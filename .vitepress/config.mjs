@@ -4,6 +4,8 @@ import sidebar from './sidebar.mjs';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  base: "/docs-demo/",
+  head:[["link", { rel: "icon", href: "/docs-demo/SixStar_P.png" }]],
   title: "HOG-StarWatch的主页",
   description: "HOG-StarWatch",
   lastUpdated: true,
