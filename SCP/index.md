@@ -3,7 +3,7 @@ layout: home
 
 hero:
   image:
-    src: /SCP.png
+    src: ../SCP.png
     alt: 背景图片
   name: "SCP基金会"
   
