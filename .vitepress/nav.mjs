@@ -5,5 +5,6 @@ export default [
         { text: 'StarCraftII', link: '/StarCraft/官方美术设定集' },
         { text: 'SCP', link: '/SCP/index' }
       ],
-    }
+    },
+    { text: 'N', link: '/Novel/' },
 ];
