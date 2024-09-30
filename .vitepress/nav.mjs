@@ -3,8 +3,12 @@ export default [
     { text: '设定集收录',
       items: [
         { text: 'StarCraftII', link: '/StarCraft/官方美术设定集' },
-        { text: 'SCP', link: '/SCP/index' }
       ],
     },
-    { text: 'N', link: '/Novel/' },
+    { text: '其他',
+      items: [
+        { text: 'SCP', link: 'https://hog-starwatch.github.io/SCP/' },
+        { text: 'Novel', link: 'https://hog-starwatch.github.io/Novel/' },
+      ],
+    },
 ];
