@@ -7,8 +7,8 @@ export default [
     },
     { text: '其他',
       items: [
-        { text: 'SCP', link: 'https://hog-starwatch.github.io/SCP/' },
-        { text: 'Novel', link: 'https://hog-starwatch.github.io/Novel/' },
+        { text: 'SCP', link: 'https://hog-starwatch.github.io/SCP/', target: '_self', },
+        { text: 'Novel', link: 'https://hog-starwatch.github.io/Novel/', target: '_self', },
       ],
     },
 ];
