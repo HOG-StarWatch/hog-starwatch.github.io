@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle 游戏</title>
+    <style>
+        /* 设置页面基本样式 */
+        body {
+            font-family: Arial, sans-serif; /* 使用 Arial 字体 */
+            text-align: center; /* 文本居中对齐 */
+            padding: 20px; /* 页面内边距 */
+            background-color: #f0f0f0; /* 背景颜色 */
+        }
+
+        .board {
+            display: flex; /* 使用弹性布局 */
+            flex-direction: column; /* 垂直排列 */
+            align-items: center; /* 子元素水平居中 */
+            margin-top: 20px; /* 上边距 */
+        }
+
+        .row {
+            display: flex; /* 使用弹性布局 */
+            margin: 5px; /* 行间距 */
+        }
+
+        .cell {
+            width: 40px; /* 单元格宽度 */
+            height: 40px; /* 单元格高度 */
+            border: 2px solid #333; /* 边框样式 */
+            line-height: 40px; /* 文本垂直居中 */
+            font-size: 24px; /* 字体大小 */
+            margin: 2px; /* 单元格间距 */
+            display: flex; /* 使用弹性布局 */
+            justify-content: center; /* 内容水平居中 */
+            align-items: center; /* 内容垂直居中 */
+        }
+
+        /* 不同状态下的单元格样式 */
+        .correct {
+            background-color: #6aaa64; /* 正确的字母背景色 */
+            color: white; /* 字体颜色 */
+        }
+        .present {
+            background-color: #c9b458; /* 存在但位置不对的字母背景色 */
+            color: white; /* 字体颜色 */
+        }
+        .absent {
+            background-color: #787c7e; /* 不存在的字母背景色 */
+            color: white; /* 字体颜色 */
+        }
+    </style>
+</head>
+<body>
+    <button onclick="goHome()">返回主页</button>
+    <h1>Wordle 游戏</h1> <!-- 游戏标题 -->
+    <div id="guessInput" style="margin: 20px;">
+        <!-- 输入框以及按钮 -->
+        <input type="text" maxlength="5" id="input" placeholder="猜一个五字母单词" />
+        <button onclick="makeGuess()">猜</button>
+        <!-- <button onclick="showAnswer()">显示答案</button> -->
+        <button onclick="restartGame()">重新开始</button>
+        <button onclick="ShowDataBase()">显示词库</button>
+    </div>
+    <div class="board" id="board"></div> <!-- 显示单词猜测的区域 -->
+    <div id="message"></div> <!-- 显示消息提示的区域 -->
+
+    <script>
+        // 定义全局变量
+        let WordleDataBase = []; // 存储单词列表
+        let targetWord = ''; // 当前目标单词
+        let currentRow = 0; // 当前猜测的行数
+
+        // 加载单词数据库
+        function loadWords() {
+            fetch('WordleDataBase.txt') // 从文本文件中获取数据
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应失败'); // 错误处理
+                    }
+                    return response.text(); // 以文本形式返回数据
+                })
+                .then(data => {
+                    // 将文本内容按行分割并形成数组
+                    WordleDataBase = data.split('\n').map(word => word.trim()).filter(word => word.length === 5);
+                    console.log('单词列表加载成功:'); // 进度反馈
+                    startGame(); // 在单词加载成功后调用 startGame
+                })
+                .catch(error => {
+                    console.error('加载单词时出错:', error); // 错误处理
+                });
+        }
+
+        // 开始新游戏
+        function startGame() {
+            targetWord = WordleDataBase[Math.floor(Math.random() * WordleDataBase.length)]; // 随机选择目标单词
+            currentRow = 0; // 重置当前行数
+            document.getElementById("board").innerHTML = ''; // 清空显示区域
+            document.getElementById("message").innerText = ''; // 清空消息
+            document.getElementById("input").value = ''; // 清空输入框
+        }
+
+        // 处理用户猜测
+        function makeGuess() {
+            const input = document.getElementById("input").value.toLowerCase(); // 获取用户输入并转为小写
+            if (input.length !== 5) {
+                alert("请输入一个五个字母的单词！"); // 输入长度不对的提示
+                return;
+            }
+            if (currentRow < 6) { // 允许猜测的最大行数为6
+                displayGuess(input); // 显示猜测结果
+                currentRow++; // 增加行数计数
+                document.getElementById("message").innerText = `加油 你还有 ${6 - currentRow} 次机会！`; // 提示剩余机会
+                document.getElementById("input").value = ""; // 清空输入框
+                if (input === targetWord) {
+                    document.getElementById("message").innerText = `恭喜你，猜对了！共用${currentRow}次！`; // 猜对的提示
+                } else if (currentRow === 6) {
+                    document.getElementById("message").innerText = `游戏结束！正确的单词是 ${targetWord}`; // 猜错并用尽所有机会的提示
+                }
+            }
+        }
+
+        // 显示猜测的结果
+        function displayGuess(guess) {
+            const board = document.getElementById("board"); // 获取显示区域
+            const row = document.createElement("div"); // 创建一个新的行
+            row.className = "row"; // 设置行的样式
+
+            const targetLetters = targetWord.split(''); // 将目标单词的字母分割为数组
+            const guessLetters = guess.split(''); // 将用户输入的字母分割为数组
+            const letterStatus = []; // 存储每个字母的状态
+
+            // 第一遍检查正确字母
+            guessLetters.forEach((letter, index) => {
+                if (letter === targetLetters[index]) { // 如果字母正确且在正确的位置
+                    letterStatus[index] = "correct"; // 标记为正确
+                    targetLetters[index] = null; // 将已匹配的字母设为 null，避免重复匹配
+                } else {
+                    letterStatus[index] = "absent"; // 默认状态为不存在
+                }
+            });
+
+            // 第二遍检查在目标字母中但位置不对的字母
+            guessLetters.forEach((letter, index) => {
+                if (letterStatus[index] === "absent" && targetLetters.includes(letter)) { // 如果字母不在当前位置但存在
+                    letterStatus[index] = "present"; // 标记为存在但位置不对
+                    targetLetters[targetLetters.indexOf(letter)] = null; // 防止重复匹配
+                }
+            });
+
+            // 创建单元格并添加到行中
+            guessLetters.forEach((letter, index) => {
+                const cell = document.createElement("div"); // 创建一个新的单元格
+                cell.className = "cell " + letterStatus[index]; // 设置单元格的样式
+                cell.innerText = letter.toUpperCase(); // 显示字母
+                row.appendChild(cell); // 将单元格添加到行中
+            });
+
+            board.appendChild(row); // 将行添加到显示区域
+        }
+
+        // 显示正确答案
+        function showAnswer() {
+            document.getElementById("message").innerText = `正确的单词是 ${targetWord}`; // 显示正确单词
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            loadWords(); // 重新加载单词库
+        }
+
+        function ShowDataBase() {
+            window.open("/WordleDataBase.html"); // 打开单词库页面
+        }
+
+        // 定义返回主页函数
+        function goHome() {
+            window.location.href = "/";
+        }
+
+        // 页面加载时初始化游戏
+        window.onload = loadWords; // 从加载单词开始
+    </script>
+</body>
+</html>

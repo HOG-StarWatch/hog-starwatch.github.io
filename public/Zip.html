@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <button onclick="goHome()">返回主页</button>
+    <title>文件《压缩》</title>
+    <script src="jszip.min.js"></script>
+    <script src="FileSaver.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #fileInput {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>文件《压缩》</h1>
+    <div>
+        <h2>选择文件进行多合一为Zip但体积略微增大</h2>
+        <input type="file" id="fileInput" multiple />
+        <button id="compressButton">压缩为 ZIP</button>
+    </div>
+
+    <script>
+        // 压缩功能
+        document.getElementById('compressButton').addEventListener('click', async function() {
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+
+            if (files.length === 0) {
+                alert('请先选择一个或多个文件!');
+                return;
+            }
+
+            const zip = new JSZip();
+
+            Array.from(files).forEach(file => {
+                zip.file(file.name, file);
+            });
+
+            // 生成 zip 文件
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            saveAs(zipBlob, 'compressed.zip');
+        });
+
+        // 定义返回主页函数
+        function goHome() {
+            window.location.href = "/";
+        }
+    </script>
+</body>
+</html>

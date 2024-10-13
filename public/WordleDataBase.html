@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>读取单词库</title>
+</head>
+<body>
+    <h1>读取单词库</h1>
+    <button onclick="loadWords()">加载单词库</button>
+    <div id="wordList"></div>
+    
+    <script>
+        let words = [];
+
+        function loadWords() {
+            fetch('WordleDataBase.txt')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应失败');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    // 将文本内容按行分割并形成数组
+                    words = data.split('\n').map(word => word.trim()).filter(word => word.length > 0);
+                    displayWords();
+                })
+                .catch(error => {
+                    console.error('加载单词时出错:', error);
+                });
+        }
+
+        function displayWords() {
+            const wordListDiv = document.getElementById('wordList');
+            wordListDiv.innerHTML = `<pre>${JSON.stringify(words, null, 2)}</pre>`;
+        }
+    </script>
+</body>
+</html>
