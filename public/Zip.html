@@ -45,7 +45,7 @@
 
             // 生成 zip 文件
             const zipBlob = await zip.generateAsync({ type: 'blob' });
-            saveAs(zipBlob, 'compressed.zip');
+            saveAs(zipBlob, 'Uncompressed.zip');
         });
 
         // 定义返回主页函数

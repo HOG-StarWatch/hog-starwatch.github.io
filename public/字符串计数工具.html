@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字符串计数工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        textarea {
+            width: 300px;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <button onclick="goHome()">返回主页</button>
+        <h2>字符串计数工具</h2>
+        <textarea id="textInput" placeholder="请输入字符串..."></textarea>
+        <br>
+        <button onclick="countCharacters()">计算字符数</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        function countCharacters() {
+            const text = document.getElementById('textInput').value;
+            const count = text.length;
+            document.getElementById('result').innerText = '字符数: ' + count;
+        }
+
+        // 定义返回主页函数
+        function goHome() {
+            window.location.href = "/";
+        }
+    </script>
+</body>
+</html>

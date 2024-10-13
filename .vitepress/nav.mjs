@@ -15,7 +15,10 @@ export default [
       items: [
         { text: '零宽隐写', link: '零宽隐写.html', target: '_self', },
         { text: '加密解密', link: '加密解密.html', target: '_self', },
-        { text: 'Zip',
+        { text: 'HTML在线运行', link: 'htmlrunner.html', target: '_self', },
+        { text: '颜色格式转换&取色', link: '颜色格式转换&取色.html', target: '_self', },
+        { text: '字符串计数工具', link: '字符串计数工具.html', target: '_self', },
+        { text: 'Uncompressed',
           items: [
             { text: '文件多合一', link: 'Zip.html', target: '_self', },
             { text: '文件夹合一', link: 'Zip-dir.html', target: '_self', },
@@ -26,6 +29,9 @@ export default [
     { text: '小游戏',
       items: [
         { text: 'Wordle', link: 'Wordle.html', target: '_self', },
+        { text: '井字棋', link: '井字棋.html', target: '_self', },
+        { text: '打砖块', link: '打砖块.html', target: '_self', },
+        { text: '贪吃蛇', link: '贪吃蛇.html', target: '_self', },
         { text: '猜数字', link: '猜数字.html', target: '_self', },
       ],
     },

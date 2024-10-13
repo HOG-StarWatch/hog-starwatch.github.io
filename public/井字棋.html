@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字棋</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            height: 100vh;
+            justify-content: center;
+            background: #f0f0f0;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="goHome()">返回主页</button>
+    <div class="board" id="board"></div>
+    <button id="resetButton">重置游戏</button>
+    <script>
+        const board = document.getElementById('board');
+        const resetButton = document.getElementById('resetButton');
+        let currentPlayer = 'X';
+        const cells = Array(9).fill(null);
+
+        function checkWinner() {
+            const winningCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            for (const combo of winningCombos) {
+                const [a, b, c] = combo;
+                if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+                    return cells[a];
+                }
+            }
+            return cells.includes(null) ? null : '平局';
+        }
+
+        function renderBoard() {
+            board.innerHTML = '';
+            cells.forEach((cell, index) => {
+                const cellDiv = document.createElement('div');
+                cellDiv.classList.add('cell');
+                cellDiv.innerText = cell ? cell : '';
+                cellDiv.addEventListener('click', () => makeMove(index));
+                board.appendChild(cellDiv);
+            });
+        }
+
+        function makeMove(index) {
+            if (!cells[index]) {
+                cells[index] = currentPlayer;
+                const winner = checkWinner();
+                if (winner) {
+                    setTimeout(() => {
+                        alert(winner === '平局' ? "平局！" : `${winner} 胜利！`);
+                        resetGame();
+                    }, 100);
+                }
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                renderBoard();
+            }
+        }
+
+        function resetGame() {
+            cells.fill(null);
+            currentPlayer = 'X';
+            renderBoard();
+        }
+
+        // 定义返回主页函数
+        function goHome() {
+            window.location.href = "/";
+        }
+        
+        resetButton.addEventListener('click', resetGame);
+        renderBoard();
+    </script>
+</body>
+</html>
