@@ -5,44 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>字符串计数工具</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            padding: 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
             text-align: center;
         }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
         textarea {
-            width: 300px;
-            height: 100px;
-            margin-bottom: 10px;
-            padding: 10px;
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            border-color: #5b9bd5;
+            outline: none;
+        }
+        .buttons {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 6px;
+            background-color: #5b9bd5;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex: 1 1 45%;
+        }
+        button:hover {
+            background-color: #4a8ac2;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+        @media (max-width: 500px) {
+            button {
+                flex: 1 1 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div>
-        <button onclick="goHome()">返回主页</button>
+    <div class="container">
         <h2>字符串计数工具</h2>
         <textarea id="textInput" placeholder="请输入字符串..."></textarea>
-        <br>
-        <button onclick="countCharacters()">计算字符数</button>
-        <p id="result"></p>
+        <div class="buttons">
+            <button id="countBtn">计算</button>
+            <button id="clearBtn">清空</button>
+            <button id="copyBtn">复制结果</button>
+        </div>
+        <div id="result">
+            <p>字符数: 0</p>
+            <p>单词数: 0</p>
+            <p>行数: 0</p>
+        </div>
     </div>
 
     <script>
-        function countCharacters() {
-            const text = document.getElementById('textInput').value;
-            const count = text.length;
-            document.getElementById('result').innerText = '字符数: ' + count;
+        const textInput = document.getElementById('textInput');
+        const countBtn = document.getElementById('countBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const result = document.getElementById('result');
+
+        function updateCounts() {
+            const text = textInput.value;
+            const charCount = text.length;
+            const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            const lineCount = text.split(/\n/).length;
+            result.innerHTML = `
+                <p>字符数: ${charCount}</p>
+                <p>单词数: ${wordCount}</p>
+                <p>行数: ${lineCount}</p>
+            `;
         }
 
-        // 定义返回主页函数
-        function goHome() {
-            window.location.href = "/";
+        function clearText() {
+            textInput.value = '';
+            updateCounts();
         }
+
+        function copyResult() {
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = result.innerText;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextarea);
+            alert('结果已复制到剪贴板');
+        }
+
+        // Event Listeners
+        countBtn.addEventListener('click', updateCounts);
+        clearBtn.addEventListener('click', clearText);
+        copyBtn.addEventListener('click', copyResult);
+        textInput.addEventListener('input', updateCounts);
+
+        // Initialize counts on page load
+        updateCounts();
     </script>
 </body>
 </html>

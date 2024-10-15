@@ -3,100 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <button onclick="goHome()">返回主页</button>
     <title>加密解密工具</title>
+    <!-- 引入 CryptoJS 全部组件 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        textarea { width: 100%; height: 100px; }
-        select { width: 100%; }
-        button { margin-top: 10px; }
+        /* 重置部分浏览器默认样式 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        select, input[type="text"], textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        select:focus, input[type="text"]:focus, textarea:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+        button {
+            padding: 10px 0;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #007BFF;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        .copy-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .copy-group textarea {
+            flex: 1;
+        }
+        .copy-group button {
+            width: auto;
+            padding: 10px 15px;
+            margin-left: 10px;
+            background: #28a745;
+        }
+        .copy-group button:hover {
+            background: #1e7e34;
+        }
+        textarea[readonly] {
+            background: #f0f0f0;
+            cursor: not-allowed;
+        }
+        .copy-feedback {
+            margin-left: 10px;
+            color: #28a745;
+            font-size: 14px;
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .button-group {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+                margin-top: 10px;
+            }
+            .copy-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .copy-group button {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+            .copy-feedback {
+                margin-left: 0;
+                margin-top: 5px;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>AES&DES&Rabbit&TripleDES-工具</h1>
-    <select id="cipher">
-        <option value="AES">AES</option>
-        <option value="DES">DES</option>
-        <option value="Rabbit">Rabbit</option>
-        <option value="TripleDES">Triple DES</option>
-    </select>
-    
-    <h3>输入文本:</h3>
-    <textarea id="inputText"></textarea>
-    
-    <h3>密钥:</h3>
-    <input type="text" id="key" placeholder="请输入密钥" />
+    <div class="container">
+        <h1>加密解密工具</h1>
+        <div class="form-group">
+            <label for="cipher">选择加密算法:</label>
+            <select id="cipher">
+                <option value="AES">AES</option>
+                <option value="DES">DES</option>
+                <option value="Rabbit">Rabbit</option>
+                <option value="TripleDES">Triple DES</option>
+                <option value="RC4">RC4</option>
+                <option value="RC4Drop">RC4Drop</option>
+                <option value="Base64">Base64</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="inputText">输入文本:</label>
+            <textarea id="inputText" placeholder="请输入要加密或解密的文本"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="key">密钥:</label>
+            <input type="text" id="key" value="请输入密钥（Base64 不需要）" />
+        </div>
 
-    <button onclick="encrypt()">加密</button>
-    <button onclick="decrypt()">解密</button>
-
-    <h3>输出结果:</h3>
-    <textarea id="outputText"></textarea>
+        <div class="button-group">
+            <button onclick="process('encrypt')">加密</button>
+            <button onclick="process('decrypt')">解密</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="outputText">输出结果:</label>
+            <div class="copy-group">
+                <textarea id="outputText" readonly></textarea>
+                <button onclick="copyResult()">复制结果</button>
+            </div>
+            <span class="copy-feedback" id="copyFeedback">已复制!</span>
+        </div>
+    </div>
 
     <script>
-        
-    // 定义加密函数
-        function encrypt() {
-            const cipher = document.getElementById('cipher').value;// 获取用户选择的加密算法
-            const key = document.getElementById('key').value;// 获取用户输入的密钥
-            const inputText = document.getElementById('inputText').value;// 获取用户输入的待加密文本
-    
-    // 初始化加密后的文本
-            let encryptedText;
+        // 定义支持的加密算法
+        const ciphers = {
+            'AES': {
+                encrypt: (text, key) => CryptoJS.AES.encrypt(text, key).toString(),
+                decrypt: (ciphertext, key) => CryptoJS.AES.decrypt(ciphertext, key).toString(CryptoJS.enc.Utf8)
+            },
+            'DES': {
+                encrypt: (text, key) => CryptoJS.DES.encrypt(text, key).toString(),
+                decrypt: (ciphertext, key) => CryptoJS.DES.decrypt(ciphertext, key).toString(CryptoJS.enc.Utf8)
+            },
+            'Rabbit': {
+                encrypt: (text, key) => CryptoJS.Rabbit.encrypt(text, key).toString(),
+                decrypt: (ciphertext, key) => CryptoJS.Rabbit.decrypt(ciphertext, key).toString(CryptoJS.enc.Utf8)
+            },
+            'TripleDES': {
+                encrypt: (text, key) => CryptoJS.TripleDES.encrypt(text, key).toString(),
+                decrypt: (ciphertext, key) => CryptoJS.TripleDES.decrypt(ciphertext, key).toString(CryptoJS.enc.Utf8)
+            },
+            'RC4': {
+                encrypt: (text, key) => CryptoJS.RC4.encrypt(text, key).toString(),
+                decrypt: (ciphertext, key) => CryptoJS.RC4.decrypt(ciphertext, key).toString(CryptoJS.enc.Utf8)
+            },
+            'RC4Drop': {
+                encrypt: (text, key) => CryptoJS.RC4Drop.encrypt(text, key).toString(),
+                decrypt: (ciphertext, key) => CryptoJS.RC4Drop.decrypt(ciphertext, key).toString(CryptoJS.enc.Utf8)
+            },
+            'Base64': {
+                encrypt: (text) => CryptoJS.enc.Utf8.parse(text).toString(CryptoJS.enc.Base64),
+                decrypt: (ciphertext) => {
+                    try {
+                        return CryptoJS.enc.Base64.parse(ciphertext).toString(CryptoJS.enc.Utf8);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+            }
+        };
 
-    // 根据用户选择的加密算法进行加密
-            switch (cipher) {
-                case 'AES':
-                    encryptedText = CryptoJS.AES.encrypt(inputText, key).toString();// 使用AES算法加密文本
-                    break;
-                case 'DES':
-                    encryptedText = CryptoJS.DES.encrypt(inputText, key).toString();// 使用DES算法加密文本
-                    break;
-                case 'Rabbit':
-                    encryptedText = CryptoJS.Rabbit.encrypt(inputText, key).toString();// 使用Rabbit算法加密文本
-                    break;
-                case 'TripleDES':
-                    encryptedText = CryptoJS.TripleDES.encrypt(inputText, key).toString();// 使用TripleDES算法加密文本
-                    break;
+        /**
+         * 处理加密和解密操作
+         * @param {string} action - 'encrypt' 或 'decrypt'
+         */
+        function process(action) {
+            const cipher = document.getElementById('cipher').value;
+            const key = document.getElementById('key').value;
+            const inputText = document.getElementById('inputText').value;
+            const outputTextArea = document.getElementById('outputText');
+
+            // 输入验证
+            if (!inputText) {
+                alert("请输入要加密或解密的文本！");
+                return;
             }
 
-    // 将加密后的文本显示在输出框中
-            document.getElementById('outputText').value = encryptedText;
-        }
-
-    // 定义解密函数
-        function decrypt() {
-            const cipher = document.getElementById('cipher').value;// 获取用户选择的加密算法
-            const key = document.getElementById('key').value;// 获取用户输入的密钥
-            const encryptedText = document.getElementById('inputText').value;// 获取用户输入的待解密文本
-
-    // 初始化解密后的文本
-            let decryptedText;
-
-    // 根据用户选择的加密算法进行解密，并指定字符编码为UTF-8
-            switch (cipher) {
-                case 'AES':
-                    decryptedText = CryptoJS.AES.decrypt(encryptedText, key).toString(CryptoJS.enc.Utf8);// 使用AES算法解密文本
-                    break;
-                case 'DES':
-                    decryptedText = CryptoJS.DES.decrypt(encryptedText, key).toString(CryptoJS.enc.Utf8);// 使用DES算法解密文本
-                    break;
-                case 'Rabbit':
-                    decryptedText = CryptoJS.Rabbit.decrypt(encryptedText, key).toString(CryptoJS.enc.Utf8);// 使用Rabbit算法解密文本
-                    break;
-                case 'TripleDES':
-                    decryptedText = CryptoJS.TripleDES.decrypt(encryptedText, key).toString(CryptoJS.enc.Utf8);// 使用TripleDES算法解密文本
-                    break;
+            // 如果选择的不是 Base64，需要输入密钥
+            if (cipher !== 'Base64' && !key) {
+                alert("请输入密钥！");
+                return;
             }
 
-    // 将解密后的文本显示在输出框中
-            document.getElementById('outputText').value = decryptedText;
+            // 获取对应的加密/解密函数
+            const selectedCipher = ciphers[cipher];
+            if (!selectedCipher) {
+                alert("不支持的加密算法！");
+                return;
+            }
+
+            try {
+                let result;
+                if (action === 'encrypt') {
+                    result = selectedCipher.encrypt(inputText, cipher === 'Base64' ? undefined : key);
+                } else if (action === 'decrypt') {
+                    result = selectedCipher.decrypt(inputText, cipher === 'Base64' ? undefined : key);
+                }
+
+                if (result === undefined || result === '') {
+                    throw new Error("操作失败，可能是密钥错误或文本格式不正确！");
+                }
+
+                outputTextArea.value = result;
+            } catch (error) {
+                alert(`${action === 'encrypt' ? '加密' : '解密'}失败，请检查输入和密钥！`);
+                console.error(error);
+            }
         }
 
-    // 定义返回主页函数
-        function goHome() {
-            window.location.href = "/";
+        /**
+         * 复制输出结果到剪贴板
+         */
+        function copyResult() {
+            const outputText = document.getElementById('outputText');
+            const copyFeedback = document.getElementById('copyFeedback');
+
+            // 选中输出文本
+            outputText.select();
+            outputText.setSelectionRange(0, 99999); // 对手机兼容
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    // 显示复制成功的提示
+                    copyFeedback.style.display = 'inline';
+                    setTimeout(() => {
+                        copyFeedback.style.display = 'none';
+                    }, 2000);
+                } else {
+                    throw new Error('复制命令执行失败');
+                }
+            } catch (err) {
+                alert('复制失败，请手动复制！');
+                console.error('复制失败:', err);
+            }
+
+            // 取消选中
+            window.getSelection().removeAllRanges();
         }
     </script>
 </body>
