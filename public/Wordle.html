@@ -54,14 +54,14 @@
             font-size: 1em;
             border: none;
             border-radius: 5px;
-            background-color: #6aaa64;
+            background-color: #4B0082;
             color: #ffffff;
             cursor: pointer;
             transition: background-color 0.3s;
         }
 
         #guessInput button:hover {
-            background-color: #538d4e;
+            background-color: #320255;
         }
 
         /* 消息提示样式 */
@@ -174,6 +174,7 @@
         <div class="button-group">
             <button id="restartButton">重新开始</button>
             <button id="showDatabaseButton">显示词库</button>
+            <button id="hintButton">提示</button> <!-- 添加提示按钮 -->
         </div>
         <div id="message"></div>
     </div>
@@ -181,42 +182,52 @@
 
     <script>
         // 全局变量
-        let WordleDataBase = [];
-        let targetWord = '';
-        let currentRow = 0;
-        const maxAttempts = 6;
+        let WordleDataBase = []; // 存储所有有效的五字母单词
+        let targetWord = ''; // 目标单词
+        let currentRow = 0; // 当前猜测的行数
+        const maxAttempts = 6; // 最大猜测次数
+        let hintUsed = false; // 是否已经使用过提示
+        let hintedPositions = []; // 已提示的位置数组，防止重复提示
 
         // DOM 元素
-        const inputField = document.getElementById('input');
-        const guessButton = document.getElementById('guessButton');
-        const restartButton = document.getElementById('restartButton');
-        const showDatabaseButton = document.getElementById('showDatabaseButton');
-        const board = document.getElementById('board');
-        const message = document.getElementById('message');
+        const inputField = document.getElementById('input'); // 输入框
+        const guessButton = document.getElementById('guessButton'); // 猜测按钮
+        const restartButton = document.getElementById('restartButton'); // 重新开始按钮
+        const showDatabaseButton = document.getElementById('showDatabaseButton'); // 显示词库按钮
+        const hintButton = document.getElementById('hintButton'); // 提示按钮
+        const board = document.getElementById('board'); // 游戏板
+        const message = document.getElementById('message'); // 消息显示区域
 
         // 加载单词数据库
         async function loadWords() {
             try {
-                const response = await fetch('WordleDataBase.txt');
+                const response = await fetch('WordleDataBase.txt'); // 从服务器加载单词库文件
                 if (!response.ok) throw new Error('网络响应失败');
-                const data = await response.text();
+                const data = await response.text(); // 获取文本内容
+                // 将文本按行分割，去除空白并转换为小写
                 WordleDataBase = data.split('\n').map(word => word.trim().toLowerCase()).filter(word => word.length === 5);
                 console.log('单词列表加载成功');
-                startGame();
+                startGame(); // 启动新游戏
             } catch (error) {
                 console.error('加载单词时出错:', error);
-                showMessage('无法加载单词库，请检查网络连接。');
+                showMessage('无法加载单词库，请检查网络连接。', true);
             }
         }
 
         // 开始新游戏
         function startGame() {
-            targetWord = WordleDataBase[Math.floor(Math.random() * WordleDataBase.length)];
-            currentRow = 0;
-            board.innerHTML = '';
-            message.innerText = '';
-            inputField.value = '';
-            // 初始化游戏板
+            targetWord = WordleDataBase[Math.floor(Math.random() * WordleDataBase.length)]; // 随机选择目标单词
+            currentRow = 0; // 重置当前行数
+            hintUsed = false; // 重置提示使用状态
+            hintedPositions = []; // 重置已提示的位置
+            board.innerHTML = ''; // 清空游戏板
+            message.innerText = ''; // 清空消息
+            inputField.value = ''; // 清空输入框
+            inputField.disabled = false; // 启用输入框
+            guessButton.disabled = false; // 启用猜测按钮
+            hintButton.disabled = false; // 启用提示按钮
+
+            // 初始化游戏板，创建6行，每行5个单元格
             for (let i = 0; i < maxAttempts; i++) {
                 const row = document.createElement('div');
                 row.className = 'row';
@@ -232,12 +243,12 @@
         // 显示消息
         function showMessage(msg, isError = false) {
             message.innerText = msg;
-            message.style.color = isError ? '#e74c3c' : '#ffffff';
+            message.style.color = isError ? '#e74c3c' : '#ffffff'; // 错误消息为红色，正常消息为白色
         }
 
         // 处理猜测
         function makeGuess() {
-            const guess = inputField.value.trim().toLowerCase();
+            const guess = inputField.value.trim().toLowerCase(); // 获取并处理玩家输入
             if (guess.length !== 5) {
                 showMessage("请输入一个五个字母的单词！", true);
                 return;
@@ -251,72 +262,153 @@
                 return;
             }
 
-            // 获取当前行
+            // 获取当前行的DOM元素
             const row = board.children[currentRow];
-            const targetLetters = targetWord.split('');
-            const guessLetters = guess.split('');
-            const letterStatus = Array(5).fill('absent');
+            const targetLetters = targetWord.split(''); // 目标单词的字母数组
+            const guessLetters = guess.split(''); // 猜测单词的字母数组
+            const letterStatus = Array(5).fill('absent'); // 存储每个字母的状态，初始为'absent'
 
-            // 第一次检查正确位置
+            // 第一次检查每个字母是否在正确的位置
             guessLetters.forEach((letter, index) => {
                 if (letter === targetLetters[index]) {
-                    letterStatus[index] = 'correct';
-                    targetLetters[index] = null;
+                    letterStatus[index] = 'correct'; // 正确位置
+                    targetLetters[index] = null; // 标记为已匹配
                 }
             });
 
-            // 第二次检查存在但位置不对
+            // 第二次检查每个字母是否存在但位置不对
             guessLetters.forEach((letter, index) => {
                 if (letterStatus[index] === 'absent' && targetLetters.includes(letter)) {
-                    letterStatus[index] = 'present';
-                    targetLetters[targetLetters.indexOf(letter)] = null;
+                    letterStatus[index] = 'present'; // 存在但位置不对
+                    targetLetters[targetLetters.indexOf(letter)] = null; // 标记为已匹配
                 }
             });
 
-            // 更新单元格样式
+            // 更新单元格样式并显示字母
             guessLetters.forEach((letter, index) => {
                 const cell = row.children[index];
                 cell.innerText = letter.toUpperCase();
                 cell.classList.add(letterStatus[index]);
             });
 
-            // 检查是否猜中
+            // 检查玩家是否猜中了单词
             if (guess === targetWord) {
                 showMessage(`恭喜你，猜对了！用了 ${currentRow + 1} 次。`);
-                inputField.disabled = true;
-                guessButton.disabled = true;
+                inputField.disabled = true; // 禁用输入框
+                guessButton.disabled = true; // 禁用猜测按钮
+                hintButton.disabled = true; // 禁用提示按钮
                 return;
             }
 
-            currentRow++;
+            currentRow++; // 增加当前行数
+
+            // 检查是否达到最大猜测次数
             if (currentRow >= maxAttempts) {
                 showMessage(`游戏结束！正确的单词是 ${targetWord.toUpperCase()}。`);
-                inputField.disabled = true;
-                guessButton.disabled = true;
+                inputField.disabled = true; // 禁用输入框
+                guessButton.disabled = true; // 禁用猜测按钮
+                hintButton.disabled = true; // 禁用提示按钮
                 return;
             } else {
                 showMessage(`加油，你还有 ${maxAttempts - currentRow} 次机会！`);
-                inputField.value = '';
+                inputField.value = ''; // 清空输入框
             }
         }
 
         // 重新开始游戏
         function restartGame() {
-            startGame();
-            inputField.disabled = false;
-            guessButton.disabled = false;
+            startGame(); // 重新初始化游戏
             showMessage('新游戏开始！');
         }
 
         // 显示词库（此处假设有一个 WordleDataBase.html 页面）
         function showDataBase() {
-            window.open("WordleDataBase.html", "_blank");
+            window.open("WordleDataBase.html", "_blank"); // 在新标签页中打开词库页面
+        }
+
+        // 提示功能
+        function provideHint() {
+            if (hintUsed) {
+                showMessage("你已经使用过提示了！", true);
+                return;
+            }
+
+            // 查找未被正确猜中的位置
+            const availablePositions = [];
+            for (let i = 0; i < 5; i++) {
+                // 如果该位置还未被正确猜中且未被提示
+                const cell = board.children[currentRow].children[i];
+                if (cell.innerText === '' && !hintedPositions.includes(i)) {
+                    availablePositions.push(i);
+                }
+            }
+
+            // 如果当前行没有可提示的位置，查找所有行
+            if (availablePositions.length === 0) {
+                for (let r = 0; r < currentRow; r++) {
+                    for (let i = 0; i < 5; i++) {
+                        const cell = board.children[r].children[i];
+                        if (cell.innerText === '' && !hintedPositions.includes(i)) {
+                            availablePositions.push(i);
+                        }
+                    }
+                }
+            }
+
+            // 如果还是没有可提示的位置，查找整个单词中未被猜中的字母位置
+            if (availablePositions.length === 0) {
+                for (let i = 0; i < 5; i++) {
+                    // 如果该位置的字母尚未被猜中
+                    const cell = board.children[currentRow].children[i];
+                    if (cell.innerText === '' && targetWord[i] && !hintedPositions.includes(i)) {
+                        availablePositions.push(i);
+                    }
+                }
+            }
+
+            // 如果没有可提示的位置，则无法提供进一步的提示
+            if (availablePositions.length === 0) {
+                showMessage("无法提供更多提示！", true);
+                return;
+            }
+
+            // 随机选择一个可提示的位置
+            const randomIndex = Math.floor(Math.random() * availablePositions.length);
+            const position = availablePositions[randomIndex];
+
+            // 获取当前行，如果当前行已经填写，则选择下一个未填写的行
+            let row = board.children[currentRow];
+            for (let r = currentRow; r < maxAttempts; r++) {
+                row = board.children[r];
+                if (row.children[position].innerText === '') {
+                    break;
+                }
+            }
+
+            // 填充提示字母
+            row.children[position].innerText = targetWord[position].toUpperCase();
+            row.children[position].classList.add('correct'); // 使用'correct'样式标识提示的字母
+            hintedPositions.push(position); // 记录已提示的位置
+
+            // 标记提示为已使用
+            hintUsed = true;
+            showMessage("提示已使用！", false);
+            hintButton.disabled = true; // 禁用提示按钮
         }
 
         // 事件监听
+
+        // 监听猜测按钮的点击事件
         guessButton.addEventListener('click', makeGuess);
+
+        // 监听重新开始按钮的点击事件
         restartButton.addEventListener('click', restartGame);
+
+        // 监听显示词库按钮的点击事件
         showDatabaseButton.addEventListener('click', showDataBase);
+
+        // 监听提示按钮的点击事件
+        hintButton.addEventListener('click', provideHint);
 
         // 处理键盘事件（按 Enter 键提交猜测）
         inputField.addEventListener('keydown', function(event) {

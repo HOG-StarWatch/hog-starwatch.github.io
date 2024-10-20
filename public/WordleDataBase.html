@@ -3,38 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>读取单词库</title>
+    <title>Wordle单词库读取与查询</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 设置页面背景和字体 */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* 深色背景 */
+            color: #FFFFFF; /* 浅色字体 */
+            padding: 20px;
+        }
+
+        /* 标题样式 */
+        h1 {
+            text-align: center;
+            color: #FFFFFF;
+            margin-bottom: 20px;
+        }
+
+        /* 按钮样式 */
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4B0082; /* 紫色按钮背景 */
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 5px;
+        }
+
+        .button:hover {
+            background-color: #320255; /* 悬停时按钮颜色变化 */
+        }
+
+        /* 单词列表容器样式 */
+        #wordList {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: #1e1e1e; /* 略浅的深色背景 */
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        /* 单词列表项样式 */
+        .word-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #333333; /* 较深的分隔线 */
+            font-size: 18px;
+            color: #FFFFFF;
+        }
+
+        .word-item:last-child {
+            border-bottom: none;
+        }
+
+        /* 错误信息样式 */
+        .error {
+            color: #ff6b6b; /* 红色错误信息 */
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        /* 加载动画样式 */
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #1f6feb;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 查询区域样式 */
+        #searchArea {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+        }
+
+        #searchArea h2 {
+            text-align: center;
+            color: #FFFFFF;
+            margin-bottom: 15px;
+        }
+
+        .search-inputs {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .search-inputs input {
+            width: 18%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #333333; /* 深色边框 */
+            border-radius: 4px;
+            background-color: #2c2c2c; /* 深色输入框背景 */
+            color: #FFFFFF;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .search-inputs input::placeholder {
+            color: #888888; /* 浅灰色占位符 */
+        }
+
+        @media (max-width: 600px) {
+            .search-inputs input {
+                width: 48%;
+                margin-bottom: 10px;
+            }
+
+            .search-inputs {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>读取单词库</h1>
-    <button onclick="loadWords()">加载单词库</button>
+    <h1>Wordle单词库读取与查询</h1>
+    
+    <!-- 加载单词库按钮 -->
+    <div style="text-align: center;">
+        <button class="button" onclick="loadWords()">加载单词库</button>
+    </div>
+    
+    <!-- 加载动画 -->
+    <div class="loader" id="loader"></div>
+    
+    <!-- 显示错误信息的容器 -->
+    <div class="error" id="errorMessage"></div>
+    
+    <!-- 查询区域 -->
+    <div id="searchArea" style="display: none;">
+        <h2>查询符合条件的单词</h2>
+        <div class="search-inputs">
+            <input type="text" id="pos1" maxlength="1" placeholder="位置1">
+            <input type="text" id="pos2" maxlength="1" placeholder="位置2">
+            <input type="text" id="pos3" maxlength="1" placeholder="位置3">
+            <input type="text" id="pos4" maxlength="1" placeholder="位置4">
+            <input type="text" id="pos5" maxlength="1" placeholder="位置5">
+        </div>
+        <div style="text-align: center;">
+            <button class="button" onclick="searchWords()">搜索</button>
+            <button class="button" onclick="resetSearch()">重置</button>
+        </div>
+    </div>
+    
+    <!-- 显示单词列表的容器 -->
     <div id="wordList"></div>
     
     <script>
+        // 初始化单词数组
         let words = [];
+        // 存储当前显示的单词
+        let displayedWords = [];
 
+        /**
+         * 加载单词库函数
+         * 通过Fetch API获取本地WordleDataBase.txt文件中的单词
+         */
         function loadWords() {
+            // 显示加载动画并清空之前的内容
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('wordList').innerHTML = '';
+            document.getElementById('errorMessage').innerText = '';
+            document.getElementById('searchArea').style.display = 'none';
+
             fetch('WordleDataBase.txt')
                 .then(response => {
+                    // 检查网络响应是否成功
                     if (!response.ok) {
-                        throw new Error('网络响应失败');
+                        throw new Error('网络响应失败，状态码：' + response.status);
                     }
+                    // 返回文本内容
                     return response.text();
                 })
                 .then(data => {
-                    // 将文本内容按行分割并形成数组
-                    words = data.split('\n').map(word => word.trim()).filter(word => word.length > 0);
-                    displayWords();
+                    // 将文本内容按行分割并形成数组，去除空行和多余空格
+                    words = data.split('\n')
+                                .map(word => word.trim().toUpperCase()) // 转为大写统一格式
+                                .filter(word => word.length === 5); // 仅保留五个字母的单词
+                    // 显示单词列表
+                    displayWords(words);
+                    // 显示查询区域
+                    document.getElementById('searchArea').style.display = 'block';
                 })
                 .catch(error => {
+                    // 在控制台输出错误信息
                     console.error('加载单词时出错:', error);
+                    // 在页面中显示错误信息
+                    document.getElementById('errorMessage').innerText = '加载单词时出错: ' + error.message;
+                })
+                .finally(() => {
+                    // 隐藏加载动画
+                    document.getElementById('loader').style.display = 'none';
                 });
         }
 
-        function displayWords() {
+        /**
+         * 显示单词列表函数
+         * 将单词数组动态生成HTML元素并插入到页面
+         * @param {Array} wordArray - 要显示的单词数组
+         */
+        function displayWords(wordArray) {
             const wordListDiv = document.getElementById('wordList');
-            wordListDiv.innerHTML = `<pre>${JSON.stringify(words, null, 2)}</pre>`;
+            wordListDiv.innerHTML = ''; // 清空之前的内容
+
+            if (wordArray.length === 0) {
+                wordListDiv.innerHTML = '<p>没有符合条件的单词。</p>';
+                return;
+            }
+
+            // 创建一个文档片段提高性能
+            const fragment = document.createDocumentFragment();
+
+            wordArray.forEach(word => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                wordItem.textContent = word;
+                fragment.appendChild(wordItem);
+            });
+
+            wordListDiv.appendChild(fragment);
         }
+
+        /**
+         * 搜索符合条件的单词函数
+         * 根据用户在各位置输入的字母过滤单词库
+         */
+        function searchWords() {
+            // 获取各位置的输入值，并转为大写
+            const pos1 = document.getElementById('pos1').value.toUpperCase();
+            const pos2 = document.getElementById('pos2').value.toUpperCase();
+            const pos3 = document.getElementById('pos3').value.toUpperCase();
+            const pos4 = document.getElementById('pos4').value.toUpperCase();
+            const pos5 = document.getElementById('pos5').value.toUpperCase();
+
+            // 使用filter方法筛选符合条件的单词
+            displayedWords = words.filter(word => {
+                let match = true;
+                if (pos1 && word.charAt(0) !== pos1) match = false;
+                if (pos2 && word.charAt(1) !== pos2) match = false;
+                if (pos3 && word.charAt(2) !== pos3) match = false;
+                if (pos4 && word.charAt(3) !== pos4) match = false;
+                if (pos5 && word.charAt(4) !== pos5) match = false;
+                return match;
+            });
+
+            // 显示筛选后的单词列表
+            displayWords(displayedWords);
+        }
+
+        /**
+         * 重置查询功能
+         * 清空所有输入框并显示全部单词
+         */
+        function resetSearch() {
+            // 清空输入框
+            document.getElementById('pos1').value = '';
+            document.getElementById('pos2').value = '';
+            document.getElementById('pos3').value = '';
+            document.getElementById('pos4').value = '';
+            document.getElementById('pos5').value = '';
+            // 显示全部单词
+            displayWords(words);
+        }
+
     </script>
 </body>
 </html>

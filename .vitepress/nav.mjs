@@ -30,6 +30,7 @@ export default [
       items: [
         { text: 'Wordle', link: 'Wordle.html', target: '_self', },
         { text: '井字棋', link: '井字棋.html', target: '_self', },
+        { text: '五子棋', link: '五子棋.html', target: '_self', },
         { text: '打砖块', link: '打砖块.html', target: '_self', },
         { text: '贪吃蛇', link: '贪吃蛇.html', target: '_self', },
         { text: '猜数字', link: '猜数字.html', target: '_self', },
