@@ -3,35 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>取色器</title>
+    <title>🎨 综合取色器</title>
     <style>
-        /* 导入Google字体 */
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
-        /* 设置页面的基本样式 */
+        /* 基础样式设置 */
         body {
-            font-family: 'Roboto', sans-serif; /* 使用Roboto字体 */
+            font-family: Arial, sans-serif; /* 使用系统默认字体 */
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #f0f4f8; /* 更柔和的背景颜色 */
-            transition: background-color 0.3s, color 0.3s; /* 统一过渡效果 */
+            background-color: #121212; /* 默认夜间模式背景色 */
+            color: #e0e0e0; /* 默认夜间模式字体颜色 */
+            transition: background-color 0.3s, color 0.3s; /* 背景和字体颜色过渡效果 */
             min-height: 100vh;
         }
 
-        h1 {
-            margin-top: 20px;
-            color: #333;
+        /* 主标题样式 */
+        h1, h2 {
+            color: inherit; /* 继承body的字体颜色 */
+            text-align: center;
         }
 
-        /* 切换按钮样式 */
+        /* 模式切换按钮样式 */
         #toggleButton {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
-            background-color: #4CAF50;
+            background-color: #bb86fc; /* 夜间模式按钮颜色 */
             color: white;
             border: none;
             padding: 10px 15px;
@@ -39,12 +38,15 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s;
+            z-index: 1000;
         }
 
+        /* 按钮悬停效果 */
         #toggleButton:hover {
-            background-color: #45a049;
+            background-color: #9b59b6; /* 夜间模式按钮悬停颜色 */
         }
 
+        /* 主功能容器样式 */
         .container {
             display: flex;
             flex-wrap: wrap;
@@ -52,48 +54,78 @@
             gap: 20px;
             width: 90%;
             max-width: 1200px;
-            margin: 30px 0;
-            background-color: #ffffff;
+            margin: 80px 0 30px 0; /* 顶部留出空间给切换按钮 */
+            background-color: #1e1e1e; /* 夜间模式容器背景色 */
             border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.05); /* 夜间模式阴影 */
             padding: 30px;
             transition: background-color 0.3s, box-shadow 0.3s;
         }
 
-        .color-section {
-            flex: 1 1 280px;
+        /* 色卡生成与展示容器样式 */
+        .palette-container {
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* 垂直排列子元素 */
             align-items: center;
-            text-align: center;
+            width: 100%;
+            max-width: 1200px;
+            margin: 30px 0;
+            background-color: #1e1e1e; /* 夜间模式容器背景色 */
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.05); /* 夜间模式阴影 */
+            padding: 30px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        /* 色卡生成顶部区域，包含图片生成和随机生成两个部分 */
+        .palette-top {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* 功能板块的样式 */
+        .color-section {
+                flex: 1 1 280px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
         }
 
         .color-section h2 {
             margin-bottom: 20px;
-            color: #555;
+            color: inherit; /* 继承body的字体颜色 */
         }
 
+        /* 输入框样式 */
         input[type="text"], input[type="color"], input[type="file"] {
             margin: 10px 0;
             padding: 10px 15px;
             width: 100%;
             max-width: 250px;
-            border: 2px solid #ccc;
+            border: 2px solid #555; /* 夜间模式输入框边框色 */
             border-radius: 8px;
             font-size: 16px;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: #2c2c2c; /* 夜间模式输入框背景色 */
+            color: #e0e0e0; /* 夜间模式输入框字体色 */
+            transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s;
         }
 
+        /* 输入框获得焦点时的样式 */
         input[type="text"]:focus, input[type="color"]:focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+            border-color: #bb86fc; /* 夜间模式输入框聚焦边框色 */
+            box-shadow: 0 0 5px rgba(187, 134, 252, 0.5); /* 夜间模式输入框聚焦阴影 */
             outline: none;
         }
 
+        /* 按钮样式 */
         button {
             margin-top: 10px;
             padding: 10px 20px;
-            background-color: #4CAF50;
+            background-color: #bb86fc; /* 夜间模式按钮颜色 */
             color: white;
             border: none;
             border-radius: 8px;
@@ -102,72 +134,147 @@
             transition: background-color 0.3s, transform 0.2s;
         }
 
+        /* 按钮悬停效果 */
         button:hover {
-            background-color: #45a049;
+            background-color: #9b59b6; /* 夜间模式按钮悬停颜色 */
             transform: translateY(-2px);
         }
 
+        /* 颜色显示区域样式 */
         .color-display {
             width: 100%;
             max-width: 250px;
             height: 60px;
             margin: 15px 0;
-            border: 2px solid #ccc;
+            border: 2px solid #555; /* 夜间模式颜色显示边框色 */
             border-radius: 8px;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
-            transition: background-color 0.3s, box-shadow 0.3s;
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.1); /* 夜间模式颜色显示阴影 */
+            background-color: #2c2c2c; /* 默认颜色显示背景色 */
+            transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
         }
 
+        /* 结果文本样式 */
         p {
             font-size: 18px;
-            color: #333;
+            color: inherit; /* 继承body的字体颜色 */
         }
 
+        /* 分割线样式 */
         hr {
             width: 90%;
             max-width: 1200px;
             border: none;
-            border-top: 2px solid #ddd;
+            border-top: 2px solid #444; /* 夜间模式分割线颜色 */
             margin: 30px 0;
         }
 
+        /* 色卡展示区域样式 */
+        #color-palette {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        /* 色卡块样式 */
+        .color-swatch {
+            width: 150px;
+            height: 150px;
+            margin: 10px;
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: #2c2c2c; /* 默认色块背景色 */
+        }
+
+        /* 色卡块悬停效果 */
+        .color-swatch:hover {
+            transform: scale(1.05);
+        }
+
+        /* 色卡代码显示样式 */
+        .color-code {
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
+            font-size: 16px;
+            padding-bottom: 10px;
+        }
+
         /* 夜间模式样式 */
-        body.night-mode {
-            background-color: #121212;
-            color: #e0e0e0;
+        .night-mode {
+            background-color: #121212; /* 夜间模式背景色 */
+            color: #e0e0e0; /* 夜间模式字体颜色 */
         }
 
-        .container.night-mode {
-            background-color: #1e1e1e;
-            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.05);
+        .night-mode .container, 
+        .night-mode .palette-container {
+            background-color: #1e1e1e; /* 夜间模式容器背景色 */
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.05); /* 夜间模式阴影 */
         }
 
-        .color-section h2, p {
-            color: #e0e0e0;
+        .night-mode input[type="text"],
+        .night-mode input[type="color"],
+        .night-mode input[type="file"] {
+            border-color: #555; /* 夜间模式输入框边框色 */
+            background-color: #2c2c2c; /* 夜间模式输入框背景色 */
+            color: #e0e0e0; /* 夜间模式输入框字体色 */
         }
 
-        input.night-mode, input[type="file"].night-mode {
-            border-color: #555;
-            background-color: #2c2c2c;
-            color: #e0e0e0;
+        .night-mode .color-display {
+            border-color: #555; /* 夜间模式颜色显示边框色 */
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.1); /* 夜间模式颜色显示阴影 */
+            background-color: #2c2c2c; /* 夜间模式颜色显示背景色 */
         }
 
-        input.night-mode:focus {
-            border-color: #bb86fc;
-            box-shadow: 0 0 5px rgba(187, 134, 252, 0.5);
+        .night-mode button {
+            background-color: #bb86fc; /* 夜间模式按钮颜色 */
         }
 
-        .color-display.night-mode {
-            border-color: #555;
-            box-shadow: inset 0 0 5px rgba(255,255,255,0.1);
+        .night-mode button:hover {
+            background-color: #9b59b6; /* 夜间模式按钮悬停颜色 */
         }
 
-        button.night-mode {
-            background-color: #bb86fc;
+        /* 日间模式样式 */
+        .day-mode {
+            background-color: #f0f4f8; /* 日间模式背景色 */
+            color: #333; /* 日间模式字体颜色 */
         }
 
-        button.night-mode:hover {
-            background-color: #9b59b6;
+        .day-mode .container, 
+        .day-mode .palette-container {
+            background-color: #ffffff; /* 日间模式容器背景色 */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* 日间模式阴影 */
+        }
+
+        .day-mode input[type="text"],
+        .day-mode input[type="color"],
+        .day-mode input[type="file"] {
+            border-color: #ccc; /* 日间模式输入框边框色 */
+            background-color: #ffffff; /* 日间模式输入框背景色 */
+            color: #333; /* 日间模式输入框字体色 */
+        }
+
+        .day-mode .color-display {
+            border-color: #ccc; /* 日间模式颜色显示边框色 */
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.1); /* 日间模式颜色显示阴影 */
+            background-color: #ffffff; /* 日间模式颜色显示背景色 */
+        }
+
+        .day-mode button {
+            background-color: #4B0082; /* 日间模式按钮颜色 */
+        }
+
+        .day-mode button:hover {
+            background-color: #320255; /* 日间模式按钮悬停颜色 */
         }
 
         /* 图片预览样式 */
@@ -181,13 +288,32 @@
             transition: transform 0.3s;
         }
 
+        /* 图片预览悬停效果 */
         #imagePreview:hover {
             transform: scale(1.02);
         }
 
-        /* 响应式设计调整 */
+        /* 色卡生成按钮样式 */
+        #generate-btn, #random-generate-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #bb86fc; /* 夜间模式按钮颜色 */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        /* 色卡生成按钮悬停效果 */
+        #generate-btn:hover, #random-generate-btn:hover {
+            background-color: #9b59b6; /* 夜间模式按钮悬停颜色 */
+        }
+
+        /* 响应式设计 */
         @media (max-width: 768px) {
-            .container {
+            .container, .palette-container {
                 flex-direction: column;
                 align-items: center;
             }
@@ -201,112 +327,176 @@
                 position: static;
                 margin-bottom: 20px;
             }
+
+            .palette-top {
+                flex-direction: column; /* 小屏幕下垂直排列 */
+            }
+
+            .palette-container {
+                padding: 20px;
+            }
         }
     </style>
 </head>
-<body>
-    <button onclick="goHome()">返回主页</button>
-    <button id="toggleButton" onclick="toggleNightMode()">🌙 切换夜间模式</button> <!-- 切换按钮 -->
-    <h1>🎨 取色器</h1> <!-- 主标题 -->
-    <div class="container"> <!-- 容器 -->
-        <div class="color-section"> <!-- HEX转RGB部分 -->
-            <h2>🔄 HEX 转 RGB</h2> <!-- 子标题 -->
-            <input type="text" id="hexInput" placeholder="输入 HEX 颜色" onfocus="addHash(this)" /> <!-- 输入框 -->
-            <button onclick="convertHexToRgb()">转换</button> <!-- 转换按钮 -->
-            <div class="color-display" id="colorDisplayHex"></div> <!-- 颜色显示区域 -->
-            <p id="resultHex">RGB: -</p> <!-- 结果文本 -->
+<body class="night-mode"> <!-- 默认启用夜间模式 -->
+
+    <!-- 夜间模式切换按钮 -->
+    <button id="toggleButton" onclick="toggleNightMode()">☀️ 切换日间模式</button>
+    
+    <!-- 主标题 -->
+    <h1>🎨 综合取色器</h1>
+    
+    <!-- 主功能容器 -->
+    <div class="container">
+        <!-- HEX转RGB部分 -->
+        <div class="color-section">
+            <h2>🔄 HEX 转 RGB</h2>
+            <p>输入 HEX 值 (例如，#FF00FF):</p>
+            <input type="text" id="hexInput" placeholder="输入 HEX 值" onfocus="addHash(this)" />
+            <button onclick="convertHexToRgb()">转换</button>
+            <div class="color-display" id="colorDisplayHex"></div>
+            <p id="resultHex">RGB: -</p>
         </div>
-        <div class="color-section"> <!-- RGB转HEX部分 -->
-            <h2>🔄 RGB 转 HEX</h2> <!-- 子标题 -->
-            <p>输入 RGB 值 (例如，255, 0, 0):</p> <!-- 说明文本 -->
-            <input type="text" id="rgbInput" placeholder="输入 RGB 颜色" onfocus="addComma(this)" /> <!-- 输入框 -->
-            <button onclick="convertRgbToHex()">转换</button> <!-- 转换按钮 -->
-            <div class="color-display" id="colorDisplayRgb"></div> <!-- 颜色显示区域 -->
-            <p id="resultRgb">HEX: -</p> <!-- 结果文本 -->
+        
+        <!-- RGB转HEX部分 -->
+        <div class="color-section">
+            <h2>🔄 RGB 转 HEX</h2>
+            <p>输入 RGB 值 (例如，255, 0, 255):</p>
+            <input type="text" id="rgbInput" placeholder="输入 RGB 值 !!注意请输入英文逗号" onfocus="addComma(this)" />
+            <button onclick="convertRgbToHex()">转换</button>
+            <div class="color-display" id="colorDisplayRgb"></div>
+            <p id="resultRgb">HEX: -</p>
         </div>
-        <div class="color-section"> <!-- 动态取色器部分 -->
-            <h2>🎨 动态取色器</h2> <!-- 子标题 -->
-            <input type="color" id="colorPicker" onchange="updateColor(this.value)" /> <!-- 颜色选择器 -->
-            <div class="color-display" id="colorDisplayPicker"></div> <!-- 颜色显示区域 -->
-            <p id="resultPicker">RGB: -</p> <!-- 结果文本 -->
+        
+        <!-- 动态取色器部分 -->
+        <div class="color-section">
+            <h2>🎨 动态取色器</h2>
+            <input type="color" id="colorPicker" onchange="updateColor(this.value)" />
+            <div class="color-display" id="colorDisplayPicker"></div>
+            <p id="resultPicker">RGB: -</p>
         </div>
     </div>
-    <hr> <!-- 水平线 -->
-    <h2>🖼️ 图片预览</h2> <!-- 子标题 -->
-    <input type="file" id="fileInput" accept="image/*" onchange="previewImage()" /> <!-- 文件输入框 -->
-    <div style="text-align: center;"> <!-- 图片预览区域 -->
-        <img id="imagePreview" alt="图片预览" /> <!-- 图片元素 -->
+    
+    <!-- 新增的色卡生成与展示容器 -->
+    <div class="palette-container">
+        <!-- 色卡生成顶部区域，包含基于图片的生成和随机生成 -->
+        <div class="palette-top">
+            <!-- 基于图片的色卡生成部分 -->
+            <div class="color-section">
+                <h2>🖼️ 基于图片的色卡生成</h2>
+                <input type="file" id="fileInput" accept="image/*" onchange="previewImage()" />
+                <img id="imagePreview" alt="图片预览" />
+                <button id="generate-btn">生成色卡</button>
+            </div>
+    
+            <!-- 随机生成色卡按钮 -->
+            <div class="color-section">
+                <h2>🎲 随机生成色卡</h2>
+                <button id="random-generate-btn" onclick="generateRandomColorPalette()">随机生成色卡</button>
+            </div>
+        </div>
+
+        <!-- 色卡展示区域，置于顶部区域下方 -->
+        <div class="color-section" style="width: 100%;">
+            <h2>🎨 色卡展示</h2>
+            <div id="color-palette"></div>
+        </div>
     </div>
+    
+    <hr>
+    
+    <!-- 引入 Color Thief 库，通过 CDN -->
+    <script src="color-thief.umd.js"></script>
+    
     <script>
-        // 在输入框获得焦点时添加 #
+        /* 
+            在输入框获得焦点时添加 # 号
+            如果输入框为空，自动添加 # 号
+        */
         function addHash(input) {
             if (input.value.length === 0) {
-                input.value = '#'; // 如果输入为空，则添加#
+                input.value = '#'; // 如果输入为空，则添加 #
             }
         }
 
-        // 在RGB输入框获得焦点时添加初始值
+        /* 
+            在RGB输入框获得焦点时添加默认值
+            如果输入框为空，自动填充 '255, 0, 255'
+        */
         function addComma(input) {
             if (input.value.trim() === '') {
-                input.value = '0, 0, 0'; // 默认值
+                input.value = '255, 0, 255'; // 默认值
             }
         }
 
-        // 将HEX颜色转换为RGB颜色
+        /* 
+            将 HEX 颜色转换为 RGB 颜色
+            获取输入的 HEX 值，转换为 RGB，并显示结果
+        */
         function convertHexToRgb() {
             let hex = document.getElementById('hexInput').value.trim();
-            if (!hex.startsWith('#')) { // 如果没有#
-                hex = '#' + hex; // 添加#
+            if (!hex.startsWith('#')) { // 如果没有 # 号，则添加
+                hex = '#' + hex;
             }
-            const hexValue = hex.slice(1); // 去掉#
-            if (hexValue.length !== 6 || !/^([0-9A-Fa-f]{6})$/.test(hexValue)) { // 检查格式
+            const hexValue = hex.slice(1); // 去掉 #
+            // 检查 HEX 格式是否正确
+            if (hexValue.length !== 6 || !/^([0-9A-Fa-f]{6})$/.test(hexValue)) {
                 alert("无效的 HEX 颜色格式");
-                return; // 返回
+                return;
             }
-            // 解析RGB值
+            // 解析 RGB 值
             const r = parseInt(hexValue.slice(0, 2), 16);
             const g = parseInt(hexValue.slice(2, 4), 16);
             const b = parseInt(hexValue.slice(4, 6), 16);
             // 显示结果
-            document.getElementById('resultHex').innerText = `RGB: (${r}, ${g}, ${b})`;
+            document.getElementById('resultHex').innerText = `RGB: (${r},${g}, ${b})`;
             document.getElementById('colorDisplayHex').style.backgroundColor = hex; // 更新颜色显示区域
-            document.getElementById('colorDisplayHex').classList.remove('night-mode');
+            // 根据当前主题调整样式
             toggleNightModeIfNeeded('colorDisplayHex', hex);
         }
 
-        // 将RGB颜色转换为HEX颜色
+        /* 
+            将 RGB 颜色转换为 HEX 颜色
+            获取输入的 RGB 值，转换为 HEX，并显示结果
+        */
         function convertRgbToHex() {
             const rgbInput = document.getElementById('rgbInput').value.trim();
             const rgbValues = rgbInput.split(',').map(item => parseInt(item.trim())); // 分割并转换为数字
-            // 检查RGB值是否有效
+            // 检查 RGB 值是否有效
             if (rgbValues.length !== 3 || rgbValues.some(value => isNaN(value) || value < 0 || value > 255)) {
                 alert("无效的 RGB 颜色值");
-                return; // 返回
+                return;
             }
             const [r, g, b] = rgbValues;
-            const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`; // 转换为HEX
+            const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`; // 转换为 HEX
             // 显示结果
             document.getElementById('resultRgb').innerText = `HEX: ${hex}`;
             document.getElementById('colorDisplayRgb').style.backgroundColor = hex; // 更新颜色显示区域
-            document.getElementById('colorDisplayRgb').classList.remove('night-mode');
+            // 根据当前主题调整样式
             toggleNightModeIfNeeded('colorDisplayRgb', hex);
         }
 
-        // 更新动态取色器的显示颜色
+        /* 
+            更新动态取色器的显示颜色
+            监听颜色选择器的变化，显示选择的颜色及其 RGB 值
+        */
         function updateColor(color) {
             const hex = color.toUpperCase();
             document.getElementById('colorDisplayPicker').style.backgroundColor = hex; // 更新显示区域
-            // 解析RGB值
+            // 解析 RGB 值
             const r = parseInt(hex.slice(1, 3), 16);
             const g = parseInt(hex.slice(3, 5), 16);
             const b = parseInt(hex.slice(5, 7), 16);
-            // 显示RGB结果
-            document.getElementById('resultPicker').innerText = `RGB: (${r}, ${g}, ${b})`;
-            document.getElementById('colorDisplayPicker').classList.remove('night-mode');
+            // 显示 RGB 结果
+            document.getElementById('resultPicker').innerText = `RGB: (${r},${g}, ${b})`;
+            // 根据当前主题调整样式
             toggleNightModeIfNeeded('colorDisplayPicker', hex);
         }
 
-        // 预览选择的图片
+        /* 
+            预览选择的图片
+            用户上传图片后，显示图片预览
+        */
         function previewImage() {
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
@@ -317,70 +507,178 @@
                     imagePreview.src = e.target.result; // 设置图片源
                     imagePreview.style.display = 'block'; // 显示图片
                 }
-                reader.readAsDataURL(file); // 读取文件为Data URL
+                reader.readAsDataURL(file); // 读取文件为 Data URL
             }
         }
 
-        // 切换夜间模式
+        /* 
+            切换夜间模式和日间模式
+            切换body的class，改变主题颜色，并更新按钮文本
+        */
         function toggleNightMode() {
             const body = document.body;
-            const container = document.querySelector('.container');
-            const inputs = document.querySelectorAll('input');
-            const colorDisplays = document.querySelectorAll('.color-display');
-            const buttons = document.querySelectorAll('button');
-
-            // 切换类名
-            body.classList.toggle('night-mode');
-            container.classList.toggle('night-mode');
-
-            inputs.forEach(input => {
-                input.classList.toggle('night-mode'); // 切换输入框的夜间模式样式
-            });
-
-            colorDisplays.forEach(display => {
-                display.classList.toggle('night-mode'); // 切换颜色显示区域的夜间模式样式
-            });
-
-            buttons.forEach(button => {
-                button.classList.toggle('night-mode'); // 切换按钮的夜间模式样式
-            });
-
-            // 切换图标
             const toggleBtn = document.getElementById('toggleButton');
+
             if (body.classList.contains('night-mode')) {
-                toggleBtn.innerText = '☀️ 切换日间模式';
-            } else {
+                body.classList.remove('night-mode');
+                body.classList.add('day-mode');
                 toggleBtn.innerText = '🌙 切换夜间模式';
+            } else {
+                body.classList.remove('day-mode');
+                body.classList.add('night-mode');
+                toggleBtn.innerText = '☀️ 切换日间模式';
             }
         }
 
-        // 根据当前主题调整颜色显示区域的样式
+        /* 
+            根据当前主题调整颜色显示区域的样式
+            确保颜色显示区域的边框颜色与当前主题匹配
+        */
         function toggleNightModeIfNeeded(elementId, color) {
             const body = document.body;
             const element = document.getElementById(elementId);
             if (body.classList.contains('night-mode')) {
-                // 如果是夜间模式，调整颜色显示区域的边框
+                // 夜间模式下使用默认样式
                 element.style.borderColor = '#555';
             } else {
+                // 日间模式下使用默认样式
                 element.style.borderColor = '#ccc';
             }
         }
 
-        // 监听模式切换，自动调整已有颜色显示区域的样式
-        window.addEventListener('load', () => {
-            const colorDisplays = document.querySelectorAll('.color-display');
-            colorDisplays.forEach(display => {
-                const color = display.style.backgroundColor;
-                if (color) {
-                    toggleNightModeIfNeeded(display.id, color);
-                }
-            });
-        });
+        // 初始化 Color Thief 实例，用于从图片中提取颜色
+        const colorThief = new ColorThief();
 
-	// 定义返回主页函数
-        function goHome() {
-            window.location.href = "/";
+        /* 
+            将 RGB 转为 HEX
+            辅助函数，将RGB值转换为HEX字符串
+        */
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
         }
+
+        /* 
+            复制文本到剪贴板
+            使用Clipboard API将文本复制到用户剪贴板
+        */
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`已复制颜色代码: ${text}`);
+            }, () => {
+                alert('复制失败，请手动复制颜色代码。');
+            });
+        }
+
+        /* 
+            生成随机 HEX 颜色
+            返回一个随机生成的HEX颜色代码
+        */
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        /* 
+            显示色卡
+            将给定的颜色数组显示在色卡展示区域，每个色卡可点击复制颜色代码
+        */
+        function displayColorPalette(palette) {
+            const colorPalette = document.getElementById('color-palette');
+            colorPalette.innerHTML = ''; // 清空现有色卡
+            palette.forEach(color => {
+                const hexColor = rgbToHex(color[0], color[1], color[2]);
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = hexColor;
+
+                const colorCode = document.createElement('div');
+                colorCode.className = 'color-code';
+                colorCode.textContent = hexColor;
+
+                swatch.appendChild(colorCode);
+                colorPalette.appendChild(swatch);
+
+                // 点击色块复制颜色代码
+                swatch.addEventListener('click', () => {
+                    copyToClipboard(hexColor);
+                });
+            });
+        }
+
+        /* 
+            生成色卡
+            从上传的图片中提取主色调，显示在色卡展示区域
+        */
+        function generateColorPaletteFromImage() {
+            const imagePreview = document.getElementById('imagePreview');
+            if (imagePreview.src === '') {
+                alert("请先上传一张图片。");
+                return;
+            }
+
+            // 确保图片已加载
+            if (!imagePreview.complete) {
+                alert("图片尚未加载完毕，请稍后再试。");
+                return;
+            }
+
+            try {
+                const palette = colorThief.getPalette(imagePreview, 5); // 提取5种颜色
+                displayColorPalette(palette);
+            } catch (error) {
+                console.error(error);
+                alert("无法提取颜色，请尝试其他图片。");
+            }
+        }
+
+        /* 
+            生成随机色卡
+            生成指定数量的随机颜色，并显示在色卡展示区域
+        */
+        function generateRandomColorPalette() {
+            const colorPalette = document.getElementById('color-palette');
+            colorPalette.innerHTML = ''; // 清空现有色卡
+            const numberOfColors = 5; // 生成颜色数量
+
+            for (let i = 0; i < numberOfColors; i++) {
+                const color = getRandomColor();
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = color;
+
+                const colorCode = document.createElement('div');
+                colorCode.className = 'color-code';
+                colorCode.textContent = color;
+
+                swatch.appendChild(colorCode);
+                colorPalette.appendChild(swatch);
+
+                // 点击色块复制颜色代码
+                swatch.addEventListener('click', () => {
+                    copyToClipboard(color);
+                });
+            }
+        }
+
+        /* 
+            点击按钮生成色卡
+            为色卡生成按钮绑定点击事件
+        */
+        document.getElementById('generate-btn').addEventListener('click', generateColorPaletteFromImage);
+        document.getElementById('random-generate-btn').addEventListener('click', generateRandomColorPalette);
+
+        /* 
+            页面加载时初始生成随机色卡
+            用户打开页面时，默认展示随机色卡
+        */
+        window.onload = generateRandomColorPalette;
     </script>
 </body>
 </html>

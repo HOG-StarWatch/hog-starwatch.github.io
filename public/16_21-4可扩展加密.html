@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>自定义编码与解密工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background-color: #fff;
+            padding: 25px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        label {
+            display: inline-block;
+            width: 250px;
+            vertical-align: top;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 5px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            resize: vertical;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            margin-right: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            margin-top: 5px;
+        }
+        select {
+            padding: 5px;
+            margin-left: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .button-group {
+            margin-top: 10px;
+        }
+        .copy-button {
+            background-color: #008CBA;
+        }
+        .copy-button:hover {
+            background-color: #007bb5;
+        }
+        .info {
+            color: #555;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>自定义编码与解密工具</h1>
+
+        <!-- 导入预设值部分 -->
+        <div class="section">
+            <h2>导入预设值</h2>
+            <label for="presetSelect">选择预设：</label>
+            <select id="presetSelect">
+                <option value="">-- 选择预设 --</option>
+            </select>
+            <button onclick="applyPreset()">应用预设</button>
+        </div>
+
+        <!-- 设置密钥字符部分 -->
+        <div class="section">
+            <h2>设置密钥字符</h2>
+            <label for="keys">请输入四个唯一字符</label>
+            <input type="text" id="keys" maxlength="4" value="HOG~">
+            <div id="keyError" class="error"></div>
+        </div>
+        
+        <!-- 加密文本部分 -->
+        <div class="section">
+            <h2>加密文本</h2>
+            <label for="inputText">输入要加密的文本：</label><br>
+            <textarea id="inputText" placeholder="在此输入需要加密的文本"></textarea><br>
+            <label>
+                <input type="checkbox" id="useWideUnicode" checked>
+                支持更广泛的 Unicode 字符（默认选择）
+            </label><br>
+            <div class="button-group">
+                <button onclick="encrypt()">加密</button>
+                <button onclick="clearEncrypt()">清空</button>
+                <button class="copy-button" onclick="copyText('encryptedText')">复制</button>
+            </div>
+            <h3>加密结果：</h3>
+            <textarea id="encryptedText" readonly></textarea>
+        </div>
+
+        <!-- 解密文本部分 -->
+        <div class="section">
+            <div id="decryptError" class="error"></div>
+            <h2>解密文本</h2>
+            <label for="inputEncryptedText">输入要解密的文本：</label><br>
+            <textarea id="inputEncryptedText" placeholder="在此输入已加密的文本"></textarea><br>
+            <label>
+                <input type="checkbox" id="useWideUnicodeDecrypt" checked>
+                支持更广泛的 Unicode 字符（默认选择）
+            </label><br>
+            <div class="button-group">
+                <button onclick="decrypt()">解密</button>
+                <button onclick="clearDecrypt()">清空</button>
+                <button class="copy-button" onclick="copyText('decryptedText')">复制</button>
+            </div>
+            <h3>解密结果：</h3>
+            <textarea id="decryptedText" readonly></textarea>
+        </div>
+
+        <div class="section">
+            <p class="info">
+                <strong>VersionDetail</strong> 测试V2-正式第一版
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 预设密钥集合
+        const presets = {
+            "Default": "HOG~",
+            "字母预设": "ABCD",
+            "数字预设": "1234",
+            "字母预设小写": "abcd",
+            "符号预设": "!@#$",
+            "虚假的佛说": "嘛呢叭咪",
+            "萌物预设": "喵嗷呜~",
+        };
+
+        function initializePresets() {
+            const presetSelect = document.getElementById('presetSelect');
+            for (const presetName in presets) {
+                const option = document.createElement('option');
+                option.value = presetName;
+                option.textContent = presetName;
+                presetSelect.appendChild(option);
+            }
+        }
+
+        function applyPreset() {
+            const selectedPreset = document.getElementById('presetSelect').value;
+            if (selectedPreset === "") {
+                displayError('decryptError', "请选择一个预设");
+                return;
+            }
+            const presetKeys = presets[selectedPreset];
+            const keysInput = document.getElementById('keys');
+            keysInput.value = presetKeys;
+            document.getElementById('keyError').textContent = "";
+            document.getElementById('decryptError').textContent = "";
+        }
+
+        function getKeyMap() {
+            const keys = document.getElementById('keys').value;
+            const errorDiv = document.getElementById('keyError');
+            errorDiv.textContent = "";
+
+            if (keys.length !== 4) {
+                errorDiv.textContent = "请输入恰好四个唯一的字符作为密钥。";
+                return null;
+            }
+
+            const uniqueKeys = new Set(keys);
+            if (uniqueKeys.size < 4) {
+                errorDiv.textContent = "四个密钥字符必须唯一。";
+                return null;
+            }
+
+            const bitToKey = {
+                '00': keys.charAt(0),
+                '01': keys.charAt(1),
+                '10': keys.charAt(2),
+                '11': keys.charAt(3)
+            };
+
+            const keyToBit = {};
+            for (const bits in bitToKey) {
+                const key = bitToKey[bits];
+                keyToBit[key] = bits;
+            }
+
+            return { bitToKey, keyToBit };
+        }
+
+        function displayError(elementId, message) {
+            const errorDiv = document.getElementById(elementId);
+            errorDiv.textContent = message;
+        }
+
+        function clearEncrypt() {
+            document.getElementById('inputText').value = "";
+            document.getElementById('encryptedText').value = "";
+            document.getElementById('decryptError').textContent = "";
+        }
+
+        function clearDecrypt() {
+            document.getElementById('inputEncryptedText').value = "";
+            document.getElementById('decryptedText').value = "";
+            document.getElementById('decryptError').textContent = "";
+        }
+
+        async function copyText(elementId) {
+            const textArea = document.getElementById(elementId);
+            const text = textArea.value;
+            if (!navigator.clipboard) {
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert(`"${elementId === 'encryptedText' ? '加密' : '解密'}结果" 已复制到剪贴板！`);
+                } catch (err) {
+                    alert('复制失败，请手动复制。');
+                }
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(text);
+                alert(`"${elementId === 'encryptedText' ? '加密' : '解密'}结果" 已复制到剪贴板！`);
+            } catch (err) {
+                alert('复制失败，请手动复制。');
+            }
+        }
+
+        function encrypt() {
+            const maps = getKeyMap();
+            if (!maps) return;
+
+            const { bitToKey } = maps;
+            const input = document.getElementById('inputText').value;
+            let encrypted = '';
+
+            // 将密钥信息添加到开头
+            encrypted += document.getElementById('keys').value + "|";
+
+            for (let i = 0; i < input.length; i++) {
+                const codePoint = input.codePointAt(i);
+                if (codePoint > 0xFFFF) {
+                    i++;
+                }
+                let binary = codePoint.toString(2);
+                if (document.getElementById('useWideUnicode').checked) {
+                    binary = binary.padStart(21, '0');
+                } else {
+                    binary = binary.padStart(16, '0');
+                }
+
+                binary = binary.padStart(Math.ceil(binary.length / 2) * 2, '0');
+                for (let j = 0; j < binary.length; j += 2) {
+                    const twoBits = binary.substr(j, 2);
+                    encrypted += bitToKey[twoBits];
+                }
+            }
+
+            const encryptedTextArea = document.getElementById('encryptedText');
+            encryptedTextArea.value = encrypted;
+            encryptedTextArea.select();
+        }
+
+        function decrypt() {
+            const encrypted = document.getElementById('inputEncryptedText').value;
+            const keyPart = encrypted.split("|")[0]; // 提取密钥部分
+            const encryptedContent = encrypted.substring(keyPart.length + 1); // 提取加密内容
+
+            // 设置密钥
+            document.getElementById('keys').value = keyPart;
+
+            const maps = getKeyMap();
+            if (!maps) return;
+
+            const { keyToBit } = maps;
+            let bitsPerChar = document.getElementById('useWideUnicodeDecrypt').checked ? 22 : 16;
+
+            document.getElementById('decryptError').textContent = "";
+
+            if (encryptedContent.length % (bitsPerChar / 2) !== 0) {
+                displayError('decryptError', `加密文本长度必须是${bitsPerChar / 2}的倍数（每个字符对应${bitsPerChar / 2}个密钥字符）。`);
+                return;
+            }
+
+            let decrypted = '';
+
+            for (let i = 0; i < encryptedContent.length; i += bitsPerChar / 2) {
+                let bits = '';
+                const chunk = encryptedContent.substr(i, bitsPerChar / 2);
+                for (let j = 0; j < bitsPerChar / 2; j++) {
+                    const keyChar = chunk[j];
+                    if (!(keyChar in keyToBit)) {
+                        displayError('decryptError', `解密失败：无效的密钥字符 "${keyChar}"。`);
+                        return;
+                    }
+                    bits += keyToBit[keyChar];
+                }
+                bits = bits.replace(/^0+/, '');
+                const charCode = parseInt(bits, 2);
+                if (isNaN(charCode) || charCode > 0x10FFFF) {
+                    displayError('decryptError', `解密失败：无效的代码点 "${bits}"。`);
+                    return;
+                }
+                decrypted += String.fromCodePoint(charCode);
+            }
+
+            const decryptedTextArea = document.getElementById('decryptedText');
+            decryptedTextArea.value = decrypted;
+            decryptedTextArea.select();
+        }
+
+        window.onload = initializePresets;
+    </script>
+</body>
+</html>

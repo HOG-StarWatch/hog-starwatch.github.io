@@ -15,6 +15,7 @@ export default [
       items: [
         { text: '零宽隐写', link: '零宽隐写.html', target: '_self', },
         { text: '加密解密', link: '加密解密.html', target: '_self', },
+        { text: '四位可扩展加密', link: '16_21-4可扩展加密.html', target: '_self', },
         { text: 'HTML在线运行', link: 'htmlrunner.html', target: '_self', },
         { text: '颜色格式转换&取色', link: '颜色格式转换&取色.html', target: '_self', },
         { text: '字符串计数工具', link: '字符串计数工具.html', target: '_self', },
