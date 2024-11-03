@@ -13,12 +13,21 @@ export default [
     },
     { text: '小工具',
       items: [
-        { text: '零宽隐写', link: '零宽隐写.html', target: '_self', },
-        { text: '加密解密', link: '加密解密.html', target: '_self', },
-        { text: '四位可扩展加密', link: '16_21-4可扩展加密.html', target: '_self', },
-        { text: 'HTML在线运行', link: 'htmlrunner.html', target: '_self', },
         { text: '颜色格式转换&取色', link: '颜色格式转换&取色.html', target: '_self', },
-        { text: '字符串计数工具', link: '字符串计数工具.html', target: '_self', },
+        { text: '字符串处理',
+          items: [
+            { text: '零宽隐写', link: '零宽隐写.html', target: '_self', },
+            { text: '加密解密', link: '加密解密.html', target: '_self', },
+            { text: '四位可扩展加密', link: '16_21-4可扩展加密.html', target: '_self', },
+            { text: '字符串计数工具', link: '字符串计数工具.html', target: '_self', },
+          ],
+        },
+        { text: 'HTML相关',
+          items: [
+            { text: 'HTML在线运行', link: 'htmlrunner.html', target: '_self', },
+            { text: '脚本执行器', link: '脚本执行器.html', target: '_self', },
+          ],
+        },
         { text: 'Uncompressed',
           items: [
             { text: '文件多合一', link: 'Zip.html', target: '_self', },
@@ -37,4 +46,11 @@ export default [
         { text: '猜数字', link: '猜数字.html', target: '_self', },
       ],
     },
+    { text: '其他',
+      items: [
+        { text: 'RPGMaker', link: '' },
+        { text: 'RPGsave修改', link: '/RPGMaker/RPGsave修改.html', target: '_self', },
+      ],
+    },
+    
 ];

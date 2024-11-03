@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脚本执行器</title>
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #000000; /* 深色背景 */
+    margin: 0;
+    padding: 20px;
+    color: #e0e0e0; /* 浅色文本 */
+}
+h1 {
+    color: #e0e0e0; /* 浅色标题 */
+}
+label {
+    font-weight: bold;
+    color: #e0e0e0; /* 浅色文本 */
+}
+input, select, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #6a1b9a; /* 紫色边框 */
+    border-radius: 5px;
+    background-color: #1b1b1b; /* 输入框背景 */
+    color: #e0e0e0; /* 浅色文本 */
+}
+button {
+    background-color: #6a1b9a; /* 紫色按钮 */
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #4a0072; /* 深紫色悬停效果 */
+}
+.container {
+    max-width: 600px;
+    margin: auto;
+    background: #1b1b1b; /* 容器背景 */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* 深色阴影 */
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+    <h1>打开网址并执行Tampermonkey脚本</h1>
+    
+    <label for="urlInput">输入网址:</label>
+    <input type="text" id="urlInput" placeholder="https://example.com" required>
+    <br><br>
+    
+    <label for="presetScripts">选择预设脚本:</label>
+    <select id="presetScripts">
+        <option value="">-- 选择预设脚本 --</option>
+        <option value=
+
+"(function() {
+    const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'saved_page.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+})();"
+>下载打开的网页</option>
+
+        <option value=
+"(function() {
+    // steam好像封禁了跨域注入 如果从此打开无效可将此框中脚本复制至打开网页的F12控制台中运行
+    // 设置地址：https://store.steampowered.com/account/preferences
+    'use strict';
+    var doms = document.querySelectorAll('.preference_row.account_setting_not_customer_facing');
+    // 显示选项
+    doms.forEach(function(dom) {
+        dom.classList.remove('account_setting_not_customer_facing');
+    });
+ 
+    // 添加标签内容
+    doms[0].getElementsByTagName(&quot;label&quot;)[0].innerText = '频繁的裸露画面或色情内容 '
+    doms[0].getElementsByTagName(&quot;span&quot;)[0].innerHTML ='\n主要展示裸露画面或色情主题的游戏或内容。勾选此复选框即表示您确认自己已至少年满 18 周岁。<br>\n<a href=&quot;javascript:ViewTitlesWithDescriptors( 4 );&quot;>查看示例产品(国区无法查看示例)\t</a>\n'
+ 
+    doms[1].getElementsByTagName(&quot;label&quot;)[0].innerText = '仅限成人的色情内容'
+    doms[1].getElementsByTagName(&quot;span&quot;)[0].innerHTML = '\n包含仅针对成人受众的性意味明显或露骨的游戏或内容。勾选此复选框即表示您确认自己已至少年满 18 周岁。<br>\n<a href=&quot;javascript:ViewTitlesWithDescriptors( 3 );&quot;>查看示例产品(国区无法查看示例)\t</a>\n'
+ 
+    // 增加一个小提示
+    document.querySelectorAll('div.hspacer')[0].innerText = &quot;脚本提示：更改最后两项设置后再次进入不会显示开启属正常情况&quot;;
+})();"
+>Steam偏好显示隐藏</option>
+
+        <option value=
+"// 预设脚本内容"
+>预设脚本</option>
+
+    </select>
+    <br><br>
+    
+    <label for="scriptInput">输入Tampermonkey脚本:</label>
+    <textarea id="scriptInput" rows="10" cols="50" placeholder="// 在这里输入你的脚本" required></textarea>
+    <br><br>
+    
+    <button id="openButton">确定</button>
+    </div>
+
+    <script>
+        // 当选择预设脚本时，将其填充到脚本输入框中
+        document.getElementById('presetScripts').addEventListener('change', function() {
+            const selectedScript = this.value;
+            document.getElementById('scriptInput').value = selectedScript;
+        });
+
+        document.getElementById('openButton').addEventListener('click', function() {
+            const url = document.getElementById('urlInput').value;
+            const script = document.getElementById('scriptInput').value;
+
+            if (url) {
+                const newWindow = window.open(url);
+
+                newWindow.onload = function() {
+                    // 使用 setTimeout 确保脚本在页面加载后执行
+                    newWindow.setTimeout(() => {
+                        newWindow.eval(script);
+                    }, 0);
+                };
+            } else {
+                alert('请输入有效的网址');
+            }
+        });
+    </script>
+</body>
+</html>
