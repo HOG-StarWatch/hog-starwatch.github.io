@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码生成器</title>
+    <script src="jquery.min.js"></script>
+    <script src="jquery.qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #121212; /* 深色背景 */
+            margin: 0;
+            color: #ffffff; /* 明亮的文本颜色 */
+        }
+        h1 {
+            margin: 20px 0;
+            color: #ffffff; /* 标题颜色 */
+        }
+        #container {
+            background-color: #1e1e1e; /* 主内容背景色 */
+            padding: 20px;
+            border-radius: 10px; /* 圆角边框 */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* 阴影效果 */
+            max-width: 400px; /* 最大宽度 */
+            margin: auto; /* 自动居中 */
+        }
+        input {
+            padding: 10px;
+            margin: 5px 0; /* 输入间隔 */
+            width: calc(100% - 22px); /* 适应宽度 */
+            border: 1px solid #444; /* 边框样式 */
+            border-radius: 5px; /* 圆角边框 */
+            background-color: #333; /* 输入框背景色 */
+            color: #ffffff; /* 输入框文本颜色 */
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #6a0dad; /* 紫色按钮背景色 */
+            color: white; /* 字体颜色 */
+            border-radius: 5px; /* 圆角边框 */
+            cursor: pointer; /* 鼠标样式 */
+            margin: 10px 5px; /* 按钮间隔 */
+        }
+        button:hover {
+            background-color: #8352c9; /* 悬停效果 */
+        }
+        #qrcode {
+            margin-top: 20px;
+            display: inline-block; /* 更好的布局 */
+            border: 1px solid #444; /* 二维码边框 */
+            padding: 10px; /* 二维码区域内边距 */
+            background-color: #fff; /* 二维码背景色 */
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>二维码生成器</h1>
+        <input type="text" id="text-input" placeholder="输入内容" />
+        <p>Qrcode_color</p>
+        <input type="color" id="foreground-color" value="#000000" title="前景色" />
+        <p>Background_color</p>
+        <input type="color" id="background-color" value="#ffffff" title="背景色" />
+        <input type="number" id="size-input" placeholder="二维码大小（px）" value="128" min="20" />
+        <button id="generate-btn">生成二维码</button>
+        <button id="reset-btn">重置</button>
+        <div id="qrcode"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // 点击“生成二维码”按钮时的事件处理
+            $('#generate-btn').click(function() {
+                var text = $('#text-input').val(); // 获取输入的文本
+                var foregroundColor = $('#foreground-color').val(); // 获取前景色
+                var backgroundColor = $('#background-color').val(); // 获取背景色
+                var size = $('#size-input').val(); // 获取二维码大小
+
+                $('#qrcode').empty(); // 清空旧的二维码
+
+                if (text) {
+                    // 使用 jQuery.qrcode 方法生成二维码
+                    $('#qrcode').qrcode({
+                        text: text,
+                        width: size,
+                        height: size,
+                        background: backgroundColor,
+                        foreground: foregroundColor
+                    });
+                } else {
+                    alert("请输入内容"); // 提示输入内容
+                }
+            });
+
+            // 点击“重置”按钮时的事件处理
+            $('#reset-btn').click(function() {
+                $('#text-input').val(''); // 清空文本输入框
+                $('#qrcode').empty(); // 清空二维码
+                $('#foreground-color').val('#000000'); // 重置前景色
+                $('#background-color').val('#ffffff'); // 重置背景色
+                $('#size-input').val(128); // 重置二维码大小
+            });
+        });
+    </script>
+</body>
+</html>

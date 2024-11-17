@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片格式批量转换器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* 暗夜模式背景色 */
+            color: #e0e0e0; /* 文字颜色 */
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #canvas {
+            display: none; /* 隐藏 canvas 元素 */
+        }
+        .output-img {
+            margin: 10px;
+            max-width: 200px; /* 限制输出图片的最大宽度 */
+        }
+        .output-container {
+            display: flex;
+            flex-wrap: wrap; /* 允许换行 */
+            justify-content: center; /* 居中对齐 */
+        }
+        .img-wrapper {
+            margin: 10px;
+            text-align: center;
+        }
+        .download-link {
+            display: block;
+            margin-top: 5px;
+            text-decoration: none; /* 去掉下划线 */
+            color: #6200ea; /* 紫色下载链接 */
+        }
+        button {
+            background-color: #6200ea; /* 紫色按钮 */
+            color: white; /* 按钮文字颜色 */
+            border: none;
+            padding: 10px 20px; /* 按钮内边距 */
+            cursor: pointer; /* 鼠标指针样式 */
+            font-size: 16px; /* 字体大小 */
+            border-radius: 5px; /* 按钮圆角 */
+            transition: background-color 0.3s; /* 添加过渡效果 */
+        }
+        button:hover {
+            background-color: #3700b3; /* 按钮悬停时的颜色 */
+        }
+        select {
+            margin: 10px 0; /* 下拉选择框的外边距 */
+            padding: 5px; /* 内边距 */
+            background-color: #333; /* 下拉框背景色 */
+            color: #e0e0e0; /* 字体颜色 */
+            border: 1px solid #6200ea; /* 边框颜色 */
+            border-radius: 5px; /* 圆角 */
+        }
+    </style>
+</head>
+<body>
+    <h1>图片格式批量转换器</h1>
+    <input type="file" id="upload" accept="image/*" multiple>
+    <br/>
+    <select id="format">
+        <option value="image/png">PNG</option>
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/webp">WEBP</option>
+        <option value="image/bmp">BMP</option>
+        <option value="image/gif">GIF</option>
+        <option value="image/tiff">TIFF</option>
+    </select>
+    <button id="convert">转换格式</button>
+    <br/><br/>
+    <div class="output-container" id="output-container"></div>
+    <canvas id="canvas"></canvas>
+    <p>点击下载无效可拖拽图片保存</p>
+    <p>.bmp.git.tiff的成功率不高哦</p>
+
+    <script>
+        // 为转换按钮添加点击事件监听器
+        document.getElementById('convert').addEventListener('click', function() {
+            const fileInput = document.getElementById('upload');
+            const outputContainer = document.getElementById('output-container');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const format = document.getElementById('format').value;
+
+            // 清空输出容器
+            outputContainer.innerHTML = '';
+
+            // 检查是否上传了文件
+            if (fileInput.files.length === 0) {
+                alert('请先上传至少一张图片！');
+                return;
+            }
+
+            const files = Array.from(fileInput.files); // 转换为数组
+            const promises = files.map(file => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    const reader = new FileReader();
+
+                    // 当文件读取完成时，设置图片源
+                    reader.onload = function(event) {
+                        img.src = event.target.result;
+                    };
+
+                    reader.readAsDataURL(file); // 读取文件为 Data URL
+
+                    // 图片加载完成后的处理
+                    img.onload = function() {
+                        canvas.width = img.width; // 设置 canvas 宽度
+                        canvas.height = img.height; // 设置 canvas 高度
+                        ctx.drawImage(img, 0, 0); // 在 canvas 上绘制图片
+                        canvas.toBlob(function(blob) {
+                            if (!blob) {
+                                reject(new Error('Blob创建失败'));
+                                return;
+                            }
+                            const url = URL.createObjectURL(blob); // 创建 Blob URL
+                            const outputWrapper = document.createElement('div');
+                            outputWrapper.className = 'img-wrapper'; // 创建图片外包装
+
+                            const outputImg = document.createElement('img');
+                            outputImg.src = url; // 设置输出图片的源
+                            outputImg.className = 'output-img';
+
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = url;
+                            downloadLink.download = `converted_image_${file.name.split('.').slice(0, -1).join('.')}.${format.split('/')[1]}`;
+                            downloadLink.className = 'download-link';
+                            downloadLink.innerText = '下载'; // 下载链接文本
+
+                            outputWrapper.appendChild(outputImg); // 添加图片到输出包装
+                            outputWrapper.appendChild(downloadLink); // 添加下载链接到输出包装
+                            outputContainer.appendChild(outputWrapper); // 添加输出包装到容器
+
+                            outputImg.onload = function() {
+                                // 在图片加载后释放 URL 以节省内存
+                                URL.revokeObjectURL(url);
+                                resolve(); // 确保图片已完成处理
+                            };
+                        }, format);
+                    };
+
+                    // 图片加载错误的处理
+                    img.onerror = function() {
+                        reject(new Error('图片加载失败'));
+                    };
+                });
+            });
+
+            // 等待所有转换完成后进行处理
+            Promise.all(promises).then(() => {
+                console.log('所有图片转换完成！');
+            }).catch(err => {
+                console.error(err);
+                alert('转换中发生错误: ' + err.message); // 显示错误信息
+            });
+        });
+    </script>
+</body>
+</html>

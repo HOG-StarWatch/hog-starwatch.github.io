@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量 Word 转 Markdown</title>
+    <script src="mammoth.browser.min.js"></script>
+    <style>
+        body {
+            background-color: #111; /* 深色背景 */
+            color: #eee; /* 浅色文字 */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #9b59b6; /* 紫色标题 */
+        }
+        input[type="file"], button, a {
+            background-color: #9b59b6; /* 紫色按钮 */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        input[type="file"] {
+            border: none;
+            display: block;
+            margin-bottom: 10px;
+        }
+        pre {
+            background-color: #222; /* 深色背景 */
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto; /* 允许横向滚动 */
+        }
+    </style>
+</head>
+<body>
+    <h1>批量 Word 转 Markdown</h1>
+    <input type="file" id="fileInput" multiple accept=".docx,.doc,.odt" />
+    <button id="convertBtn">转换</button>
+    
+    <div id="statusArea" style="margin-top: 20px;">
+        <h2>处理状态</h2>
+        <div id="statusMessages"></div>
+    </div>
+    
+    <div id="downloadArea" style="margin-top: 20px;">
+        <p>下载链接↓👇↓</p>
+        <div id="downloadButtons"></div>
+        <p>预览区域↓👇↓</p>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        document.getElementById('convertBtn').addEventListener('click', async () => {
+            const input = document.getElementById('fileInput');
+            const files = input.files;
+            const outputDiv = document.getElementById('output');
+            const downloadButtonsDiv = document.getElementById('downloadButtons');
+            const statusMessagesDiv = document.getElementById('statusMessages');
+            
+            // 清空之前的内容
+            downloadButtonsDiv.innerHTML = '';
+            outputDiv.innerHTML = '';
+            statusMessagesDiv.innerHTML = '';
+            
+            for (const file of files) {
+                const fileSize = formatFileSize(file.size);
+                const fileName = file.name;
+
+                try {
+                    // 显示文件处理状态
+                    statusMessagesDiv.insertAdjacentHTML('beforeend', `<p>正在处理: ${fileName} (大小:${fileSize})</p>`);
+                    
+                    // 读取文件内容
+                    const arrayBuffer = await readFile(file);
+                    const result = await mammoth.convertToMarkdown({ arrayBuffer: arrayBuffer });
+                    const markdownContent = result.value;
+
+                    // 显示转换结果
+                    const markdownHTML = `<h3>${fileName}</h3><pre>${markdownContent}</pre>`;
+                    outputDiv.insertAdjacentHTML('beforeend', markdownHTML);
+
+                    // 创建下载按钮
+                    const downloadButton = createDownloadButton(fileName.replace(/\.(docx?|odt)$/, '.md'), markdownContent);
+                    downloadButtonsDiv.insertAdjacentElement('beforeend', downloadButton);
+                    
+                    statusMessagesDiv.insertAdjacentHTML('beforeend', `<p>转换成功: ${fileName}</p>`);
+                    
+                } catch (err) {
+                    console.error(err); // 输出详细错误信息
+                    statusMessagesDiv.insertAdjacentHTML('beforeend', `<p>转换错误: ${fileName} -${err.message}</p>`);
+                }
+            }
+        });
+
+        // 函数：读取文件内容
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    resolve(event.target.result);
+                };
+                reader.onerror = function() {
+                    reject(new Error("读取文件时出错"));
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // 创建下载按钮
+        function createDownloadButton(fileName, content) {
+            const downloadButton = document.createElement('a');
+            downloadButton.textContent = '下载 ' + fileName;
+            const blob = new Blob([content], { type: 'text/markdown' });
+            downloadButton.href = URL.createObjectURL(blob);
+            downloadButton.download = fileName;
+            downloadButton.style.display = 'block'; // 每个按钮占一行
+            return downloadButton;
+        }
+
+        // 格式化文件大小
+        function formatFileSize(size) {
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let unitIndex = 0;
+            while (size >= 1024 && unitIndex < units.length - 1) {
+                size /= 1024;
+                unitIndex++;
+            }
+            return `${size.toFixed(2)}${units[unitIndex]}`;
+        }
+    </script>
+</body>
+</html>

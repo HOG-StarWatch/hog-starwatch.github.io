@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 转义程序</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #121212;  /* 暗夜模式背景色 */
+            color: #ffffff;              /* 文字颜色 */
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+            background-color: #1e1e1e;  /* 文本框背景色 */
+            color: #ffffff;              /* 文本框文字颜色 */
+            border: 1px solid #444;      /* 边框颜色 */
+            border-radius: 4px;         /* 圆角 */
+            padding: 10px;               /* 内边距 */
+        }
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-right: 10px;
+            background-color: #6200ea;    /* 紫色按钮 */
+            color: #ffffff;               /* 按钮文字颜色 */
+            border: none;                 /* 去掉边框 */
+            border-radius: 4px;          /* 圆角 */
+        }
+        button:hover {
+            background-color: #3700b3;   /* 按钮悬停效果 */
+        }
+        h1, h2, h3 {
+            color: #ffffff;               /* 标题文字颜色 */
+        }
+        pre {
+            background-color: #1e1e1e;    /* 输出区域背景色 */
+            padding: 10px;                /* 内边距 */
+            border-radius: 4px;          /* 圆角 */
+        }
+    </style>
+</head>
+<body>
+    <h1>&<>"'`/ 转义程序</h1>
+    <h2>输入文本或上传 .md/.txt 文件</h2>
+    <textarea id="markdownInput" placeholder="在这里输入Markdown文本..."></textarea>
+    
+    <h3>或</h3>
+    <input type="file" id="fileInput" accept=".md,.txt">
+    <button id="processFileButton">处理文件</button>
+    
+    <button id="processTextButton">处理文本</button>
+    
+    <h2>转义后的 HTML</h2>
+    <button id="copyButton" style="display:none;">复制到剪贴板</button>
+    <button id="downloadButton" style="display:none;">下载 HTML 文件</button>
+    <pre id="escapedOutput"></pre>
+
+    <script>
+        // 处理文件上传
+        document.getElementById('processFileButton').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            // 检查是否选择了文件
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const markdownInput = e.target.result;
+                    processMarkdown(markdownInput);
+                };
+                reader.readAsText(file); // 以文本格式读取文件
+            } else {
+                alert('请先选择一个文件！');
+            }
+        });
+
+        // 处理文本框中的 Markdown 文本
+        document.getElementById('processTextButton').addEventListener('click', function() {
+            const markdownInput = document.getElementById('markdownInput').value;
+            processMarkdown(markdownInput);
+        });
+
+        // 处理 Markdown 并显示转义后的结果
+        function processMarkdown(markdown) {
+            const escapedOutput = escapeMarkdown(markdown);
+            document.getElementById('escapedOutput').textContent = escapedOutput;
+
+            // 显示下载和复制按钮
+            document.getElementById('downloadButton').style.display = 'inline';
+            document.getElementById('copyButton').style.display = 'inline';
+            
+            document.getElementById('downloadButton').onclick = function() {
+                downloadHTML(escapedOutput);
+            };
+            document.getElementById('copyButton').onclick = function() {
+                copyToClipboard(escapedOutput);
+            };
+        }
+
+        // 转义 Markdown 特殊字符
+        function escapeMarkdown(markdown) {
+            return markdown
+                .replace(/&/g, '&amp;')      // 转义 &
+                .replace(/</g, '&lt;')       // 转义 <
+                .replace(/>/g, '&gt;')       // 转义 >
+                .replace(/"/g, '&quot;')     // 转义 "
+                .replace(/'/g, '&#39;')      // 转义 '
+                .replace(/`/g, '&#96;')       // 转义 `
+                .replace(/\//g, '&#x2F;');    // 转义 /
+        }
+
+        // 复制内容到剪贴板
+        function copyToClipboard(content) {
+            const textarea = document.createElement('textarea');
+            textarea.value = content;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('已复制到剪贴板！');
+        }
+
+        // 下载转义后的 HTML 文件
+        function downloadHTML(content) {
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'output.html';
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>

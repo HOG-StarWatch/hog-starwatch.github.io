@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unicode转码解码程序</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            max-width: 600px;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            box-sizing: border-box;
+            color: #fff;
+            background-color: #222;
+        }
+        button {
+            padding: 10px 15px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #6a5acd;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #483d8b;
+        }
+        #message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            color: white;
+        }
+        #message.success {
+            background-color: #28a745;
+        }
+        #message.error {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Unicode转码解码程序</h1>
+        <textarea id="inputText" placeholder="输入文本"></textarea>
+        <button onclick="encodeUnicode()">转码 Unicode</button>
+        <button onclick="decodeUnicode()">解码 Unicode</button>
+    </div>
+
+    <div class="container">
+        <h2>结果:</h2>
+        <textarea id="outputText" readonly placeholder="结果输出"></textarea>
+    </div>
+
+    <div class="container">
+        <h2>实现在别人QQ@你的时候在他说的话后面加一段内容！嘻嘻</h2>
+        <div>比如你按照我示例搞设的昵称就应该是HOGStarWatch喵~ 那别人@你本来发的是“@HOGStarWatch 你好”的话就会变成“@HOGStarWatch 你好喵~”</div>
+        <div class="input-group">
+            <label for="inputText1">输入昵称 示例:HOGStarWatch</label>
+            <textarea id="inputText1" placeholder="输入昵称 示例:HOGStarWatch"></textarea>
+        </div>
+        <div class="input-group">
+            <label for="inputText2">输入添加的文字 示例:~喵 注:这个地方输入顺序得是反着的 ~~虽然我可以后端处理 但是懒了~~</label>
+            <textarea id="inputText2" placeholder="输入添加的文字 示例:~喵"></textarea>
+        </div>
+        <button onclick="processUnicode()">处理昵称</button>
+        <h2>结果:combinedEncoded</h2>
+        <textarea id="QoutputText" placeholder="结果输出 示例:HOGStarWatch喵~ 将输出内容改成QQ昵称就可以啦"></textarea>
+        <button onclick="copyToClipboard()">复制</button>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        function encodeUnicode() {
+            const input = document.getElementById('inputText').value;
+            const encoded = Array.from(input).map(char => {
+                return '\\u' + ('0000' + char.charCodeAt(0).toString(16)).slice(-4);
+            }).join('');
+            document.getElementById('outputText').value = encoded;
+        }
+
+        function decodeUnicode() {
+            const input = document.getElementById('inputText').value;
+            const decoded = input.replace(/\\u([\da-f]{4})/gi, (match, grp) => {
+                return String.fromCharCode(parseInt(grp, 16));
+            });
+            document.getElementById('outputText').value = decoded;
+        }
+
+        function QencodeUnicode(input) {
+            return Array.from(input).map(char => {
+                return '\\u' + ('0000' + char.charCodeAt(0).toString(16)).slice(-4);
+            }).join('');
+        }
+
+        function QdecodeUnicode(input) {
+            return input.replace(/\\u([\da-f]{4})/gi, (match, grp) => {
+                return String.fromCharCode(parseInt(grp, 16));
+            });
+        }
+
+        function processUnicode() {
+            const input1 = document.getElementById('inputText1').value;
+            const input2 = document.getElementById('inputText2').value;
+
+            // 转码输入框1的内容
+            const encoded1 = QencodeUnicode(input1);
+            // 转码输入框2的内容并加上前后缀
+            const encoded2 = '\\u2067' + QencodeUnicode(input2) + '\\u2066';
+            // 合并两个编码
+            const combinedEncoded = encoded1 + encoded2;
+
+            // 解码合并后的结果
+            const decodedResult = QdecodeUnicode(combinedEncoded);
+            // 输出结果
+            document.getElementById('QoutputText').value = decodedResult;
+        }
+
+        // 复制到剪切板的函数
+        function copyToClipboard() {
+            // 获取textarea元素
+            var textarea = document.getElementById('QoutputText');
+            // 获取textarea中的文本
+            var text = textarea.value;
+
+            // 使用Clipboard API复制文本
+            navigator.clipboard.writeText(text).then(function() {
+                // 显示成功消息
+                document.getElementById('message').textContent = '复制成功！';
+                document.getElementById('message').className = 'success';
+            }, function(err) {
+                // 显示失败消息
+                document.getElementById('message').textContent = '复制失败！';
+                document.getElementById('message').className = 'error';
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>旋律生成器</title>
+	<style>
+		body {
+		    background-color: #000000; /* 黑色背景 */
+		    color: #eaeaea; /* 浅色文字 */
+		    font-family: Arial, sans-serif;
+		}
+		
+		.container {
+		    max-width: 600px;
+		    margin: 0 auto;
+		    padding: 20px;
+		    border-radius: 8px;
+		    background-color: #000000; /* 黑色背景 */
+		    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+		}
+		
+		h1, h2 {
+		    color: #e94560; /* 明亮的紫色 */
+		}
+		
+		.input-group {
+		    margin-bottom: 15px;
+		}
+		
+		input[type="number"], input[type="text"] {
+		    width: 100%;
+		    padding: 10px;
+		    border: 1px solid #e94560; /* 紫色边框 */
+		    border-radius: 5px;
+		    background-color: #6f2c91; /* 紫色输入框背景 */
+		    color: #ffffff; /* 白色文字 */
+		}
+		
+		button {
+		    background-color: #6f2c91; /* 紫色按钮背景 */
+		    color: #ffffff; /* 白色文字 */
+		    cursor: pointer;
+		    border: none; /* 去掉默认边框 */
+		    padding: 10px;
+		    border-radius: 5px;
+		    width: 100%; /* 按钮宽度100% */
+		}
+		
+		button:hover {
+		    background-color: #5c2380; /* 按钮悬停时的颜色 (略深的紫色) */
+		}
+		
+		.button-container {
+		    display: flex;         /* 使用flexbox布局 */
+		    flex-direction: column; /* 设置为纵向排列，即分为两排 */
+		    margin-top: 20px;     /* 添加上边距 */
+		}
+		
+		.button-row {
+		    display: flex;         /* 设置每一行的按钮为横向排列 */
+		    justify-content: center; /* 将按钮居中对齐 */
+		    margin-bottom: 10px;  /* 为每一行的按钮添加下边距 */
+		}
+		
+		.button-row button {
+		    flex: 0 1 80px;       /* 设置按钮的固定宽度（例如80px），允许他们根据内容的高度自适应 */
+		    margin: 0 10px;       /* 为按钮之间添加左右间距 */
+		}
+		
+		#availableNotes {
+		    margin-top: 10px;
+		}
+		
+		.notes-tone-container {
+		    display: flex; /* 使用flexbox布局 */
+		    justify-content: space-between; /* 在两部分之间均匀分配空间 */
+		    margin-top: 20px; /* 为容器添加一些上边距 */
+		}
+		
+		
+		#availableNotesContainer, #toneSelector {
+		    flex: 1; /* 每个部分占据同样的宽度 */
+		    margin-right: 20px; /* 添加右边距，以避免重叠 */
+		}
+		
+		#toneSelector {
+		    margin-right: 0; /* 最后一个部分的右边距设置为0 */
+		}
+		
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>旋律生成器</h1>
+		<div>
+			<label for="noteCount">音符数量:</label>
+			<input type="number" id="noteCount" value="8" min="1">
+		</div>
+		<div>
+			<label for="noteDuration">音符持续时间 (秒):</label>
+			<input type="number" id="noteDuration" value="0.3" step="0.1">
+		</div>
+		<div>
+			<label for="noteInterval">音符间隔 (毫秒):</label>
+			<input type="number" id="noteInterval" value="100" step="100">
+		</div>
+		<div>
+			<label for="customNotes">设置音符是否启用:</label>
+			<input type="text" id="customNotes" placeholder="C4,D4,E4,F4,G4,A4,B4,C5">
+		</div>
+		<div>
+			<label for="manualInput">手动输入旋律:</label>
+			<input type="text" id="manualInput" placeholder="C4,C4,G4,G4,A4,A4,G4">
+			<button id="setMelody">设置旋律</button>
+		</div>
+		<div class="button-container">
+			<div class="button-row">
+				<button id="generate">生成旋律</button>
+				<button id="play">播放旋律</button>
+			</div>
+			<div class="button-row">
+				<button id="download">下载音频</button>
+				<button id="visualMelody">可视化音频</button>
+			</div>
+		</div>
+		<p id="melody"></p>
+		<!-- 添加画布 -->
+		<canvas id="melodyCanvas" width="600" height="200" style="border:1px solid #e94560; margin-top: 20px;"></canvas>
+		<div class="notes-tone-container">
+			<div id="availableNotesContainer">
+				<h2>可用音符</h2>
+				<p>优先级低于上框</p>
+				<div id="availableNotes"></div>
+			</div>
+			<div id="toneSelector">
+				<h2>选择音色</h2>
+				<input type="radio" name="tone" value="sine" checked> 正弦波<br>
+				<input type="radio" name="tone" value="square"> 方波<br>
+				<input type="radio" name="tone" value="triangle"> 三角波<br>
+				<input type="radio" name="tone" value="sawtooth"> 锯齿波<br>
+			</div>
+		</div>
+	</div>
+	<script>
+		const notes = {
+		    'C4': 261.63,
+		    'D4': 293.66,
+		    'E4': 329.63,
+		    'F4': 349.23,
+		    'G4': 392.00,
+		    'A4': 440.00,
+		    'B4': 493.88,
+		    'C5': 523.25
+		};
+		
+		let melody = [];
+		let enabledNotes = Object.keys(notes); // 默认启用所有音符
+		
+		function playTone(frequency, duration, type) {
+		    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+		    const oscillator = audioCtx.createOscillator();
+		    oscillator.type = type; // 使用选择的音色
+		    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+		    oscillator.connect(audioCtx.destination);
+		    oscillator.start();
+		    oscillator.stop(audioCtx.currentTime + duration);
+		}
+		
+		function displayAvailableNotes() {
+		    const availableNotesDiv = document.getElementById('availableNotes');
+		    availableNotesDiv.innerHTML = ''; // 清空之前的内容
+		    const sortedNotes = Object.keys(notes).sort(); 
+		    
+		    sortedNotes.forEach(note => {
+		        const checkbox = document.createElement('input');
+		        checkbox.type = 'checkbox';
+		        checkbox.id = note;
+		        checkbox.checked = true; // 默认选中
+		        checkbox.addEventListener('change', () => {
+		            if (checkbox.checked) {
+		                enabledNotes.push(note);
+		            } else {
+		                enabledNotes = enabledNotes.filter(n => n !== note);
+		            }
+		        });
+		
+		        const label = document.createElement('label');
+		        label.htmlFor = note;
+		        label.innerText = note;
+		
+		        availableNotesDiv.appendChild(checkbox);
+		        availableNotesDiv.appendChild(label);
+		        availableNotesDiv.appendChild(document.createElement('br'));
+		    });
+		}
+		
+		// 初始化可用音符显示
+		displayAvailableNotes();
+		
+		document.getElementById('generate').addEventListener('click', () => {
+		    melody = [];
+		    const noteCount = parseInt(document.getElementById('noteCount').value);
+		    const customNotesInput = document.getElementById('customNotes').value;
+		
+		    // 如果用户提供了自定义音符，则使用自定义音符
+		    if (customNotesInput) {
+		        const customNotes = customNotesInput.split(',').map(note => note.trim()).filter(note => enabledNotes.includes(note));// 过滤掉无效音符
+		        if (customNotes.length > 0) {
+		            melody = Array.from({ length: noteCount }, () => 
+		                customNotes[Math.floor(Math.random() * customNotes.length)]
+		            );
+		        }
+		    } else {
+		        for (let i = 0; i < noteCount; i++) {
+		            const randomNote = enabledNotes[Math.floor(Math.random() * enabledNotes.length)];
+		            melody.push(randomNote);
+		        }
+		    }
+		
+		    document.getElementById('melody').innerText = '当前旋律: ' + melody.join(', ');
+		});
+		
+		document.getElementById('setMelody').addEventListener('click', () => {
+		    const manualInput = document.getElementById('manualInput').value;
+		    const manualNotes = manualInput.split(',').map(note => note.trim()).filter(note => enabledNotes.includes(note)); // 过滤掉无效音符
+		
+		    if (manualNotes.length > 0) {
+		        melody = manualNotes; // 设置旋律为用户输入的音符
+		        document.getElementById('melody').innerText = '生成的旋律: ' + melody.join(', ');
+		    } else {
+		        alert('请确保输入的音符有效！');
+		    }
+		});
+		
+		document.getElementById('play').addEventListener('click', () => {
+		    let index = 0;
+		    const noteDuration = parseFloat(document.getElementById('noteDuration').value);
+		    const noteInterval = parseInt(document.getElementById('noteInterval').value);
+		    const selectedTone = document.querySelector('input[name="tone"]:checked').value; // 获取选中的音色
+		
+		    const playNote = () => {
+		        if (index < melody.length) {
+		            const note = melody[index];
+		            playTone(notes[note], noteDuration, selectedTone);// 使用用户输入的音符持续时间和音色
+		            index++;
+		            setTimeout(playNote, noteDuration * 1000 + noteInterval); // 确保正确间隔时间
+		        }
+		    };
+		    playNote();
+		});
+		
+		// 生成 WAV 文件
+		document.getElementById('download').addEventListener('click', async () => {
+		    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+		    const sampleRate = audioCtx.sampleRate;
+		    const noteDuration = parseFloat(document.getElementById('noteDuration').value);
+		    const noteInterval = parseInt(document.getElementById('noteInterval').value) / 1000;
+		    const totalDuration = melody.length * (noteDuration + noteInterval); 
+		    const buffer = audioCtx.createBuffer(1, sampleRate * totalDuration, sampleRate);
+		    const data = buffer.getChannelData(0);
+		
+		    let offset = 0;
+		
+		    melody.forEach(note => {
+		        const frequency = notes[note];
+		
+		        // 生成音符
+		        for (let i = 0; i < sampleRate * noteDuration; i++) {
+		            data[offset++] = Math.sin(2 * Math.PI * frequency * (i / sampleRate));
+		        }
+		
+		        // 添加间隔的静音
+		        for (let i = 0; i < sampleRate * noteInterval; i++) {
+		            data[offset++] = 0; // 静音部分
+		        }
+		    });
+		
+		    const wavData = audioBufferToWav(buffer);
+		    const blob = new Blob([new Uint8Array(wavData)], { type: 'audio/wav' });
+		    const url = URL.createObjectURL(blob);
+		    const a = document.createElement('a');
+		    a.style.display = 'none';
+		    a.href = url;
+		    a.download = 'melody.wav';
+		    document.body.appendChild(a);
+		    a.click();
+		    window.URL.revokeObjectURL(url);
+		    document.body.removeChild(a);
+		});
+		
+		// convert audio buffer to wav format
+		function audioBufferToWav(buffer) {
+		    const numChannels = buffer.numberOfChannels;
+		    const sampleRate = buffer.sampleRate;
+		    const format = 1; // PCM format
+		    const blockAlign = numChannels * 2; // 16-bit PCM
+		    const byteRate = sampleRate * blockAlign;
+		
+		    const wavDataLength = 44 + buffer.length * numChannels * 2; // 44 bytes for header + data
+		    const ab = new ArrayBuffer(wavDataLength);
+		    const view = new DataView(ab);
+		
+		    // Write WAV header
+		    let offset = 0;
+		    writeString(view, offset, 'RIFF');
+		    offset += 4;
+		    view.setUint32(offset, wavDataLength - 8, true);
+		    offset += 4;
+		    writeString(view, offset, 'WAVE');
+		    offset += 4;
+		    writeString(view, offset, 'fmt ');
+		    offset += 4;
+		    view.setUint32(offset, 16, true);
+		    offset += 4;
+		    view.setUint16(offset, format, true);
+		    offset += 2;
+		    view.setUint16(offset, numChannels, true);
+		    offset += 2;
+		    view.setUint32(offset, sampleRate, true);
+		    offset += 4;
+		    view.setUint32(offset, byteRate, true);
+		    offset += 4;
+		    view.setUint16(offset, blockAlign, true);
+		    offset += 2;
+		    view.setUint16(offset, 16, true);
+		    offset += 2;
+		    writeString(view, offset, 'data');
+		    offset += 4;
+		    view.setUint32(offset, buffer.length * numChannels * 2, true);
+		    offset += 4;
+		
+		    for (let channel = 0; channel < numChannels; channel++) {
+		        const channelData = buffer.getChannelData(channel);
+		        for (let i = 0; i < channelData.length; i++) {
+		            view.setInt16(offset, channelData[i] * 32767, true);
+		            offset += 2;
+		        }
+		    }
+		
+		    return ab;
+		}
+		
+		function writeString(view, offset, string) {
+		    for (let i = 0; i < string.length; i++) {
+		        view.setUint8(offset + i, string.charCodeAt(i));
+		    }
+		}
+			// 获取按钮元素
+		    const visualMelody = document.getElementById('visualMelody');
+		
+		    // 为按钮添加点击事件
+		    // 替换其他操作按钮的事件监听器
+		visualMelody.addEventListener('click', function() {
+		    const canvas = document.getElementById('melodyCanvas');
+		    const ctx = canvas.getContext('2d');
+		    const width = canvas.width;
+		    const height = canvas.height;
+		    
+		    // 清空画布
+		    ctx.clearRect(0, 0, width, height);
+		    
+		    // 绘制旋律
+		    const noteWidth = width / melody.length; // 每个音符的宽度
+		    ctx.strokeStyle = '#e94560'; // 设置画笔颜色
+		    ctx.beginPath();
+		    
+		    melody.forEach((note, index) => {
+		        const frequency = notes[note];
+		        const y = height - (frequency / 523.25) * height; // 根据音符频率计算Y坐标 (C5频率作为标准高度)
+		        ctx.lineTo(index * noteWidth, y);
+		    });
+		    
+		    ctx.stroke(); // 绘制曲线
+		});
+		
+	</script>
+</body>
+</html>
