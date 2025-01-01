@@ -78,9 +78,9 @@ Albert, compared to the other professors at the Academy, only has rudimentary sk
 
 #### Notable Experiments
 
-**<REDACTED>** aka **Nimu**:
+**< REDACTED >** aka **Nimu**:
 
-<REDACTED>
+< REDACTED >
 
 **LZ-Series:**
 
