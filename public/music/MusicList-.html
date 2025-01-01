@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的音乐歌单</title>
+    <style>
+        /* 设置夜间模式的背景和文字颜色 */
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        /* 使用 Flexbox 布局使歌曲列表为自适应多列 */
+        .song-list {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        /* 美化歌曲标记的外观 */
+        .song {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            flex: 1 1 300px; /* 每个项目至少有300px宽度 */
+            margin-right: 10px;
+            box-sizing: border-box;
+        }
+
+        /* 控制音频和歌词容器的显示 */
+        .audio-container, .lyrics-container {
+            display: none;
+            margin-left: 20px;
+        }
+
+        /* 鼠标悬停时改变按钮颜色 */
+        .toggle-button {
+            cursor: pointer;
+            color: #1e90ff;
+            text-decoration: underline;
+        }
+
+        .toggle-button:hover {
+            color: #63a4ff;
+        }
+
+        /* 标题的样式 */
+        h1, h3 {
+            color: #ffffff;
+        }
+
+	button#toggle-all {
+    	/* 按钮的背景颜色设为蓝色 */
+   	background-color: #1e90ff;
+    
+    	/* 按钮文本颜色设为白色 */
+    	color: #ffffff;
+    
+    	/* 去掉按钮默认边框 */
+    	border: none;
+    
+    	/* 设置按钮的内边距，增大可点击区域 */
+    	padding: 10px 20px;
+    
+    	/* 设置按钮底部的外边距 */
+    	margin-bottom: 20px;
+    
+    	/* 鼠标悬停时显示为指针样式 */
+    	cursor: pointer;
+    
+    	/* 按钮上的文本字体大小 */
+    	font-size: 16px;
+    
+    	/* 圆角边框，使按钮边缘更圆滑 */
+    	border-radius: 5px;
+    
+    	/* 背景颜色渐变效果的过渡时间 */
+   	transition: background-color 0.3s;
+	}
+
+	button#toggle-all:hover {
+    	/* 鼠标悬停按钮时改变背景颜色 */
+    	background-color: #63a4ff;
+	}
+
+    </style>
+</head>
+<body>
+    <h1>我的音乐歌单</h1>
+    <button id="toggle-all" onclick="toggleAll()">全部展开/关闭</button>
+    <div class="song-list" id="song-list">
+        <!-- 动态加载歌曲信息 -->
+    </div>
+
+    <script>
+        let isAllOpen = false;
+
+        /**
+         * 切换内容的显示状态
+         * @param {Element} element - 被点击的元素
+         */
+        function toggleContent(element) {
+            const audioContainer = element.nextElementSibling;
+            const lyricsContainer = audioContainer.nextElementSibling;
+            const isVisible = audioContainer.style.display === "block";
+
+            // 切换显示状态
+            audioContainer.style.display = isVisible ? "none" : "block";
+            lyricsContainer.style.display = isVisible ? "none" : "block";
+        }
+
+        /**
+         * 切换所有内容的显示状态
+         */
+        function toggleAll() {
+            const audioContainers = document.querySelectorAll('.audio-container');
+            const lyricsContainers = document.querySelectorAll('.lyrics-container');
+
+            // 根据 isAllOpen 状态来决定显示或隐藏
+            audioContainers.forEach(container => {
+                container.style.display = isAllOpen ? "none" : "block";
+            });
+
+            lyricsContainers.forEach(container => {
+                container.style.display = isAllOpen ? "none" : "block";
+            });
+
+            // 反转 isAllOpen 的布尔值
+            isAllOpen = !isAllOpen;
+        }
+
+        // 从 JSON 文件加载歌曲数据
+        fetch('songs.json')
+            .then(response => response.json())
+            .then(songs => {
+                const songListContainer = document.getElementById('song-list');
+                songs.forEach(song => {
+                    const songElement = document.createElement('div');
+                    songElement.classList.add('song');
+                    
+                    // 将歌词中的 \n 替换为 <br>
+                    const formattedLyrics = song.lyrics.replace(/\n/g, '<br>');
+
+                    songElement.innerHTML = `
+                        <span class="toggle-button" onclick="toggleContent(this)">${song.title}</span>
+                        <div class="audio-container">
+                            <audio controls>
+                                <source src="${song.audioFile}" type="audio/mp4">
+                                您的浏览器不支持音频元素。
+                            </audio>
+                        </div>
+                        <div class="lyrics-container">
+                            <h3>歌词</h3>
+                            <p>${formattedLyrics}</p>
+                        </div>
+                    `;
+
+                    songListContainer.appendChild(songElement);
+                });
+            })
+            .catch(error => console.error('Error loading songs:', error));
+    </script>
+</body>
+</html>

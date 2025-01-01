@@ -58,6 +58,7 @@ export default [
       items: [
         { text: 'RPGMaker相关', link: '/RPGMaker/RPGMaker_index.md', target: '_self', },
         { text: 'RPGMakerMV存档的加密解密与保护', link: '/RPGMaker/RPGMakerMV存档的加密解密与保护.md' },
+        { text: 'Music', link: '/music/MusicList-', target: '_self', },
       ],
     },
     

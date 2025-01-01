@@ -16,7 +16,7 @@ hero:
     - theme: alt
       text: Tusiart
       link: https://tusiart.com/u/648531931343957263
-      - theme: alt
+    - theme: alt
       text: Pixiv
       link: https://www.pixiv.net/users/80658183
 ---
