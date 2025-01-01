@@ -22,5 +22,5 @@ All content is available for **free** in full quality. Your donations are howeve
 
 所有内容均以完整质量 **免费** 提供。然而，您的捐款非常受欢迎且至关重要，没有您，这是不可能的！
 
-## [GoToTheWorldOfVaira-进入瓦拉Vaira世界](./TheWorld)
+## [GoToTheWorldOfVaira-进入瓦拉Vaira世界](./TheWorld/)
 
