@@ -10,6 +10,6 @@
 
 **F5** 刷新一下就好了
 
-[RPGsave修改](../RPGsave修改.html)
+[RPGsave修改-ezUI](../RPGsave修改.html)
 
-[RPGsave修改_原件](../RPGsave修改_原件.html)
+[RPGsave修改-原件](../RPGsave修改_原件.html)
