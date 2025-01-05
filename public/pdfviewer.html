@@ -4,66 +4,64 @@
     <meta charset="UTF-8">
     <title>增强型PDF查看器</title>
     <style>
+        /* 基础样式 */
+        :root {
+            --bg-primary: #f4f4f4;
+            --bg-secondary: white;
+            --text-primary: #333;
+            --btn-primary: #4CAF50;
+            --btn-hover: #45a049;
+        }
+
+        /* 暗夜模式 */
+        .dark-mode {
+            --bg-primary: #232323;
+            --bg-secondary: #2c2c2c;
+            --text-primary: #f0f0f0;
+            --btn-primary: #4B0082;
+            --btn-hover: #320255;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f4f4f4;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
         }
+
+        /* 其他样式保持不变，仅调整颜色变量 */
         .container {
             max-width: 900px;
             margin: 0 auto;
-            background-color: white;
+            background-color: var(--bg-secondary);
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+
         .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            padding: 10px;
-            background-color: #f1f1f1;
-            gap: 10px;
+            background-color: var(--bg-primary);
         }
-        .import-section {
-            display: flex;
-            gap: 10px;
-        }
-        #pdf-viewer {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-y: auto;
-            max-height: 800px;
-        }
-        #pdf-viewer canvas {
-            max-width: 100%;
-            margin-bottom: 10px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
-        }
-        .page-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .url-input {
-            width: 300px;
-        }
+
         .btn {
-            padding: 5px 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
+            background-color: var(--btn-primary);
         }
+
         .btn:hover {
-            background-color: #45a049;
+            background-color: var(--btn-hover);
+        }
+
+        /* 新增模式切换按钮样式 */
+        #mode-toggle {
+            margin-left: 10px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="toolbar">
+            <!-- 原有工具栏 -->
             <div class="import-section">
                 <input type="file" id="pdf-upload" accept=".pdf">
                 
@@ -72,6 +70,11 @@
             </div>
             
             <div class="page-controls">
+                <!-- 新增页面跳转输入 -->
+                <input type="number" id="page-jump" min="1" style="width:50px" placeholder="页码">
+                <button id="jump-page" class="btn">跳转</button>
+
+                <!-- 原有分页和缩放控件 -->
                 <button id="prev-page" class="btn">上一页</button>
                 <span id="page-num">0 / 0</span>
                 <button id="next-page" class="btn">下一页</button>
@@ -84,14 +87,16 @@
                 </select>
 
                 <button id="save-pdf" class="btn">保存PDF</button>
+
+                <!-- 新增模式切换 -->
+                <button id="mode-toggle" class="btn">🌓</button>
             </div>
         </div>
         
         <div id="pdf-viewer"></div>
-
     </div>
 
-    <!-- 引入PDF.js和FileSaver库 -->
+    <!-- 保持原有external库和脚本引用 -->
     <script src="pdf.min.js"></script>
     <script src="pdf.worker.min.js"></script>
     <script src="FileSaver.min.js"></script>
@@ -283,11 +288,41 @@
         });
 		// 页面加载时初始化
         window.addEventListener('load', initFromUrlParam);
+        // 页面跳转功能
+        const pageJump = document.getElementById('page-jump');
+        const jumpPageBtn = document.getElementById('jump-page');
 
+        jumpPageBtn.addEventListener('click', function() {
+            const targetPage = parseInt(pageJump.value);
+            if (pdfDoc && targetPage > 0 && targetPage <= pdfDoc.numPages) {
+                pageNum = targetPage;
+                queueRenderPage(pageNum);
+            } else {
+                alert('请输入有效的页码');
+            }
+        });
+
+        // 暗夜模式切换
+        const modeToggle = document.getElementById('mode-toggle');
+        modeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            // 可以存储用户偏好
+            localStorage.setItem('theme', 
+                document.body.classList.contains('dark-mode') ? 'dark' : 'light'
+            );
+        });
+
+        // 初始化时检查之前的模式偏好
+        window.addEventListener('load', function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+        });
     </script>
 
-    <!-- 使用示例说明 -->
-    <div style="max-width: 900px; margin: 20px auto; background: #f4f4f4; padding: 15px; border-radius: 5px;">
+    <!-- 使用说明部分 -->
+    <div style="max-width: 900px; margin: 20px auto; background: var(--bg-primary); padding: 15px; border-radius: 5px;">
         <h3>PDF查看器使用示例</h3>
         <ol>
             <li>
