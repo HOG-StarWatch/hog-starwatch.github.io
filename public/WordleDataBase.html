@@ -143,6 +143,25 @@
                 align-items: center;
             }
         }
+
+        /* 新增的已知字母输入框样式 */
+        .known-input {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .known-input input {
+            width: 48%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #333333; /* 深色边框 */
+            border-radius: 4px;
+            background-color: #2c2c2c; /* 深色输入框背景 */
+            color: #FFFFFF;
+            text-transform: uppercase;
+            text-align: center;/* 添加此行以使输入框居中 */
+        }
     </style>
 </head>
 <body>
@@ -168,6 +187,10 @@
             <input type="text" id="pos3" maxlength="1" placeholder="位置3">
             <input type="text" id="pos4" maxlength="1" placeholder="位置4">
             <input type="text" id="pos5" maxlength="1" placeholder="位置5">
+        </div>
+        <div class="known-input">
+            <input type="text" id="knownLetters" maxlength="5" placeholder="已知字母 (任意位置)重复输入无效">
+            <input type="text" id="notKnownLetters" maxlength="5" placeholder="已知不存在字母"> 
         </div>
         <div style="text-align: center;">
             <button class="button" onclick="searchWords()">搜索</button>
@@ -255,7 +278,7 @@
 
         /**
          * 搜索符合条件的单词函数
-         * 根据用户在各位置输入的字母过滤单词库
+         * 根据用户在各位置输入的字母和已知字母过滤单词库
          */
         function searchWords() {
             // 获取各位置的输入值，并转为大写
@@ -264,15 +287,40 @@
             const pos3 = document.getElementById('pos3').value.toUpperCase();
             const pos4 = document.getElementById('pos4').value.toUpperCase();
             const pos5 = document.getElementById('pos5').value.toUpperCase();
+            const knownLetters = document.getElementById('knownLetters').value.toUpperCase();
+            const notKnownLetters = document.getElementById('notKnownLetters').value.toUpperCase(); // 获取已知不存在字母
 
             // 使用filter方法筛选符合条件的单词
             displayedWords = words.filter(word => {
                 let match = true;
+
+                // 检查特定位置的字母
                 if (pos1 && word.charAt(0) !== pos1) match = false;
                 if (pos2 && word.charAt(1) !== pos2) match = false;
                 if (pos3 && word.charAt(2) !== pos3) match = false;
                 if (pos4 && word.charAt(3) !== pos4) match = false;
                 if (pos5 && word.charAt(4) !== pos5) match = false;
+
+                // 检查已知字母是否包含在单词中
+                if (knownLetters) {
+                    for (let letter of knownLetters) {
+                        if (!word.includes(letter)) {
+                            match = false;
+                            break;
+                        }
+                    }
+                }
+
+                // 检查已知不存在的字母
+                if (notKnownLetters) {
+                    for (let letter of notKnownLetters) {
+                        if (word.includes(letter)) {
+                            match = false;
+                            break;
+                        }
+                    }
+                }
+
                 return match;
             });
 
@@ -291,10 +339,11 @@
             document.getElementById('pos3').value = '';
             document.getElementById('pos4').value = '';
             document.getElementById('pos5').value = '';
+            document.getElementById('knownLetters').value = ''; // 清空已知字母输入框
+            document.getElementById('notKnownLetters').value = ''; // 清空已知不存在字母输入框
             // 显示全部单词
             displayWords(words);
         }
-
     </script>
 </body>
 </html>

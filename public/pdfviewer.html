@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>增强型PDF查看器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f1f1f1;
+            gap: 10px;
+        }
+        .import-section {
+            display: flex;
+            gap: 10px;
+        }
+        #pdf-viewer {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            max-height: 800px;
+        }
+        #pdf-viewer canvas {
+            max-width: 100%;
+            margin-bottom: 10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .page-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .url-input {
+            width: 300px;
+        }
+        .btn {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="toolbar">
+            <div class="import-section">
+                <input type="file" id="pdf-upload" accept=".pdf">
+                
+                <input type="text" id="pdf-url" class="url-input" placeholder="输入PDF文件链接">
+                <button id="load-url" class="btn">导入链接</button>
+            </div>
+            
+            <div class="page-controls">
+                <button id="prev-page" class="btn">上一页</button>
+                <span id="page-num">0 / 0</span>
+                <button id="next-page" class="btn">下一页</button>
+                
+                <select id="zoom-select">
+                    <option value="0.5">50%</option>
+                    <option value="1" selected>100%</option>
+                    <option value="1.5">150%</option>
+                    <option value="2">200%</option>
+                </select>
+
+                <button id="save-pdf" class="btn">保存PDF</button>
+            </div>
+        </div>
+        
+        <div id="pdf-viewer"></div>
+
+    </div>
+
+    <!-- 引入PDF.js和FileSaver库 -->
+    <script src="pdf.min.js"></script>
+    <script src="pdf.worker.min.js"></script>
+    <script src="FileSaver.min.js"></script>
+
+    <script>
+        // PDF.js配置
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
+
+        // 全局变量
+        let pdfDoc = null;
+        let pageNum = 1;
+        let pageRendering = false;
+        let pageNumPending = null;
+        let scale = 1.0;
+        let pdfRawData = null;
+
+        // 获取DOM元素
+        const pdfUpload = document.getElementById('pdf-upload');
+        const pdfUrl = document.getElementById('pdf-url');
+        const loadUrlBtn = document.getElementById('load-url');
+        const pdfViewer = document.getElementById('pdf-viewer');
+        const prevPage = document.getElementById('prev-page');
+        const nextPage = document.getElementById('next-page');
+        const pageNumSpan = document.getElementById('page-num');
+        const zoomSelect = document.getElementById('zoom-select');
+        const savePdfBtn = document.getElementById('save-pdf');
+
+        // 解析URL参数的函数
+        function getUrlParameter(name) {
+            name = name.replace(/[$$]/, '\$$').replace(/[$$]/, '\$$');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1]);
+        }
+
+        // 渲染PDF页面(之前的代码保持不变)
+        function renderPage(num) {
+            pageRendering = true;
+            
+            pdfDoc.getPage(num).then(function(page) {
+                const viewport = page.getViewport({ scale: scale });
+                
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                const renderTask = page.render(renderContext);
+                
+                renderTask.promise.then(function() {
+                    pageRendering = false;
+                    
+                    if (pageNumPending !== null) {
+                        renderPage(pageNumPending);
+                        pageNumPending = null;
+                    }
+                });
+                
+                pageNumSpan.textContent = `${num} / ${pdfDoc.numPages}`;
+                
+                pdfViewer.innerHTML = '';
+                pdfViewer.appendChild(canvas);
+            });
+        }
+
+        // 加载PDF的通用方法
+        function loadPDF(data, filename = 'downloaded.pdf') {
+            pdfjsLib.getDocument(data).promise.then(function(pdf) {
+                pdfDoc = pdf;
+                pageNum = 1;
+                pdfRawData = data;
+                savePdfBtn.dataset.filename = filename; // 保存文件名
+                renderPage(pageNum);
+            }).catch(function(error) {
+                alert('PDF加载失败：' + error);
+            });
+        }
+
+        // 初始化时检查URL参数
+        function initFromUrlParam() {
+            // 尝试从URL参数中获取PDF链接
+            const pdfLink = getUrlParameter('pdf');
+            if (pdfLink) {
+                pdfUrl.value = pdfLink;
+                // 自动加载PDF
+                fetchPdfFromUrl(pdfLink);
+            }
+        }
+
+        // 从URL获取PDF的增强函数
+        function fetchPdfFromUrl(url) {
+            // 提取文件名（如果可能）
+            let filename = 'downloaded.pdf';
+            try {
+                const urlObj = new URL(url);
+                const pathParts = urlObj.pathname.split('/');
+                const lastPart = pathParts[pathParts.length - 1];
+                if (lastPart.endsWith('.pdf')) {
+                    filename = lastPart;
+                }
+            } catch(e) {
+                console.warn('无法提取文件名', e);
+            }
+
+            fetch(url)
+                .then(response => {
+                    // 处理可能的错误响应
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.arrayBuffer();
+                })
+                .then(arrayBuffer => {
+                    const typedArray = new Uint8Array(arrayBuffer);
+                    loadPDF(typedArray, filename);
+                })
+                .catch(error => {
+                    alert('PDF链接加载失败：' + error);
+                });
+        }
+
+        // 链接导入事件
+        loadUrlBtn.addEventListener('click', function() {
+            const url = pdfUrl.value.trim();
+            if (url) {
+                fetchPdfFromUrl(url);
+            }
+        });
+
+        // 文件上传事件
+        pdfUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const typedArray = new Uint8Array(e.target.result);
+                    loadPDF(typedArray, file.name);
+                }
+                
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        // 保存PDF到本地
+        savePdfBtn.addEventListener('click', function() {
+            if (pdfRawData) {
+                const blob = new Blob([pdfRawData], { type: 'application/pdf' });
+                saveAs(blob, this.dataset.filename || 'downloaded.pdf');
+            } else {
+                alert('请先加载PDF');
+            }
+        });
+
+        // 翻页事件(之前代码保持不变)
+        function queueRenderPage(num) {
+            if (pageRendering) {
+                pageNumPending = num;
+            } else {
+                renderPage(num);
+            }
+        }
+
+        prevPage.addEventListener('click', function() {
+            if (pageNum <= 1) return;
+            pageNum--;
+            queueRenderPage(pageNum);
+        });
+
+        nextPage.addEventListener('click', function() {
+            if (pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            queueRenderPage(pageNum);
+        });
+
+        // 缩放事件
+        zoomSelect.addEventListener('change', function() {
+            scale = parseFloat(this.value);
+            if (pdfDoc) {
+                renderPage(pageNum);
+            }
+        });
+		// 页面加载时初始化
+        window.addEventListener('load', initFromUrlParam);
+
+    </script>
+
+    <!-- 使用示例说明 -->
+    <div style="max-width: 900px; margin: 20px auto; background: #f4f4f4; padding: 15px; border-radius: 5px;">
+        <h3>PDF查看器使用示例</h3>
+        <ol>
+            <li>
+                <strong>直接链接打开方式：</strong>
+                <br>
+                在浏览器地址栏中添加PDF链接参数，例如：
+                <pre>http://my-site.com/pdfviewer.html?pdf=https://example.com/sample.pdf</pre>
+            </li>
+            <li>
+                <strong>手动导入方式：</strong>
+                <br>
+                1) 在输入框中粘贴PDF链接
+                <br>
+                2) 点击"导入链接"按钮
+            </li>
+            <li>
+                <strong>本地文件导入：</strong>
+                <br>
+                点击文件选择按钮，选择本地PDF文件
+            </li>
+        </ol>
+        
+        <h4>注意事项：</h4>
+        <ul>
+            <li>PDF链接需要支持跨域访问</li>
+            <li>部分受保护的PDF可能无法直接加载</li>
+            <li>大文件加载可能需要一定时间</li>
+        </ul>
+    </div>
+</body>
+</html>

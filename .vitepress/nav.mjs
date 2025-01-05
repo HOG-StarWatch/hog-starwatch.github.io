@@ -30,6 +30,7 @@ export default [
         { text: '文件处理',
           items: [
             { text: 'Word转MarkDown', link: '../../../word2md.html', target: '_self', },
+            { text: 'PDF查看器', link: '../../../pdfviewer.html', target: '_self', },
             { text: '图片格式转换', link: '../../../img2img.html', target: '_self', },
             { text: '文件多合一-非压缩', link: '../../../Zip.html', target: '_self', },
             { text: '文件夹合一-非压缩', link: '../../../Zip-dir.html', target: '_self', },
