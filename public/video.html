@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <title>手机视频播放器</title>
+</head>
+
+<body class="bg-gray-100 flex flex-col items-center justify-center h-screen">
+    <input type="file" id="videoInput" accept="video/*" class="mb-4 p-2 border border-gray-300 rounded">
+    <video id="videoPlayer" width="" height="" controls class="shadow-md rounded-md">
+        你的浏览器不支持视频播放。
+    </video>
+
+    <script>
+        const videoInput = document.getElementById('videoInput');
+        const videoPlayer = document.getElementById('videoPlayer');
+
+        videoInput.addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const objectURL = URL.createObjectURL(file);
+                videoPlayer.src = objectURL;
+            }
+        });
+    </script>
+</body>
+
+</html>
+    
