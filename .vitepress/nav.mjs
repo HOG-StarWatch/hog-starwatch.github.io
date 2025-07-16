@@ -2,14 +2,15 @@ export default [
     { text: '主页', link: '/' },
     { text: '设定集收录',
       items: [
-        { text: 'StarCraftII', link: '/StarCraft/官方美术设定集.md' },
-        { text: 'WorldOfVaira', link: '/WorldofVaira/' },
+        { text: 'StarCraftII', link: '../../../StarCraft/官方美术设定集.md', target: '_self', },
+        { text: 'WorldOfVaira', link: '../../../WorldofVaira/', target: '_self', },
       ],
     },
     { text: '其他',
       items: [
         { text: 'SCP', link: 'https://hog-starwatch.github.io/SCP/', target: '_self', },
         { text: 'Novel', link: 'https://hog-starwatch.github.io/Novel/', target: '_self', },
+        { text: 'Domain', link: '../../../DomainIndex.md', target: '_self', },
       ],
     },
     { text: '小工具',
@@ -54,8 +55,8 @@ export default [
     },
     { text: '其他',
       items: [
-        { text: 'RPGMaker相关', link: '/RPGMaker/RPGMaker_index.md', target: '_self', },
-        { text: 'RPGMakerMV存档的加密解密与保护', link: '/RPGMaker/RPGMakerMV存档的加密解密与保护.md' },
+        { text: 'RPGMaker相关', link: '../../../RPGMaker/RPGMaker_index.md', target: '_self', },
+        { text: 'RPGMakerMV存档的加密解密与保护', link: '../../../RPGMaker/RPGMakerMV存档的加密解密与保护.md', target: '_self', },
       ],
     },
     

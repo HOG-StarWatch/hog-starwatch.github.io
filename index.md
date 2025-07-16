@@ -11,8 +11,8 @@ hero:
     alt: 背景图片
   actions:
     - theme: brand
-      text: My Page
-      link: https://starwatch.lovely.pw/
+      text: My Domain
+      link: ../../../DomainIndex.md
     - theme: alt
       text: Tusiart
       link: https://tusiart.com/u/648531931343957263
