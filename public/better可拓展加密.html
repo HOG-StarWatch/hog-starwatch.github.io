@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字符编码器</title>
+    <style>
+        :root {
+            --primary: #ff4081;
+            --secondary: #3f51b5;
+            --background: #fce4ec;
+            --surface: #ffffff;
+            --error: #b00020;
+            --success: #4caf50;
+            --on-surface: #212121;
+            --shadow: rgba(0, 0, 0, 0.15);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #fce4ec 100%);
+            color: var(--on-surface);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 850px;
+            width: 100%;
+            box-shadow: 0 12px 30px var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 24px 24px 0 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+        
+        .settings {
+            background: #f0f7ff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .settings-title {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .settings-title::before {
+            content: "⚙️";
+            margin-right: 10px;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .app-body {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .section {
+            background: #f9f9f9;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+        
+        .section-title::before {
+            content: "◆";
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            resize: vertical;
+            font-size: 1rem;
+            font-family: inherit;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 64, 129, 0.2);
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 64, 129, 0.2);
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 15px rgba(255, 64, 129, 0.4);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 64, 129, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        #encodeBtn {
+            background: linear-gradient(135deg, #ff4081, #f50057);
+        }
+        
+        #decodeBtn {
+            background: linear-gradient(135deg, #3f51b5, #303f9f);
+        }
+        
+        .info-panel {
+            background: #e3f2fd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .info-title {
+            display: flex;
+            align-items: center;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+        
+        .info-title::before {
+            content: "ℹ";
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .info-content {
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .info-content ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .info-content li {
+            margin-bottom: 8px;
+        }
+        
+        .character-set {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .char-card {
+            width: 38px;
+            height: 38px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--success);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 500;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: transform 0.4s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .toast.error {
+            background: var(--error);
+        }
+        
+        .example {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+            background: rgba(255, 64, 129, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .example-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+        
+        .charset-preview {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f9ff;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            min-height: 45px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>字符编码器</h1>
+            <p class="subtitle">支持自定义字符集 - 编码时自动记录字符集信息</p>
+        </div>
+        
+        <div class="settings">
+            <h3 class="settings-title">字符集设置</h3>
+            <div class="settings-grid">
+                <label for="presetCharset">预设字符集：</label>
+                <select id="presetCharset">
+                    <option value="default">默认声音字符集</option>
+                    <option value="sound">另一个声音字符集</option>
+                    <option value="emoji">表情符号</option>
+                    <option value="numbers">数字(0-9a-f)</option>
+                    <option value="letters">字母(a-p)</option>
+                    <option value="symbols">符号集</option>
+                    <option value="custom">自定义字符集</option>
+                </select>
+                
+                <label for="customCharset">自定义字符集：</label>
+                <div>
+                    <input type="text" id="customCharset" placeholder="输入16个不重复字符" maxlength="16">
+                    <div class="charset-preview" id="charsetPreview">
+                        齁,哦,噢,喔,咕,咿,嗯,啊,～,哈,！,唔,哼,❤,呃,呼
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="app-body">
+            <div class="section">
+                <div class="section-title">
+                    <h2>原始文本</h2>
+                </div>
+                <label for="inputRaw">输入要编码的文本：</label>
+                <textarea id="inputRaw" placeholder="在此输入原始文本...">这是一个支持自定义字符集的编码器！</textarea>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <h2>编码结果</h2>
+                </div>
+                <label for="inputCode">编码结果（含字符集信息）：</label>
+                <textarea id="inputCode" placeholder="编码结果将显示在这里..."></textarea>
+                
+                <div class="example">
+                    <div class="example-title">编码格式：</div>
+                    <div>#CHARSET=字符集字符串<br>编码后的内容</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="character-set" id="currentCharset">
+            <div class="char-card">齁</div>
+            <div class="char-card">哦</div>
+            <div class="char-card">噢</div>
+            <div class="char-card">喔</div>
+            <div class="char-card">咕</div>
+            <div class="char-card">咿</div>
+            <div class="char-card">嗯</div>
+            <div class="char-card">啊</div>
+            <div class="char-card">～</div>
+            <div class="char-card">哈</div>
+            <div class="char-card">！</div>
+            <div class="char-card">唔</div>
+            <div class="char-card">哼</div>
+            <div class="char-card">❤</div>
+            <div class="char-card">呃</div>
+            <div class="char-card">呼</div>
+        </div>
+        
+        <div class="button-group">
+            <button id="encodeBtn">编码文本</button>
+            <button id="decodeBtn">解码字符</button>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-title">
+                <h3>使用说明</h3>
+            </div>
+            <div class="info-content">
+                <ul>
+                    <li><strong>编码</strong>：在左侧输入文本，点击"编码文本"转换为字符序列</li>
+                    <li><strong>解码</strong>：在右侧输入字符序列（含字符集信息），点击"解码字符"还原文本</li>
+                    <li>编码结果开头包含 <code>#CHARSET=</code> 标识使用的字符集</li>
+                    <li>支持自定义16个字符集，每个字符必须唯一</li>
+                    <li>解码时会自动识别编码时使用的字符集</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">操作成功！</div>
+
+    <script>
+        // 预设字符集
+        const charsets = {
+            default: ['齁', '哦', '噢', '喔', '咕', '咿', '嗯', '啊', '～', '哈', '！', '唔', '哼', '❤', '呃', '呼'],
+            sound: ['喵', '呜', '嗷', '喔', '嘎', '吼', '嗯', '啊', '～', '哈', '！', '唔', '哼', '❤', '呃', '呼'],
+            emoji: ['😀', '😍', '😂', '🥰', '🤩', '😎', '😢', '😡', '🥳', '🤯', '🥶', '🤢', '👻', '🤖', '👾', '🐱'],
+            numbers: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'],
+            letters: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'],
+            symbols: ['★', '☆', '♥', '♦', '♣', '♠', '☀', '☁', '☂', '☃', '☎', '☑', '✓', '✕', '✰', '❀']
+        };
+        
+        // 当前字符集
+        let currentCharset = [...charsets.default];
+        let currentCharsetMap = {};
+        
+        // DOM元素
+        const inputRaw = document.getElementById('inputRaw');
+        const inputCode = document.getElementById('inputCode');
+        const encodeBtn = document.getElementById('encodeBtn');
+        const decodeBtn = document.getElementById('decodeBtn');
+        const toast = document.getElementById('toast');
+        const presetSelect = document.getElementById('presetCharset');
+        const customInput = document.getElementById('customCharset');
+        const charsetPreview = document.getElementById('charsetPreview');
+        const currentCharsetDisplay = document.getElementById('currentCharset');
+        
+        // 更新字符集显示
+        function updateCharsetDisplay() {
+            currentCharsetDisplay.innerHTML = '';
+            currentCharset.forEach(char => {
+                const charCard = document.createElement('div');
+                charCard.className = 'char-card';
+                charCard.textContent = char;
+                currentCharsetDisplay.appendChild(charCard);
+            });
+            
+            charsetPreview.textContent = currentCharset.join('');
+        }
+        
+        // 创建字符映射
+        function createCharsetMap() {
+            currentCharsetMap = {};
+            for (let i = 0; i < currentCharset.length; i++) {
+                currentCharsetMap[currentCharset[i]] = i;
+            }
+        }
+        
+        // 验证字符集
+        function validateCharset(chars) {
+            if (chars.length !== 16) {
+                return {valid: false, message: '字符集必须包含16个字符'};
+            }
+            
+            const uniqueChars = new Set(chars);
+            if (uniqueChars.size !== 16) {
+                return {valid: false, message: '字符集包含重复字符'};
+            }
+            
+            return {valid: true};
+        }
+        
+        // 显示提示信息
+        function showToast(message, isError = false) {
+            toast.textContent = message;
+            toast.className = 'toast';
+            
+            if (isError) {
+                toast.classList.add('error');
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 编码函数
+        function encode() {
+            const input = inputRaw.value;
+            
+            if (!input.trim()) {
+                showToast('请输入要编码的文本', true);
+                return;
+            }
+            
+            try {
+                // 将字符串转换为UTF-8字节数组
+                const utf8Bytes = new TextEncoder().encode(input);
+                let encoded = '';
+                
+                // 将每个字节编码为两个字符
+                for (let byte of utf8Bytes) {
+                    const high = (byte >> 4) & 0x0F;
+                    const low = byte & 0x0F;
+                    encoded += currentCharset[high] + currentCharset[low];
+                }
+                
+                // 添加字符集信息
+                const charsetHeader = `#CHARSET=${currentCharset.join('')}\n`;
+                inputCode.value = charsetHeader + encoded;
+                showToast('文本编码成功！');
+            } catch (error) {
+                showToast('编码过程中发生错误: ' + error.message, true);
+            }
+        }
+        
+        // 解码函数
+        function decode() {
+            let input = inputCode.value;
+            
+            if (!input.trim()) {
+                showToast('请输入要解码的字符序列', true);
+                return;
+            }
+            
+            // 检查字符集信息
+            let charsetLine = '';
+            if (input.startsWith('#CHARSET=')) {
+                const endOfLine = input.indexOf('\n');
+                if (endOfLine === -1) {
+                    showToast('无效的字符集信息', true);
+                    return;
+                }
+                
+                charsetLine = input.substring(0, endOfLine);
+                input = input.substring(endOfLine + 1);
+                
+                // 提取字符集
+                const charsetStr = charsetLine.substring(9);
+                if (charsetStr.length !== 16) {
+                    showToast('字符集长度必须为16个字符', true);
+                    return;
+                }
+                
+                currentCharset = Array.from(charsetStr);
+                createCharsetMap();
+                updateCharsetDisplay();
+            }
+            
+            // 检查输入长度是否为偶数
+            if (input.length % 2 !== 0) {
+                showToast('输入长度必须为偶数', true);
+                return;
+            }
+            
+            try {
+                const bytes = [];
+                
+                // 每两个字符解码为一个字节
+                for (let i = 0; i < input.length; i += 2) {
+                    const char1 = input[i];
+                    const char2 = input[i + 1];
+                    
+                    // 检查字符是否在字符集中
+                    if (currentCharsetMap[char1] === undefined || currentCharsetMap[char2] === undefined) {
+                        const invalidChar = currentCharsetMap[char1] === undefined ? char1 : char2;
+                        showToast(`无效字符: ${invalidChar}`, true);
+                        return;
+                    }
+                    
+                    const high = currentCharsetMap[char1];
+                    const low = currentCharsetMap[char2];
+                    const byte = (high << 4) | low;
+                    bytes.push(byte);
+                }
+                
+                // 将字节数组解码为字符串
+                const decoded = new TextDecoder().decode(new Uint8Array(bytes));
+                inputRaw.value = decoded;
+                showToast('字符解码成功！');
+            } catch (error) {
+                showToast('解码过程中发生错误: ' + error.message, true);
+            }
+        }
+        
+        // 添加事件监听器
+        encodeBtn.addEventListener('click', encode);
+        decodeBtn.addEventListener('click', decode);
+        
+        // 预设字符集选择
+        presetSelect.addEventListener('change', function() {
+            const selected = this.value;
+            
+            if (selected === 'custom') {
+                customInput.style.display = 'block';
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                currentCharset = [...charsets[selected]];
+                createCharsetMap();
+                updateCharsetDisplay();
+                showToast(`已切换到预设: ${this.options[this.selectedIndex].text}`);
+            }
+        });
+        
+        // 自定义字符集输入
+        customInput.addEventListener('input', function() {
+            const chars = this.value;
+            
+            // 自动截取前16个字符
+            if (chars.length > 16) {
+                this.value = chars.substring(0, 16);
+            }
+            
+            // 更新预览
+            charsetPreview.textContent = this.value;
+            
+            // 验证字符集
+            if (this.value.length === 16) {
+                const validation = validateCharset(Array.from(this.value));
+                if (validation.valid) {
+                    currentCharset = Array.from(this.value);
+                    createCharsetMap();
+                    updateCharsetDisplay();
+                    showToast('自定义字符集已应用');
+                } else {
+                    showToast(validation.message, true);
+                }
+            }
+        });
+        
+        // 初始化
+        function init() {
+            createCharsetMap();
+            updateCharsetDisplay();
+            encode();
+        }
+        
+        // 页面加载时初始化
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

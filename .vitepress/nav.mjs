@@ -16,6 +16,7 @@ export default [
     { text: '小工具',
       items: [
         { text: '颜色格式转换&取色', link: '../../../颜色格式转换&取色.html', target: '_self', },
+        { text: '图片像素化', link: '../../../pix.html', target: '_self', },
         { text: '二维码生成器', link: '../../../QrCode.html', target: '_self', },
         { text: '音阶片段生成器', link: '../../../Music.html', target: '_self', },
         { text: '字符串处理',
@@ -24,6 +25,7 @@ export default [
             { text: '零宽隐写', link: '../../../零宽隐写.html', target: '_self', },
             { text: '加密解密', link: '../../../加密解密.html', target: '_self', },
             { text: '四位可扩展加密', link: '../../../16_21-4可扩展加密.html', target: '_self', },
+            { text: '更好的十六位可扩展加密', link: '../../../better可拓展加密.html', target: '_self', },
             { text: '字符串计数工具', link: '../../../字符串计数工具.html', target: '_self', },
             { text: 'Unicode字符转换', link: '../../../Unicode.html', target: '_self', },
             { text: 'URL中文字符转换', link: '../../../urlcode.html', target: '_self', },

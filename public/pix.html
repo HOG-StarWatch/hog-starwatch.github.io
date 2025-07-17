@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片像素化处理工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            animation: fadeIn 1s ease-out;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            border-radius: 2px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 20px auto;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            width: 100%;
+            justify-content: center;
+            animation: slideUp 1s ease-out;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+            width: 100%;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        
+        label i {
+            margin-right: 10px;
+            color: #ff9966;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="range"]:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ff5e62;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 94, 98, 0.5);
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            border-color: #ff9966;
+            background: rgba(0, 0, 0, 0.15);
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ff9966;
+        }
+        
+        .upload-text {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff9966, #ff5e62);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            width: 100%;
+            margin: 10px 0;
+            box-shadow: 0 4px 15px rgba(255, 94, 98, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        button i {
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 94, 98, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 550px;
+            margin: 15px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .placeholder {
+            width: 100%;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .placeholder i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ff9966;
+        }
+        
+        .pixel-size-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+            color: #ff9966;
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .value-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .info {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .info h2 {
+            margin-bottom: 15px;
+            color: #ff9966;
+        }
+        
+        .info p {
+            line-height: 1.7;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .info p i {
+            margin-right: 10px;
+            color: #ff9966;
+        }
+        
+        .mobile-warning {
+            display: none;
+            background: rgba(255, 100, 100, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .mode-toggle {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 50px;
+            overflow: hidden;
+        }
+        
+        .mode-btn {
+            padding: 8px 15px;
+            background: transparent;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: none;
+            width: auto;
+            margin: 0;
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(45deg, #ff9966, #ff5e62);
+        }
+        
+        .comparison-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+        
+        .comparison-before, .comparison-after {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .comparison-after {
+            width: 50%;
+            border-right: 2px solid #ff9966;
+        }
+        
+        .comparison-handle {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #ff9966;
+            cursor: col-resize;
+            transform: translateX(-50%);
+        }
+        
+        .comparison-handle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ff9966;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .controls, .preview {
+                max-width: 100%;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .mobile-warning {
+                display: block;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .processing {
+            position: relative;
+        }
+        
+        .processing::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-image"></i> 图片像素化处理工具</h1>
+            <p class="subtitle">上传图片，调整像素化程度，创建独特的像素艺术效果。完全在浏览器中处理，您的图片不会上传到服务器。</p>
+        </header>
+        
+        <div class="mobile-warning">
+            <i class="fas fa-mobile-alt"></i> 提示：在移动设备上处理大图片可能需要更长时间
+        </div>
+        
+        <div class="app-container">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="imageUpload"><i class="fas fa-upload"></i> 上传图片</label>
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div class="upload-text">点击或拖放图片到此处</div>
+                        <div class="upload-hint">支持 JPG, PNG, GIF 格式</div>
+                        <input type="file" id="imageUpload" accept="image/*" hidden>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="pixelSize"><i class="fas fa-th-large"></i> 像素块大小: <span id="pixelValue">8</span>px</label>
+                    <input type="range" id="pixelSize" min="2" max="30" value="8">
+                    <div class="value-display">
+                        <span><i class="fas fa-search-minus"></i> 精细</span>
+                        <span><i class="fas fa-search-plus"></i> 粗糙</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <button id="processBtn" disabled>
+                        <i class="fas fa-cogs"></i> 处理图片
+                    </button>
+                    <button id="downloadBtn" disabled>
+                        <i class="fas fa-download"></i> 下载图片
+                    </button>
+                    <button id="resetBtn">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                </div>
+                
+                <div class="info">
+                    <h2><i class="fas fa-info-circle"></i> 使用说明</h2>
+                    <p><i class="fas fa-arrow-right"></i> 上传JPG或PNG格式的图片</p>
+                    <p><i class="fas fa-arrow-right"></i> 调整滑块设置像素块大小</p>
+                    <p><i class="fas fa-arrow-right"></i> 点击"处理图片"生成效果</p>
+                    <p><i class="fas fa-arrow-right"></i> 点击"下载图片"保存结果</p>
+                </div>
+            </div>
+            
+            <div class="preview">
+                <div class="preview-header">
+                    <h2><i class="fas fa-eye"></i> 效果预览</h2>
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" data-mode="preview">预览</button>
+                        <button class="mode-btn" data-mode="compare">对比</button>
+                    </div>
+                </div>
+                
+                <div class="canvas-container">
+                    <div class="placeholder" id="previewPlaceholder">
+                        <i class="fas fa-image"></i>
+                        图片处理后将显示在这里
+                    </div>
+                    <canvas id="originalCanvas"></canvas>
+                    <canvas id="pixelatedCanvas" style="display: none;"></canvas>
+                    
+                    <div class="comparison-container" style="display: none;">
+                        <div class="comparison-before">
+                            <canvas id="beforeCanvas"></canvas>
+                        </div>
+                        <div class="comparison-after">
+                            <canvas id="afterCanvas"></canvas>
+                        </div>
+                        <div class="comparison-handle"></div>
+                    </div>
+                </div>
+                
+                <div class="pixel-size-display">
+                    <i class="fas fa-th"></i> 当前像素块大小: <span id="currentPixelSize">8</span>px
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const imageUpload = document.getElementById('imageUpload');
+        const uploadArea = document.getElementById('uploadArea');
+        const pixelSize = document.getElementById('pixelSize');
+        const pixelValue = document.getElementById('pixelValue');
+        const currentPixelSize = document.getElementById('currentPixelSize');
+        const processBtn = document.getElementById('processBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const pixelatedCanvas = document.getElementById('pixelatedCanvas');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const beforeCanvas = document.getElementById('beforeCanvas');
+        const afterCanvas = document.getElementById('afterCanvas');
+        const comparisonContainer = document.querySelector('.comparison-container');
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        
+        // 上下文对象
+        let originalCtx = originalCanvas.getContext('2d');
+        let pixelatedCtx = pixelatedCanvas.getContext('2d');
+        let beforeCtx = beforeCanvas.getContext('2d');
+        let afterCtx = afterCanvas.getContext('2d');
+        
+        // 全局变量
+        let originalImage = null;
+        let pixelSizeValue = 8;
+        let currentMode = 'preview';
+        
+        // 更新像素大小显示
+        function updatePixelSizeDisplay() {
+            pixelValue.textContent = pixelSizeValue;
+            currentPixelSize.textContent = pixelSizeValue;
+        }
+        
+        // 加载图片
+        function loadImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        resolve(img);
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // 调整Canvas大小
+        function resizeCanvas(canvas, width, height) {
+            canvas.width = width;
+            canvas.height = height;
+        }
+        
+        // 像素化处理
+        function pixelateImage() {
+            if (!originalImage) return;
+            
+            // 获取原始尺寸
+            const width = originalImage.width;
+            const height = originalImage.height;
+            
+            // 调整画布大小
+            resizeCanvas(pixelatedCanvas, width, height);
+            resizeCanvas(originalCanvas, width, height);
+            resizeCanvas(beforeCanvas, width, height);
+            resizeCanvas(afterCanvas, width, height);
+            
+            // 绘制原始图片
+            originalCtx.drawImage(originalImage, 0, 0);
+            beforeCtx.drawImage(originalImage, 0, 0);
+            
+            // 显示像素化画布
+            pixelatedCanvas.style.display = 'block';
+            previewPlaceholder.style.display = 'none';
+            
+            // 像素化处理
+            pixelatedCtx.drawImage(originalImage, 0, 0);
+            
+            const imageData = pixelatedCtx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            
+            for (let y = 0; y < height; y += pixelSizeValue) {
+                for (let x = 0; x < width; x += pixelSizeValue) {
+                    // 计算当前块的边界
+                    const blockEndX = Math.min(x + pixelSizeValue, width);
+                    const blockEndY = Math.min(y + pixelSizeValue, height);
+                    
+                    // 计算当前块的平均颜色
+                    let totalR = 0, totalG = 0, totalB = 0, count = 0;
+                    
+                    for (let blockY = y; blockY < blockEndY; blockY++) {
+                        for (let blockX = x; blockX < blockEndX; blockX++) {
+                            const index = (blockY * width + blockX) * 4;
+                            totalR += data[index];
+                            totalG += data[index + 1];
+                            totalB += data[index + 2];
+                            count++;
+                        }
+                    }
+                    
+                    const avgR = Math.round(totalR / count);
+                    const avgG = Math.round(totalG / count);
+                    const avgB = Math.round(totalB / count);
+                    
+                    // 填充整个块为平均颜色
+                    for (let blockY = y; blockY < blockEndY; blockY++) {
+                        for (let blockX = x; blockX < blockEndX; blockX++) {
+                            const index = (blockY * width + blockX) * 4;
+                            data[index] = avgR;
+                            data[index + 1] = avgG;
+                            data[index + 2] = avgB;
+                        }
+                    }
+                }
+            }
+            
+            // 应用处理后的图像数据
+            pixelatedCtx.putImageData(imageData, 0, 0);
+            afterCtx.putImageData(imageData, 0, 0);
+            
+            // 将处理后的图像绘制到原始Canvas上显示
+            originalCtx.drawImage(pixelatedCanvas, 0, 0);
+            
+            // 初始化对比模式
+            initComparison();
+        }
+        
+        // 初始化对比模式
+        function initComparison() {
+            const container = document.querySelector('.comparison-container');
+            const handle = document.querySelector('.comparison-handle');
+            let isResizing = false;
+            
+            handle.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+                const containerRect = container.getBoundingClientRect();
+                const offsetX = e.clientX - containerRect.left;
+                const percent = Math.min(Math.max(offsetX / containerRect.width, 0), 1);
+                
+                document.querySelector('.comparison-after').style.width = `${percent * 100}%`;
+            });
+            
+            document.addEventListener('mouseup', function() {
+                isResizing = false;
+            });
+            
+            // 触摸事件支持
+            handle.addEventListener('touchstart', function(e) {
+                isResizing = true;
+                e.preventDefault();
+            });
+            
+            document.addEventListener('touchmove', function(e) {
+                if (!isResizing) return;
+                const containerRect = container.getBoundingClientRect();
+                const touch = e.touches[0];
+                const offsetX = touch.clientX - containerRect.left;
+                const percent = Math.min(Math.max(offsetX / containerRect.width, 0), 1);
+                
+                document.querySelector('.comparison-after').style.width = `${percent * 100}%`;
+            });
+            
+            document.addEventListener('touchend', function() {
+                isResizing = false;
+            });
+        }
+        
+        // 下载图片
+        function downloadImage() {
+            if (!originalImage) return;
+            
+            const link = document.createElement('a');
+            link.download = 'pixelated-image.png';
+            link.href = pixelatedCanvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // 重置所有
+        function resetAll() {
+            imageUpload.value = '';
+            originalImage = null;
+            pixelSizeValue = 8;
+            pixelSize.value = 8;
+            updatePixelSizeDisplay();
+            processBtn.disabled = true;
+            downloadBtn.disabled = true;
+            originalCanvas.style.display = 'none';
+            pixelatedCanvas.style.display = 'none';
+            previewPlaceholder.style.display = 'flex';
+            comparisonContainer.style.display = 'none';
+            resizeCanvas(originalCanvas, 0, 0);
+            resizeCanvas(pixelatedCanvas, 0, 0);
+            resizeCanvas(beforeCanvas, 0, 0);
+            resizeCanvas(afterCanvas, 0, 0);
+            
+            // 重置模式按钮
+            document.querySelector('[data-mode="preview"]').classList.add('active');
+            document.querySelector('[data-mode="compare"]').classList.remove('active');
+            currentMode = 'preview';
+        }
+        
+        // 切换预览模式
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            if (mode === 'preview') {
+                originalCanvas.style.display = 'block';
+                comparisonContainer.style.display = 'none';
+            } else {
+                originalCanvas.style.display = 'none';
+                comparisonContainer.style.display = 'block';
+            }
+        }
+        
+        // 事件监听
+        uploadArea.addEventListener('click', function() {
+            imageUpload.click();
+        });
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ff9966';
+            this.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+        });
+        
+        uploadArea.addEventListener('dragleave', function() {
+            this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+            
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                imageUpload.files = e.dataTransfer.files;
+                handleImageUpload(e.dataTransfer.files[0]);
+            }
+        });
+        
+        async function handleImageUpload(file) {
+            try {
+                originalImage = await loadImage(file);
+                
+                // 限制图片尺寸
+                const maxDimension = 1500;
+                if (originalImage.width > maxDimension || originalImage.height > maxDimension) {
+                    const scale = Math.min(
+                        maxDimension / originalImage.width,
+                        maxDimension / originalImage.height
+                    );
+                    const newWidth = originalImage.width * scale;
+                    const newHeight = originalImage.height * scale;
+                    
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCanvas.width = newWidth;
+                    tempCanvas.height = newHeight;
+                    tempCtx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+                    
+                    const resizedImage = new Image();
+                    resizedImage.src = tempCanvas.toDataURL('image/png');
+                    resizedImage.onload = function() {
+                        originalImage = resizedImage;
+                        processBtn.disabled = false;
+                    };
+                } else {
+                    processBtn.disabled = false;
+                }
+                
+                // 更新上传区域显示
+                uploadArea.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <div class="upload-text">图片已选择</div>
+                    <div class="upload-hint">${file.name}</div>
+                `;
+            } catch (error) {
+                alert('图片加载失败，请重试');
+                console.error(error);
+                uploadArea.innerHTML = `
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <div class="upload-text">点击或拖放图片到此处</div>
+                    <div class="upload-hint">支持 JPG, PNG, GIF 格式</div>
+                `;
+            }
+        }
+        
+        imageUpload.addEventListener('change', async function(e) {
+            if (e.target.files && e.target.files[0]) {
+                await handleImageUpload(e.target.files[0]);
+            }
+        });
+        
+        pixelSize.addEventListener('input', function() {
+            pixelSizeValue = parseInt(this.value);
+            updatePixelSizeDisplay();
+        });
+        
+        processBtn.addEventListener('click', function() {
+            if (!originalImage) return;
+            
+            this.classList.add('processing');
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-cogs"></i> 处理中...';
+            
+            // 使用setTimeout让UI有机会更新
+            setTimeout(() => {
+                try {
+                    pixelateImage();
+                    downloadBtn.disabled = false;
+                    
+                    // 处理完成后显示提示
+                    const notification = document.createElement('div');
+                    notification.textContent = '图片处理完成！';
+                    notification.style.position = 'fixed';
+                    notification.style.bottom = '20px';
+                    notification.style.left = '50%';
+                    notification.style.transform = 'translateX(-50%)';
+                    notification.style.backgroundColor = '#4CAF50';
+                    notification.style.color = 'white';
+                    notification.style.padding = '10px 20px';
+                    notification.style.borderRadius = '5px';
+                    notification.style.zIndex = '1000';
+                    notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 3000);
+                    
+                } catch (error) {
+                    alert('处理图片时出错: ' + error.message);
+                    console.error(error);
+                }
+                
+                this.classList.remove('processing');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-cogs"></i> 处理图片';
+            }, 100);
+        });
+        
+        downloadBtn.addEventListener('click', downloadImage);
+        resetBtn.addEventListener('click', resetAll);
+        
+        // 模式切换
+        modeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                modeButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                switchMode(this.dataset.mode);
+            });
+        });
+        
+        // 初始化
+        updatePixelSizeDisplay();
+    </script>
+</body>
+</html>
