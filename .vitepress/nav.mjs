@@ -15,9 +15,15 @@ export default [
     },
     { text: '小工具',
       items: [
-        { text: '颜色格式转换&取色', link: '../../../颜色格式转换&取色.html', target: '_self', },
-        { text: '图片像素化', link: '../../../pix.html', target: '_self', },
-        { text: '二维码生成器', link: '../../../QrCode.html', target: '_self', },
+        { text: '图片处理',
+          items:[
+            { text: '颜色格式转换&取色', link: '../../../颜色格式转换&取色.html', target: '_self', },
+            { text: '图片像素化', link: '../../../pix.html', target: '_self', },
+            { text: '二维码生成器', link: '../../../QrCode.html', target: '_self', },
+            { text: '差值分离图像加密', link: '../../../差值分离图像加密.html', target: '_self', },
+            { text: '文件转二维码', link: '../../../File2QRcode.html', target: '_self', },
+          ],
+        },
         { text: '音阶片段生成器', link: '../../../Music.html', target: '_self', },
         { text: '字符串处理',
           items: [
