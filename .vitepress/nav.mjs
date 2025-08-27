@@ -21,6 +21,8 @@ export default [
             { text: '图片像素化', link: '../../../pix.html', target: '_self', },
             { text: '二维码生成器', link: '../../../QrCode.html', target: '_self', },
             { text: '差值分离图像加密', link: '../../../差值分离图像加密.html', target: '_self', },
+            { text: '幻影坦克', link: '../../../幻影坦克.html', target: '_self', },
+            { text: '图种', link: '../../../imgseed.html', target: '_self', },
             { text: '文件转二维码', link: '../../../File2QRcode.html', target: '_self', },
           ],
         },
