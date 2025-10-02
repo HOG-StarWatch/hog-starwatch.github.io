@@ -13,3 +13,4 @@ lastUpdated: true
 6. [cloud-mail-mail.019425.xyz](https://mail.019425.xyz)
 7. [fileworker-file.019425.xyz](https://file.019425.xyz)
 8. [cloudflare-imgbed-img.019425.xyz](https://img.019425.xyz)
+9. [clawcloud--openlist-openlist.019425.xyz](https://openlist.019425.xyz)
