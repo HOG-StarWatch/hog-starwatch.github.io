@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本处理工具 & 单位换算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+        
+        .tools-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .tools-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .tool-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .tool-header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .tool-header h2 {
+            font-size: 1.8rem;
+        }
+        
+        .tool-content {
+            padding: 25px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: #2575fc;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(37, 117, 252, 0.2);
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 117, 252, 0.4);
+        }
+        
+        .text-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #2575fc;
+            display: none;
+        }
+        
+        .conversion-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .conversion-controls select, .conversion-controls input {
+            flex: 1;
+        }
+        
+        .conversion-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #2575fc;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .history {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .history h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>文本处理工具 & 单位换算器</h1>
+            <p class="subtitle">高效处理文本内容，快速完成单位换算</p>
+        </header>
+        
+        <div class="tools-container">
+            <!-- 文本处理工具 -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <h2>文本处理工具</h2>
+                </div>
+                <div class="tool-content">
+                    <div class="input-group">
+                        <label for="input-text">输入文本</label>
+                        <textarea id="input-text" placeholder="请输入需要处理的文本..."></textarea>
+                    </div>
+                    
+                    <div class="text-buttons">
+                        <button id="to-uppercase">转为大写</button>
+                        <button id="to-lowercase">转为小写</button>
+                        <button id="capitalize">首字母大写</button>
+                        <button id="remove-spaces">移除空格</button>
+                        <button id="remove-linebreaks">移除换行</button>
+                        <button id="count-chars">统计字符</button>
+                        <button id="reverse-text">反转文本</button>
+                        <button id="trim-text">去除首尾空格</button>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="output-text">处理结果</label>
+                        <textarea id="output-text" readonly></textarea>
+                    </div>
+                    
+                    <div class="result" id="char-count-result">
+                        <!-- 字符统计结果将显示在这里 -->
+                    </div>
+                    
+                    <div class="history">
+                        <h3>处理历史</h3>
+                        <div id="text-history">
+                            <!-- 历史记录将显示在这里 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 单位换算器 -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <h2>单位换算器</h2>
+                </div>
+                <div class="tool-content">
+                    <div class="input-group">
+                        <label for="conversion-type">选择换算类型</label>
+                        <select id="conversion-type">
+                            <option value="length">长度</option>
+                            <option value="weight">重量</option>
+                            <option value="temperature">温度</option>
+                            <option value="area">面积</option>
+                            <option value="volume">体积</option>
+                            <option value="speed">速度</option>
+                        </select>
+                    </div>
+                    
+                    <div class="conversion-controls">
+                        <input type="number" id="conversion-input" value="1" step="any">
+                        <select id="from-unit"></select>
+                        <span>转换为</span>
+                        <select id="to-unit"></select>
+                        <button id="convert">换算</button>
+                    </div>
+                    
+                    <div class="conversion-result" id="conversion-result">
+                        <!-- 换算结果将显示在这里 -->
+                    </div>
+                    
+                    <div class="history">
+                        <h3>换算历史</h3>
+                        <div id="conversion-history">
+                            <!-- 历史记录将显示在这里 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 实用工具集合 | 使用本地存储保存您的历史记录</p>
+        </footer>
+    </div>
+
+    <script>
+        // 文本处理功能
+        const inputText = document.getElementById('input-text');
+        const outputText = document.getElementById('output-text');
+        const charCountResult = document.getElementById('char-count-result');
+        const textHistory = document.getElementById('text-history');
+        
+        // 加载文本处理历史
+        let textHistoryList = JSON.parse(localStorage.getItem('textHistory')) || [];
+        updateTextHistory();
+        
+        // 文本处理按钮事件
+        document.getElementById('to-uppercase').addEventListener('click', () => {
+            outputText.value = inputText.value.toUpperCase();
+            addToTextHistory('转为大写', inputText.value, outputText.value);
+        });
+        
+        document.getElementById('to-lowercase').addEventListener('click', () => {
+            outputText.value = inputText.value.toLowerCase();
+            addToTextHistory('转为小写', inputText.value, outputText.value);
+        });
+        
+        document.getElementById('capitalize').addEventListener('click', () => {
+            outputText.value = inputText.value.replace(/\b\w/g, l => l.toUpperCase());
+            addToTextHistory('首字母大写', inputText.value, outputText.value);
+        });
+        
+        document.getElementById('remove-spaces').addEventListener('click', () => {
+            outputText.value = inputText.value.replace(/\s+/g, '');
+            addToTextHistory('移除空格', inputText.value, outputText.value);
+        });
+        
+        document.getElementById('remove-linebreaks').addEventListener('click', () => {
+            outputText.value = inputText.value.replace(/\n/g, ' ');
+            addToTextHistory('移除换行', inputText.value, outputText.value);
+        });
+        
+        document.getElementById('count-chars').addEventListener('click', () => {
+            const text = inputText.value;
+            const charCount = text.length;
+            const charCountNoSpaces = text.replace(/\s/g, '').length;
+            const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const lineCount = text ? text.split('\n').length : 0;
+            
+            charCountResult.innerHTML = `
+                <p>字符数（含空格）: ${charCount}</p>
+                <p>字符数（不含空格）: ${charCountNoSpaces}</p>
+                <p>单词数: ${wordCount}</p>
+                <p>行数: ${lineCount}</p>
+            `;
+            charCountResult.style.display = 'block';
+            
+            addToTextHistory('统计字符', inputText.value, `字符: ${charCount}, 单词: ${wordCount}, 行数: ${lineCount}`);
+        });
+        
+        document.getElementById('reverse-text').addEventListener('click', () => {
+            outputText.value = inputText.value.split('').reverse().join('');
+            addToTextHistory('反转文本', inputText.value, outputText.value);
+        });
+        
+        document.getElementById('trim-text').addEventListener('click', () => {
+            outputText.value = inputText.value.trim();
+            addToTextHistory('去除首尾空格', inputText.value, outputText.value);
+        });
+        
+        // 添加文本处理历史记录
+        function addToTextHistory(operation, input, output) {
+            const historyItem = {
+                operation,
+                input,
+                output,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            textHistoryList.unshift(historyItem);
+            if (textHistoryList.length > 5) {
+                textHistoryList = textHistoryList.slice(0, 5);
+            }
+            
+            localStorage.setItem('textHistory', JSON.stringify(textHistoryList));
+            updateTextHistory();
+        }
+        
+        // 更新文本处理历史显示
+        function updateTextHistory() {
+            textHistory.innerHTML = '';
+            
+            if (textHistoryList.length === 0) {
+                textHistory.innerHTML = '<p>暂无历史记录</p>';
+                return;
+            }
+            
+            textHistoryList.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <p><strong>${item.operation}</strong> - ${item.timestamp}</p>
+                    <p>输入: ${item.input.substring(0, 30)}${item.input.length > 30 ? '...' : ''}</p>
+                    <p>输出: ${item.output.substring(0, 30)}${item.output.length > 30 ? '...' : ''}</p>
+                `;
+                textHistory.appendChild(historyItem);
+            });
+        }
+        
+        // 单位换算功能
+        const conversionType = document.getElementById('conversion-type');
+        const conversionInput = document.getElementById('conversion-input');
+        const fromUnit = document.getElementById('from-unit');
+        const toUnit = document.getElementById('to-unit');
+        const convertBtn = document.getElementById('convert');
+        const conversionResult = document.getElementById('conversion-result');
+        const conversionHistory = document.getElementById('conversion-history');
+        
+        // 加载单位换算历史
+        let conversionHistoryList = JSON.parse(localStorage.getItem('conversionHistory')) || [];
+        updateConversionHistory();
+        
+        // 定义单位换算数据
+        const conversionData = {
+            length: {
+                units: {
+                    meter: { name: '米', factor: 1 },
+                    kilometer: { name: '千米', factor: 1000 },
+                    centimeter: { name: '厘米', factor: 0.01 },
+                    millimeter: { name: '毫米', factor: 0.001 },
+                    foot: { name: '英尺', factor: 0.3048 },
+                    inch: { name: '英寸', factor: 0.0254 },
+                    yard: { name: '码', factor: 0.9144 },
+                    mile: { name: '英里', factor: 1609.34 }
+                },
+                defaultFrom: 'meter',
+                defaultTo: 'kilometer'
+            },
+            weight: {
+                units: {
+                    gram: { name: '克', factor: 1 },
+                    kilogram: { name: '千克', factor: 1000 },
+                    milligram: { name: '毫克', factor: 0.001 },
+                    pound: { name: '磅', factor: 453.592 },
+                    ounce: { name: '盎司', factor: 28.3495 }
+                },
+                defaultFrom: 'gram',
+                defaultTo: 'kilogram'
+            },
+            temperature: {
+                units: {
+                    celsius: { name: '摄氏度', factor: 1 },
+                    fahrenheit: { name: '华氏度', factor: 1 },
+                    kelvin: { name: '开尔文', factor: 1 }
+                },
+                defaultFrom: 'celsius',
+                defaultTo: 'fahrenheit'
+            },
+            area: {
+                units: {
+                    squareMeter: { name: '平方米', factor: 1 },
+                    squareKilometer: { name: '平方千米', factor: 1000000 },
+                    hectare: { name: '公顷', factor: 10000 },
+                    acre: { name: '英亩', factor: 4046.86 },
+                    squareFoot: { name: '平方英尺', factor: 0.092903 },
+                    squareInch: { name: '平方英寸', factor: 0.00064516 }
+                },
+                defaultFrom: 'squareMeter',
+                defaultTo: 'squareKilometer'
+            },
+            volume: {
+                units: {
+                    liter: { name: '升', factor: 1 },
+                    milliliter: { name: '毫升', factor: 0.001 },
+                    cubicMeter: { name: '立方米', factor: 1000 },
+                    gallon: { name: '加仑', factor: 3.78541 },
+                    quart: { name: '夸脱', factor: 0.946353 },
+                    pint: { name: '品脱', factor: 0.473176 }
+                },
+                defaultFrom: 'liter',
+                defaultTo: 'gallon'
+            },
+            speed: {
+                units: {
+                    meterPerSecond: { name: '米/秒', factor: 1 },
+                    kilometerPerHour: { name: '千米/小时', factor: 0.277778 },
+                    milePerHour: { name: '英里/小时', factor: 0.44704 },
+                    knot: { name: '节', factor: 0.514444 },
+                    footPerSecond: { name: '英尺/秒', factor: 0.3048 }
+                },
+                defaultFrom: 'meterPerSecond',
+                defaultTo: 'kilometerPerHour'
+            }
+        };
+        
+        // 更新单位选项
+        function updateUnitOptions() {
+            const type = conversionType.value;
+            const data = conversionData[type];
+            
+            // 清空现有选项
+            fromUnit.innerHTML = '';
+            toUnit.innerHTML = '';
+            
+            // 添加新选项
+            for (const [key, unit] of Object.entries(data.units)) {
+                fromUnit.add(new Option(unit.name, key));
+                toUnit.add(new Option(unit.name, key));
+            }
+            
+            // 设置默认选项
+            fromUnit.value = data.defaultFrom;
+            toUnit.value = data.defaultTo;
+        }
+        
+        // 初始化单位选项
+        updateUnitOptions();
+        
+        // 当换算类型改变时更新单位选项
+        conversionType.addEventListener('change', updateUnitOptions);
+        
+        // 执行单位换算
+        convertBtn.addEventListener('click', () => {
+            const type = conversionType.value;
+            const inputValue = parseFloat(conversionInput.value);
+            const from = fromUnit.value;
+            const to = toUnit.value;
+            
+            if (isNaN(inputValue)) {
+                conversionResult.textContent = '请输入有效的数值';
+                return;
+            }
+            
+            let result;
+            
+            if (type === 'temperature') {
+                // 温度换算需要特殊处理
+                result = convertTemperature(inputValue, from, to);
+            } else {
+                // 其他单位使用因子换算
+                const data = conversionData[type];
+                const fromFactor = data.units[from].factor;
+                const toFactor = data.units[to].factor;
+                
+                result = (inputValue * fromFactor) / toFactor;
+            }
+            
+            const fromName = conversionData[type].units[from].name;
+            const toName = conversionData[type].units[to].name;
+            
+            conversionResult.textContent = `${inputValue} ${fromName} = ${result.toFixed(6)} ${toName}`;
+            
+            // 添加到历史记录
+            addToConversionHistory(type, inputValue, fromName, result, toName);
+        });
+        
+        // 温度换算函数
+        function convertTemperature(value, from, to) {
+            // 先转换为摄氏度
+            let celsius;
+            
+            if (from === 'celsius') {
+                celsius = value;
+            } else if (from === 'fahrenheit') {
+                celsius = (value - 32) * 5/9;
+            } else if (from === 'kelvin') {
+                celsius = value - 273.15;
+            }
+            
+            // 再从摄氏度转换为目标单位
+            if (to === 'celsius') {
+                return celsius;
+            } else if (to === 'fahrenheit') {
+                return (celsius * 9/5) + 32;
+            } else if (to === 'kelvin') {
+                return celsius + 273.15;
+            }
+            
+            return value;
+        }
+        
+        // 添加单位换算历史记录
+        function addToConversionHistory(type, inputValue, fromUnit, result, toUnit) {
+            const historyItem = {
+                type,
+                inputValue,
+                fromUnit,
+                result,
+                toUnit,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            conversionHistoryList.unshift(historyItem);
+            if (conversionHistoryList.length > 5) {
+                conversionHistoryList = conversionHistoryList.slice(0, 5);
+            }
+            
+            localStorage.setItem('conversionHistory', JSON.stringify(conversionHistoryList));
+            updateConversionHistory();
+        }
+        
+        // 更新单位换算历史显示
+        function updateConversionHistory() {
+            conversionHistory.innerHTML = '';
+            
+            if (conversionHistoryList.length === 0) {
+                conversionHistory.innerHTML = '<p>暂无历史记录</p>';
+                return;
+            }
+            
+            conversionHistoryList.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <p><strong>${getConversionTypeName(item.type)}</strong> - ${item.timestamp}</p>
+                    <p>${item.inputValue} ${item.fromUnit} = ${item.result.toFixed(4)} ${item.toUnit}</p>
+                `;
+                conversionHistory.appendChild(historyItem);
+            });
+        }
+        
+        // 获取换算类型的中文名称
+        function getConversionTypeName(type) {
+            const names = {
+                length: '长度',
+                weight: '重量',
+                temperature: '温度',
+                area: '面积',
+                volume: '体积',
+                speed: '速度'
+            };
+            
+            return names[type] || type;
+        }
+    </script>
+</body>
+</html>

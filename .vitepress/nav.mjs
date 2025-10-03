@@ -27,6 +27,8 @@ export default [
           ],
         },
         { text: '音阶片段生成器', link: '../../../Music.html', target: '_self', },
+        { text: '时钟', link: '../../../时钟.html', target: '_self', },
+        { text: '时钟-配置版', link: '../../../时钟-配置版.html', target: '_self', },
         { text: '字符串处理',
           items: [
             { text: '繁简体转换', link: '../../../繁简体转换.html', target: '_self', },
@@ -35,6 +37,7 @@ export default [
             { text: '四位可扩展加密', link: '../../../16_21-4可扩展加密.html', target: '_self', },
             { text: '更好的十六位可扩展加密', link: '../../../better可拓展加密.html', target: '_self', },
             { text: '字符串计数工具', link: '../../../字符串计数工具.html', target: '_self', },
+            { text: '文本处理单位换算', link: '../../../文本处理单位换算.html', target: '_self', },
             { text: 'Unicode字符转换', link: '../../../Unicode.html', target: '_self', },
             { text: 'URL中文字符转换', link: '../../../urlcode.html', target: '_self', },
           ],
