@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片重叠合成工具 - 支持混合模式</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .upload-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .upload-box {
+            flex: 1;
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .upload-box:hover {
+            background: #e8f4fc;
+            border-color: #2980b9;
+        }
+        
+        .upload-box h3 {
+            margin-bottom: 15px;
+            color: #3498db;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 500;
+        }
+        
+        .file-label:hover {
+            background: #2980b9;
+        }
+        
+        .preview-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .preview-box {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .preview-box h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .preview-img {
+            max-width: 100%;
+            height: 250px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            object-fit: contain;
+            background: #f1f2f6;
+            padding: 10px;
+        }
+        
+        .controls {
+            background: #f1f2f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 10px;
+        }
+        
+        .select-control {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .combine-btn {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .combine-btn:hover {
+            background: #27ae60;
+        }
+        
+        .download-btn {
+            background: #9b59b6;
+            color: white;
+        }
+        
+        .download-btn:hover {
+            background: #8e44ad;
+        }
+        
+        .reset-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .reset-btn:hover {
+            background: #c0392b;
+        }
+        
+        .result-container {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .result-container h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        #resultCanvas {
+            max-width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .instruction {
+            background: #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .instruction h3 {
+            margin-bottom: 10px;
+            color: #d35400;
+        }
+        
+        .instruction ul {
+            padding-left: 20px;
+        }
+        
+        .instruction li {
+            margin-bottom: 8px;
+        }
+        
+        .mode-info {
+            background: #d6eaf8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .upload-container, .preview-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>图片重叠合成工具</h1>
+    <p class="subtitle">选择两张图片，调整透明度和混合模式，创建独特效果</p>
+    
+    <div class="container">
+        <div class="upload-container">
+            <div class="upload-box">
+                <h3>选择第一张图片（底层）</h3>
+                <input type="file" id="image1" class="file-input" accept="image/*">
+                <label for="image1" class="file-label">选择图片</label>
+            </div>
+            
+            <div class="upload-box">
+                <h3>选择第二张图片（上层）</h3>
+                <input type="file" id="image2" class="file-input" accept="image/*">
+                <label for="image2" class="file-label">选择图片</label>
+            </div>
+        </div>
+        
+        <div class="preview-container">
+            <div class="preview-box">
+                <h3>第一张图片预览</h3>
+                <img id="preview1" class="preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f1f2f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23aaa'%3E等待上传%3C/text%3E%3C/svg%3E" alt="预览图1">
+            </div>
+            
+            <div class="preview-box">
+                <h3>第二张图片预览</h3>
+                <img id="preview2" class="preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f1f2f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23aaa'%3E等待上传%3C/text%3E%3C/svg%3E" alt="预览图2">
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="opacity">上层图片透明度: <span id="opacityValue">50%</span></label>
+                <input type="range" id="opacity" class="slider" min="0" max="100" value="50">
+            </div>
+            
+            <div class="control-group">
+                <label for="blendMode">混合模式:</label>
+                <select id="blendMode" class="select-control">
+                    <option value="normal">正常 (Normal)</option>
+                    <option value="difference">差值 (Difference)</option>
+                    <option value="multiply">正片叠底 (Multiply)</option>
+                    <option value="screen">滤色 (Screen)</option>
+                </select>
+                <div class="mode-info" id="modeInfo">
+                    正常模式：上层图片按透明度叠加在底层图片上
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="combine" class="combine-btn">合成图片</button>
+                <button id="download" class="download-btn" disabled>下载图片</button>
+                <button id="reset" class="reset-btn">重置</button>
+            </div>
+        </div>
+        
+        <div class="result-container">
+            <h2>合成结果</h2>
+            <canvas id="resultCanvas" width="800" height="500"></canvas>
+        </div>
+        
+        <div class="instruction">
+            <h3>使用说明</h3>
+            <ul>
+                <li>首先选择两张要重叠的图片（支持JPG、PNG等格式）</li>
+                <li>使用透明度滑块调整上层图片的透明度</li>
+                <li>选择混合模式以创建不同的视觉效果</li>
+                <li>点击"合成图片"按钮生成重叠效果</li>
+                <li>满意后点击"下载图片"保存结果</li>
+                <li>点击"重置"按钮可以重新开始</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const image1Input = document.getElementById('image1');
+            const image2Input = document.getElementById('image2');
+            const preview1 = document.getElementById('preview1');
+            const preview2 = document.getElementById('preview2');
+            const opacitySlider = document.getElementById('opacity');
+            const opacityValue = document.getElementById('opacityValue');
+            const blendModeSelect = document.getElementById('blendMode');
+            const modeInfo = document.getElementById('modeInfo');
+            const combineBtn = document.getElementById('combine');
+            const downloadBtn = document.getElementById('download');
+            const resetBtn = document.getElementById('reset');
+            const canvas = document.getElementById('resultCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            let image1 = null;
+            let image2 = null;
+            
+            // 混合模式说明
+            const modeDescriptions = {
+                normal: "正常模式：上层图片按透明度叠加在底层图片上",
+                difference: "差值模式：计算两张图片颜色值的绝对差异，产生高对比度效果",
+                multiply: "正片叠底模式：将两张图片的颜色值相乘，通常会使图像变暗",
+                screen: "滤色模式：将两张图片的颜色值反转后相乘再反转，通常会使图像变亮"
+            };
+            
+            // 监听混合模式选择变化
+            blendModeSelect.addEventListener('change', function() {
+                modeInfo.textContent = modeDescriptions[this.value];
+            });
+            
+            // 监听图片1上传
+            image1Input.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview1.src = e.target.result;
+                        image1 = new Image();
+                        image1.src = e.target.result;
+                        image1.onload = function() {
+                            // 启用合成按钮
+                            if (image1 && image2) {
+                                combineBtn.disabled = false;
+                            }
+                        };
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+            
+            // 监听图片2上传
+            image2Input.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview2.src = e.target.result;
+                        image2 = new Image();
+                        image2.src = e.target.result;
+                        image2.onload = function() {
+                            // 启用合成按钮
+                            if (image1 && image2) {
+                                combineBtn.disabled = false;
+                            }
+                        };
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+            
+            // 更新透明度值显示
+            opacitySlider.addEventListener('input', function() {
+                opacityValue.textContent = this.value + '%';
+            });
+            
+            // 合成图片
+            combineBtn.addEventListener('click', function() {
+                if (!image1 || !image2) {
+                    alert('请先选择两张图片！');
+                    return;
+                }
+                
+                // 设置canvas尺寸为第一张图片的尺寸
+                canvas.width = image1.width;
+                canvas.height = image1.height;
+                
+                // 清除canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 获取混合模式
+                const blendMode = blendModeSelect.value;
+                const opacity = opacitySlider.value / 100;
+                
+                // 根据混合模式进行不同的合成处理
+                if (blendMode === 'normal') {
+                    // 正常模式
+                    ctx.drawImage(image1, 0, 0, canvas.width, canvas.height);
+                    ctx.globalAlpha = opacity;
+                    ctx.drawImage(image2, 0, 0, canvas.width, canvas.height);
+                    ctx.globalAlpha = 1.0;
+                } else {
+                    // 其他混合模式需要手动计算像素
+                    applyBlendMode(blendMode, opacity);
+                }
+                
+                // 启用下载按钮
+                downloadBtn.disabled = false;
+            });
+            
+            // 应用混合模式
+            function applyBlendMode(mode, opacity) {
+                // 创建临时canvas用于处理图像数据
+                const tempCanvas1 = document.createElement('canvas');
+                const tempCtx1 = tempCanvas1.getContext('2d');
+                tempCanvas1.width = canvas.width;
+                tempCanvas1.height = canvas.height;
+                
+                const tempCanvas2 = document.createElement('canvas');
+                const tempCtx2 = tempCanvas2.getContext('2d');
+                tempCanvas2.width = canvas.width;
+                tempCanvas2.height = canvas.height;
+                
+                // 绘制图片到临时canvas
+                tempCtx1.drawImage(image1, 0, 0, canvas.width, canvas.height);
+                tempCtx2.drawImage(image2, 0, 0, canvas.width, canvas.height);
+                
+                // 获取图像数据
+                const imageData1 = tempCtx1.getImageData(0, 0, canvas.width, canvas.height);
+                const imageData2 = tempCtx2.getImageData(0, 0, canvas.width, canvas.height);
+                const data1 = imageData1.data;
+                const data2 = imageData2.data;
+                
+                // 创建结果图像数据
+                const resultData = ctx.createImageData(canvas.width, canvas.height);
+                const result = resultData.data;
+                
+                // 应用混合模式
+                for (let i = 0; i < data1.length; i += 4) {
+                    const r1 = data1[i];
+                    const g1 = data1[i + 1];
+                    const b1 = data1[i + 2];
+                    const a1 = data1[i + 3];
+                    
+                    const r2 = data2[i];
+                    const g2 = data2[i + 1];
+                    const b2 = data2[i + 2];
+                    const a2 = data2[i + 3];
+                    
+                    let r, g, b;
+                    
+                    switch (mode) {
+                        case 'difference':
+                            // 差值模式：|底层颜色 - 上层颜色|
+                            r = Math.abs(r1 - r2);
+                            g = Math.abs(g1 - g2);
+                            b = Math.abs(b1 - b2);
+                            break;
+                        case 'multiply':
+                            // 正片叠底模式：底层颜色 × 上层颜色 / 255
+                            r = (r1 * r2) / 255;
+                            g = (g1 * g2) / 255;
+                            b = (b1 * b2) / 255;
+                            break;
+                        case 'screen':
+                            // 滤色模式：255 - ((255 - 底层颜色) × (255 - 上层颜色)) / 255
+                            r = 255 - ((255 - r1) * (255 - r2)) / 255;
+                            g = 255 - ((255 - g1) * (255 - g2)) / 255;
+                            b = 255 - ((255 - b1) * (255 - b2)) / 255;
+                            break;
+                        default:
+                            r = r1;
+                            g = g1;
+                            b = b1;
+                    }
+                    
+                    // 应用透明度
+                    const blendedR = Math.round(r * opacity + r1 * (1 - opacity));
+                    const blendedG = Math.round(g * opacity + g1 * (1 - opacity));
+                    const blendedB = Math.round(b * opacity + b1 * (1 - opacity));
+                    
+                    result[i] = blendedR;
+                    result[i + 1] = blendedG;
+                    result[i + 2] = blendedB;
+                    result[i + 3] = 255; // 完全不透明
+                }
+                
+                // 将结果绘制到主canvas
+                ctx.putImageData(resultData, 0, 0);
+            }
+            
+            // 下载图片
+            downloadBtn.addEventListener('click', function() {
+                if (canvas.width === 0) return;
+                
+                const link = document.createElement('a');
+                link.download = '合成图片.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+            
+            // 重置所有内容
+            resetBtn.addEventListener('click', function() {
+                // 重置文件输入
+                image1Input.value = '';
+                image2Input.value = '';
+                
+                // 重置预览图
+                preview1.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f1f2f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23aaa'%3E等待上传%3C/text%3E%3C/svg%3E";
+                preview2.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f1f2f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23aaa'%3E等待上传%3C/text%3E%3C/svg%3E";
+                
+                // 重置图片对象
+                image1 = null;
+                image2 = null;
+                
+                // 重置透明度滑块
+                opacitySlider.value = 50;
+                opacityValue.textContent = '50%';
+                
+                // 重置混合模式
+                blendModeSelect.value = 'normal';
+                modeInfo.textContent = modeDescriptions.normal;
+                
+                // 禁用按钮
+                combineBtn.disabled = true;
+                downloadBtn.disabled = true;
+                
+                // 清除canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                canvas.width = 800;
+                canvas.height = 500;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M3U8播放下载器</title>
+    <script src="hls.js"></script>
+    <script src="ffmpeg.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e2e2e2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(30, 15, 60, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: #c77dff;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            color: #b19cd9;
+        }
+        
+        .player-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (min-width: 768px) {
+            .player-container {
+                flex-direction: row;
+            }
+        }
+        
+        .video-section {
+            flex: 3;
+            background: rgba(20, 10, 40, 0.7);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
+        
+        #videoPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+        
+        .playlist-section {
+            flex: 1;
+            background: rgba(20, 10, 40, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .playlist-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(138, 43, 226, 0.5);
+            color: #c77dff;
+        }
+        
+        .playlist {
+            list-style: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .playlist-item {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: rgba(138, 43, 226, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(138, 43, 226, 0.1);
+        }
+        
+        .playlist-item:hover {
+            background: rgba(138, 43, 226, 0.3);
+            transform: translateX(5px);
+            border-color: rgba(138, 43, 226, 0.5);
+        }
+        
+        .playlist-item.active {
+            background: rgba(199, 125, 255, 0.4);
+            border-left: 4px solid #c77dff;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(30, 15, 60, 0.7);
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        button {
+            background: rgba(138, 43, 226, 0.3);
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            color: #e2e2e2;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        button:hover {
+            background: rgba(138, 43, 226, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(138, 43, 226, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .progress-container {
+            flex: 1 1 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(138, 43, 226, 0.2);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #9d4edd, #c77dff);
+            border-radius: 4px;
+            width: 0%;
+        }
+        
+        .time-display {
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .volume-slider {
+            flex: 1;
+            height: 8px;
+            background: rgba(138, 43, 226, 0.2);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .volume-level {
+            height: 100%;
+            background: linear-gradient(90deg, #7b2cbf, #9d4edd);
+            border-radius: 4px;
+            width: 70%;
+        }
+        
+        .url-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(30, 15, 60, 0.7);
+            color: #e2e2e2;
+            font-size: 1rem;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        input[type="text"]::placeholder {
+            color: rgba(177, 156, 217, 0.6);
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            background: rgba(30, 15, 60, 0.9);
+            border-color: rgba(138, 43, 226, 0.6);
+            box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+        }
+        
+        .status {
+            padding: 10px;
+            text-align: center;
+            background: rgba(30, 15, 60, 0.7);
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            padding: 20px;
+            background: rgba(30, 15, 60, 0.7);
+            border-radius: 15px;
+            width: 100%;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            background: rgba(30, 15, 60, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            line-height: 1.6;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #c77dff;
+        }
+        
+        /* TS片段监控面板样式 */
+        .ts-monitor {
+            margin-top: 30px;
+            background: rgba(20, 10, 40, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .ts-monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(138, 43, 226, 0.5);
+        }
+        
+        .ts-monitor-title {
+            font-size: 1.5rem;
+            color: #c77dff;
+        }
+        
+        .ts-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .ts-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(30, 15, 60, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+        
+        .ts-segment {
+            width: 40px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .ts-segment.pending {
+            background: rgba(138, 43, 226, 0.2);
+            color: rgba(177, 156, 217, 0.7);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .ts-segment.loading {
+            background: rgba(255, 193, 7, 0.7);
+            color: #000;
+        }
+        
+        .ts-segment.loaded {
+            background: rgba(76, 175, 80, 0.7);
+            color: #fff;
+        }
+        
+        .ts-segment.error {
+            background: rgba(244, 67, 54, 0.7);
+            color: #fff;
+        }
+        
+        .ts-segment.current {
+            box-shadow: 0 0 0 2px #c77dff;
+            transform: scale(1.1);
+        }
+        
+        .ts-legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+        
+        .legend-pending {
+            background: rgba(138, 43, 226, 0.2);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .legend-loading {
+            background: rgba(255, 193, 7, 0.7);
+        }
+        
+        .legend-loaded {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        
+        .legend-error {
+            background: rgba(244, 67, 54, 0.7);
+        }
+        
+        .legend-current {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            box-shadow: 0 0 0 2px #c77dff;
+            background: rgba(76, 175, 80, 0.7);
+        }
+        
+        /* 下载功能样式 */
+        .download-section {
+            margin-top: 20px;
+            background: rgba(20, 10, 40, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .download-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(138, 43, 226, 0.5);
+        }
+        
+        .download-title {
+            font-size: 1.5rem;
+            color: #c77dff;
+        }
+        
+        .download-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .download-progress-container {
+            margin-top: 15px;
+            background: rgba(30, 15, 60, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+        
+        .download-progress-bar {
+            height: 20px;
+            background: rgba(138, 43, 226, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .download-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #9d4edd, #c77dff);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .download-status {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #b19cd9;
+        }
+        
+        .quality-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        select {
+            background: rgba(30, 15, 60, 0.7);
+            color: #e2e2e2;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            outline: none;
+        }
+        
+        select:focus {
+            border-color: rgba(138, 43, 226, 0.6);
+            box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+        }
+        
+        /* 新增样式：片段范围选择器 */
+        .range-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .range-inputs input {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+        }
+        
+        .range-display {
+            font-size: 0.9rem;
+            color: #b19cd9;
+        }
+        
+        /* 新增：格式转换样式 */
+        .conversion-section {
+            margin-top: 20px;
+            background: rgba(20, 10, 40, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+        
+        .conversion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(138, 43, 226, 0.5);
+        }
+        
+        .conversion-title {
+            font-size: 1.5rem;
+            color: #c77dff;
+        }
+        
+        .conversion-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .conversion-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .conversion-progress-container {
+            margin-top: 15px;
+            background: rgba(30, 15, 60, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+        
+        .conversion-progress-bar {
+            height: 20px;
+            background: rgba(138, 43, 226, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .conversion-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #9d4edd, #c77dff);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .conversion-status {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #b19cd9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>M3U8 视频播放下载器</h1>
+            <p class="subtitle">基于HLS.js的流媒体播放解决方案</p>
+        </header>
+        
+        <div class="url-input">
+            <input type="text" id="m3u8Url" placeholder="输入M3U8视频流URL或从下方列表中选择示例">
+            <button id="loadBtn">加载视频</button>
+        </div>
+        
+        <div class="player-container">
+            <div class="video-section">
+                <div class="video-wrapper">
+                    <video id="videoPlayer" controls></video>
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <button id="playPauseBtn">
+                            <span>播放</span>
+                        </button>
+                        <button id="muteBtn">
+                            <span>静音</span>
+                        </button>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <span class="time-display" id="currentTime">0:00</span>
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress" id="progress"></div>
+                        </div>
+                        <span class="time-display" id="duration">0:00</span>
+                    </div>
+                    
+                    <div class="volume-container">
+                        <span>音量</span>
+                        <div class="volume-slider" id="volumeSlider">
+                            <div class="volume-level" id="volumeLevel"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="status" id="status">
+                    准备就绪 - 请输入M3U8 URL或从示例列表中选择
+                </div>
+            </div>
+            
+            <div class="playlist-section">
+                <h2 class="playlist-title">示例列表</h2>
+                <ul class="playlist" id="playlist">
+                    <!-- 播放列表将通过JS动态生成 -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- TS片段监控面板 -->
+        <div class="ts-monitor">
+            <div class="ts-monitor-header">
+                <h2 class="ts-monitor-title">TS片段加载监控</h2>
+                <div class="ts-stats">
+                    <span>总计: <span id="totalSegments">0</span></span>
+                    <span>已加载: <span id="loadedSegments">0</span></span>
+                    <span>错误: <span id="errorSegments">0</span></span>
+                </div>
+            </div>
+            <div class="ts-container" id="tsContainer">
+                <!-- TS片段将通过JS动态生成 -->
+            </div>
+            <div class="ts-legend">
+                <div class="legend-item">
+                    <div class="legend-color legend-pending"></div>
+                    <span>等待中</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-loading"></div>
+                    <span>加载中</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-loaded"></div>
+                    <span>已加载</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-error"></div>
+                    <span>错误</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-current"></div>
+                    <span>当前播放</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 下载功能面板 -->
+        <div class="download-section">
+            <div class="download-header">
+                <h2 class="download-title">视频下载</h2>
+                <div class="download-controls">
+                    <button id="downloadBtn">下载视频</button>
+                    <button id="pauseDownloadBtn" disabled>暂停下载</button>
+                    <button id="resumeDownloadBtn" disabled>继续下载</button>
+                    <button id="stopDownloadBtn" disabled>停止下载</button>
+                    <button id="savePartialBtn" disabled>保存已下载片段</button>
+                </div>
+            </div>
+            
+            <div class="quality-selector">
+                <label for="qualitySelect">选择下载质量:</label>
+                <select id="qualitySelect">
+                    <option value="auto">自动选择</option>
+                </select>
+            </div>
+            
+            <!-- 新增：片段范围选择器 -->
+            <div class="range-selector">
+                <label>下载片段范围:</label>
+                <div class="range-inputs">
+                    <input type="number" id="startRange" min="1" value="1" placeholder="开始">
+                    <span>至</span>
+                    <input type="number" id="endRange" min="1" value="1" placeholder="结束">
+                </div>
+                <button id="selectAllBtn">全选</button>
+                <span class="range-display" id="rangeDisplay">总计: 0 片段</span>
+            </div>
+            
+            <div class="download-progress-container">
+                <div class="download-progress-bar">
+                    <div class="download-progress" id="downloadProgress">0%</div>
+                </div>
+                <div class="download-status" id="downloadStatus">
+                    准备下载 - 请先加载视频
+                </div>
+            </div>
+        </div>
+        
+        <!-- 新增：格式转换面板 -->
+        <div class="conversion-section">
+            <div class="conversion-header">
+                <h2 class="conversion-title">视频格式转换</h2>
+                <div class="conversion-controls">
+                    <button id="convertBtn" disabled>转换格式</button>
+                    <button id="cancelConvertBtn" disabled>取消转换</button>
+                </div>
+            </div>
+            
+            <div class="conversion-options">
+                <div class="quality-selector">
+                    <label for="outputFormat">输出格式:</label>
+                    <select id="outputFormat">
+                        <option value="mp4">MP4</option>
+                        <option value="webm">WebM</option>
+                        <option value="avi">AVI</option>
+                    </select>
+                </div>
+                
+                <div class="quality-selector">
+                    <label for="videoQuality">视频质量:</label>
+                    <select id="videoQuality">
+                        <option value="high">高质量</option>
+                        <option value="medium" selected>中等质量</option>
+                        <option value="low">低质量</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="conversion-progress-container">
+                <div class="conversion-progress-bar">
+                    <div class="conversion-progress" id="conversionProgress">0%</div>
+                </div>
+                <div class="conversion-status" id="conversionStatus">
+                    请先下载视频文件
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>使用说明</h3>
+            <p>1. 在输入框中输入M3U8视频流URL，或从右侧示例列表中选择预设视频</p>
+            <p>2. 点击"加载视频"按钮开始播放</p>
+            <p>3. 使用播放器控件进行播放/暂停、音量调节和进度控制</p>
+            <p>4. 观察TS片段加载监控面板，了解每个TS片段的加载状态</p>
+            <p>5. 点击TS片段可以跳转到对应时间点播放</p>
+            <p>6. 使用下载功能可以将视频保存到本地（选择质量后点击下载按钮）</p>
+            <p>7. 可以指定下载片段范围，支持暂停/继续下载</p>
+            <p>8. 下载过程中可以随时停止并保存已下载的片段</p>
+            <p>9. 使用格式转换功能可以将下载的TS文件转换为MP4等格式</p>
+            <p>10. 注意：某些M3U8流可能需要CORS支持，如果无法播放/下载请尝试使用代理</p>
+        </div>
+        
+        <footer>
+            <p>M3U8播放下载器 - 基于HLS.js技术</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const videoPlayer = document.getElementById('videoPlayer');
+            const m3u8UrlInput = document.getElementById('m3u8Url');
+            const loadBtn = document.getElementById('loadBtn');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const muteBtn = document.getElementById('muteBtn');
+            const progressBar = document.getElementById('progressBar');
+            const progress = document.getElementById('progress');
+            const currentTime = document.getElementById('currentTime');
+            const duration = document.getElementById('duration');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeLevel = document.getElementById('volumeLevel');
+            const status = document.getElementById('status');
+            const playlist = document.getElementById('playlist');
+            
+            // TS监控相关元素
+            const tsContainer = document.getElementById('tsContainer');
+            const totalSegments = document.getElementById('totalSegments');
+            const loadedSegments = document.getElementById('loadedSegments');
+            const errorSegments = document.getElementById('errorSegments');
+            
+            // 下载功能相关元素
+            const downloadBtn = document.getElementById('downloadBtn');
+            const pauseDownloadBtn = document.getElementById('pauseDownloadBtn');
+            const resumeDownloadBtn = document.getElementById('resumeDownloadBtn');
+            const stopDownloadBtn = document.getElementById('stopDownloadBtn');
+            const savePartialBtn = document.getElementById('savePartialBtn');
+            const qualitySelect = document.getElementById('qualitySelect');
+            const downloadProgress = document.getElementById('downloadProgress');
+            const downloadStatus = document.getElementById('downloadStatus');
+            
+            // 新增：片段范围选择器相关元素
+            const startRange = document.getElementById('startRange');
+            const endRange = document.getElementById('endRange');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const rangeDisplay = document.getElementById('rangeDisplay');
+            
+            // 新增：格式转换相关元素
+            const convertBtn = document.getElementById('convertBtn');
+            const cancelConvertBtn = document.getElementById('cancelConvertBtn');
+            const outputFormat = document.getElementById('outputFormat');
+            const videoQuality = document.getElementById('videoQuality');
+            const conversionProgress = document.getElementById('conversionProgress');
+            const conversionStatus = document.getElementById('conversionStatus');
+            
+            let hls;
+            let isPlaying = false;
+            let segments = [];
+            let currentSegmentIndex = -1;
+            let downloadController = null;
+            let isDownloading = false;
+            let isDownloadPaused = false;
+            let downloadedBlobs = [];
+            let totalFragmentsCount = 0;
+            let currentDownloadIndex = 0;
+            let fragments = [];
+            let currentLevel = null;
+            let ffmpeg = null;
+            let isConverting = false;
+            let convertController = null;
+            
+            // 预定义的M3U8播放列表
+            const m3u8Playlist = [
+                {
+                    name: "示例视频1 (Big Buck Bunny)",
+                    url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                },
+                {
+                    name: "示例视频2 (Apple 16x9基本流)",
+                    url: "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8"
+                },
+                {
+                    name: "示例视频3 (Apple 4x3基本流)",
+                    url: "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8"
+                }
+            ];
+            
+            // 初始化播放列表
+            function initPlaylist() {
+                playlist.innerHTML = '';
+                m3u8Playlist.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'playlist-item';
+                    li.textContent = item.name;
+                    li.addEventListener('click', () => {
+                        // 移除所有active类
+                        document.querySelectorAll('.playlist-item').forEach(el => {
+                            el.classList.remove('active');
+                        });
+                        // 添加active类到当前项
+                        li.classList.add('active');
+                        // 加载选中的视频
+                        loadVideo(item.url);
+                    });
+                    playlist.appendChild(li);
+                });
+            }
+            
+            // 初始化TS片段监控
+            function initTSMonitor() {
+                tsContainer.innerHTML = '';
+                segments = [];
+                totalSegments.textContent = '0';
+                loadedSegments.textContent = '0';
+                errorSegments.textContent = '0';
+                currentSegmentIndex = -1;
+                totalFragmentsCount = 0;
+            }
+            
+            // 更新TS片段状态
+            function updateSegmentStatus(index, status) {
+                if (segments[index]) {
+                    segments[index].status = status;
+                    const segmentElement = document.getElementById(`ts-${index}`);
+                    if (segmentElement) {
+                        segmentElement.className = `ts-segment ${status}`;
+                        
+                        // 更新统计信息
+                        const loadedCount = segments.filter(s => s.status === 'loaded').length;
+                        const errorCount = segments.filter(s => s.status === 'error').length;
+                        
+                        loadedSegments.textContent = loadedCount;
+                        errorSegments.textContent = errorCount;
+                    }
+                }
+            }
+            
+            // 设置当前播放的TS片段
+            function setCurrentSegment(index) {
+                // 移除之前当前片段的标记
+                if (currentSegmentIndex >= 0 && segments[currentSegmentIndex]) {
+                    const prevSegmentElement = document.getElementById(`ts-${currentSegmentIndex}`);
+                    if (prevSegmentElement) {
+                        prevSegmentElement.classList.remove('current');
+                    }
+                }
+                
+                // 设置新的当前片段
+                currentSegmentIndex = index;
+                if (segments[index]) {
+                    const segmentElement = document.getElementById(`ts-${index}`);
+                    if (segmentElement) {
+                        segmentElement.classList.add('current');
+                    }
+                }
+            }
+            
+            // 更新下载质量选择器
+            function updateQualitySelector(levels) {
+                qualitySelect.innerHTML = '<option value="auto">自动选择</option>';
+                
+                if (levels && levels.length > 0) {
+                    levels.forEach((level, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = `质量 ${index} (${level.height}p${level.bitrate ? `, ${Math.round(level.bitrate/1000)}kbps` : ''})`;
+                        qualitySelect.appendChild(option);
+                    });
+                }
+            }
+            
+            // 更新片段范围显示
+            function updateRangeDisplay() {
+                rangeDisplay.textContent = `总计: ${totalFragmentsCount} 片段`;
+                endRange.max = totalFragmentsCount;
+                startRange.max = totalFragmentsCount;
+                
+                if (totalFragmentsCount > 0) {
+                    endRange.value = totalFragmentsCount;
+                }
+            }
+            
+            // 全选片段范围
+            function selectAllFragments() {
+                startRange.value = 1;
+                endRange.value = totalFragmentsCount;
+            }
+            
+            // 保存已下载的片段
+            function savePartialDownload() {
+                if (downloadedBlobs.length === 0) {
+                    downloadStatus.textContent = '没有已下载的片段可保存';
+                    return;
+                }
+                
+                try {
+                    // 合并已下载的Blob
+                    const combinedBlob = new Blob(downloadedBlobs, { type: 'video/mp2t' });
+                    const url = URL.createObjectURL(combinedBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `partial_video_${new Date().getTime()}_${downloadedBlobs.length}segments.ts`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    downloadStatus.textContent = `已保存部分视频! 片段: ${downloadedBlobs.length}/${totalFragmentsCount}, 大小: ${(combinedBlob.size / (1024 * 1024)).toFixed(2)}MB`;
+                    
+                } catch (error) {
+                    console.error('保存部分下载失败:', error);
+                    downloadStatus.textContent = `保存失败: ${error.message}`;
+                }
+            }
+            
+            // 下载视频片段
+            async function downloadVideo() {
+                if (!hls || !hls.levels.length) {
+                    downloadStatus.textContent = '请先加载视频';
+                    return;
+                }
+                
+                // 获取选中的质量
+                const selectedQuality = qualitySelect.value;
+                let levelIndex;
+                
+                if (selectedQuality === 'auto') {
+                    levelIndex = hls.currentLevel;
+                } else {
+                    levelIndex = parseInt(selectedQuality);
+                }
+                
+                currentLevel = hls.levels[levelIndex];
+                
+                // 获取片段信息
+                fragments = hls.levels[levelIndex].details?.fragments;
+                if (!fragments || fragments.length === 0) {
+                    downloadStatus.textContent = '无法获取片段信息';
+                    return;
+                }
+                
+                totalFragmentsCount = fragments.length;
+                updateRangeDisplay();
+                
+                // 获取下载范围
+                const startIndex = Math.max(0, parseInt(startRange.value) - 1);
+                const endIndex = Math.min(totalFragmentsCount - 1, parseInt(endRange.value) - 1);
+                
+                if (startIndex >= endIndex) {
+                    downloadStatus.textContent = '无效的片段范围';
+                    return;
+                }
+                
+                // 初始化下载状态
+                isDownloading = true;
+                isDownloadPaused = false;
+                currentDownloadIndex = startIndex;
+                downloadedBlobs = [];
+                
+                // 更新UI状态
+                downloadBtn.disabled = true;
+                pauseDownloadBtn.disabled = false;
+                stopDownloadBtn.disabled = false;
+                savePartialBtn.disabled = true;
+                downloadStatus.textContent = `开始下载: 片段 ${startIndex+1}-${endIndex+1} (共${endIndex - startIndex + 1}个片段)`;
+                
+                // 创建AbortController用于控制下载
+                downloadController = new AbortController();
+                
+                try {
+                    for (let i = startIndex; i <= endIndex; i++) {
+                        if (!isDownloading) break;
+                        
+                        while (isDownloadPaused && isDownloading) {
+                            // 等待暂停状态结束
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                        }
+                        
+                        if (!isDownloading) break;
+                        
+                        const fragment = fragments[i];
+                        const fragmentUrl = fragment.url.startsWith('http') ? 
+                            fragment.url : 
+                            new URL(fragment.url, hls.url).href;
+                        
+                        downloadStatus.textContent = `下载中: 片段 ${i+1}/${endIndex+1} (${((i - startIndex + 1) / (endIndex - startIndex + 1) * 100).toFixed(1)}%)`;
+                        downloadProgress.style.width = `${((i - startIndex) / (endIndex - startIndex + 1)) * 100}%`;
+                        downloadProgress.textContent = `${Math.round(((i - startIndex) / (endIndex - startIndex + 1)) * 100)}%`;
+                        
+                        try {
+                            const response = await fetch(fragmentUrl, {
+                                signal: downloadController.signal
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+                            
+                            const blob = await response.blob();
+                            downloadedBlobs.push(blob);
+                            
+                            // 更新片段状态为已下载
+                            updateSegmentStatus(i, 'loaded');
+                            
+                        } catch (error) {
+                            if (error.name === 'AbortError') {
+                                break;
+                            }
+                            console.error(`下载片段 ${i+1} 失败:`, error);
+                            updateSegmentStatus(i, 'error');
+                            // 继续下载下一个片段，而不是中断整个下载
+                            continue;
+                        }
+                        
+                        currentDownloadIndex = i;
+                    }
+                    
+                    if (isDownloading) {
+                        // 下载完成
+                        downloadProgress.style.width = '100%';
+                        downloadProgress.textContent = '100%';
+                        
+                        // 合并所有片段并保存
+                        if (downloadedBlobs.length > 0) {
+                            const combinedBlob = new Blob(downloadedBlobs, { type: 'video/mp2t' });
+                            const url = URL.createObjectURL(combinedBlob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `video_${new Date().getTime()}_${downloadedBlobs.length}segments.ts`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            
+                            downloadStatus.textContent = `下载完成! 片段: ${downloadedBlobs.length}/${endIndex - startIndex + 1}, 大小: ${(combinedBlob.size / (1024 * 1024)).toFixed(2)}MB`;
+                            
+                            // 启用转换按钮
+                            convertBtn.disabled = false;
+                            conversionStatus.textContent = '视频已下载，可以转换格式';
+                        } else {
+                            downloadStatus.textContent = '下载完成，但没有成功下载任何片段';
+                        }
+                    } else {
+                        downloadStatus.textContent = `下载已停止。已下载: ${downloadedBlobs.length} 片段`;
+                    }
+                    
+                } catch (error) {
+                    console.error('下载过程出错:', error);
+                    downloadStatus.textContent = `下载出错: ${error.message}`;
+                } finally {
+                    // 重置下载状态
+                    isDownloading = false;
+                    isDownloadPaused = false;
+                    downloadBtn.disabled = false;
+                    pauseDownloadBtn.disabled = true;
+                    resumeDownloadBtn.disabled = true;
+                    stopDownloadBtn.disabled = true;
+                    savePartialBtn.disabled = downloadedBlobs.length === 0;
+                }
+            }
+            
+            // 暂停下载
+            function pauseDownload() {
+                if (isDownloading && !isDownloadPaused) {
+                    isDownloadPaused = true;
+                    pauseDownloadBtn.disabled = true;
+                    resumeDownloadBtn.disabled = false;
+                    downloadStatus.textContent = '下载已暂停';
+                }
+            }
+            
+            // 继续下载
+            function resumeDownload() {
+                if (isDownloading && isDownloadPaused) {
+                    isDownloadPaused = false;
+                    pauseDownloadBtn.disabled = false;
+                    resumeDownloadBtn.disabled = true;
+                    downloadStatus.textContent = '下载继续...';
+                }
+            }
+            
+            // 停止下载
+            function stopDownload() {
+                if (isDownloading) {
+                    isDownloading = false;
+                    if (downloadController) {
+                        downloadController.abort();
+                    }
+                    downloadStatus.textContent = `下载已停止。已下载: ${downloadedBlobs.length} 片段`;
+                    
+                    // 启用保存部分下载按钮
+                    savePartialBtn.disabled = downloadedBlobs.length === 0;
+                }
+            }
+            
+            // 初始化FFmpeg
+            async function initFFmpeg() {
+                if (!ffmpeg) {
+                    try {
+                        // 使用正确的FFmpeg初始化方式
+                        if (typeof FFmpeg !== 'undefined') {
+                            ffmpeg = FFmpeg.createFFmpeg({
+                                log: true,
+                                corePath: 'ffmpeg-core.js'
+                            });
+                            await ffmpeg.load();
+                            conversionStatus.textContent = 'FFmpeg 初始化成功';
+                        } else {
+                            throw new Error('FFmpeg 未定义，请检查ffmpeg.min.js是否正确加载');
+                        }
+                    } catch (error) {
+                        console.error('FFmpeg 初始化失败:', error);
+                        conversionStatus.textContent = 'FFmpeg 初始化失败: ' + error.message;
+                    }
+                }
+                return ffmpeg !== null;
+            }
+            
+            // 转换视频格式
+            async function convertVideo() {
+                if (!ffmpeg || !downloadedBlobs || downloadedBlobs.length === 0) {
+                    conversionStatus.textContent = '请先下载视频或等待FFmpeg初始化';
+                    return;
+                }
+                
+                isConverting = true;
+                convertBtn.disabled = true;
+                cancelConvertBtn.disabled = false;
+                conversionStatus.textContent = '开始转换视频格式...';
+                
+                try {
+                    // 合并所有TS片段
+                    const combinedBlob = new Blob(downloadedBlobs, { type: 'video/mp2t' });
+                    const arrayBuffer = await combinedBlob.arrayBuffer();
+                    
+                    // 写入输入文件
+                    await ffmpeg.writeFile('input.ts', new Uint8Array(arrayBuffer));
+                    
+                    // 获取输出格式和质量设置
+                    const format = outputFormat.value;
+                    const quality = videoQuality.value;
+                    
+                    // 根据质量设置参数
+                    let qualityParams = [];
+                    switch(quality) {
+                        case 'high':
+                            qualityParams = ['-crf', '18', '-preset', 'slow'];
+                            break;
+                        case 'medium':
+                            qualityParams = ['-crf', '23', '-preset', 'medium'];
+                            break;
+                        case 'low':
+                            qualityParams = ['-crf', '28', '-preset', 'fast'];
+                            break;
+                    }
+                    
+                    // 转换命令
+                    const outputFile = `output.${format}`;
+                    const args = [
+                        '-i', 'input.ts',
+                        '-c', 'copy', // 直接复制流，不重新编码（更快）
+                        ...qualityParams,
+                        outputFile
+                    ];
+                    
+                    // 监听转换进度
+                    ffmpeg.setProgress(({ ratio }) => {
+                        const percent = Math.round(ratio * 100);
+                        conversionProgress.style.width = `${percent}%`;
+                        conversionProgress.textContent = `${percent}%`;
+                        conversionStatus.textContent = `转换中: ${percent}%`;
+                    });
+                    
+                    // 执行转换
+                    await ffmpeg.run(...args);
+                    
+                    // 读取输出文件
+                    const data = await ffmpeg.readFile(outputFile);
+                    
+                    // 创建下载链接
+                    const convertedBlob = new Blob([data.buffer], { type: `video/${format}` });
+                    const url = URL.createObjectURL(convertedBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `converted_video_${new Date().getTime()}.${format}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    conversionProgress.style.width = '100%';
+                    conversionProgress.textContent = '100%';
+                    conversionStatus.textContent = `格式转换完成! 输出格式: ${format.toUpperCase()}`;
+                    
+                } catch (error) {
+                    console.error('格式转换失败:', error);
+                    conversionStatus.textContent = `转换失败: ${error.message}`;
+                } finally {
+                    isConverting = false;
+                    convertBtn.disabled = false;
+                    cancelConvertBtn.disabled = true;
+                    
+                    // 清理文件
+                    try {
+                        await ffmpeg.deleteFile('input.ts');
+                        await ffmpeg.deleteFile(`output.${outputFormat.value}`);
+                    } catch (e) {
+                        // 忽略清理错误
+                        console.warn('清理临时文件失败:', e);
+                    }
+                }
+            }
+            
+            // 取消转换
+            function cancelConversion() {
+                if (isConverting && ffmpeg) {
+                    ffmpeg.exit();
+                    isConverting = false;
+                    convertBtn.disabled = false;
+                    cancelConvertBtn.disabled = true;
+                    conversionStatus.textContent = '转换已取消';
+                }
+            }
+            
+            // 加载视频
+            function loadVideo(url) {
+                // 更新输入框
+                m3u8UrlInput.value = url;
+                
+                // 重置状态
+                status.textContent = '正在加载视频...';
+                initTSMonitor();
+                
+                // 如果HLS实例已存在，先销毁
+                if (hls) {
+                    hls.destroy();
+                }
+                
+                // 创建新的HLS实例
+                hls = new Hls({
+                    debug: false,
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90
+                });
+                
+                // 绑定HLS到video元素
+                hls.loadSource(url);
+                hls.attachMedia(videoPlayer);
+                
+                // 监听HLS事件
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    status.textContent = '视频加载完成，可以开始播放';
+                    
+                    // 更新质量选择器
+                    updateQualitySelector(hls.levels);
+                    
+                    // 初始化FFmpeg
+                    initFFmpeg();
+                });
+                
+                hls.on(Hls.Events.LEVEL_LOADED, function(event, data) {
+                    // 更新片段信息
+                    totalFragmentsCount = data.details.totalduration / data.details.targetduration;
+                    updateRangeDisplay();
+                    
+                    // 初始化TS片段监控
+                    initTSMonitor();
+                    const fragmentCount = Math.ceil(totalFragmentsCount);
+                    
+                    for (let i = 0; i < fragmentCount; i++) {
+                        segments.push({
+                            index: i,
+                            status: 'pending'
+                        });
+                        
+                        const segmentElement = document.createElement('div');
+                        segmentElement.id = `ts-${i}`;
+                        segmentElement.className = 'ts-segment pending';
+                        segmentElement.textContent = i + 1;
+                        segmentElement.title = `片段 ${i + 1}`;
+                        
+                        // 点击片段跳转到对应时间
+                        segmentElement.addEventListener('click', () => {
+                            const targetTime = i * data.details.targetduration;
+                            videoPlayer.currentTime = targetTime;
+                        });
+                        
+                        tsContainer.appendChild(segmentElement);
+                    }
+                    
+                    totalSegments.textContent = fragmentCount;
+                });
+                
+                hls.on(Hls.Events.FRAG_LOADING, function(event, data) {
+                    updateSegmentStatus(data.frag.sn - 1, 'loading');
+                });
+                
+                hls.on(Hls.Events.FRAG_LOADED, function(event, data) {
+                    updateSegmentStatus(data.frag.sn - 1, 'loaded');
+                });
+                
+                hls.on(Hls.Events.FRAG_BUFFERED, function(event, data) {
+                    setCurrentSegment(data.frag.sn - 1);
+                });
+                
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                status.textContent = '网络错误: ' + data.details;
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                status.textContent = '媒体错误: ' + data.details;
+                                break;
+                            default:
+                                status.textContent = '未知错误: ' + data.details;
+                                break;
+                        }
+                    } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR && data.details === 'fragLoadError') {
+                        // 片段加载错误
+                        if (data.frag) {
+                            updateSegmentStatus(data.frag.sn - 1, 'error');
+                        }
+                    }
+                });
+                
+                // 监听视频播放事件
+                videoPlayer.addEventListener('loadedmetadata', function() {
+                    duration.textContent = formatTime(videoPlayer.duration);
+                });
+                
+                videoPlayer.addEventListener('timeupdate', function() {
+                    const current = videoPlayer.currentTime;
+                    const total = videoPlayer.duration;
+                    
+                    if (total) {
+                        const progressPercent = (current / total) * 100;
+                        progress.style.width = `${progressPercent}%`;
+                        currentTime.textContent = formatTime(current);
+                    }
+                });
+                
+                videoPlayer.addEventListener('ended', function() {
+                    playPauseBtn.innerHTML = '<span>播放</span>';
+                    isPlaying = false;
+                });
+            }
+            
+            // 格式化时间显示
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+            
+            // 事件监听器
+            loadBtn.addEventListener('click', function() {
+                const url = m3u8UrlInput.value.trim();
+                if (url) {
+                    loadVideo(url);
+                } else {
+                    status.textContent = '请输入有效的M3U8 URL';
+                }
+            });
+            
+            playPauseBtn.addEventListener('click', function() {
+                if (videoPlayer.paused) {
+                    videoPlayer.play();
+                    playPauseBtn.innerHTML = '<span>暂停</span>';
+                    isPlaying = true;
+                } else {
+                    videoPlayer.pause();
+                    playPauseBtn.innerHTML = '<span>播放</span>';
+                    isPlaying = false;
+                }
+            });
+            
+            muteBtn.addEventListener('click', function() {
+                videoPlayer.muted = !videoPlayer.muted;
+                muteBtn.innerHTML = videoPlayer.muted ? '<span>取消静音</span>' : '<span>静音</span>';
+            });
+            
+            progressBar.addEventListener('click', function(e) {
+                if (videoPlayer.duration) {
+                    const rect = progressBar.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    videoPlayer.currentTime = percent * videoPlayer.duration;
+                }
+            });
+            
+            volumeSlider.addEventListener('click', function(e) {
+                const rect = volumeSlider.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                videoPlayer.volume = percent;
+                volumeLevel.style.width = `${percent * 100}%`;
+            });
+            
+            // 下载功能事件监听
+            downloadBtn.addEventListener('click', downloadVideo);
+            pauseDownloadBtn.addEventListener('click', pauseDownload);
+            resumeDownloadBtn.addEventListener('click', resumeDownload);
+            stopDownloadBtn.addEventListener('click', stopDownload);
+            savePartialBtn.addEventListener('click', savePartialDownload);
+            selectAllBtn.addEventListener('click', selectAllFragments);
+            
+            // 格式转换事件监听
+            convertBtn.addEventListener('click', convertVideo);
+            cancelConvertBtn.addEventListener('click', cancelConversion);
+            
+            // 初始化
+            initPlaylist();
+            initTSMonitor();
+            
+            // 设置初始音量
+            videoPlayer.volume = 0.7;
+            volumeLevel.style.width = '70%';
+            
+            // 禁用转换按钮直到有下载内容
+            convertBtn.disabled = true;
+            cancelConvertBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
