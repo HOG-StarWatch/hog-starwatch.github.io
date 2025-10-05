@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>暗夜模式密码强度检测器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #e2e2e2;
+        }
+        
+        .container {
+            background: rgba(25, 20, 50, 0.85);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 550px;
+            padding: 35px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #3a2a6d;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #8a2be2, #9370db, #ba55d3);
+        }
+        
+        h1 {
+            color: #c9b6f0;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-shadow: 0 0 10px rgba(186, 85, 211, 0.5);
+        }
+        
+        .description {
+            text-align: center;
+            color: #a89cc8;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 18px 50px 18px 20px;
+            border: 2px solid #3a2a6d;
+            border-radius: 12px;
+            font-size: 18px;
+            transition: all 0.3s;
+            background-color: #1e1839;
+            color: #e2e2e2;
+        }
+        
+        input:focus {
+            border-color: #9370db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(147, 112, 219, 0.3);
+            background-color: #2a2345;
+        }
+        
+        input::placeholder {
+            color: #6b5b95;
+        }
+        
+        .input-buttons {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #8a7fb0;
+            transition: color 0.2s, transform 0.2s;
+            padding: 5px;
+        }
+        
+        .input-btn:hover {
+            color: #c9b6f0;
+            transform: scale(1.1);
+        }
+        
+        .strength-container {
+            margin: 25px 0;
+        }
+        
+        .strength-meter {
+            height: 14px;
+            background-color: #2a2345;
+            border-radius: 7px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .strength-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 7px;
+            transition: all 0.4s ease;
+            background: linear-gradient(90deg, #8a2be2, #9370db, #ba55d3);
+            box-shadow: 0 0 10px rgba(186, 85, 211, 0.7);
+        }
+        
+        .strength-text {
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .strength-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #8a7fb0;
+        }
+        
+        .requirements {
+            margin-top: 25px;
+            background-color: #2a2345;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #3a2a6d;
+        }
+        
+        .requirement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            color: #a89cc8;
+            transition: all 0.3s;
+        }
+        
+        .requirement i {
+            margin-right: 12px;
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .requirement.valid {
+            color: #7cfc9a;
+            text-shadow: 0 0 5px rgba(124, 252, 154, 0.5);
+        }
+        
+        .requirement.invalid {
+            color: #ff7f7f;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #8a2be2, #9370db);
+            color: white;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(138, 43, 226, 0.6);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #4a3c7d, #6b5b95);
+            color: #e2e2e2;
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #5a4b8d, #7b6ba5);
+            transform: translateY(-2px);
+        }
+        
+        .tips {
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #2a2345, #3a2a6d);
+            border-radius: 12px;
+            border-left: 5px solid #9370db;
+        }
+        
+        .tips h3 {
+            margin-bottom: 12px;
+            color: #c9b6f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tips ul {
+            padding-left: 20px;
+        }
+        
+        .tips li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            color: #a89cc8;
+        }
+        
+        .generator-settings {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #2a2345, #3a2a6d);
+            border-radius: 12px;
+            border: 1px dashed #9370db;
+        }
+        
+        .generator-settings h3 {
+            color: #c9b6f0;
+            margin-bottom: 15px;
+        }
+        
+        .setting {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .setting label {
+            font-weight: 500;
+            color: #c9b6f0;
+        }
+        
+        .length-display {
+            font-weight: bold;
+            color: #ba55d3;
+            min-width: 30px;
+            text-align: center;
+            text-shadow: 0 0 5px rgba(186, 85, 211, 0.5);
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            margin: 0 15px;
+            padding: 0;
+            background: #2a2345;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ba55d3;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(186, 85, 211, 0.8);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #9370db;
+        }
+        
+        .checkbox-item label {
+            color: #a89cc8;
+            font-weight: normal;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .input-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .checkbox-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, #8a2be2, #9370db);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.4s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .glow {
+            text-shadow: 0 0 10px rgba(186, 85, 211, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>暗夜模式密码强度检测器</h1>
+        <p class="description">检测密码强度并生成安全密码</p>
+        
+        <div class="input-group">
+            <input type="password" id="password-input" placeholder="输入密码或生成新密码..." autocomplete="off">
+            <div class="input-buttons">
+                <button class="input-btn" id="toggle-password" title="显示/隐藏密码">👁️</button>
+                <button class="input-btn" id="copy-password" title="复制密码">📋</button>
+            </div>
+        </div>
+        
+        <div class="strength-container">
+            <div class="strength-meter">
+                <div class="strength-fill" id="strength-fill"></div>
+            </div>
+            <div class="strength-text" id="strength-text"></div>
+            <div class="strength-details">
+                <span>弱</span>
+                <span>中等</span>
+                <span>强</span>
+                <span>非常强</span>
+            </div>
+        </div>
+        
+        <div class="requirements">
+            <div class="requirement" id="length-req">
+                <i>❌</i> 至少8个字符
+            </div>
+            <div class="requirement" id="lowercase-req">
+                <i>❌</i> 包含小写字母
+            </div>
+            <div class="requirement" id="uppercase-req">
+                <i>❌</i> 包含大写字母
+            </div>
+            <div class="requirement" id="number-req">
+                <i>❌</i> 包含数字
+            </div>
+            <div class="requirement" id="special-req">
+                <i>❌</i> 包含特殊字符 (!@#$%^&*等)
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-primary" id="generate-password">
+                <span>生成密码</span>
+            </button>
+            <button class="btn btn-secondary" id="clear-password">
+                <span>清除</span>
+            </button>
+        </div>
+        
+        <div class="generator-settings">
+            <h3>密码生成设置</h3>
+            <div class="setting">
+                <label for="length-slider">密码长度:</label>
+                <span class="length-display" id="length-value">12</span>
+                <input type="range" id="length-slider" min="8" max="24" value="12">
+            </div>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="include-lowercase" checked>
+                    <label for="include-lowercase">小写字母 (a-z)</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="include-uppercase" checked>
+                    <label for="include-uppercase">大写字母 (A-Z)</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="include-numbers" checked>
+                    <label for="include-numbers">数字 (0-9)</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="include-symbols" checked>
+                    <label for="include-symbols">符号 (!@#$%^&*)</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tips">
+            <h3>🔒 密码安全提示</h3>
+            <ul>
+                <li>使用至少12个字符的长密码</li>
+                <li>避免使用个人信息（姓名、生日等）</li>
+                <li>为每个账户使用不同的密码</li>
+                <li>考虑使用密码管理器存储密码</li>
+                <li>定期更换重要账户的密码</li>
+                <li>启用双因素认证增加安全性</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password-input');
+            const togglePassword = document.getElementById('toggle-password');
+            const copyPassword = document.getElementById('copy-password');
+            const generatePassword = document.getElementById('generate-password');
+            const clearPassword = document.getElementById('clear-password');
+            const strengthFill = document.getElementById('strength-fill');
+            const strengthText = document.getElementById('strength-text');
+            const lengthSlider = document.getElementById('length-slider');
+            const lengthValue = document.getElementById('length-value');
+            const toast = document.getElementById('toast');
+            
+            // 密码要求元素
+            const lengthReq = document.getElementById('length-req');
+            const lowercaseReq = document.getElementById('lowercase-req');
+            const uppercaseReq = document.getElementById('uppercase-req');
+            const numberReq = document.getElementById('number-req');
+            const specialReq = document.getElementById('special-req');
+            
+            // 字符集
+            const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+            const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numberChars = '0123456789';
+            const symbolChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+            
+            // 初始化
+            updateLengthDisplay();
+            
+            // 切换密码可见性
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.textContent = type === 'password' ? '👁️' : '🔒';
+            });
+            
+            // 复制密码
+            copyPassword.addEventListener('click', function() {
+                if (passwordInput.value) {
+                    navigator.clipboard.writeText(passwordInput.value).then(() => {
+                        showToast('密码已复制到剪贴板');
+                    }).catch(err => {
+                        console.error('复制失败: ', err);
+                        showToast('复制失败，请手动复制');
+                    });
+                } else {
+                    showToast('请先生成或输入密码');
+                }
+            });
+            
+            // 生成密码
+            generatePassword.addEventListener('click', function() {
+                const length = parseInt(lengthSlider.value);
+                const includeLowercase = document.getElementById('include-lowercase').checked;
+                const includeUppercase = document.getElementById('include-uppercase').checked;
+                const includeNumbers = document.getElementById('include-numbers').checked;
+                const includeSymbols = document.getElementById('include-symbols').checked;
+                
+                // 确保至少选择一种字符类型
+                if (!includeLowercase && !includeUppercase && !includeNumbers && !includeSymbols) {
+                    showToast('请至少选择一种字符类型');
+                    return;
+                }
+                
+                const password = generateRandomPassword(length, includeLowercase, includeUppercase, includeNumbers, includeSymbols);
+                passwordInput.value = password;
+                passwordInput.setAttribute('type', 'text');
+                togglePassword.textContent = '🔒';
+                checkPasswordStrength(password);
+                showToast('新密码已生成');
+            });
+            
+            // 清除密码
+            clearPassword.addEventListener('click', function() {
+                passwordInput.value = '';
+                checkPasswordStrength('');
+                passwordInput.setAttribute('type', 'password');
+                togglePassword.textContent = '👁️';
+            });
+            
+            // 密码强度检测
+            passwordInput.addEventListener('input', function() {
+                checkPasswordStrength(this.value);
+            });
+            
+            // 更新长度显示
+            lengthSlider.addEventListener('input', updateLengthDisplay);
+            
+            function updateLengthDisplay() {
+                lengthValue.textContent = lengthSlider.value;
+            }
+            
+            function generateRandomPassword(length, includeLowercase, includeUppercase, includeNumbers, includeSymbols) {
+                let charset = '';
+                let password = '';
+                
+                if (includeLowercase) charset += lowercaseChars;
+                if (includeUppercase) charset += uppercaseChars;
+                if (includeNumbers) charset += numberChars;
+                if (includeSymbols) charset += symbolChars;
+                
+                // 确保密码包含每种选定的字符类型
+                if (includeLowercase) password += getRandomChar(lowercaseChars);
+                if (includeUppercase) password += getRandomChar(uppercaseChars);
+                if (includeNumbers) password += getRandomChar(numberChars);
+                if (includeSymbols) password += getRandomChar(symbolChars);
+                
+                // 填充剩余长度
+                for (let i = password.length; i < length; i++) {
+                    password += getRandomChar(charset);
+                }
+                
+                // 打乱密码字符顺序
+                return shuffleString(password);
+            }
+            
+            function getRandomChar(charset) {
+                return charset[Math.floor(Math.random() * charset.length)];
+            }
+            
+            function shuffleString(string) {
+                const array = string.split('');
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array.join('');
+            }
+            
+            function checkPasswordStrength(password) {
+                // 检查各项要求
+                const hasMinLength = password.length >= 8;
+                const hasLowercase = /[a-z]/.test(password);
+                const hasUppercase = /[A-Z]/.test(password);
+                const hasNumber = /[0-9]/.test(password);
+                const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+                
+                // 更新要求状态
+                updateRequirement(lengthReq, hasMinLength);
+                updateRequirement(lowercaseReq, hasLowercase);
+                updateRequirement(uppercaseReq, hasUppercase);
+                updateRequirement(numberReq, hasNumber);
+                updateRequirement(specialReq, hasSpecial);
+                
+                // 计算密码强度分数 (0-100)
+                let score = 0;
+                if (hasMinLength) score += 20;
+                if (hasLowercase) score += 20;
+                if (hasUppercase) score += 20;
+                if (hasNumber) score += 20;
+                if (hasSpecial) score += 20;
+                
+                // 根据密码长度增加额外分数
+                if (password.length >= 12) score += 10;
+                if (password.length >= 16) score += 10;
+                
+                // 更新强度指示器
+                updateStrengthIndicator(score);
+            }
+            
+            function updateRequirement(element, isValid) {
+                if (isValid) {
+                    element.classList.add('valid');
+                    element.classList.remove('invalid');
+                    element.querySelector('i').textContent = '✅';
+                } else {
+                    element.classList.add('invalid');
+                    element.classList.remove('valid');
+                    element.querySelector('i').textContent = '❌';
+                }
+            }
+            
+            function updateStrengthIndicator(score) {
+                // 更新进度条
+                strengthFill.style.width = `${score}%`;
+                
+                // 设置颜色和文本
+                if (score === 0) {
+                    strengthText.textContent = '请输入密码';
+                    strengthText.style.color = '#8a7fb0';
+                } else if (score <= 40) {
+                    strengthText.textContent = '密码强度: 弱';
+                    strengthText.style.color = '#ff7f7f';
+                } else if (score <= 70) {
+                    strengthText.textContent = '密码强度: 中等';
+                    strengthText.style.color = '#ffb366';
+                } else if (score <= 90) {
+                    strengthText.textContent = '密码强度: 强';
+                    strengthText.style.color = '#7cfc9a';
+                } else {
+                    strengthText.textContent = '密码强度: 非常强';
+                    strengthText.style.color = '#7cfc9a';
+                    strengthText.classList.add('glow');
+                }
+            }
+            
+            function showToast(message) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
