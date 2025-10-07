@@ -17,10 +17,10 @@ The voice actors contributing to these works are of age and consent to the use o
 
 
 ![kadolstop](https://worldofvaira.com/wp-content/uploads/2023/11/kadolstop-1-500x540.png)
+![ABOUT](https://worldofvaira.com/wp-content/uploads/2025/04/18_2_p-802x540.png)
 
 All content is available for **free** in full quality. Your donations are however extremely welcome and crucial, it wouldn’t be possible without you!
 
 所有内容均以完整质量 **免费** 提供。然而，您的捐款非常受欢迎且至关重要，没有您，这是不可能的！
 
 ## [GoToTheWorldOfVaira-进入瓦拉Vaira世界](./TheWorld/)
-
