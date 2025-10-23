@@ -67,6 +67,7 @@ export default [
       items: [
         { text: 'Wordle', link: '../../../Wordle.html', target: '_self', },
         { text: '地址栏贪吃蛇-推荐无痕模式游玩;)', link: '../../../snake/index.html', target: '_self', },
+        { text: 'Music-world.execute.me', link: '../../../world.execute.me.html', target: '_self', },
       ],
     },
     { text: '其他',
