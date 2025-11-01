@@ -1,5 +1,5 @@
 ## 本站链接
-[激活方式对比表](./methodcompare.md)
+[激活方式对比表](./chart.md)
 
 [MAS英文版](https://hog-starwatch.github.io/MAS_AIO_v3.7_En_W.cmd)
 
@@ -105,6 +105,6 @@ note
 | KMS38 | Windows 10-11-Server | 至 2038 年 | 否 |
 | 在线 KMS | Windows / Office | 180 天。通过续订任务实现永久 | 是 |
 
-更多详情，请在文档中查看相应的激活详情和[对比表](/chart)。
+更多详情，请在文档中查看相应的激活详情和[对比表](./chart.md)。
 
 ---
