@@ -1,5 +1,5 @@
 ## 本站链接
-[激活方式对比表](./chart.md)
+[激活方式对比表](./methodcompare.md)
 
 [MAS英文版](https://hog-starwatch.github.io/MAS_AIO_v3.7_En_W.cmd)
 
