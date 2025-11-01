@@ -52,7 +52,7 @@
 * 它更注重隐私。
   不，[遥测选项](https://gist.github.com/ave9858/a2153957afb053f7d0e7ffdd6c3dcb89)与GAC企业版相同。
 * IoT LTSC 2021是2025年10月后为Windows 10接收安全更新的唯一方式。
-  不，您也可以在Windows 10中[激活ESU](/windows10_eol)。
+  不，您也可以在Windows 10中[激活ESU](https://massgrave.dev/windows10_eol)。
 
 #### 在LTSC上安装Microsoft Store应用[​](#microsoft-store-app-installation-on-ltsc "Direct link to Microsoft store app installation on LTSC")
 
@@ -92,7 +92,7 @@ LTSC版本预装时不包含商店应用。要安装它们，请按照以下步�
 
 | 功能 | Enterprise LTSC | IoT Enterprise LTSC / IoT Enterprise Subscription LTSC |
 | --- | --- | --- |
-| **TPM / 安全启动 / UEFI / 4GB RAM** | 全部必需 | [非必需](https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/Hardware/System_Requirements?tabs=Windows11LTSC#optional-minimum-requirements) 🎉   [IoT Enterprise 24H2 (非LTSC)](/Win-11)也不需要 |
+| **TPM / 安全启动 / UEFI / 4GB RAM** | 全部必需 | [非必需](https://learn.microsoft.com/en-us/windows/iot/iot-enterprise/Hardware/System_Requirements?tabs=Windows11LTSC#optional-minimum-requirements) 🎉   [IoT Enterprise 24H2 (非LTSC)]()也不需要 |
 | **自动设备加密** | 已启用 | 已禁用 |
 | **更新支持** | 5年 | 10年 |
 | **保留存储功能** | 已启用 | 已禁用 |
@@ -114,7 +114,7 @@ LTSC版本预装时不包含商店应用。要安装它们，请按照以下步�
 | **保留存储功能** | 已启用 | 已禁用 |
 | **数字许可证 (HWID)** | 不支持 | 支持 |
 | **KMS许可证** | 支持 | 在更新19044.2788后添加支持 |
-| **$OEM$文件夹支持** | 是 | 否 [(更多信息)](/oem-folder) |
+| **$OEM$文件夹支持** | 是 | 否  |
 
 * IoT Enterprise LTSC是赢家。
 * 您只能通过在Windows设置中的激活页面插入相应的版本密钥来相互更改版本（IoT和非IoT Windows Enterprise LTSC）。
@@ -130,7 +130,7 @@ LTSC版本预装时不包含商店应用。要安装它们，请按照以下步�
 
 点击此处获取信息
 
-您可能想查看[Windows 10 EOL指南](/windows10_eol)。
+您可能想查看[Windows 10 EOL指南](https://massgrave.dev/windows10_eol)。
 
 #### 如何以非英语语言全新安装Windows 11 IoT Enterprise LTSC 2024？[​](#how-to-clean-install-windows-11-iot-enterprise-ltsc-2024-in-non-english-language "Direct link to How to clean install Windows 11 IoT Enterprise LTSC 2024 in Non-English language?")
 
@@ -590,4 +590,4 @@ Windows 10 IoT Enterprise LTSC
 
 ## Windows 10/11 IoT Enterprise LTSC ARM64
 
-请查看[此处](/Win-ARM64)。
+请查看[此处](./Win-ARM64.md)。

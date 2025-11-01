@@ -425,7 +425,7 @@ MSDL <https://msdl.gravesoft.dev/#52> 提供直接来自Microsoft的官方链接
 | Ukrainian | x64 | [uk\_windows\_embedded\_8.1\_industry\_enterprise\_with\_update\_x64\_dvd\_6052210.iso](https://drive.massgrave.dev/uk_windows_embedded_8.1_industry_enterprise_with_update_x64_dvd_6052210.iso) |
 | Ukrainian | x32 | [uk\_windows\_embedded\_8.1\_industry\_enterprise\_with\_update\_x86\_dvd\_6052328.iso](https://drive.massgrave.dev/uk_windows_embedded_8.1_industry_enterprise_with_update_x86_dvd_6052328.iso) |
 
-[What are Windows N, K, and KN editions, and should I use them?](/genuine-installation-media#what-are-windows-n-k-and-kn-editions-and-should-i-use-them)
+[What are Windows N, K, and KN editions, and should I use them?](https://massgrave.dev/genuine-installation-media#what-are-windows-n-k-and-kn-editions-and-should-i-use-them)
 
 * Windows 8.1 N Core / Pro
 * Windows 8.1 Professional N (VL)

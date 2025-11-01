@@ -482,7 +482,7 @@ Available in x86 only.
 | Turkish | x32 | [tr\_windows\_7\_starter\_with\_sp1\_x86\_dvd\_u\_678523.iso](https://drive.massgrave.dev/tr_windows_7_starter_with_sp1_x86_dvd_u_678523.iso) |
 | Ukrainian | x32 | [uk\_windows\_7\_starter\_with\_sp1\_x86\_dvd\_u\_678529.iso](https://drive.massgrave.dev/uk_windows_7_starter_with_sp1_x86_dvd_u_678529.iso) |
 
-[What are Windows N, K, and KN editions, and should I use them?](/genuine-installation-media#what-are-windows-n-k-and-kn-editions-and-should-i-use-them)
+[What are Windows N, K, and KN editions, and should I use them?](https://massgrave.dev/genuine-installation-media#what-are-windows-n-k-and-kn-editions-and-should-i-use-them)
 
 * Windows 7 Ultimate N SP1
 * Windows 7 Enterprise N SP1

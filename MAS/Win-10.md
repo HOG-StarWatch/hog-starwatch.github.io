@@ -224,11 +224,11 @@ slmgr.vbs /ipk XQQYW-NFFMW-XJPBH-K8732-CKFFD
 
 ## Windows 10 ARM64 22H2
 
-查看[这里](/Win-ARM64)。
+查看[这里](./Win-ARM64.md)。
 
 ## Windows 10 (IoT) 企业版 LTSC
 
-查看[这里](/Win-LTSC)。
+查看[这里](./Win-LTSC.md)。
 
 ## 其他版本
 

@@ -197,7 +197,7 @@ Windows Vista 入门版
 | Ukrainian | x64 | [uk\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40398.iso](https://drive.massgrave.dev/uk_windows_vista_enterprise_with_sp2_x64_dvd_x15-40398.iso) |
 | Ukrainian | x32 | [uk\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40253.iso](https://drive.massgrave.dev/uk_windows_vista_enterprise_with_sp2_x86_dvd_x15-40253.iso) |
 
-[What are Windows N, K, and KN editions, and should I use them?](/genuine-installation-media#what-are-windows-n-k-and-kn-editions-and-should-i-use-them)
+[What are Windows N, K, and KN editions, and should I use them?](https://massgrave.dev/genuine-installation-media#what-are-windows-n-k-and-kn-editions-and-should-i-use-them)
 
 * Windows Vista Business N (VL) SP2
 * Windows Vista Business N and Home Basic N SP2

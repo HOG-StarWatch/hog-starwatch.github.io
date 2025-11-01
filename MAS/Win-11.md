@@ -200,11 +200,11 @@ slmgr.vbs /ipk XQQYW-NFFMW-XJPBH-K8732-CKFFD
 
 ## Windows 11 ARM64 25H2
 
-请在此处查看[链接](/Win-ARM64)。
+请在此处查看[链接](./Win-ARM64.md)。
 
 ## Windows 11 (IoT) 企业版 LTSC 2024
 
-请在此处查看[链接](/Win-LTSC)。
+请在此处查看[链接](./Win-LTSC.md)。
 
 ## 其他版本
 

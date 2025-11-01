@@ -261,7 +261,7 @@
 | Ukrainian | x64 | [uk\_windows\_8\_enterprise\_x64\_dvd\_917583.iso](https://drive.massgrave.dev/uk_windows_8_enterprise_x64_dvd_917583.iso) |
 | Ukrainian | x32 | [uk\_windows\_8\_enterprise\_x86\_dvd\_917694.iso](https://drive.massgrave.dev/uk_windows_8_enterprise_x86_dvd_917694.iso) |
 
-[What are Windows N, K, and KN editions, and should I use them?](/genuine-installation-media#what-are-windows-n-k-and-kn-editions-and-should-i-use-them)
+[What are Windows N, K, and KN editions, and should I use them?](https://massgrave.dev/genuine-installation-media#what-are-windows-n-k-and-kn-editions-and-should-i-use-them)
 
 * Windows 8 N Core / Pro
 * Windows 8 Professional N (VL)
