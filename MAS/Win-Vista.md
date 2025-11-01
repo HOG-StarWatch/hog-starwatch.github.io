@@ -1,0 +1,254 @@
+# Windows Vista 下载
+
+所有下载链接仅指向正版文件。
+
+* **Windows Vista 可以通过MAS中的TSforge选项永久激活。**
+
+---
+
+## 下载链接[​](#download-links "直接链接到下载链接")
+
+## Windows Vista 含Service Pack 2
+版本 - 6002.18005
+
+* Windows Vista SP2
+* Windows Vista N、K和KN SP2
+
+* Windows Vista SP2
+* Windows Vista 商业版（批量许可）SP2
+* Windows Vista 企业版 SP2
+
+## Windows Vista SP2
+
+以下列出的ISO在安装Windows时可选择以下版本：
+Windows Vista 商业版
+Windows Vista 家庭基础版
+Windows Vista 家庭高级版
+Windows Vista 旗舰版
+Windows Vista 家庭基础版 N
+Windows Vista 商业版 N
+Windows Vista 入门版
+其中N版本仅在英文ISO中可用，入门版仅在x86版本ISO中可用。
+
+| 语言 | 架构 | 链接 |
+| --- | --- | --- |
+| Arabic | x64 | [ar\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36318.iso](https://drive.massgrave.dev/ar_windows_vista_with_sp2_x64_dvd_x15-36318.iso) |
+| Arabic | x32 | [ar\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36282.iso](https://drive.massgrave.dev/ar_windows_vista_with_sp2_x86_dvd_x15-36282.iso) |
+| Bulgarian | x64 | [bg\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36321.iso](https://drive.massgrave.dev/bg_windows_vista_with_sp2_x64_dvd_x15-36321.iso) |
+| Bulgarian | x32 | [bg\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36284.iso](https://drive.massgrave.dev/bg_windows_vista_with_sp2_x86_dvd_x15-36284.iso) |
+| Chinese - Hong Kong SAR | x64 | [hk\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36324.iso](https://drive.massgrave.dev/hk_windows_vista_with_sp2_x64_dvd_x15-36324.iso) |
+| Chinese - Hong Kong SAR | x32 | [hk\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36287.iso](https://drive.massgrave.dev/hk_windows_vista_with_sp2_x86_dvd_x15-36287.iso) |
+| Chinese - Simplified | x64 | [cn\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36322.iso](https://drive.massgrave.dev/cn_windows_vista_with_sp2_x64_dvd_x15-36322.iso) |
+| Chinese - Simplified | x32 | [cn\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36285.iso](https://drive.massgrave.dev/cn_windows_vista_with_sp2_x86_dvd_x15-36285.iso) |
+| Chinese - Traditional | x64 | [tw\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36323.iso](https://drive.massgrave.dev/tw_windows_vista_with_sp2_x64_dvd_x15-36323.iso) |
+| Chinese - Traditional | x32 | [tw\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36286.iso](https://drive.massgrave.dev/tw_windows_vista_with_sp2_x86_dvd_x15-36286.iso) |
+| Croatian | x64 | [hr\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36325.iso](https://drive.massgrave.dev/hr_windows_vista_with_sp2_x64_dvd_x15-36325.iso) |
+| Croatian | x32 | [hr\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36288.iso](https://drive.massgrave.dev/hr_windows_vista_with_sp2_x86_dvd_x15-36288.iso) |
+| Czech | x64 | [cs\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36327.iso](https://drive.massgrave.dev/cs_windows_vista_with_sp2_x64_dvd_x15-36327.iso) |
+| Czech | x32 | [cs\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36289.iso](https://drive.massgrave.dev/cs_windows_vista_with_sp2_x86_dvd_x15-36289.iso) |
+| Danish | x64 | [da\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36329.iso](https://drive.massgrave.dev/da_windows_vista_with_sp2_x64_dvd_x15-36329.iso) |
+| Danish | x32 | [da\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36290.iso](https://drive.massgrave.dev/da_windows_vista_with_sp2_x86_dvd_x15-36290.iso) |
+| Dutch | x64 | [nl\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36331.iso](https://drive.massgrave.dev/nl_windows_vista_with_sp2_x64_dvd_x15-36331.iso) |
+| Dutch | x32 | [nl\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36291.iso](https://drive.massgrave.dev/nl_windows_vista_with_sp2_x86_dvd_x15-36291.iso) |
+| English | x64 | [en\_windows\_vista\_sp2\_x64\_dvd\_342267.iso](https://drive.massgrave.dev/en_windows_vista_sp2_x64_dvd_342267.iso) |
+| English | x32 | [en\_windows\_vista\_with\_sp2\_x86\_dvd\_342266.iso](https://drive.massgrave.dev/en_windows_vista_with_sp2_x86_dvd_342266.iso) |
+| Estonian | x64 | [et\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36335.iso](https://drive.massgrave.dev/et_windows_vista_with_sp2_x64_dvd_x15-36335.iso) |
+| Estonian | x32 | [et\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36293.iso](https://drive.massgrave.dev/et_windows_vista_with_sp2_x86_dvd_x15-36293.iso) |
+| Finnish | x64 | [fi\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36337.iso](https://drive.massgrave.dev/fi_windows_vista_with_sp2_x64_dvd_x15-36337.iso) |
+| Finnish | x32 | [fi\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36294.iso](https://drive.massgrave.dev/fi_windows_vista_with_sp2_x86_dvd_x15-36294.iso) |
+| French | x64 | [fr\_windows\_vista\_sp2\_x64\_dvd\_342277.iso](https://drive.massgrave.dev/fr_windows_vista_sp2_x64_dvd_342277.iso) |
+| French | x32 | [fr\_windows\_vista\_sp2\_x86\_dvd\_342276.iso](https://drive.massgrave.dev/fr_windows_vista_sp2_x86_dvd_342276.iso) |
+| German | x64 | [de\_windows\_vista\_sp2\_x64\_dvd\_342287.iso](https://drive.massgrave.dev/de_windows_vista_sp2_x64_dvd_342287.iso) |
+| German | x32 | [de\_windows\_vista\_sp2\_x86\_dvd\_342286.iso](https://drive.massgrave.dev/de_windows_vista_sp2_x86_dvd_342286.iso) |
+| Greek | x64 | [el\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36343.iso](https://drive.massgrave.dev/el_windows_vista_with_sp2_x64_dvd_x15-36343.iso) |
+| Greek | x32 | [el\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36297.iso](https://drive.massgrave.dev/el_windows_vista_with_sp2_x86_dvd_x15-36297.iso) |
+| Hebrew | x64 | [he\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36344.iso](https://drive.massgrave.dev/he_windows_vista_with_sp2_x64_dvd_x15-36344.iso) |
+| Hebrew | x32 | [he\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36298.iso](https://drive.massgrave.dev/he_windows_vista_with_sp2_x86_dvd_x15-36298.iso) |
+| Hungarian | x64 | [hu\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36346.iso](https://drive.massgrave.dev/hu_windows_vista_with_sp2_x64_dvd_x15-36346.iso) |
+| Hungarian | x32 | [hu\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36299.iso](https://drive.massgrave.dev/hu_windows_vista_with_sp2_x86_dvd_x15-36299.iso) |
+| Italian | x64 | [it\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36348.iso](https://drive.massgrave.dev/it_windows_vista_with_sp2_x64_dvd_x15-36348.iso) |
+| Italian | x32 | [it\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36300.iso](https://drive.massgrave.dev/it_windows_vista_with_sp2_x86_dvd_x15-36300.iso) |
+| Japanese | x64 | [ja\_windows\_vista\_sp2\_x64\_dvd\_342298.iso](https://drive.massgrave.dev/ja_windows_vista_sp2_x64_dvd_342298.iso) |
+| Japanese | x32 | [ja\_windows\_vista\_sp2\_x86\_dvd\_342296.iso](https://drive.massgrave.dev/ja_windows_vista_sp2_x86_dvd_342296.iso) |
+| Latvian | x64 | [lv\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36353.iso](https://drive.massgrave.dev/lv_windows_vista_with_sp2_x64_dvd_x15-36353.iso) |
+| Latvian | x32 | [lv\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36303.iso](https://drive.massgrave.dev/lv_windows_vista_with_sp2_x86_dvd_x15-36303.iso) |
+| Lithuanian | x64 | [lt\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36355.iso](https://drive.massgrave.dev/lt_windows_vista_with_sp2_x64_dvd_x15-36355.iso) |
+| Lithuanian | x32 | [lt\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36304.iso](https://drive.massgrave.dev/lt_windows_vista_with_sp2_x86_dvd_x15-36304.iso) |
+| Norwegian | x64 | [no\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36357.iso](https://drive.massgrave.dev/no_windows_vista_with_sp2_x64_dvd_x15-36357.iso) |
+| Norwegian | x32 | [no\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36305.iso](https://drive.massgrave.dev/no_windows_vista_with_sp2_x86_dvd_x15-36305.iso) |
+| Polish | x64 | [pl\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36359.iso](https://drive.massgrave.dev/pl_windows_vista_with_sp2_x64_dvd_x15-36359.iso) |
+| Polish | x32 | [pl\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36306.iso](https://drive.massgrave.dev/pl_windows_vista_with_sp2_x86_dvd_x15-36306.iso) |
+| Portuguese - Brazil | x64 | [pt\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36319.iso](https://drive.massgrave.dev/pt_windows_vista_with_sp2_x64_dvd_x15-36319.iso) |
+| Portuguese - Brazil | x32 | [pt\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36283.iso](https://drive.massgrave.dev/pt_windows_vista_with_sp2_x86_dvd_x15-36283.iso) |
+| Portuguese - Portugal | x64 | [pp\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36361.iso](https://drive.massgrave.dev/pp_windows_vista_with_sp2_x64_dvd_x15-36361.iso) |
+| Portuguese - Portugal | x32 | [pp\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36307.iso](https://drive.massgrave.dev/pp_windows_vista_with_sp2_x86_dvd_x15-36307.iso) |
+| Romanian | x64 | [ro\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36363.iso](https://drive.massgrave.dev/ro_windows_vista_with_sp2_x64_dvd_x15-36363.iso) |
+| Romanian | x32 | [ro\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36308.iso](https://drive.massgrave.dev/ro_windows_vista_with_sp2_x86_dvd_x15-36308.iso) |
+| Russian | x64 | [ru\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36364.iso](https://drive.massgrave.dev/ru_windows_vista_with_sp2_x64_dvd_x15-36364.iso) |
+| Russian | x32 | [ru\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36309.iso](https://drive.massgrave.dev/ru_windows_vista_with_sp2_x86_dvd_x15-36309.iso) |
+| Serbian | x64 | [sr\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36365.iso](https://drive.massgrave.dev/sr_windows_vista_with_sp2_x64_dvd_x15-36365.iso) |
+| Serbian | x32 | [sr\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36310.iso](https://drive.massgrave.dev/sr_windows_vista_with_sp2_x86_dvd_x15-36310.iso) |
+| Slovak | x64 | [sk\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36367.iso](https://drive.massgrave.dev/sk_windows_vista_with_sp2_x64_dvd_x15-36367.iso) |
+| Slovak | x32 | [sk\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36311.iso](https://drive.massgrave.dev/sk_windows_vista_with_sp2_x86_dvd_x15-36311.iso) |
+| Slovenian | x64 | [sl\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36369.iso](https://drive.massgrave.dev/sl_windows_vista_with_sp2_x64_dvd_x15-36369.iso) |
+| Slovenian | x32 | [sl\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36312.iso](https://drive.massgrave.dev/sl_windows_vista_with_sp2_x86_dvd_x15-36312.iso) |
+| Spanish | x64 | [es\_windows\_vista\_sp2\_x64\_dvd\_342309.iso](https://drive.massgrave.dev/es_windows_vista_sp2_x64_dvd_342309.iso) |
+| Spanish | x32 | [es\_windows\_vista\_sp2\_x86\_dvd\_342308.iso](https://drive.massgrave.dev/es_windows_vista_sp2_x86_dvd_342308.iso) |
+| Swedish | x64 | [sv\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36373.iso](https://drive.massgrave.dev/sv_windows_vista_with_sp2_x64_dvd_x15-36373.iso) |
+| Swedish | x32 | [sv\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36314.iso](https://drive.massgrave.dev/sv_windows_vista_with_sp2_x86_dvd_x15-36314.iso) |
+| Thai | x64 | [th\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36374.iso](https://drive.massgrave.dev/th_windows_vista_with_sp2_x64_dvd_x15-36374.iso) |
+| Thai | x32 | [th\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36315.iso](https://drive.massgrave.dev/th_windows_vista_with_sp2_x86_dvd_x15-36315.iso) |
+| Turkish | x64 | [tr\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36375.iso](https://drive.massgrave.dev/tr_windows_vista_with_sp2_x64_dvd_x15-36375.iso) |
+| Turkish | x32 | [tr\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36316.iso](https://drive.massgrave.dev/tr_windows_vista_with_sp2_x86_dvd_x15-36316.iso) |
+| Ukrainian | x64 | [uk\_windows\_vista\_with\_sp2\_x64\_dvd\_x15-36376.iso](https://drive.massgrave.dev/uk_windows_vista_with_sp2_x64_dvd_x15-36376.iso) |
+| Ukrainian | x32 | [uk\_windows\_vista\_with\_sp2\_x86\_dvd\_x15-36317.iso](https://drive.massgrave.dev/uk_windows_vista_with_sp2_x86_dvd_x15-36317.iso) |
+| English | x64 | [en\_windows\_vista\_n\_sp2\_x64\_dvd\_342268.iso](https://drive.massgrave.dev/en_windows_vista_n_sp2_x64_dvd_342268.iso) |
+| French | x64 | [fr\_windows\_vista\_n\_sp2\_x64\_dvd\_342278.iso](https://drive.massgrave.dev/fr_windows_vista_n_sp2_x64_dvd_342278.iso) |
+| German | x64 | [de\_windows\_vista\_n\_sp2\_x64\_dvd\_342288.iso](https://drive.massgrave.dev/de_windows_vista_n_sp2_x64_dvd_342288.iso) |
+| Spanish | x64 | [es\_windows\_vista\_n\_sp2\_x64\_dvd\_342311.iso](https://drive.massgrave.dev/es_windows_vista_n_sp2_x64_dvd_342311.iso) |
+
+## Windows Vista 商业版（批量许可）SP2
+
+| 语言 | 架构 | 链接 |
+| --- | --- | --- |
+| English | x64 | [en\_windows\_vista\_business\_sp2\_x64\_dvd\_342327.iso](https://drive.massgrave.dev/en_windows_vista_business_sp2_x64_dvd_342327.iso) |
+| English | x32 | [en\_windows\_vista\_business\_sp2\_x86\_dvd\_342321.iso](https://drive.massgrave.dev/en_windows_vista_business_sp2_x86_dvd_342321.iso) |
+| French | x64 | [fr\_windows\_vista\_business\_sp2\_x64\_dvd\_342350.iso](https://drive.massgrave.dev/fr_windows_vista_business_sp2_x64_dvd_342350.iso) |
+| French | x32 | [fr\_windows\_vista\_business\_sp2\_x86\_dvd\_342343.iso](https://drive.massgrave.dev/fr_windows_vista_business_sp2_x86_dvd_342343.iso) |
+| German | x64 | [de\_windows\_vista\_business\_sp2\_x64\_dvd\_342372.iso](https://drive.massgrave.dev/de_windows_vista_business_sp2_x64_dvd_342372.iso) |
+| German | x32 | [de\_windows\_vista\_business\_sp2\_x86\_dvd\_342366.iso](https://drive.massgrave.dev/de_windows_vista_business_sp2_x86_dvd_342366.iso) |
+| Japanese | x64 | [ja\_windows\_vista\_business\_sp2\_x64\_dvd\_342390.iso](https://drive.massgrave.dev/ja_windows_vista_business_sp2_x64_dvd_342390.iso) |
+| Japanese | x32 | [ja\_windows\_vista\_business\_sp2\_x86\_dvd\_342388.iso](https://drive.massgrave.dev/ja_windows_vista_business_sp2_x86_dvd_342388.iso) |
+| Spanish | x64 | [es\_windows\_vista\_business\_sp2\_x64\_dvd\_342412.iso](https://drive.massgrave.dev/es_windows_vista_business_sp2_x64_dvd_342412.iso) |
+| Spanish | x32 | [es\_windows\_vista\_business\_sp2\_x86\_dvd\_342405.iso](https://drive.massgrave.dev/es_windows_vista_business_sp2_x86_dvd_342405.iso) |
+
+## Windows Vista 企业版 SP2
+
+| Language | Arch | Link |
+| --- | --- | --- |
+| Arabic | x64 | [ar\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40408.iso](https://drive.massgrave.dev/ar_windows_vista_enterprise_with_sp2_x64_dvd_x15-40408.iso) |
+| Arabic | x32 | [ar\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40263.iso](https://drive.massgrave.dev/ar_windows_vista_enterprise_with_sp2_x86_dvd_x15-40263.iso) |
+| Bulgarian | x64 | [bg\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40410.iso](https://drive.massgrave.dev/bg_windows_vista_enterprise_with_sp2_x64_dvd_x15-40410.iso) |
+| Bulgarian | x32 | [bg\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40265.iso](https://drive.massgrave.dev/bg_windows_vista_enterprise_with_sp2_x86_dvd_x15-40265.iso) |
+| Chinese - Hong Kong SAR | x64 | [hk\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40463.iso](https://drive.massgrave.dev/hk_windows_vista_enterprise_with_sp2_x64_dvd_x15-40463.iso) |
+| Chinese - Hong Kong SAR | x32 | [hk\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40317.iso](https://drive.massgrave.dev/hk_windows_vista_enterprise_with_sp2_x86_dvd_x15-40317.iso) |
+| Chinese - Simplified | x64 | [cn\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40402.iso](https://drive.massgrave.dev/cn_windows_vista_enterprise_with_sp2_x64_dvd_x15-40402.iso) |
+| Chinese - Simplified | x32 | [cn\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40257.iso](https://drive.massgrave.dev/cn_windows_vista_enterprise_with_sp2_x86_dvd_x15-40257.iso) |
+| Chinese - Traditional | x64 | [tw\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40461.iso](https://drive.massgrave.dev/tw_windows_vista_enterprise_with_sp2_x64_dvd_x15-40461.iso) |
+| Chinese - Traditional | x32 | [tw\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40315.iso](https://drive.massgrave.dev/tw_windows_vista_enterprise_with_sp2_x86_dvd_x15-40315.iso) |
+| Croatian | x64 | [hr\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40396.iso](https://drive.massgrave.dev/hr_windows_vista_enterprise_with_sp2_x64_dvd_x15-40396.iso) |
+| Croatian | x32 | [hr\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40251.iso](https://drive.massgrave.dev/hr_windows_vista_enterprise_with_sp2_x86_dvd_x15-40251.iso) |
+| Czech | x64 | [cs\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40412.iso](https://drive.massgrave.dev/cs_windows_vista_enterprise_with_sp2_x64_dvd_x15-40412.iso) |
+| Czech | x32 | [cs\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40267.iso](https://drive.massgrave.dev/cs_windows_vista_enterprise_with_sp2_x86_dvd_x15-40267.iso) |
+| Danish | x64 | [da\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40416.iso](https://drive.massgrave.dev/da_windows_vista_enterprise_with_sp2_x64_dvd_x15-40416.iso) |
+| Danish | x32 | [da\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40271.iso](https://drive.massgrave.dev/da_windows_vista_enterprise_with_sp2_x86_dvd_x15-40271.iso) |
+| Dutch | x64 | [nl\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40441.iso](https://drive.massgrave.dev/nl_windows_vista_enterprise_with_sp2_x64_dvd_x15-40441.iso) |
+| Dutch | x32 | [nl\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40295.iso](https://drive.massgrave.dev/nl_windows_vista_enterprise_with_sp2_x86_dvd_x15-40295.iso) |
+| English | x64 | [en\_windows\_vista\_enterprise\_sp2\_x64\_dvd\_342332.iso](https://drive.massgrave.dev/en_windows_vista_enterprise_sp2_x64_dvd_342332.iso) |
+| English | x32 | [en\_windows\_vista\_enterprise\_sp2\_x86\_dvd\_342329.iso](https://drive.massgrave.dev/en_windows_vista_enterprise_sp2_x86_dvd_342329.iso) |
+| Estonian | x64 | [et\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40437.iso](https://drive.massgrave.dev/et_windows_vista_enterprise_with_sp2_x64_dvd_x15-40437.iso) |
+| Estonian | x32 | [et\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40291.iso](https://drive.massgrave.dev/et_windows_vista_enterprise_with_sp2_x86_dvd_x15-40291.iso) |
+| Finnish | x64 | [fi\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40451.iso](https://drive.massgrave.dev/fi_windows_vista_enterprise_with_sp2_x64_dvd_x15-40451.iso) |
+| Finnish | x32 | [fi\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40305.iso](https://drive.massgrave.dev/fi_windows_vista_enterprise_with_sp2_x86_dvd_x15-40305.iso) |
+| French | x64 | [fr\_windows\_vista\_enterprise\_sp2\_x64\_dvd\_342355.iso](https://drive.massgrave.dev/fr_windows_vista_enterprise_sp2_x64_dvd_342355.iso) |
+| French | x32 | [fr\_windows\_vista\_enterprise\_sp2\_x86\_dvd\_342352.iso](https://drive.massgrave.dev/fr_windows_vista_enterprise_sp2_x86_dvd_342352.iso) |
+| German | x64 | [de\_windows\_vista\_enterprise\_sp2\_x64\_dvd\_342376.iso](https://drive.massgrave.dev/de_windows_vista_enterprise_sp2_x64_dvd_342376.iso) |
+| German | x32 | [de\_windows\_vista\_enterprise\_sp2\_x86\_dvd\_342373.iso](https://drive.massgrave.dev/de_windows_vista_enterprise_sp2_x86_dvd_342373.iso) |
+| Greek | x64 | [el\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40423.iso](https://drive.massgrave.dev/el_windows_vista_enterprise_with_sp2_x64_dvd_x15-40423.iso) |
+| Greek | x32 | [el\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40277.iso](https://drive.massgrave.dev/el_windows_vista_enterprise_with_sp2_x86_dvd_x15-40277.iso) |
+| Hebrew | x64 | [he\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40425.iso](https://drive.massgrave.dev/he_windows_vista_enterprise_with_sp2_x64_dvd_x15-40425.iso) |
+| Hebrew | x32 | [he\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40279.iso](https://drive.massgrave.dev/he_windows_vista_enterprise_with_sp2_x86_dvd_x15-40279.iso) |
+| Hungarian | x64 | [hu\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40427.iso](https://drive.massgrave.dev/hu_windows_vista_enterprise_with_sp2_x64_dvd_x15-40427.iso) |
+| Hungarian | x32 | [hu\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40281.iso](https://drive.massgrave.dev/hu_windows_vista_enterprise_with_sp2_x86_dvd_x15-40281.iso) |
+| Italian | x64 | [it\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40429.iso](https://drive.massgrave.dev/it_windows_vista_enterprise_with_sp2_x64_dvd_x15-40429.iso) |
+| Italian | x32 | [it\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40283.iso](https://drive.massgrave.dev/it_windows_vista_enterprise_with_sp2_x86_dvd_x15-40283.iso) |
+| Japanese | x64 | [ja\_windows\_vista\_enterprise\_sp2\_x64\_dvd\_342393.iso](https://drive.massgrave.dev/ja_windows_vista_enterprise_sp2_x64_dvd_342393.iso) |
+| Japanese | x32 | [ja\_windows\_vista\_enterprise\_sp2\_x86\_dvd\_342391.iso](https://drive.massgrave.dev/ja_windows_vista_enterprise_sp2_x86_dvd_342391.iso) |
+| Latvian | x64 | [lv\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40392.iso](https://drive.massgrave.dev/lv_windows_vista_enterprise_with_sp2_x64_dvd_x15-40392.iso) |
+| Latvian | x32 | [lv\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40247.iso](https://drive.massgrave.dev/lv_windows_vista_enterprise_with_sp2_x86_dvd_x15-40247.iso) |
+| Lithuanian | x64 | [lt\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40394.iso](https://drive.massgrave.dev/lt_windows_vista_enterprise_with_sp2_x64_dvd_x15-40394.iso) |
+| Lithuanian | x32 | [lt\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40249.iso](https://drive.massgrave.dev/lt_windows_vista_enterprise_with_sp2_x86_dvd_x15-40249.iso) |
+| Norwegian | x64 | [no\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40439.iso](https://drive.massgrave.dev/no_windows_vista_enterprise_with_sp2_x64_dvd_x15-40439.iso) |
+| Norwegian | x32 | [no\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40293.iso](https://drive.massgrave.dev/no_windows_vista_enterprise_with_sp2_x86_dvd_x15-40293.iso) |
+| Polish | x64 | [pl\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40445.iso](https://drive.massgrave.dev/pl_windows_vista_enterprise_with_sp2_x64_dvd_x15-40445.iso) |
+| Polish | x32 | [pl\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40299.iso](https://drive.massgrave.dev/pl_windows_vista_enterprise_with_sp2_x86_dvd_x15-40299.iso) |
+| Portuguese - Brazil | x64 | [pt\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40400.iso](https://drive.massgrave.dev/pt_windows_vista_enterprise_with_sp2_x64_dvd_x15-40400.iso) |
+| Portuguese - Brazil | x32 | [pt\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40255.iso](https://drive.massgrave.dev/pt_windows_vista_enterprise_with_sp2_x86_dvd_x15-40255.iso) |
+| Portuguese - Portugal | x64 | [pp\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40443.iso](https://drive.massgrave.dev/pp_windows_vista_enterprise_with_sp2_x64_dvd_x15-40443.iso) |
+| Portuguese - Portugal | x32 | [pp\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40297.iso](https://drive.massgrave.dev/pp_windows_vista_enterprise_with_sp2_x86_dvd_x15-40297.iso) |
+| Romanian | x64 | [ro\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40447.iso](https://drive.massgrave.dev/ro_windows_vista_enterprise_with_sp2_x64_dvd_x15-40447.iso) |
+| Romanian | x32 | [ro\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40301.iso](https://drive.massgrave.dev/ro_windows_vista_enterprise_with_sp2_x86_dvd_x15-40301.iso) |
+| Russian | x64 | [ru\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40455.iso](https://drive.massgrave.dev/ru_windows_vista_enterprise_with_sp2_x64_dvd_x15-40455.iso) |
+| Russian | x32 | [ru\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40309.iso](https://drive.massgrave.dev/ru_windows_vista_enterprise_with_sp2_x86_dvd_x15-40309.iso) |
+| Serbian | x64 | [sr\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40406.iso](https://drive.massgrave.dev/sr_windows_vista_enterprise_with_sp2_x64_dvd_x15-40406.iso) |
+| Serbian | x32 | [sr\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40261.iso](https://drive.massgrave.dev/sr_windows_vista_enterprise_with_sp2_x86_dvd_x15-40261.iso) |
+| Slovak | x64 | [sk\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40453.iso](https://drive.massgrave.dev/sk_windows_vista_enterprise_with_sp2_x64_dvd_x15-40453.iso) |
+| Slovak | x32 | [sk\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40307.iso](https://drive.massgrave.dev/sk_windows_vista_enterprise_with_sp2_x86_dvd_x15-40307.iso) |
+| Slovenian | x64 | [sl\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40435.iso](https://drive.massgrave.dev/sl_windows_vista_enterprise_with_sp2_x64_dvd_x15-40435.iso) |
+| Slovenian | x32 | [sl\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40289.iso](https://drive.massgrave.dev/sl_windows_vista_enterprise_with_sp2_x86_dvd_x15-40289.iso) |
+| Spanish | x64 | [es\_windows\_vista\_enterprise\_sp2\_x64\_dvd\_342415.iso](https://drive.massgrave.dev/es_windows_vista_enterprise_sp2_x64_dvd_342415.iso) |
+| Spanish | x32 | [es\_windows\_vista\_enterprise\_sp2\_x86\_dvd\_342413.iso](https://drive.massgrave.dev/es_windows_vista_enterprise_sp2_x86_dvd_342413.iso) |
+| Swedish | x64 | [sv\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40449.iso](https://drive.massgrave.dev/sv_windows_vista_enterprise_with_sp2_x64_dvd_x15-40449.iso) |
+| Swedish | x32 | [sv\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40303.iso](https://drive.massgrave.dev/sv_windows_vista_enterprise_with_sp2_x86_dvd_x15-40303.iso) |
+| Thai | x64 | [th\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40457.iso](https://drive.massgrave.dev/th_windows_vista_enterprise_with_sp2_x64_dvd_x15-40457.iso) |
+| Thai | x32 | [th\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40311.iso](https://drive.massgrave.dev/th_windows_vista_enterprise_with_sp2_x86_dvd_x15-40311.iso) |
+| Turkish | x64 | [tr\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40459.iso](https://drive.massgrave.dev/tr_windows_vista_enterprise_with_sp2_x64_dvd_x15-40459.iso) |
+| Turkish | x32 | [tr\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40313.iso](https://drive.massgrave.dev/tr_windows_vista_enterprise_with_sp2_x86_dvd_x15-40313.iso) |
+| Ukrainian | x64 | [uk\_windows\_vista\_enterprise\_with\_sp2\_x64\_dvd\_x15-40398.iso](https://drive.massgrave.dev/uk_windows_vista_enterprise_with_sp2_x64_dvd_x15-40398.iso) |
+| Ukrainian | x32 | [uk\_windows\_vista\_enterprise\_with\_sp2\_x86\_dvd\_x15-40253.iso](https://drive.massgrave.dev/uk_windows_vista_enterprise_with_sp2_x86_dvd_x15-40253.iso) |
+
+[What are Windows N, K, and KN editions, and should I use them?](/genuine-installation-media#what-are-windows-n-k-and-kn-editions-and-should-i-use-them)
+
+* Windows Vista Business N (VL) SP2
+* Windows Vista Business N and Home Basic N SP2
+* Windows Vista [Korean (K, KN)] SP2
+
+**Windows Vista Business N (VL) SP2**
+
+| Language | Arch | Link |
+| --- | --- | --- |
+| English | x64 | [en\_windows\_vista\_business\_n\_sp2\_x64\_dvd\_342326.iso](https://drive.massgrave.dev/en_windows_vista_business_n_sp2_x64_dvd_342326.iso) |
+| English | x32 | [en\_windows\_vista\_business\_n\_sp2\_x86\_dvd\_342323.iso](https://drive.massgrave.dev/en_windows_vista_business_n_sp2_x86_dvd_342323.iso) |
+| French | x64 | [fr\_windows\_vista\_business\_n\_sp2\_x64\_dvd\_342349.iso](https://drive.massgrave.dev/fr_windows_vista_business_n_sp2_x64_dvd_342349.iso) |
+| French | x32 | [fr\_windows\_vista\_business\_n\_sp2\_x86\_dvd\_342346.iso](https://drive.massgrave.dev/fr_windows_vista_business_n_sp2_x86_dvd_342346.iso) |
+| German | x64 | [de\_windows\_vista\_business\_n\_sp2\_x64\_dvd\_342370.iso](https://drive.massgrave.dev/de_windows_vista_business_n_sp2_x64_dvd_342370.iso) |
+| German | x32 | [de\_windows\_vista\_business\_n\_sp2\_x86\_dvd\_342368.iso](https://drive.massgrave.dev/de_windows_vista_business_n_sp2_x86_dvd_342368.iso) |
+| Spanish | x64 | [es\_windows\_vista\_business\_n\_sp2\_x64\_dvd\_342411.iso](https://drive.massgrave.dev/es_windows_vista_business_n_sp2_x64_dvd_342411.iso) |
+| Spanish | x32 | [es\_windows\_vista\_business\_n\_sp2\_x86\_dvd\_342408.iso](https://drive.massgrave.dev/es_windows_vista_business_n_sp2_x86_dvd_342408.iso) |
+
+**Windows Vista Business N and Home Basic N SP2**
+
+| Language | Arch | Link |
+| --- | --- | --- |
+| Bulgarian | x64 | [bg\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36320.iso](https://drive.massgrave.dev/bg_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36320.iso) |
+| Czech | x64 | [cs\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36326.iso](https://drive.massgrave.dev/cs_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36326.iso) |
+| Danish | x64 | [da\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36328.iso](https://drive.massgrave.dev/da_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36328.iso) |
+| Dutch | x64 | [nl\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_service\_pack\_2\_x64\_dvd\_x15-36330.iso](https://drive.massgrave.dev/nl_windows_vista_business_n_and_home_basic_n_with_service_pack_2_x64_dvd_x15-36330.iso) |
+| Estonian | x64 | [et\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36334.iso](https://drive.massgrave.dev/et_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36334.iso) |
+| Finnish | x64 | [fi\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_service\_pack\_2\_x64\_dvd\_x15-36336.iso](https://drive.massgrave.dev/fi_windows_vista_business_n_and_home_basic_n_with_service_pack_2_x64_dvd_x15-36336.iso) |
+| Greek | x64 | [el\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36342.iso](https://drive.massgrave.dev/el_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36342.iso) |
+| Hungarian | x64 | [hu\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_service\_pack\_2\_x64\_dvd\_x15-36345.iso](https://drive.massgrave.dev/hu_windows_vista_business_n_and_home_basic_n_with_service_pack_2_x64_dvd_x15-36345.iso) |
+| Italian | x64 | [it\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36347.iso](https://drive.massgrave.dev/it_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36347.iso) |
+| Latvian | x64 | [lv\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36352.iso](https://drive.massgrave.dev/lv_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36352.iso) |
+| Lithuanian | x64 | [lt\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36354.iso](https://drive.massgrave.dev/lt_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36354.iso) |
+| Norwegian | x64 | [no\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36356.iso](https://drive.massgrave.dev/no_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36356.iso) |
+| Polish | x64 | [pl\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36358.iso](https://drive.massgrave.dev/pl_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36358.iso) |
+| Portuguese - Portugal | x64 | [pp\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36360.iso](https://drive.massgrave.dev/pp_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36360.iso) |
+| Romanian | x64 | [ro\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36362.iso](https://drive.massgrave.dev/ro_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36362.iso) |
+| Slovak | x64 | [sk\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36366.iso](https://drive.massgrave.dev/sk_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36366.iso) |
+| Slovenian | x64 | [sl\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36368.iso](https://drive.massgrave.dev/sl_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36368.iso) |
+| Swedish | x64 | [sv\_windows\_vista\_business\_n\_and\_home\_basic\_n\_with\_sp2\_x64\_dvd\_x15-36372.iso](https://drive.massgrave.dev/sv_windows_vista_business_n_and_home_basic_n_with_sp2_x64_dvd_x15-36372.iso) |
+
+**Windows Vista [Korean (K, KN)] SP2**
+
+| Language | Arch | Link |
+| --- | --- | --- |
+| Korean | x64 | [ko\_windows\_vista\_business\_kn\_with\_sp2\_x64\_dvd\_x15-40625.iso](https://drive.massgrave.dev/ko_windows_vista_business_kn_with_sp2_x64_dvd_x15-40625.iso) |
+| Korean | x32 | [ko\_windows\_vista\_business\_kn\_with\_sp2\_x86\_dvd\_x15-40621.iso](https://drive.massgrave.dev/ko_windows_vista_business_kn_with_sp2_x86_dvd_x15-40621.iso) |
+| Korean | x64 | [ko\_windows\_vista\_enterprise\_k\_with\_sp2\_x64\_dvd\_x15-40433.iso](https://drive.massgrave.dev/ko_windows_vista_enterprise_k_with_sp2_x64_dvd_x15-40433.iso) |
+| Korean | x32 | [ko\_windows\_vista\_enterprise\_k\_with\_sp2\_x86\_dvd\_x15-40287.iso](https://drive.massgrave.dev/ko_windows_vista_enterprise_k_with_sp2_x86_dvd_x15-40287.iso) |
+| Korean | x64 | [ko\_windows\_vista\_enterprise\_kn\_with\_sp2\_x64\_dvd\_x15-40625.iso](https://drive.massgrave.dev/ko_windows_vista_enterprise_kn_with_sp2_x64_dvd_x15-40625.iso) |
+| Korean | x32 | [ko\_windows\_vista\_enterprise\_kn\_with\_sp2\_x86\_dvd\_x15-40621.iso](https://drive.massgrave.dev/ko_windows_vista_enterprise_kn_with_sp2_x86_dvd_x15-40621.iso) |
+| Korean | x32 | [ko\_windows\_vista\_k\_and\_kn\_with\_sp2\_x86\_dvd\_x15-36302.iso](https://drive.massgrave.dev/ko_windows_vista_k_and_kn_with_sp2_x86_dvd_x15-36302.iso) |
+| Korean | x64 | [ko\_windows\_vista\_k\_with\_sp2\_x64\_dvd\_x15-36350.iso](https://drive.massgrave.dev/ko_windows_vista_k_with_sp2_x64_dvd_x15-36350.iso) |
+| Korean | x64 | [ko\_windows\_vista\_kn\_with\_sp2\_x64\_dvd\_x15-36351.iso](https://drive.massgrave.dev/ko_windows_vista_kn_with_sp2_x64_dvd_x15-36351.iso) |

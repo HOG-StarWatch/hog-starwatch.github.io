@@ -11,6 +11,7 @@ export default [
         { text: 'SCP', link: 'https://hog-starwatch.github.io/SCP/', target: '_self', },
         { text: 'Novel', link: 'https://hog-starwatch.github.io/Novel/', target: '_self', },
         { text: 'Domain', link: '../../../DomainIndex.md', target: '_self', },
+        { text: 'Windows/Office', link: '../../../MAS/', target: '_self', },
       ],
     },
     { text: '小工具',
