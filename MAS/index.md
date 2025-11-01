@@ -1,11 +1,9 @@
 ## 本站链接
 [激活方式对比表](./chart.md)
 
-![MAS英文版](https://hog-starwatch.github.io/MAS_AIO_v3.7_En_W.cmd.png)
+[MAS英文版](https://hog-starwatch.github.io/MAS/MAS_AIO_v3.7_En_W.cmd)
 
-![MAS中文版](https://hog-starwatch.github.io/MAS_AIO_v3.7_Chs_W.cmd.png)
-
-使用方法：下载图片 打开本站-小工具-图片处理-文件转二维码. 选择下载的图片 提取文件 下载文件
+[MAS中文版](https://hog-starwatch.github.io/MAS/MAS_AIO_v3.7_Chs_W.cmd)
 
 [Windows&Office下载](./download.md)
 
