@@ -18,6 +18,7 @@ export default [
       items: [
         { text: 'HTML在线运行', link: '../../../htmlrunner.html', target: '_self', },
         { text: 'IP检测', link: '../../../IPcheck.html', target: '_self', },
+        { text: 'RDAP-Whois', link: '../../../RDAP-whois.html', target: '_self', },
         { text: '图片处理',
           items:[
             { text: '画板&颜色格式转换&取色', link: '../../../drawbroad+color.html', target: '_self', },
