@@ -16,6 +16,14 @@ lastUpdated: true
 9. [clawcloud--openlist-openlist.019425.xyz](https://openlist.019425.xyz)
 10. [ona-dop-dnsr.019425.xyz](https://dnsr.019425.xyz)
 
+## cloudemail.ggff.net
+
+1. [cloud-mail-cloudemail.ggff.net](https://cloudemail.ggff.net)
+
+
+## pikpakspeed.ggff.net
 
 1. [ona-prox-prox.pikpakspeed.ggff.net=i.pximg.net](https://prox.pikpakspeed.ggff.net)
 2. [pikpakspeed-p.pikpakspeed.ggff.net/+原链](https://p.pikpakspeed.ggff.net)
+
+ce725a92-690d-4f9f-af42-0bcba945bac0
