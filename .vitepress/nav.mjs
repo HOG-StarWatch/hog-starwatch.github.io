@@ -19,10 +19,12 @@ export default [
         { text: 'HTML在线运行', link: '../../../htmlrunner.html', target: '_self', },
         { text: 'IP检测', link: '../../../IPcheck.html', target: '_self', },
         { text: 'RDAP-Whois', link: '../../../RDAP-whois.html', target: '_self', },
+        { text: 'Pixiv代理', link: '../../../i.pximg.net-prox.html', target: '_self', },
         { text: '图片处理',
           items:[
             { text: '画板&颜色格式转换&取色', link: '../../../drawbroad+color.html', target: '_self', },
             { text: '图片像素化', link: '../../../pix.html', target: '_self', },
+            { text: '图片&视频转ASCII', link: '../../../img2ASCII.html', target: '_self', },
             { text: '二维码生成器', link: '../../../QrCode.html', target: '_self', },
             { text: '差值分离图像加密', link: '../../../差值分离图像加密.html', target: '_self', },
             { text: '图片重叠合成', link: '../../../图片重叠合成.html', target: '_self', },

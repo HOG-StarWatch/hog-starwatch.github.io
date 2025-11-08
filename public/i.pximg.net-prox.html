@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Pixiv原图i.pximg.net</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a2e;
+            color: #e6e6fa;
+        }
+
+        .container {
+            background: #2a2a3a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #b19cd9;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #b19cd9;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #4b0082;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #3a3a4a;
+            color: #e6e6fa;
+        }
+
+        input[type="url"]:focus {
+            border-color: #9370db;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #9370db;
+        }
+
+        .iframe-container {
+            margin-top: 30px;
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .iframe-label {
+            background: #4b0082;
+            padding: 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #4b0082;
+            color: white;
+        }
+
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            background: white;
+        }
+
+        .error {
+            color: #ff6b6b;
+            background: #3a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #ff6b6b;
+        }
+
+        .info {
+            background: #2a3a4a;
+            color: #add8e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .result-link-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #3a3a4a;
+            border-radius: 6px;
+            border: 1px solid #4b0082;
+        }
+        
+        .result-link-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+            color: #b19cd9;
+        }
+        
+        .result-link {
+            word-break: break-all;
+            padding: 10px;
+            background: #2a2a3a;
+            border: 1px solid #4b0082;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            color: #e6e6fa;
+        }
+        
+        .result-link:hover {
+            background: #3a3a4a;
+        }
+        
+        .copy-notification {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            background: #6a5acd;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .show-copy-notification {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pixiv原图i.pximg.net</h1>
+
+        <div class="input-group">
+            <label for="urlInput">请输入Pixiv原图 i.pximg.net 的链接：</label>
+            <input 
+                type="url" 
+                id="urlInput" 
+                placeholder="例如：https://i.pximg.net/img-original/img/..."
+            />
+            <button onclick="processLink()">🔄 加载到下方</button>
+        </div>
+
+        <div id="errorMsg" class="error" style="display: none;"></div>
+        <div id="infoMsg" class="info" style="display: none;"></div>
+
+        <!-- 显示转换后的链接 -->
+        <div id="resultLinkContainer" class="result-link-container" style="display: none;">
+            <span class="result-link-label">可直接访问的链接（点击可复制）：</span>
+            <div id="resultLink" class="result-link" onclick="copyToClipboard(this)"></div>
+        </div>
+
+        <!-- 下方用于显示替换后链接内容的 iframe -->
+        <div id="iframeContainer" class="iframe-container" style="display: none;">
+            <div class="iframe-label">图片内容（在下方 iframe 中打开 右键/长按可保存）：</div>
+            <iframe id="resultFrame" src=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        function processLink() {
+            const input = document.getElementById('urlInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const infoMsg = document.getElementById('infoMsg');
+            const iframeContainer = document.getElementById('iframeContainer');
+            const resultFrame = document.getElementById('resultFrame');
+            const resultLinkContainer = document.getElementById('resultLinkContainer');
+            const resultLink = document.getElementById('resultLink');
+
+            // 隐藏之前的消息和iframe
+            errorMsg.style.display = 'none';
+            infoMsg.style.display = 'none';
+            iframeContainer.style.display = 'none';
+            resultLinkContainer.style.display = 'none';
+
+            if (!input) {
+                showError('❌ 请先输入一个链接！');
+                return;
+            }
+
+            try {
+                let originalUrl = input;
+
+                // 如果用户没输入协议，我们默认补上 https://
+                if (!originalUrl.startsWith('http://') && !originalUrl.startsWith('https://')) {
+                    originalUrl = 'https://' + originalUrl;
+                }
+
+                // 执行替换：i.pximg.net → prox.pikpakspeed.ggff.net
+                const replacedUrl = originalUrl.replace(
+                    /i\.pximg\.net/g, 
+                    'prox.pikpakspeed.ggff.net'
+                );
+
+                if (replacedUrl === originalUrl) {
+                    showError('⚠️ 此非Pixiv原图链接 <br> 链接应为 https://i.pximg.net/img-original/img/... <br> 无法打开。请检查输入的链接是否正确。');
+                    return;
+                }
+
+                // 显示提示信息
+                showInfo(`✅ 已代理：<br> i.pximg.net <br>正在下方加载链接内容...`);
+
+                // 显示转换后的链接
+                resultLink.textContent = replacedUrl;
+                resultLinkContainer.style.display = 'block';
+
+                // 将替换后的链接设置到 iframe 的 src 中（即"打开"该链接的内容）
+                resultFrame.src = replacedUrl;
+
+                // 显示 iframe 容器
+                iframeContainer.style.display = 'block';
+
+            } catch (err) {
+                showError('❌ 处理链接时出错：' + err.message);
+            }
+        }
+
+        function showError(msg) {
+            const elem = document.getElementById('errorMsg');
+            elem.innerHTML = msg;
+            elem.style.display = 'block';
+        }
+
+        function showInfo(msg) {
+            const elem = document.getElementById('infoMsg');
+            elem.innerHTML = msg;
+            elem.style.display = 'block';
+        }
+
+        function copyToClipboard(element) {
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const notification = document.createElement('div');
+                notification.className = 'copy-notification show-copy-notification';
+                notification.textContent = '已复制!';
+                element.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.classList.remove('show-copy-notification');
+                    setTimeout(() => {
+                        element.removeChild(notification);
+                    }, 300);
+                }, 2000);
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        }
+    </script>
+</body>
+</html>
