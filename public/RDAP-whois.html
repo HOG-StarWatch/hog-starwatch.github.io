@@ -2,683 +2,219 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>域名信息查询工具</title>
+    <title>RDAP Tool</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, sans-serif; padding: 20px; line-height: 1.5; }
+        .container { max-width: 900px; margin: 0 auto; background: #1e293b; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            color: #e2e2e2;
-        }
+        h2 { margin-top: 0; color: #818cf8; border-bottom: 1px solid #334155; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .ver { font-size: 12px; color: #475569; }
+        .section { margin-bottom: 20px; }
         
-        .container {
-            width: 100%;
-            max-width: 1000px;
-            background-color: #1e1e2e;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            border: 1px solid #3d3d5c;
-        }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        select, input, textarea { background: #0f172a; color: #fff; border: 1px solid #334155; padding: 12px; border-radius: 6px; font-size: 15px; }
+        select { flex: 1; cursor: pointer; }
+        input { flex: 2; }
+        textarea { width: 100%; height: 180px; font-family: 'Consolas', monospace; font-size: 12px; resize: vertical; border-color: #4f46e5; }
+
+        button { padding: 10px 20px; cursor: pointer; background: #4f46e5; color: white; border: none; border-radius: 6px; font-weight: 600; transition: 0.2s; }
+        button:hover { background: #6366f1; }
+        .btn-sec { background: #334155; color: #cbd5e1; }
+        .btn-sec:hover { background: #475569; color: #fff; }
+        .btn-parse { background: #059669; width: 100%; margin-top: 10px; font-size: 16px; }
+        .btn-export { background: #d97706; }
+        .btn-export:hover { background: #f59e0b; }
+
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; margin-top: 20px; }
+        .card { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid #4f46e5; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); }
+        .card-label { color: #64748b; font-size: 11px; text-transform: uppercase; margin-bottom: 5px; }
+        .card-val { font-size: 14px; word-break: break-all; color: #f8fafc; font-weight: 500; }
+
+        .status { color: #fbbf24; font-size: 13px; margin: 10px 0; min-height: 20px; }
+        .hidden { display: none; }
         
-        .header {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            color: white;
-            padding: 25px;
-            text-align: center;
-            position: relative;
-        }
-        
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            opacity: 0.9;
-            font-size: 16px;
-        }
-        
-        .rdap-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .search-section {
-            padding: 25px;
-            border-bottom: 1px solid #3d3d5c;
-        }
-        
-        .search-box {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .search-box input {
-            flex: 1;
-            padding: 15px;
-            background-color: #2d2d44;
-            border: 2px solid #4a4a6a;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
-            color: #e2e2e2;
-        }
-        
-        .search-box input:focus {
-            border-color: #8a2be2;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.3);
-        }
-        
-        .search-box input::placeholder {
-            color: #8a8a9e;
-        }
-        
-        .search-box button {
-            padding: 15px 25px;
-            background: linear-gradient(135deg, #8a2be2 0%, #6a11cb 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .search-box button:hover {
-            background: linear-gradient(135deg, #6a11cb 0%, #4a0d9e 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.4);
-        }
-        
-        .search-box button:active {
-            transform: translateY(0);
-        }
-        
-        .result-section {
-            padding: 25px;
-            min-height: 200px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 30px;
-            color: #8a8a9e;
-        }
-        
-        .spinner {
-            border: 5px solid #3d3d5c;
-            border-top: 5px solid #8a2be2;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .error {
-            background-color: #4a1e3d;
-            color: #ff6b9d;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ff6b9d;
-        }
-        
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid #3d3d5c;
-            margin-bottom: 20px;
-        }
-        
-        .tab {
-            padding: 12px 20px;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-            color: #8a8a9e;
-        }
-        
-        .tab.active {
-            border-bottom: 3px solid #8a2be2;
-            color: #8a2be2;
-            font-weight: 600;
-        }
-        
-        .tab:hover {
-            color: #a855f7;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .domain-info {
-            background-color: #2d2d44;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #3d3d5c;
-        }
-        
-        .domain-info h3 {
-            color: #d8d8f0;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #3d3d5c;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-        }
-        
-        .info-item {
-            padding: 15px;
-            background-color: #363652;
-            border-radius: 6px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            border-left: 3px solid #8a2be2;
-        }
-        
-        .info-label {
-            font-weight: 600;
-            color: #a855f7;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        
-        .info-value {
-            color: #e2e2e2;
-            font-size: 16px;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-right: 5px;
-            margin-bottom: 5px;
-        }
-        
-        .status-active {
-            background-color: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
-            border: 1px solid #4ade80;
-        }
-        
-        .status-inactive {
-            background-color: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            border: 1px solid #f87171;
-        }
-        
-        .status-pending {
-            background-color: rgba(245, 158, 11, 0.2);
-            color: #fbbf24;
-            border: 1px solid #fbbf24;
-        }
-        
-        .status-ok {
-            background-color: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
-            border: 1px solid #4ade80;
-        }
-        
-        .status-error {
-            background-color: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            border: 1px solid #f87171;
-        }
-        
-        .timeline {
-            position: relative;
-            margin: 20px 0;
-        }
-        
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 20px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background-color: #3d3d5c;
-        }
-        
-        .timeline-item {
-            position: relative;
-            margin-bottom: 20px;
-            padding-left: 50px;
-        }
-        
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: 14px;
-            top: 5px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: #8a2be2;
-            border: 2px solid #1e1e2e;
-            box-shadow: 0 0 0 2px #8a2be2;
-        }
-        
-        .timeline-date {
-            font-weight: 600;
-            color: #a855f7;
-            margin-bottom: 5px;
-        }
-        
-        .timeline-content {
-            background-color: #363652;
-            padding: 10px 15px;
-            border-radius: 6px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        
-        .nameservers {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-        }
-        
-        .nameserver {
-            background-color: #363652;
-            padding: 10px 15px;
-            border-radius: 6px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            border-left: 3px solid #8a2be2;
-        }
-        
-        .raw-data {
-            background-color: #1a1a2e;
-            color: #cbd5e1;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            overflow-x: auto;
-            font-size: 14px;
-            margin-top: 20px;
-            border: 1px solid #3d3d5c;
-        }
-        
-        @media (max-width: 600px) {
-            .search-box {
-                flex-direction: column;
-            }
-            
-            .search-box button {
-                width: 100%;
-            }
-            
-            .tabs {
-                flex-wrap: wrap;
-            }
-            
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        .hint { background: #2d1a1a; padding: 15px; border-radius: 8px; border: 1px solid #7f1d1d; color: #fca5a5; font-size: 14px; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="rdap-badge">基于 RDAP 查询服务</div>
-            <h1>域名信息查询工具</h1>
-            <p>输入域名查询其详细信息，包括状态、注册商、时间线等</p>
+
+<div class="container">
+    <h2>RDAP 工具 <span class="ver">Final Pro</span></h2>
+    
+    <div class="section">
+        <div class="row">
+            <select id="nodeSelect">
+                <option value="https://rdap.org/domain/">rdap.org (默认递归查询)</option>
+                <option value="https://rdap.cnnic.cn/domain/">rdap.cnnic.cn (中国 .CN)</option>
+                <option value="https://rdap.verisign.com/com/v1/domain/">rdap.verisign.com (.COM)</option>
+                <option value="https://rdap.verisign.com/net/v1/domain/">rdap.verisign.com (.NET)</option>
+                <option value="https://rdap.publicinterestregistry.org/rdap/domain/">pir.org (.ORG)</option>
+                <option value="https://rdap.nic.ad.jp/domain/">nic.ad.jp (.JP)</option>
+            </select>
+            <button class="btn-sec" onclick="openNodeRoot()">访问节点根目录</button>
         </div>
-        
-        <div class="search-section">
-            <div class="search-box">
-                <input type="text" id="domainInput" placeholder="输入域名，例如：google.com">
-                <button id="searchBtn">查询</button>
-            </div>
+        <div class="row">
+            <input type="text" id="domainInput" placeholder="输入域名 (例如: 123.com 或 apple.net)">
+            <button onclick="doSearch()">在线获取并解析</button>
         </div>
+        <div id="status" class="status"></div>
+    </div>
+
+    <div class="section">
+        <p style="font-size: 13px; color: #94a3b8; margin-bottom: 8px; display: flex; justify-content: space-between;">
+            <span>JSON 数据交互区 (获取到的数据会自动填入此处)：</span>
+            <span id="dataInfo" style="color:#059669"></span>
+        </p>
+        <textarea id="jsonInput" placeholder='等待获取数据或在此粘贴 JSON 代码...'></textarea>
         
-        <div class="result-section" id="resultSection">
-            <div class="loading" id="loading" style="display: none;">
-                <div class="spinner"></div>
-                <p>正在查询域名信息...</p>
-            </div>
-            
-            <div id="result"></div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-parse" onclick="parseManualJson()">解析文本框中的 JSON</button>
+            <button id="exportBtn" class="btn-export btn-parse hidden" onclick="exportJsonFile()">导出为 .json 文件</button>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const domainInput = document.getElementById('domainInput');
-            const searchBtn = document.getElementById('searchBtn');
-            const resultSection = document.getElementById('result');
-            const loading = document.getElementById('loading');
-            
-            // 示例域名
-            domainInput.value = 'google.com';
-            
-            // 查询按钮点击事件
-            searchBtn.addEventListener('click', function() {
-                const domain = domainInput.value.trim();
-                if (!domain) {
-                    alert('请输入域名');
-                    return;
-                }
-                
-                // 显示加载状态
-                loading.style.display = 'block';
-                resultSection.innerHTML = '';
-                
-                // 构建API URL
-                const apiUrl = `https://rdap.org/domain/${domain}`;
-                
-                // 发送请求
-                fetch(apiUrl)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('域名不存在或查询失败');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // 隐藏加载状态
-                        loading.style.display = 'none';
-                        
-                        // 处理并显示结果
-                        displayResults(data, domain);
-                    })
-                    .catch(error => {
-                        // 隐藏加载状态
-                        loading.style.display = 'none';
-                        
-                        // 显示错误信息
-                        resultSection.innerHTML = `
-                            <div class="error">
-                                <h3>查询失败</h3>
-                                <p>${error.message}</p>
-                                <p>请检查域名是否正确，或稍后重试。</p>
-                            </div>
-                        `;
-                    });
-            });
-            
-            // 处理并显示结果
-            function displayResults(data, domain) {
-                // 构建标签页HTML
-                const tabsHTML = `
-                    <div class="tabs">
-                        <div class="tab active" data-tab="overview">概览</div>
-                        <div class="tab" data-tab="timeline">时间线</div>
-                        <div class="tab" data-tab="nameservers">名称服务器</div>
-                        <div class="tab" data-tab="raw">原始数据</div>
-                    </div>
-                    <div class="tab-content active" id="overview">
-                        ${createOverviewTab(data, domain)}
-                    </div>
-                    <div class="tab-content" id="timeline">
-                        ${createTimelineTab(data, domain)}
-                    </div>
-                    <div class="tab-content" id="nameservers">
-                        ${createNameserversTab(data, domain)}
-                    </div>
-                    <div class="tab-content" id="raw">
-                        ${createRawDataTab(data)}
-                    </div>
-                `;
-                
-                resultSection.innerHTML = tabsHTML;
-                
-                // 添加标签页切换事件
-                const tabs = document.querySelectorAll('.tab');
-                tabs.forEach(tab => {
-                    tab.addEventListener('click', function() {
-                        // 移除所有活动标签
-                        tabs.forEach(t => t.classList.remove('active'));
-                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                        
-                        // 设置当前活动标签
-                        this.classList.add('active');
-                        document.getElementById(this.dataset.tab).classList.add('active');
-                    });
-                });
+    <div id="toolBar" class="hidden" style="margin-bottom:15px; border-top: 1px solid #334155; padding-top: 15px;">
+        <button class="btn-sec" id="apiUrlBtn" onclick="window.open(currentFullUrl, '_blank')">🌐 打开原始 API 页面</button>
+        <button class="btn-sec" onclick="clearAll()">清空全部</button>
+    </div>
+
+    <div id="parseResult"></div>
+</div>
+
+<script>
+    let currentFullUrl = "";
+    let lastFetchedData = null;
+
+    function openNodeRoot() {
+        const root = document.getElementById('nodeSelect').value.split('domain/')[0];
+        window.open(root, '_blank');
+    }
+
+    function updateStatus(msg) {
+        document.getElementById('status').innerText = msg;
+    }
+
+    // 核心渲染函数
+    function renderRdapData(data) {
+        const resultDiv = document.getElementById('parseResult');
+        const exportBtn = document.getElementById('exportBtn');
+        const toolBar = document.getElementById('toolBar');
+        
+        // 1. 同步显示到文本框
+        document.getElementById('jsonInput').value = JSON.stringify(data, null, 2);
+        lastFetchedData = data;
+
+        // 2. 显示工具栏和下载按钮
+        toolBar.classList.remove('hidden');
+        exportBtn.classList.remove('hidden');
+
+        // 3. 提取字段逻辑
+        const getRegistrar = () => {
+            const ent = data.entities?.find(e => e.roles?.includes('registrar'));
+            return ent?.vcardArray?.[1]?.find(i => i[0]==='fn')?.[3] || ent?.handle || "未知";
+        };
+
+        const infoItems = [
+            { label: "域名主体", val: data.ldhName },
+            { label: "注册商", val: getRegistrar() },
+            { label: "状态 (Status)", val: (data.status || []).join(' / ') },
+            { label: "WHOIS 服务器", val: data.port43 },
+        ];
+
+        // 提取时间点
+        const events = (data.events || []).map(e => ({
+            label: `时间点: ${e.eventAction}`,
+            val: new Date(e.eventDate).toLocaleString()
+        }));
+
+        const allItems = [...infoItems, ...events];
+
+        let html = '<div class="result-grid">';
+        allItems.forEach(item => {
+            if(item.val) {
+                html += `<div class="card">
+                    <div class="card-label">${item.label}</div>
+                    <div class="card-val">${item.val}</div>
+                </div>`;
             }
-            
-            // 创建概览标签页
-            function createOverviewTab(data, domain) {
-                // 提取域名状态
-                const statuses = data.status || [];
-                const statusHTML = statuses.map(status => {
-                    let statusClass = 'status-pending';
-                    if (status.includes('active')) statusClass = 'status-active';
-                    if (status.includes('inactive')) statusClass = 'status-inactive';
-                    if (status.includes('ok')) statusClass = 'status-ok';
-                    if (status.includes('error')) statusClass = 'status-error';
-                    
-                    return `<span class="status-badge ${statusClass}">${status}</span>`;
-                }).join('');
-                
-                // 提取注册商信息
-                const registrar = data.entities ? 
-                    data.entities.find(entity => entity.roles && entity.roles.includes('registrar')) : null;
-                const registrarName = registrar ? (registrar.vcardArray ? 
-                    registrar.vcardArray[1].find(item => item[0] === 'fn')?.[3] : registrar.name) : '未知';
-                
-                // 提取事件信息
-                const events = data.events || [];
-                const registrationDate = events.find(event => event.eventAction === 'registration')?.eventDate;
-                const expirationDate = events.find(event => event.eventAction === 'expiration')?.eventDate;
-                const lastChanged = events.find(event => event.eventAction === 'last changed')?.eventDate;
-                const lastUpdate = events.find(event => event.eventAction === 'last update')?.eventDate;
-                
-                // 提取DNSSEC信息
-                const secureDNS = data.secureDNS;
-                const dnssecStatus = secureDNS ? (secureDNS.delegationSigned ? '已签名' : '未签名') : '未知';
-                
-                return `
-                    <div class="domain-info">
-                        <h3>域名概览: ${domain}</h3>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <div class="info-label">域名状态</div>
-                                <div class="info-value">
-                                    ${statusHTML || '<span class="status-badge status-pending">未知</span>'}
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">注册商</div>
-                                <div class="info-value">${registrarName}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">注册日期</div>
-                                <div class="info-value">${formatDate(registrationDate) || '未知'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">到期日期</div>
-                                <div class="info-value">${formatDate(expirationDate) || '未知'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">最后更新</div>
-                                <div class="info-value">${formatDate(lastUpdate) || formatDate(lastChanged) || '未知'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">DNSSEC</div>
-                                <div class="info-value">${dnssecStatus}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">对象类型</div>
-                                <div class="info-value">${data.objectClassName || '未知'}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">处理方式</div>
-                                <div class="info-value">${data.rdapConformance ? data.rdapConformance.join(', ') : '未知'}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // 创建时间线标签页
-            function createTimelineTab(data, domain) {
-                const events = data.events || [];
-                
-                let timelineHTML = '';
-                
-                if (events.length === 0) {
-                    timelineHTML = '<p>暂无时间线数据</p>';
-                } else {
-                    timelineHTML = `
-                        <div class="timeline">
-                            ${events.map(event => `
-                                <div class="timeline-item">
-                                    <div class="timeline-date">${formatDate(event.eventDate)}</div>
-                                    <div class="timeline-content">
-                                        <strong>${getEventActionText(event.eventAction)}</strong>
-                                        ${event.eventActor ? `<br>执行者: ${event.eventActor}` : ''}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-                
-                return `
-                    <div class="domain-info">
-                        <h3>域名时间线: ${domain}</h3>
-                        ${timelineHTML}
-                    </div>
-                `;
-            }
-            
-            // 创建名称服务器标签页
-            function createNameserversTab(data, domain) {
-                const nameservers = data.nameservers || [];
-                
-                let nameserversHTML = '';
-                
-                if (nameservers.length === 0) {
-                    nameserversHTML = '<p>暂无名称服务器数据</p>';
-                } else {
-                    nameserversHTML = `
-                        <div class="nameservers">
-                            ${nameservers.map(ns => {
-                                const statuses = ns.status || [];
-                                const statusHTML = statuses.map(status => {
-                                    let statusClass = 'status-pending';
-                                    if (status.includes('active')) statusClass = 'status-active';
-                                    if (status.includes('inactive')) statusClass = 'status-inactive';
-                                    return `<span class="status-badge ${statusClass}">${status}</span>`;
-                                }).join('');
-                                
-                                const events = ns.events || [];
-                                const lastChanged = events.find(event => event.eventAction === 'last changed')?.eventDate;
-                                
-                                return `
-                                    <div class="nameserver">
-                                        <div class="info-label">主机名</div>
-                                        <div class="info-value">${ns.ldhName || '未知'}</div>
-                                        <div class="info-label">状态</div>
-                                        <div class="info-value">${statusHTML || '<span class="status-badge status-pending">未知</span>'}</div>
-                                        <div class="info-label">最后更改</div>
-                                        <div class="info-value">${formatDate(lastChanged) || '未知'}</div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    `;
-                }
-                
-                return `
-                    <div class="domain-info">
-                        <h3>名称服务器: ${domain}</h3>
-                        ${nameserversHTML}
-                    </div>
-                `;
-            }
-            
-            // 创建原始数据标签页
-            function createRawDataTab(data) {
-                return `
-                    <div class="raw-data">
-                        <h3>原始数据 (基于RDAP查询)</h3>
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                    </div>
-                `;
-            }
-            
-            // 格式化日期
-            function formatDate(dateString) {
-                if (!dateString) return null;
-                
-                try {
-                    const date = new Date(dateString);
-                    return date.toLocaleString('zh-CN', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        timeZoneName: 'short'
-                    });
-                } catch (e) {
-                    return dateString;
-                }
-            }
-            
-            // 获取事件动作的文本描述
-            function getEventActionText(action) {
-                const actionMap = {
-                    'registration': '域名注册',
-                    'expiration': '域名到期',
-                    'last changed': '最后更改',
-                    'last update': '最后更新',
-                    'transfer': '域名转移',
-                    'deletion': '域名删除'
-                };
-                
-                return actionMap[action] || action;
-            }
-            
-            // 按Enter键触发查询
-            domainInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchBtn.click();
-                }
-            });
         });
-    </script>
+        html += '</div>';
+        resultDiv.innerHTML = html;
+        document.getElementById('dataInfo').innerText = "数据已同步至解析器";
+    }
+
+    // 在线查询
+    async function doSearch() {
+        const domain = document.getElementById('domainInput').value.trim();
+        const server = document.getElementById('nodeSelect').value;
+        
+        if (!domain) return alert("请输入域名");
+
+        updateStatus("🚀 正在请求 API 数据...");
+        document.getElementById('parseResult').innerHTML = "";
+        document.getElementById('dataInfo').innerText = "";
+        currentFullUrl = server + domain;
+
+        try {
+            const response = await fetch(currentFullUrl);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            updateStatus("✅ 获取成功");
+            renderRdapData(data);
+        } catch (err) {
+            updateStatus("❌ 自动获取失败 (CORS跨域限制或域名不存在)");
+            document.getElementById('parseResult').innerHTML = `
+                <div class="hint">
+                    <b>受浏览器安全政策影响，自动解析失败。</b><br>
+                    请执行以下步骤：<br>
+                    1. 点击下方的蓝色按钮打开 API 页面。<br>
+                    2. <b>全选并复制</b> 页面上的所有代码。<br>
+                    3. 粘贴到中间文本框后点击 <b>“解析文本框中的 JSON”</b>。
+                </div>`;
+            document.getElementById('toolBar').classList.remove('hidden');
+            document.getElementById('apiUrlBtn').classList.remove('hidden');
+        }
+    }
+
+    // 手动解析
+    function parseManualJson() {
+        const input = document.getElementById('jsonInput').value;
+        if(!input) return alert("文本框中没有数据");
+        try {
+            const data = JSON.parse(input);
+            updateStatus("本地解析完成");
+            renderRdapData(data);
+        } catch (e) {
+            alert("解析失败：JSON 格式不正确。请确保您复制了完整的 { ... } 括号内容。");
+        }
+    }
+
+    // 导出文件功能
+    function exportJsonFile() {
+        if(!lastFetchedData) return;
+        const dataStr = JSON.stringify(lastFetchedData, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `rdap_${lastFetchedData.ldhName || 'export'}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function clearAll() {
+        document.getElementById('jsonInput').value = "";
+        document.getElementById('domainInput').value = "";
+        document.getElementById('parseResult').innerHTML = "";
+        document.getElementById('toolBar').classList.add('hidden');
+        document.getElementById('exportBtn').classList.add('hidden');
+        document.getElementById('dataInfo').innerText = "";
+        updateStatus("");
+        lastFetchedData = null;
+    }
+</script>
+
 </body>
 </html>

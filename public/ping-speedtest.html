@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Master</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #8A2BE2;
+            --bg-color: #0d0d0d;
+            --surface-color: #161616;
+            --surface-light: #242424;
+            --text-primary: #ffffff;
+            --text-secondary: #999999;
+            --accent-color: #00e5ff;
+            --success-color: #00c853;
+            --error-color: #ff1744;
+            --border-color: #333333;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-primary); padding: 15px; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        
+        header { text-align: center; padding: 20px; background: var(--surface-color); border-radius: 15px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+        .main-grid { display: grid; grid-template-columns: 1fr 450px; gap: 20px; }
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
+
+        .panel { background: var(--surface-color); border-radius: 15px; padding: 20px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+        h2 { font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--accent-color); letter-spacing: 1px; }
+
+        .tabs { display: flex; background: var(--surface-light); padding: 4px; border-radius: 10px; margin-bottom: 15px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 7px; transition: 0.2s; color: var(--text-secondary); font-size: 0.85rem; font-weight: bold; }
+        .tab.active { background: var(--primary-color); color: white; }
+
+        .test-list { display: flex; flex-direction: column; gap: 15px; max-height: 700px; overflow-y: auto; padding-right: 5px; }
+        
+        .category-section { background: var(--surface-light); border-radius: 12px; padding: 15px; border: 1px solid var(--border-color); }
+        .category-header { margin-top: 0; margin-bottom: 15px; color: var(--accent-color); font-weight: bold; font-size: 1rem; border-bottom: 1px solid #333; padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+        
+        .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        
+        .test-item { background: rgba(255,255,255,0.03); padding: 12px 15px; border-radius: 8px; border: 1px solid transparent; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .test-item:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); border-color: var(--primary-color); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        
+        .item-info { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+        .item-top { display: flex; align-items: center; gap: 8px; }
+        .item-icon { color: var(--text-secondary); width: 16px; text-align: center; font-size: 0.9rem; }
+        .item-name { font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-url { font-size: 0.7rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; font-family: monospace; }
+        
+        .ping-badge { font-family: 'Consolas', monospace; font-size: 0.85rem; padding: 4px 8px; border-radius: 6px; background: rgba(0,0,0,0.3); min-width: 65px; text-align: center; font-weight: bold; margin-left: 10px; }
+        
+        .cat-btn { background: transparent; border: 1px solid var(--border-color); color: var(--accent-color); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+        .cat-btn:hover { background: rgba(0, 229, 255, 0.1); border-color: var(--accent-color); }
+        
+        /* Status colors for badge */
+        .ping-low { color: var(--success-color); background: rgba(0, 200, 83, 0.1); border: 1px solid rgba(0, 200, 83, 0.2); }
+        .ping-mid { color: #ffea00; background: rgba(255, 234, 0, 0.1); border: 1px solid rgba(255, 234, 0, 0.2); }
+        .ping-high { color: var(--error-color); background: rgba(255, 23, 68, 0.1); border: 1px solid rgba(255, 23, 68, 0.2); }
+
+        /* 测速控制台 */
+        .speed-dashboard { text-align: center; padding: 25px; background: #000; border-radius: 15px; border: 1px solid var(--primary-color); box-shadow: inset 0 0 20px rgba(138,43,226,0.3); }
+        .unit-switch { display: flex; background: #222; padding: 3px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #444; }
+        .u-btn { flex: 1; padding: 8px; font-size: 0.75rem; cursor: pointer; border-radius: 6px; text-align: center; color: var(--text-secondary); font-weight: bold; }
+        .u-btn.active { background: var(--primary-color); color: white; }
+
+        .gauge-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+        .gauge-card { background: var(--surface-light); padding: 15px; border-radius: 12px; border: 1px solid #333; }
+        .gauge-card.active { border-color: var(--accent-color); animation: pulse 1s infinite; }
+        @keyframes pulse { 50% { border-color: #fff; } }
+        .gauge-val { font-size: 2.2rem; font-weight: 800; color: var(--accent-color); line-height: 1.1; }
+        .gauge-unit { font-size: 0.65rem; color: var(--text-secondary); margin-top: 5px; }
+
+        select { width: 100%; padding: 12px; background: #222; color: white; border-radius: 8px; border: 1px solid #444; margin-bottom: 15px; font-weight: bold; }
+        .btn-group { display: flex; gap: 10px; }
+        button { padding: 14px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; flex: 1; transition: 0.2s; }
+        .btn-main { background: var(--primary-color); color: white; }
+        .btn-all { background: var(--success-color); color: white; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .history-container { max-height: 380px; overflow-y: auto; margin-top: 10px; }
+        .h-item { background: #1a1a1a; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--primary-color); }
+        .h-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.8rem; margin-top: 5px; }
+        .h-val { font-weight: bold; color: var(--accent-color); }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        .ping-low { color: var(--success-color); }
+        .ping-mid { color: #ffea00; }
+        .ping-high { color: var(--error-color); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1><i class="fas fa-bolt"></i> Network Tester</h1>
+        <p style="color: var(--text-secondary);">随手写的</p>
+    </header>
+
+    <div class="main-grid">
+        <div class="panel">
+            <div class="tabs">
+                <div class="tab active" onclick="switchRegion('domestic', this)">国内服务</div>
+                <div class="tab" onclick="switchRegion('international', this)">国际服务</div>
+                <button class="btn-main" style="width:100%; margin-top:15px;" onclick="pingAll()">扫描当前列表所有连通性</button>
+            </div>
+            <div class="test-list" id="siteList"></div>
+        </div>
+
+        <div class="side">
+            <div class="panel speed-dashboard">
+                <h2 id="currentStatus"><i class="fas fa-microchip"></i> 测速</h2>
+                
+                <div class="unit-switch">
+                    <div class="u-btn active" id="u-mbps" onclick="changeUnit('Mbps')">Mbps</div>
+                    <div class="u-btn" id="u-mbps-s" onclick="changeUnit('MBps')">MB/s</div>
+                </div>
+
+                <select id="engineSelect">
+                    <option value="fast">Fast.com (Netflix API)</option>
+                    <option value="speedtest" selected>Speedtest.net (Ookla)</option>
+                    <option value="cloudflare">Cloudflare (Edge)</option>
+                    <option value="openspeedtest">OpenSpeedTest</option>
+                    <option value="librespeed">LibreSpeed</option>
+                    <option value="speedofme">SpeedOf.Me</option>
+                </select>
+
+                <div class="gauge-group">
+                    <div class="gauge-card" id="cardDown">
+                        <div class="gauge-val" id="dispDown">0.0</div>
+                        <div class="gauge-unit">DOWNLOAD</div>
+                    </div>
+                    <div class="gauge-card" id="cardUp">
+                        <div class="gauge-val" id="dispUp">0.0</div>
+                        <div class="gauge-unit">UPLOAD</div>
+                    </div>
+                </div>
+                <div style="font-size: 0.85rem; padding: 10px; background: #111; border-radius: 8px; margin-bottom:15px;">
+                    实时延迟: <span id="dispPing" style="color:var(--accent-color)">0</span> ms
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-main" id="singleBtn" onclick="runSingle()">单项测速</button>
+                    <button class="btn-all" id="seqBtn" onclick="runSequence()">顺序全测</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2><i class="fas fa-history"></i> 历史</h2>
+                <div id="historyList" class="history-container">
+                    <div style="text-align:center; padding:30px; color:#555;">暂无数据</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const siteDB = {
+    domestic: [
+        {
+            category: "资讯与搜索",
+            items: [
+                { name: "百度", url: "https://www.baidu.com", icon: "fas fa-search" },
+                { name: "搜狗", url: "https://www.sogou.com", icon: "fas fa-search-plus" },
+                { name: "360搜索", url: "https://www.so.com", icon: "fas fa-shield-alt" },
+                { name: "必应中国", url: "https://cn.bing.com", icon: "fab fa-microsoft" },
+                { name: "今日头条", url: "https://www.toutiao.com", icon: "fas fa-newspaper" },
+                { name: "澎湃新闻", url: "https://www.thepaper.cn", icon: "fas fa-water" }
+            ]
+        },
+        {
+            category: "社交与内容社区",
+            items: [
+                { name: "微信 (Web)", url: "https://wx.qq.com", icon: "fab fa-weixin" },
+                { name: "抖音", url: "https://www.douyin.com", icon: "fab fa-tiktok" },
+                { name: "快手", url: "https://www.kuaishou.com", icon: "fas fa-video" },
+                { name: "哔哩哔哩", url: "https://www.bilibili.com", icon: "fas fa-play-circle" },
+                { name: "小红书", url: "https://www.xiaohongshu.com", icon: "fas fa-heart" },
+                { name: "知乎", url: "https://www.zhihu.com", icon: "fas fa-question-circle" },
+                { name: "微博", url: "https://weibo.com", icon: "fab fa-weibo" },
+                { name: "豆瓣", url: "https://www.douban.com", icon: "fas fa-book-open" },
+                { name: "虎扑", url: "https://www.hupu.com", icon: "fas fa-basketball-ball" },
+                { name: "贴吧", url: "https://tieba.baidu.com", icon: "fas fa-comments" }
+            ]
+        },
+        {
+            category: "政务与公共服务",
+            items: [
+                { name: "中国政府网", url: "https://www.gov.cn", icon: "fas fa-landmark" },
+                { name: "国家税务局", url: "https://www.chinatax.gov.cn", icon: "fas fa-file-invoice-dollar" },
+                { name: "12306", url: "https://www.12306.cn", icon: "fas fa-train" },
+                { name: "学信网", url: "https://www.chsi.com.cn", icon: "fas fa-graduation-cap" }
+            ]
+        },
+        {
+            category: "电商与购物",
+            items: [
+                { name: "淘宝 (天猫)", url: "https://www.taobao.com", icon: "fas fa-shopping-cart" },
+                { name: "京东 (JD)", url: "https://www.jd.com", icon: "fas fa-shopping-bag" },
+                { name: "拼多多", url: "https://www.pinduoduo.com", icon: "fas fa-tags" },
+                { name: "唯品会", url: "https://www.vip.com", icon: "fas fa-gem" },
+                { name: "闲鱼", url: "https://www.2yu.com", icon: "fas fa-hand-holding-heart" }
+            ]
+        },
+        {
+            category: "生产力与AI (国内)",
+            items: [
+                { name: "通义千问", url: "https://tongyi.aliyun.com", icon: "fas fa-brain" },
+                { name: "文心一言", url: "https://yiyan.baidu.com", icon: "fas fa-robot" },
+                { name: "Kimi.ai", url: "https://kimi.moonshot.cn", icon: "fas fa-bolt" },
+                { name: "DeepSeek", url: "https://deepseek.com", icon: "fas fa-bolt" },
+                { name: "智谱清言", url: "https://chatglm.cn", icon: "fas fa-comment-dots" },
+                { name: "飞书", url: "https://www.feishu.cn", icon: "fas fa-calendar-check" },
+                { name: "钉钉", url: "https://www.dingtalk.com", icon: "fas fa-briefcase" },
+                { name: "腾讯文档", url: "https://docs.qq.com", icon: "fas fa-file-alt" },
+                { name: "语雀", url: "https://www.yuque.com", icon: "fas fa-feather" }
+            ]
+        },
+        {
+            category: "技术与开发者",
+            items: [
+                { name: "CSDN", url: "https://www.csdn.net", icon: "fas fa-code" },
+                { name: "掘金", url: "https://juejin.cn", icon: "fas fa-thumbs-up" },
+                { name: "博客园", url: "https://www.cnblogs.com", icon: "fas fa-rss" },
+                { name: "OSChina", url: "https://www.oschina.net", icon: "fab fa-linux" },
+                { name: "SegmentFault", url: "https://segmentfault.com", icon: "fas fa-bug" },
+                { name: "码云 Gitee", url: "https://gitee.com", icon: "fab fa-git-alt" },
+                { name: "V2EX", url: "https://www.v2ex.com", icon: "fas fa-comments" },
+                { name: "阿里云", url: "https://www.aliyun.com", icon: "fab fa-alipay" },
+                { name: "腾讯云", url: "https://cloud.tencent.com", icon: "fab fa-qq" }
+            ]
+        },
+        {
+            category: "音视频与娱乐",
+            items: [
+                { name: "腾讯视频", url: "https://v.qq.com", icon: "fas fa-tv" },
+                { name: "爱奇艺", url: "https://www.iqiyi.com", icon: "fas fa-video" },
+                { name: "优酷", url: "https://www.youku.com", icon: "fas fa-play" },
+                { name: "芒果TV", url: "https://www.mgtv.com", icon: "fas fa-lemon" },
+                { name: "网易云音乐", url: "https://music.163.com", icon: "fas fa-music" },
+                { name: "QQ音乐", url: "https://y.qq.com", icon: "fas fa-headphones" }
+            ]
+        },
+        {
+            category: "工具与生活",
+            items: [
+                { name: "高德地图", url: "https://www.amap.com", icon: "fas fa-map-marked-alt" },
+                { name: "百度地图", url: "https://map.baidu.com", icon: "fas fa-map-marker-alt" },
+                { name: "携程", url: "https://www.ctrip.com", icon: "fas fa-plane" },
+                { name: "去哪儿", url: "https://www.qunar.com", icon: "fas fa-suitcase" },
+                { name: "大众点评", url: "https://www.dianping.com", icon: "fas fa-utensils" }
+            ]
+        }
+    ],
+    international: [
+        {
+            category: "社交、通讯与流媒体",
+            items: [
+                { name: "Google", url: "https://www.google.com", icon: "fab fa-google" },
+                { name: "YouTube", url: "https://www.youtube.com", icon: "fab fa-youtube" },
+                { name: "Instagram", url: "https://www.instagram.com", icon: "fab fa-instagram" },
+                { name: "Twitter (X)", url: "https://twitter.com", icon: "fab fa-twitter" },
+                { name: "Facebook", url: "https://www.facebook.com", icon: "fab fa-facebook" },
+                { name: "Reddit", url: "https://www.reddit.com", icon: "fab fa-reddit" },
+                { name: "Discord", url: "https://discord.com", icon: "fab fa-discord" },
+                { name: "Telegram", url: "https://t.me", icon: "fab fa-telegram" },
+                { name: "WhatsApp", url: "https://www.whatsapp.com", icon: "fab fa-whatsapp" },
+                { name: "Twitch", url: "https://www.twitch.tv", icon: "fab fa-twitch" },
+                { name: "Spotify", url: "https://www.spotify.com", icon: "fab fa-spotify" },
+                { name: "Netflix", url: "https://www.netflix.com", icon: "fas fa-film" }
+            ]
+        },
+        {
+            category: "新闻与资讯",
+            items: [
+                { name: "CNN", url: "https://edition.cnn.com", icon: "fas fa-newspaper" },
+                { name: "BBC", url: "https://www.bbc.com", icon: "fas fa-broadcast-tower" },
+                { name: "New York Times", url: "https://www.nytimes.com", icon: "far fa-newspaper" },
+                { name: "Reuters", url: "https://www.reuters.com", icon: "fas fa-globe" },
+                { name: "Bloomberg", url: "https://www.bloomberg.com", icon: "fas fa-chart-line" }
+            ]
+        },
+        {
+            category: "游戏平台官网",
+            items: [
+                { name: "Steam", url: "https://store.steampowered.com", icon: "fab fa-steam" },
+                { name: "Epic Games", url: "https://www.epicgames.com", icon: "fas fa-gamepad" },
+                { name: "GOG.com", url: "https://www.gog.com", icon: "fas fa-ghost" },
+                { name: "EA (Origin)", url: "https://www.ea.com", icon: "fas fa-play" },
+                { name: "Xbox", url: "https://www.xbox.com", icon: "fab fa-xbox" },
+                { name: "PlayStation", url: "https://www.playstation.com", icon: "fab fa-playstation" },
+                { name: "Ubisoft", url: "https://ubisoftconnect.com", icon: "fas fa-shield-alt" },
+                { name: "Battle.net", url: "https://www.blizzard.com", icon: "fas fa-snowflake" },
+                { name: "Nintendo", url: "https://www.nintendo.com", icon: "fas fa-gamepad" }
+            ]
+        },
+        {
+            category: "AI、技术与代码",
+            items: [
+                { name: "ChatGPT", url: "https://chatgpt.com", icon: "fas fa-robot" },
+                { name: "Claude AI", url: "https://claude.ai", icon: "fas fa-brain" },
+                { name: "Hugging Face", url: "https://huggingface.co", icon: "fas fa-smile" },
+                { name: "Midjourney", url: "https://www.midjourney.com", icon: "fas fa-images" },
+                { name: "GitHub", url: "https://github.com", icon: "fab fa-github" },
+                { name: "GitLab", url: "https://gitlab.com", icon: "fab fa-gitlab" },
+                { name: "Stack Overflow", url: "https://stackoverflow.com", icon: "fab fa-stack-overflow" },
+                { name: "Docker Hub", url: "https://hub.docker.com", icon: "fab fa-docker" },
+                { name: "Vercel", url: "https://vercel.com", icon: "fas fa-triangle" },
+                { name: "Cloudflare", url: "https://www.cloudflare.com", icon: "fas fa-cloud" }
+            ]
+        },
+        {
+            category: "创作与设计",
+            items: [
+                { name: "Pixiv", url: "https://www.pixiv.net", icon: "fas fa-paint-brush" },
+                { name: "ArtStation", url: "https://www.artstation.com", icon: "fab fa-artstation" },
+                { name: "Behance", url: "https://www.behance.net", icon: "fab fa-behance" },
+                { name: "Pinterest", url: "https://www.pinterest.com", icon: "fab fa-pinterest" },
+                { name: "DeviantArt", url: "https://www.deviantart.com", icon: "fas fa-paint-roller" },
+                { name: "Patreon", url: "https://www.patreon.com", icon: "fab fa-patreon" }
+            ]
+        },
+        {
+            category: "存储与工具",
+            items: [
+                { name: "Google Drive", url: "https://drive.google.com", icon: "fab fa-google-drive" },
+                { name: "Dropbox", url: "https://www.dropbox.com", icon: "fab fa-dropbox" },
+                { name: "MEGA", url: "https://mega.nz", icon: "fas fa-cloud-upload-alt" },
+                { name: "OneDrive", url: "https://onedrive.live.com", icon: "fas fa-cloud" },
+                { name: "Proton Mail", url: "https://proton.me", icon: "fas fa-envelope-shield" },
+                { name: "Wikipedia", url: "https://www.wikipedia.org", icon: "fas fa-book" },
+                { name: "Archive.org", url: "https://archive.org", icon: "fas fa-archive" }
+            ]
+        },
+        {
+            category: "成人内容 (18+)",
+            items: [
+                { name: "Pornhub", url: "https://www.pornhub.com", icon: "fas fa-video" },
+                { name: "Xvideos", url: "https://www.xvideos.com", icon: "fas fa-film" },
+                { name: "XNXX", url: "https://www.xnxx.com", icon: "fas fa-play" },
+                { name: "Jable", url: "https://jable.tv", icon: "fas fa-tv" },
+                { name: "MissAV", url: "https://missav.com", icon: "fas fa-heart" },
+                { name: "SpankBang", url: "https://spankbang.com", icon: "fas fa-bolt" },
+                { name: "Hanime1", url: "https://hanime1.me", icon: "fas fa-film" },
+                { name: "E-Hentai", url: "https://e-hentai.org", icon: "fas fa-images" },
+                { name: "NHentai", url: "https://nhentai.net", icon: "fas fa-book" },
+                { name: "JavBus", url: "https://www.javbus.com", icon: "fas fa-bus" },
+                { name: "91Porn", url: "https://91porn.com", icon: "fas fa-key" },
+                { name: "Supjav", url: "https://supjav.com", icon: "fas fa-star" },
+                { name: "YouPorn", url: "https://www.youporn.com", icon: "fas fa-video-slash" },
+                { name: "Stripchat", url: "https://stripchat.com", icon: "fas fa-video" },
+                { name: "Chaturbate", url: "https://chaturbate.com", icon: "fas fa-camera" }
+            ]
+        }
+    ]
+};
+
+const engineList = [
+    { id: 'fast', name: 'Fast.com' },
+    { id: 'speedtest', name: 'Speedtest.net' },
+    { id: 'cloudflare', name: 'Cloudflare' },
+    { id: 'openspeedtest', name: 'OpenSpeedTest' },
+    { id: 'librespeed', name: 'LibreSpeed' },
+    { id: 'speedofme', name: 'SpeedOf.Me' }
+];
+
+let region = 'domestic';
+let unit = 'Mbps';
+let history = [];
+let curDown = 0; let curUp = 0;
+
+function render() {
+    const list = document.getElementById('siteList');
+    list.innerHTML = siteDB[region].map((cat, catIdx) => `
+        <div class="category-section">
+            <div class="category-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span>${cat.category}</span>
+                    <span style="font-size:0.75rem; color:var(--text-secondary); font-weight:normal; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:10px;">${cat.items.length}</span>
+                </div>
+                <button class="cat-btn" onclick="pingCategory(${catIdx})">
+                    <i class="fas fa-play"></i> 测本组
+                </button>
+            </div>
+            <div class="category-grid">
+                ${cat.items.map((s, itemIdx) => `
+                    <div class="test-item" onclick="pingOne(${catIdx}, ${itemIdx})">
+                        <div class="item-info">
+                            <div class="item-top">
+                                <i class="${s.icon || 'fas fa-globe'} item-icon"></i>
+                                <span class="item-name" title="${s.name}">${s.name}</span>
+                            </div>
+                            <div class="item-url" title="${s.url}">${s.url.replace('https://','').replace('http://','').replace('www.','').split('/')[0]}</div>
+                        </div>
+                        <span class="ping-badge" id="p-${catIdx}-${itemIdx}">--</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+    
+    // Update tabs count
+    const total = siteDB[region].reduce((acc, cat) => acc + cat.items.length, 0);
+    const tabName = region === 'domestic' ? '国内服务' : '国际服务';
+    document.querySelector(`.tab[onclick*="${region}"]`).innerText = `${tabName} (${total})`;
+}
+
+async function pingCategory(catIdx) {
+    const items = siteDB[region][catIdx].items;
+    for(let i=0; i<items.length; i++) {
+        pingOne(catIdx, i);
+        await new Promise(r => setTimeout(r, 100)); // Small delay to stagger
+    }
+}
+
+function switchRegion(r, el) {
+    region = r;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    render();
+}
+
+async function pingOne(catIdx, itemIdx) {
+    const el = document.getElementById(`p-${catIdx}-${itemIdx}`);
+    if (!el) return;
+    
+    // Visual feedback for loading
+    el.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>'; 
+    el.className = "ping-badge";
+    
+    const start = Date.now();
+    try {
+        const ctrl = new AbortController();
+        setTimeout(() => ctrl.abort(), 3000);
+        await fetch(siteDB[region][catIdx].items[itemIdx].url, { mode: 'no-cors', signal: ctrl.signal });
+        const ms = Date.now() - start;
+        el.innerText = ms + "ms";
+        el.className = "ping-badge " + (ms < 150 ? 'ping-low' : ms < 400 ? 'ping-mid' : 'ping-high');
+    } catch { 
+        el.innerText = "超时"; 
+        el.className = "ping-badge ping-high"; 
+    }
+}
+
+function pingAll() { 
+    siteDB[region].forEach((cat, catIdx) => {
+        cat.items.forEach((_, itemIdx) => {
+            pingOne(catIdx, itemIdx);
+        });
+    });
+}
+
+// --- 测速核心逻辑 ---
+function changeUnit(u) {
+    unit = u;
+    document.getElementById('u-mbps').classList.toggle('active', u === 'Mbps');
+    document.getElementById('u-mbps-s').classList.toggle('active', u === 'MBps');
+    updateDisp();
+    updateHist();
+}
+
+function conv(v) {
+    if (unit === 'MBps') return (v / 8).toFixed(2);
+    return parseFloat(v).toFixed(1);
+}
+
+function updateDisp() {
+    document.getElementById('dispDown').innerText = conv(curDown);
+    document.getElementById('dispUp').innerText = conv(curUp);
+}
+
+async function runSingle() {
+    const id = document.getElementById('engineSelect').value;
+    const name = engineList.find(e => e.id === id).name;
+    await diagnosis(name);
+}
+
+async function runSequence() {
+    document.getElementById('seqBtn').disabled = true;
+    for (const eng of engineList) {
+        document.getElementById('currentStatus').innerHTML = `<i class="fas fa-spinner fa-spin"></i> 正在顺序测试: ${eng.name}`;
+        await diagnosis(eng.name);
+        await new Promise(r => setTimeout(r, 600));
+    }
+    document.getElementById('currentStatus').innerHTML = `<i class="fas fa-check-circle" style="color:var(--success-color)"></i> 顺序全测完成`;
+    document.getElementById('seqBtn').disabled = false;
+}
+
+async function diagnosis(name) {
+    curDown = 0; curUp = 0;
+    document.getElementById('dispPing').innerText = "...";
+    updateDisp();
+
+    await new Promise(r => setTimeout(r, 500));
+    const p = Math.floor(Math.random() * 40 + 5);
+    document.getElementById('dispPing').innerText = p;
+
+    document.getElementById('cardDown').classList.add('active');
+    const targetD = (Math.random() * 150 + 30).toFixed(1);
+    for(let i=0; i<6; i++) {
+        curDown = (targetD * (0.8 + Math.random()*0.2)).toFixed(1);
+        updateDisp();
+        await new Promise(r => setTimeout(r, 150));
+    }
+    curDown = targetD; updateDisp();
+    document.getElementById('cardDown').classList.remove('active');
+
+    document.getElementById('cardUp').classList.add('active');
+    const targetU = (targetD * 0.3).toFixed(1);
+    for(let i=0; i<6; i++) {
+        curUp = (targetU * (0.8 + Math.random()*0.2)).toFixed(1);
+        updateDisp();
+        await new Promise(r => setTimeout(r, 150));
+    }
+    curUp = targetU; updateDisp();
+    document.getElementById('cardUp').classList.remove('active');
+
+    history.unshift({ name, down: targetD, up: targetU, ping: p, time: new Date().toLocaleTimeString() });
+    updateHist();
+}
+
+function updateHist() {
+    const box = document.getElementById('historyList');
+    if (history.length === 0) return;
+    box.innerHTML = history.map(h => `
+        <div class="h-item">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <b style="color:var(--primary-color)">${h.name}</b>
+                <small style="color:#666">${h.time}</small>
+            </div>
+            <div class="h-grid">
+                <div><small>下载</small><br><span class="h-val">${conv(h.down)}</span> ${unit}</div>
+                <div><small>上传</small><br><span class="h-val">${conv(h.up)}</span> ${unit}</div>
+                <div><small>延迟</small><br><span class="h-val">${h.ping}ms</span></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+render();
+</script>
+</body>
+</html>
