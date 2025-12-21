@@ -342,5 +342,5 @@ goto MAIN_MENU
 ```
 
 ::: details <^null
-[配套预编译版](./TDL.7z)
+配套预编译版](./TDL.7z)
 :::

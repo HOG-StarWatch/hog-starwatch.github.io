@@ -18,10 +18,10 @@ tdl completion [command]
 
 ## 可用命令
 
-* [bash](tdl-completion-bash.md)	 - 生成 bash 的自动补全脚本
-* [fish](tdl-completion-fish.md)	 - 生成 fish 的自动补全脚本
-* [powershell](tdl-completion-powershell.md)	 - 生成 powershell 的自动补全脚本
-* [zsh](tdl-completion-zsh.md)	 - 生成 zsh 的自动补全脚本
+* bash](tdl-completion-bash.md)	 - 生成 bash 的自动补全脚本
+* fish](tdl-completion-fish.md)	 - 生成 fish 的自动补全脚本
+* powershell](tdl-completion-powershell.md)	 - 生成 powershell 的自动补全脚本
+* zsh](tdl-completion-zsh.md)	 - 生成 zsh 的自动补全脚本
 
 ## 选项
 
@@ -47,7 +47,7 @@ tdl completion [command]
 ## 参见
 
 * [tdl](tdl.md)	 - Telegram 下载器，但不仅仅是下载器
-* [tdl completion bash](tdl-completion-bash.md)	 - 生成 bash 的自动补全脚本
-* [tdl completion fish](tdl-completion-fish.md)	 - 生成 fish 的自动补全脚本
-* [tdl completion powershell](tdl-completion-powershell.md)	 - 生成 powershell 的自动补全脚本
-* [tdl completion zsh](tdl-completion-zsh.md)	 - 生成 zsh 的自动补全脚本
+* tdl completion bash](tdl-completion-bash.md)	 - 生成 bash 的自动补全脚本
+* tdl completion fish](tdl-completion-fish.md)	 - 生成 fish 的自动补全脚本
+* tdl completion powershell](tdl-completion-powershell.md)	 - 生成 powershell 的自动补全脚本
+* tdl completion zsh](tdl-completion-zsh.md)	 - 生成 zsh 的自动补全脚本

@@ -26,7 +26,7 @@
 
 #### Q: 如何将会话迁移到另一台设备？
 
-**A:** 您可以使用 `tdl backup` 和 `tdl recover` 命令导出和导入会话。详细信息请参见 [迁移](/zh/guide/migration)。
+**A:** 您可以使用 `tdl backup` 和 `tdl recover` 命令导出和导入会话。详细信息请参见 [迁移](./migration)。
 
 #### Q: 这算滥用吗？
 
