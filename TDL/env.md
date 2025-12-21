@@ -1,0 +1,25 @@
+# 环境变量
+
+::: info
+所有环境变量的值优先级低于命令行选项。
+:::
+
+通过设置环境变量，避免在每次重复输入相同的命令行选项。
+
+|          环境变量           |         对应选项          |
+|:-----------------------:|:---------------------:|
+|        `TDL_NS`         |       `-n/--ns`       |
+|       `TDL_PROXY`       |       `--proxy`       |
+|      `TDL_STORAGE`      |      `--storage`      |
+|       `TDL_DEBUG`       |       `--debug`       |
+|       `TDL_SIZE`        |      `-s/--size`      |
+|      `TDL_THREADS`      |    `-t/--threads`     |
+|       `TDL_LIMIT`       |     `-l/--limit`      |
+|       `TDL_POOL`        |       `--pool`        |
+|        `TDL_NTP`        |        `--ntp`        |
+| `TDL_RECONNECT_TIMEOUT` | `--reconnect-timeout` |
+|     `TDL_TEMPLATE`      |    dl `--template`    |
+
+::: warning
+- `TDL_STORAGE` 环境变量的格式与命令行选项不同：`{"type": "bolt", "path": "/path/to/data-dir"}` (JSON 对象)。
+:::

@@ -11,8 +11,10 @@ export default [
         { text: 'SCP', link: 'https://hog-starwatch.github.io/SCP/', target: '_self', },
         { text: 'Novel', link: 'https://hog-starwatch.github.io/Novel/', target: '_self', },
         { text: 'Domain', link: '../../../DomainIndex.md', target: '_self', },
+        { text: 'RPGMaker相关', link: '../../../RPGMaker/', target: '_self', },
         { text: 'Windows/Office', link: '../../../MAS/', target: '_self', },
         { text: 'CF', link: '../../../CF/', target: '_self', },
+        { text: 'TDL', link: '../../../TDL/', target: '_self', },
       ],
     },
     { text: '小工具',
@@ -79,12 +81,5 @@ export default [
         { text: '地址栏贪吃蛇-推荐无痕模式游玩;)', link: '../../../snake/index.html', target: '_self', },
         { text: 'Music-world.execute.me', link: '../../../world.execute.me.html', target: '_self', },
       ],
-    },
-    { text: '其他',
-      items: [
-        { text: 'RPGMaker相关', link: '../../../RPGMaker/RPGMaker_index.md', target: '_self', },
-        { text: 'RPGMakerMV存档的加密解密与保护', link: '../../../RPGMaker/RPGMakerMV存档的加密解密与保护.md', target: '_self', },
-      ],
-    },
-    
+    },    
 ];
