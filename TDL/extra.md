@@ -77,9 +77,38 @@ exit /b 0
 cls
 echo tdl 将被安装到 %SystemDrive%\tdl（将被添加到 PATH 中），该脚本还可用于升级 tdl。
 echo.
-set "PS_CMD=iwr -useb https://docs.iyear.me/tdl/install.ps1 | iex"
-echo 即将执行: powershell -NoExit -Command "%PS_CMD%"
 pause
+echo [提示] 将自动检测是否已授予管理员权限...
+echo 请在弹出的窗口中确认授予管理员权限 并在新打开的窗口中操作
+echo.
+set "PS_CMD=iwr -useb https://docs.iyear.me/tdl/install.ps1 | iex"
+echo 即将执行: powershell -Command "%PS_CMD%"
+echo.
+timeout /t 3 /nobreak >nul
+
+:: 检查当前是否具有管理员权限
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    :: 没有管理员权限，使用runas重新启动
+    echo 正在打开管理员权限窗口...
+    powershell -Command "Start-Process '%~f0' -ArgumentList 'install_admin' -Verb RunAs"
+    pause
+    goto EXIT
+)   
+
+:: 如果有参数 install_admin，则执行安装
+if "%~1"=="install_admin" (
+    cls
+    echo 正在以管理员权限运行安装程序...
+    echo.
+    powershell -NoExit -Command "%PS_CMD%"
+    echo.
+    echo 安装完成！按任意键返回主菜单...
+    pause >nul
+    exit /b 0
+)
+
+:: 正常流程
 start "TDL Install" powershell -NoExit -Command "%PS_CMD%"
 goto MAIN_MENU
 
@@ -143,8 +172,8 @@ cls
 echo =================================================
 echo                   导出 (Export)
 echo =================================================
-echo 1. 列出 (tdl chat ls)
-echo 2. 导出
+echo 1. 列出聊天 (tdl chat ls)
+echo 2. 导出聊天记录到JSON
 echo.
 echo 0. 返回 (Back)
 echo =================================================
@@ -169,29 +198,55 @@ goto EXPORT
 
 :EXPORT_DO
 cls
-echo CHAT 示例
-echo  可用值: #
-echo  @iyear (用户名)
-echo  iyear (无前缀 @ 的用户名)
-echo  123456789 (ID)
-echo  https://t.me/iyear (公开链接)
-echo  +1 123456789 (电话号码)
-echo  如何在 Telegram 桌面端获取聊天 ID: #
-echo  设置 -^> 高级 -^> 实验性设置 -^> 在资料中显示对话 ID
-echo  空的 CHAT 表示 "收藏夹"
-echo  所有消息 #
-echo  将包含媒体的所有消息导出到 tdl-export.json
+echo =================================================
+echo             导出聊天记录到 JSON
+echo =================================================
+echo [重要提示] 导出设置说明:
+echo.
+echo CHAT 识别方式:
+echo   • @username (用户名，如 @iyear)
+echo   • username  (无 @ 的用户名，如 iyear)
+echo   • 123456789 (聊天ID)
+echo   • https://t.me/iyear (公开链接)
+echo   • +1 1234567890 (电话号码)
+echo.
+echo [如何获取聊天ID]:
+echo   1. 打开 Telegram Desktop
+echo   2. 设置 -^> 高级 -^> 实验性设置
+echo   3. 启用"在资料中显示对话 ID"
+echo   4. 重新打开聊天窗口，在顶部能看到ID
+echo.
+echo   • 留空 (直接回车): 导出"收藏夹"消息
+echo.
+echo [示例]:
+echo   • 导出用户 @iyear: 输入 @iyear
+echo   • 导出聊天ID 123456: 输入 123456
+echo   • 导出收藏夹: 直接按回车
+echo =================================================
 echo.
 set "chat_id="
-set /p chat_id="请输入 CHAT (回车确认): "
+set /p "chat_id=请输入 CHAT 标识 (参考上述说明): "
+
 echo.
-set "CMD="%TDL_EXE%" chat export -c "%chat_id%""
+echo 导出设置:
+echo CHAT: !chat_id!
+echo 输出文件: !cfg_json!
+echo.
+if "!chat_id!"=="" (
+    echo [注意] CHAT为空，将导出"收藏夹"消息
+    set "chat_id=favorite"
+)
+
+set "CMD="%TDL_EXE%" chat export -c "!chat_id!""
+echo.
 echo 即将执行: !CMD!
 if not exist "!TDL_EXE!" (
     echo [错误] 找不到 tdl.exe，请先安装或检查路径。
     pause
     goto MAIN_MENU
 )
+echo.
+echo 按任意键开始导出，导出完成后JSON文件将保存在当前目录...
 pause
 start "TDL Export" cmd /k "!CMD!"
 goto MAIN_MENU
@@ -219,14 +274,50 @@ set "schoice=%errorlevel%"
 if "%schoice%"=="9" goto RESET_CONFIG
 if "%schoice%"=="8" goto SAVE_CONFIG
 if "%schoice%"=="7" (
+    cls
+    echo =================================================
+    echo              设置黑名单 (Blacklist)
+    echo =================================================
+    echo [格式说明]:
+    echo   • 使用逗号分隔多个文件扩展名
+    echo   • 不包含点号，只写扩展名本身
+    echo   • 留空表示不使用黑名单
+    echo.
+    echo [示例]:
+    echo   • 排除视频文件: mp4,avi,mkv,flv
+    echo   • 排除文档文件: pdf,doc,docx
+    echo   • 排除多种文件: mp4,avi,pdf,zip
+    echo.
+    echo 当前黑名单: !cfg_blacklist!
+    echo =================================================
+    echo.
     set "input="
-    set /p "input=请输入黑名单 (如 mp4,flv): "
+    set /p "input=请输入黑名单 (使用逗号分隔，如 mp4,flv,avi): "
     if defined input set "cfg_blacklist=!input!"
     goto SETTINGS
 )
 if "%schoice%"=="6" (
+    cls
+    echo =================================================
+    echo              设置白名单 (Whitelist)
+    echo =================================================
+    echo [格式说明]:
+    echo   • 使用逗号分隔多个文件扩展名
+    echo   • 不包含点号，只写扩展名本身
+    echo   • 留空表示不使用白名单
+    echo.
+    echo [示例]:
+    echo   • 仅下载图片: jpg,jpeg,png,gif
+    echo   • 仅下载音频: mp3,wav,flac
+    echo   • 仅下载特定格式: pdf,docx,xlsx
+    echo.
+    echo 注意: 白名单和黑名单同时设置时，白名单优先级更高
+    echo.
+    echo 当前白名单: !cfg_whitelist!
+    echo =================================================
+    echo.
     set "input="
-    set /p "input=请输入白名单 (如 jpg,png): "
+    set /p "input=请输入白名单 (使用逗号分隔，如 jpg,png,gif): "
     if defined input set "cfg_whitelist=!input!"
     goto SETTINGS
 )
@@ -292,6 +383,21 @@ if "%dchoice%"=="3" goto MAIN_MENU
 goto DOWNLOAD
 
 :DL_JSON
+cls
+echo =================================================
+echo            从 JSON 文件下载
+echo =================================================
+echo 配置文件: !cfg_json!
+echo 下载目录: !cfg_dir!
+echo 线程数: !cfg_threads!
+echo 并发任务: !cfg_concurrent!
+if "!cfg_skip_same!"=="true" echo 跳过已存在: 是
+if defined cfg_whitelist echo 白名单: !cfg_whitelist!
+if defined cfg_blacklist echo 黑名单: !cfg_blacklist!
+echo.
+echo 请确认上述设置，按任意键开始下载...
+pause
+
 set "CMD="%TDL_EXE%" dl"
 if "!cfg_skip_same!"=="true" set "CMD=!CMD! --skip-same"
 set "CMD=!CMD! -t !cfg_threads! -l !cfg_concurrent!"
@@ -306,13 +412,24 @@ if not exist "!TDL_EXE!" (
     pause
     goto MAIN_MENU
 )
-pause
 start "TDL Download JSON" cmd /k "!CMD!"
 goto MAIN_MENU
 
 :DL_LINKS
+cls
+echo =================================================
+echo              从链接下载
+echo =================================================
+echo [格式说明]:
+echo   • 可以输入多个链接，用空格分隔
+echo   • 支持 Telegram 消息链接、频道链接等
 echo.
-echo 请输入链接，用空格分隔 (例如: https://t.me/a https://t.me/b)
+echo [示例]:
+echo   • 单链接: https://t.me/iyear/123
+echo   • 多链接: https://t.me/a/1 https://t.me/b/2
+echo =================================================
+echo.
+echo 请输入链接，用空格分隔
 set "links="
 set /p "links=链接: "
 
@@ -320,6 +437,18 @@ set "URL_PARAMS="
 for %%a in (%links%) do (
     set "URL_PARAMS=!URL_PARAMS! -u %%a"
 )
+
+echo.
+echo 下载设置:
+echo 下载目录: !cfg_dir!
+echo 线程数: !cfg_threads!
+echo 并发任务: !cfg_concurrent!
+if "!cfg_skip_same!"=="true" echo 跳过已存在: 是
+if defined cfg_whitelist echo 白名单: !cfg_whitelist!
+if defined cfg_blacklist echo 黑名单: !cfg_blacklist!
+echo.
+echo 链接数量:  %links: = % 个
+echo.
 
 set "CMD="%TDL_EXE%" dl"
 if "!cfg_skip_same!"=="true" set "CMD=!CMD! --skip-same"
@@ -338,9 +467,10 @@ if not exist "!TDL_EXE!" (
 pause
 start "TDL Download Links" cmd /k "!CMD!"
 goto MAIN_MENU
-
 ```
 
 ::: details <^null
-配套预编译版](./TDL.7z)
+[配套预编译版](https://hog-starwatch.github.io/TDL/tdl.exe.tar)
+[TDL.bat.tar](https://hog-starwatch.github.io/TDL/TDL.bat.tar)
+手动下载预编译版tdl时，请将tdl存放目录添加至PATH
 :::
