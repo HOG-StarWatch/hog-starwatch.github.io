@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Pixiv原图i.pximg.net</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a2e;
+            color: #e6e6fa;
+        }
+
+        .container {
+            background: #2a2a3a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #b19cd9;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #b19cd9;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #4b0082;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #3a3a4a;
+            color: #e6e6fa;
+        }
+
+        input[type="url"]:focus {
+            border-color: #9370db;
+            outline: none;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #4b0082;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #3a3a4a;
+            color: #e6e6fa;
+            margin-bottom: 10px;
+        }
+
+        select:focus {
+            border-color: #9370db;
+            outline: none;
+        }
+
+        .custom-proxy-input {
+            display: none;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 12px;
+            font-size: 16px;
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #9370db;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button-row button {
+            flex: 1;
+        }
+
+        .image-container {
+            margin-top: 30px;
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .image-label {
+            background: #4b0082;
+            padding: 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #4b0082;
+            color: white;
+        }
+
+        .image-wrapper {
+            width: 100%;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+        }
+
+        .scaled-image {
+            max-width: 100%;
+            max-height: 600px;
+            object-fit: contain;
+        }
+
+        .original-image {
+            max-width: none;
+            max-height: none;
+            width: auto;
+            height: auto;
+        }
+
+        .error {
+            color: #ff6b6b;
+            background: #3a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #ff6b6b;
+        }
+
+        .info {
+            background: #2a3a4a;
+            color: #add8e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .result-link-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #3a3a4a;
+            border-radius: 6px;
+            border: 1px solid #4b0082;
+        }
+        
+        .result-link-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+            color: #b19cd9;
+        }
+        
+        .result-link {
+            word-break: break-all;
+            padding: 10px;
+            background: #2a2a3a;
+            border: 1px solid #4b0082;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            color: #e6e6fa;
+        }
+        
+        .result-link:hover {
+            background: #3a3a4a;
+        }
+        
+        .copy-notification {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            background: #6a5acd;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .show-copy-notification {
+            opacity: 1;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px;
+            background: #3a3a4a;
+            border-top: 1px solid #4b0082;
+        }
+
+        .show-original-btn {
+            width: auto;
+            margin-top: 0;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .secret-settings {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .secret-settings-content {
+            background: #2a2a3a;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .secret-settings h2 {
+            color: #b19cd9;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .secret-input-group {
+            margin-bottom: 20px;
+        }
+
+        .secret-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b19cd9;
+        }
+
+        .secret-input-group input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #4b0082;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #3a3a4a;
+            color: #e6e6fa;
+        }
+
+        .secret-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .secret-buttons button {
+            flex: 1;
+        }
+
+        .close-secret {
+            background: #ff6b6b !important;
+        }
+
+        .close-secret:hover {
+            background: #ff5252 !important;
+        }
+
+        /* 快速访问按钮容器 */
+        .quick-access-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+            display: none; /* 默认隐藏 */
+        }
+
+        /* 快速访问按钮样式 */
+        .quick-access-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 0; /* Override default button margin */
+        }
+
+        .quick-access-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+        }
+
+        /* 详情信息容器 */
+        .details-container {
+            margin-top: 15px;
+            background: #2a2a3a;
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+            padding: 15px;
+            display: none; /* 默认隐藏 */
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            color: #b19cd9;
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            color: #e6e6fa;
+            word-break: break-all;
+        }
+
+        /* 标签样式 */
+        .tag-pill {
+            display: inline-block;
+            background: #4b0082;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        /* 功能切换按钮样式 */
+        .function-toggle {
+            display: flex;
+            margin-bottom: 20px;
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .function-toggle button {
+            flex: 1;
+            margin: 0;
+            border-radius: 0;
+            background-color: #3a3a4a;
+        }
+
+        .function-toggle button.active {
+            background-color: #6a5acd;
+        }
+
+        /* Gallery Layout Styles */
+        .gallery-body {
+            display: flex;
+            gap: 20px;
+            height: 70vh; /* Fixed height for internal scrolling */
+            margin-top: 10px;
+        }
+
+        .gallery-sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 5px;
+            border-right: 1px solid #4b0082;
+            padding-right: 15px;
+        }
+
+        .gallery-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0; /* Crucial for flex child overflow */
+        }
+
+        .gallery-table-container {
+            flex: 1;
+            overflow: auto; /* Both horizontal and vertical scroll */
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+        }
+        
+        /* --- Gallery Table Styles (maintainability) --- */
+        .gallery-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+            font-size: 14px;
+        }
+        .gallery-table thead {
+            background: #4b0082;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .gallery-table th, .gallery-table td {
+            padding: 10px;
+        }
+        .gallery-table th.th-center { text-align: center; }
+        .gallery-table th.th-left { text-align: left; }
+        .gallery-row { border-bottom: 1px solid #3a3a4a; color: #e6e6fa; }
+        .cell-title {
+            min-width: 280px;
+            max-width: 480px;
+            white-space: normal;
+            word-break: normal;
+            overflow-wrap: break-word;
+        }
+        .cell-desc {
+            min-width: 380px;
+            max-width: 640px;
+            white-space: normal;
+            word-break: normal;
+            overflow-wrap: break-word;
+        }
+        .cell-action {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        .action-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #6a5acd;
+            color: #fff;
+            border: 1px solid #7a6eea;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+        .action-btn:hover { background: #7b6be0; }
+        .cell-tags {
+            display: grid;
+            grid-template-columns: repeat(2, max-content);
+            gap: 6px 10px;
+            align-items: center;
+        }
+        .tag-toggle {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 12px;
+            background: #4b0082;
+            color: #fff;
+            border: 1px solid #7a6eea;
+            border-radius: 14px;
+            margin-left: 6px;
+            vertical-align: middle;
+            align-self: center;
+        }
+        .fill-url-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #6a5acd;
+            color: #fff;
+            border: 1px solid #7a6eea;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+        .fill-url-btn:hover { background: #7b6be0; }
+        .meta-pill {
+            display: inline-block;
+            background: #3a3a4a;
+            color: #e6e6fa;
+            padding: 2px 6px;
+            border-radius: 12px;
+            margin-right: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .cell-meta { white-space: nowrap; }
+        /* Tag dropdown controls */
+        .tag-dropdown {
+            position: relative;
+        }
+        .tag-panel {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 100%;
+            z-index: 20;
+            background: #3a3a4a;
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+            padding: 10px;
+            max-height: 220px;
+            overflow: auto;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .tag-panel.open { 
+            display: block;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .tag-item {
+            display: block;
+            padding: 4px 6px;
+            font-size: 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .tag-item.selected {
+            background: #6a5acd;
+            color: #fff;
+        }
+        .tag-dropdown button {
+            width: 100%;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .filters-row {
+            display: flex;
+            gap: 8px;
+        }
+        .filters-row .tag-dropdown { flex: 1; min-width: 0; }
+        .selected-tags-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .selected-group {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .selected-label {
+            color: #b19cd9;
+            font-size: 12px;
+        }
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .selected-tags .tag-pill { cursor: pointer; }
+        .thumb-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: #3a3a4a;
+            border: 1px solid #4b0082;
+            color: #e6e6fa;
+            border-radius: 4px;
+        }
+        .pager-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+        }
+        .pager-select, .pager-input {
+            padding: 8px 10px;
+            background: #3a3a4a;
+            border: 1px solid #4b0082;
+            color: #e6e6fa;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+        .pager-row select, 
+        .pager-row input {
+            width: auto !important;
+            flex: 0 0 auto;
+        }
+        .pager-btn {
+            padding: 8px 12px;
+            background: #6a5acd;
+            color: #fff;
+            border: 1px solid #7a6eea;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+        .pager-btn:hover { background: #7b6be0; }
+        /* Sticky first column (Action) */
+        .gallery-table thead th.action-col {
+            position: sticky;
+            left: 0;
+            z-index: 11;
+            background: #4b0082;
+        }
+        .gallery-table tbody td.action-col {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background: #2a2a3a;
+            border-right: 1px solid #3a3a4a;
+        }
+        
+        /* Sidebar inputs styling override */
+        .gallery-sidebar select, 
+        .gallery-sidebar input,
+        .gallery-sidebar .input-wrapper {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+        /* Do NOT stretch compact rows */
+        .gallery-sidebar .filters-row select,
+        .gallery-sidebar .filters-row input {
+            width: auto !important;
+            flex: 0 0 auto;
+        }
+        .gallery-sidebar .filters-row .thumb-option {
+            flex: 0 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pixiv原图 <br> i.pximg.net</h1>
+
+        <!-- 快速访问按钮 -->
+        <div id="quickAccessContainer" class="quick-access-container">
+            <button id="quickAccessBtn" class="quick-access-btn" style="background-color: #9370db; display: none;" onclick="openSecretSettings()" title="设置">
+                ⚙
+            </button>
+            <button id="galleryBtn" class="quick-access-btn" style="background-color: #ff9f43; display: none;" onclick="openGalleryBrowser()" title="图库">
+                📂
+            </button>
+        </div>
+
+        <div class="input-group">
+            <label for="proxySelect">选择服务器：</label>
+            <select id="proxySelect" onchange="handleProxyChange()">
+                <option value="https://prox.futa.de5.net/">站长自建</option>
+                <option value="https://prox.spacetimee.xyz/">Github大佬公开</option>
+                <option value="custom">自定义</option>
+            </select>
+            <input 
+                type="url" 
+                id="customProxyInput" 
+                class="custom-proxy-input"
+                placeholder="请输入自定义网址，例如：https://prox.yourdomainname.domain/"
+            />
+        </div>
+
+        <div class="input-group">
+            <label for="urlInput">请输入Pixiv原图 <br> i.pximg.net 的链接：</label>
+            <input 
+                type="url" 
+                id="urlInput" 
+                placeholder="例如：https://i.pximg.net/img-original/img/..."
+                oninput="checkSecretCode()"
+            />
+            <div class="button-row">
+                <button onclick="processLink()">🔄 加载图片</button>
+                <button onclick="openInNewTab()">🔗 在新标签页打开原图</button>
+            </div>
+        </div>
+
+        <!-- 详细信息展示区 -->
+        <div id="detailsContainer" class="details-container">
+            <h3 style="margin-top: 0; color: #b19cd9; margin-bottom: 10px;">📄 图片详情</h3>
+            <div id="detailsGrid" class="details-grid">
+                <!-- Content will be injected via JS -->
+            </div>
+        </div>
+
+        <div id="errorMsg" class="error" style="display: none;"></div>
+        <div id="infoMsg" class="info" style="display: none;"></div>
+
+        <!-- 显示转换后的链接 -->
+        <div id="resultLinkContainer" class="result-link-container" style="display: none;">
+            <span class="result-link-label">可直接访问的链接（点击可复制）：</span>
+            <div id="resultLink" class="result-link" onclick="copyToClipboard(this)"></div>
+        </div>
+
+        <!-- 下方用于显示图片 -->
+        <div id="imageContainer" class="image-container" style="display: none;">
+            <div class="image-label">图片内容（右键/长按可保存）：</div>
+            <div class="image-wrapper" id="imageWrapper">
+                <div id="loadingIndicator" style="display: none; padding: 20px;">
+                    <span class="loading"></span>
+                    <span id="loadingText">正在加载图片...</span>
+                    <div id="progressContainer" style="margin-top: 10px; width: 100%; max-width: 300px; height: 5px; background: #3a3a4a; border-radius: 3px; overflow: hidden; display: none;">
+                        <div id="progressBar" style="width: 0%; height: 100%; background: #6a5acd; transition: width 0.1s;"></div>
+                    </div>
+                    <div id="progressStats" style="font-size: 12px; color: #b19cd9; margin-top: 5px; display: none;">0%</div>
+                </div>
+                <img id="resultImage" src="" alt="Pixiv图片" style="display: none;" />
+            </div>
+            <div class="button-container">
+                <button id="downloadBtn" class="show-original-btn" onclick="downloadImage()">下载原图</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 静态资源页面 -->
+    <div id="secretSettings" class="secret-settings">
+        <div class="secret-settings-content">
+            <h2>静态资源</h2>
+            
+            <!-- 功能切换按钮 -->
+            <div class="function-toggle">
+                <button id="staticResourceBtn" class="active" onclick="switchFunction('static')">静态资源</button>
+                <button id="AnotherBtn" onclick="switchFunction('Another')">另一个静态资源-PikPak</button>
+            </div>
+            
+            <!-- 静态资源部分 -->
+            <div id="staticResourceSection">
+                <div class="secret-input-group">
+                    <label for="secretProxySelect">选择服务器：</label>
+                    <select id="secretProxySelect" onchange="handleSecretProxyChange()">
+                        <option value="https://prox.futa.de5.net/">站长自建</option>
+                        <option value="https://prox.spacetimee.xyz/">Github大佬公开</option>
+                        <option value="custom">自定义</option>
+                    </select>
+                    <input 
+                        type="url" 
+                        id="secretCustomProxyInput" 
+                        class="custom-proxy-input"
+                        placeholder="请输入自定义网址，例如：https://www.google.com/favicon.ico/"
+                    />
+                </div>
+                <div class="secret-input-group">
+                    <label for="secretInput">输入内容：</label>
+                    <input 
+                        type="text" 
+                        id="secretInput" 
+                        placeholder="请输入静态资源链接..."
+                    />
+                </div>
+            </div>
+            
+            <!-- 另一个静态资源部分 -->
+            <div id="AnotherSection" style="display: none;">
+                <div class="secret-input-group">
+                    <label for="AnotherInput">输入链接：</label>
+                    <input 
+                        type="text" 
+                        id="AnotherInput" 
+                        placeholder="请输入链接..."
+                    />
+                </div>
+            </div>
+            
+            <div class="secret-buttons">
+                <button onclick="handleSecretAction()">执行操作</button>
+                <button class="close-secret" onclick="closeSecretSettings()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+        <!-- Gallery Browser Modal -->
+    <div id="galleryBrowser" class="secret-settings" style="display: none;">
+        <div class="secret-settings-content" style="max-width: 1200px; width: 95%; height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <h2 style="margin: 0;">图库浏览</h2>
+                    <button onclick="pickRandomImage()" style="margin: 0; padding: 8px 15px; background: #ff9f43; font-size: 14px; border-radius: 4px; border: none; cursor: pointer; color: white;">🎲 随机一图</button>
+                    <label class="thumb-option" for="useThumbCheckbox">
+                        <input type="checkbox" id="useThumbCheckbox" />
+                        使用缩略图
+                    </label>
+                </div>
+                <button class="close-secret" onclick="closeGalleryBrowser()" style="width: auto; padding: 5px 15px;">✕</button>
+            </div>
+            
+            <div class="gallery-body">
+                <div class="gallery-sidebar">
+                    <div class="input-wrapper">
+                        <label style="display:block; color:#b19cd9; margin-bottom:5px; font-size:14px;">数据源</label>
+                        <select id="galleryCsvSelect" onchange="loadGalleryData()" style="padding: 10px; background: #3a3a4a; border: 1px solid #4b0082; color: #e6e6fa; border-radius: 4px;">
+                            <!-- Options injected via JS -->
+                        </select>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <label style="display:block; color:#b19cd9; margin-bottom:5px; font-size:14px;">搜索</label>
+                        <input type="text" id="gallerySearch" placeholder="搜索标题、描述、ID..." style="padding: 10px; background: #3a3a4a; border: 1px solid #4b0082; color: #e6e6fa; border-radius: 4px;">
+                    </div>
+                
+                    <div class="input-wrapper">
+                        <label style="display:block; color:#b19cd9; margin-bottom:5px; font-size:14px;">排序</label>
+                        <select id="gallerySort" style="padding: 10px; background: #3a3a4a; border: 1px solid #4b0082; color: #e6e6fa; border-radius: 4px;">
+                            <option value="newest">📅 日期最新</option>
+                            <option value="oldest">📅 日期最早</option>
+                            <option value="id_desc">🔢 ID 降序</option>
+                            <option value="id_asc">🔢 ID 升序</option>
+                            <option value="view_desc">👁️ 浏览最多</option>
+                            <option value="like_desc">❤️ 收藏最多</option>
+                        </select>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <label style="display:block; color:#b19cd9; margin-bottom:5px; font-size:14px;">标签筛选</label>
+                        <div class="filters-row">
+                            <div class="tag-dropdown">
+                                <button id="openTagInclude" style="padding:8px 10px;">选择包含标签</button>
+                                <div id="tagIncludePanel" class="tag-panel"></div>
+                            </div>
+                            <div class="tag-dropdown">
+                                <button id="openTagExclude" style="padding:8px 10px;">选择排除标签</button>
+                                <div id="tagExcludePanel" class="tag-panel"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-wrapper">
+                        <label style="display:block; color:#b19cd9; margin-bottom:5px; font-size:14px;">已选标签</label>
+                        <div class="selected-tags-row">
+                            <div class="selected-group">
+                                <span class="selected-label">包含</span>
+                                <div id="selectedInclude" class="selected-tags"></div>
+                            </div>
+                            <div class="selected-group">
+                                <span class="selected-label">排除</span>
+                                <div id="selectedExclude" class="selected-tags"></div>
+                            </div>
+                            <button id="clearSelectedTags" class="pager-btn">清空</button>
+                        </div>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <label style="display:block; color:#b19cd9; margin-bottom:5px; font-size:14px;">显示选项</label>
+                        <div class="filters-row">
+                            <select id="galleryAiFilter" class="pager-select">
+                                <option value="">🤖 AI: 全部</option>
+                                <option value="YES">AI: 是</option>
+                                <option value="NO">AI: 否</option>
+                            </select>
+                            <select id="galleryDateFormat" class="pager-select">
+                                <option value="raw">原始</option>
+                                <option value="local">本地格式</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="galleryStatus" style="color: #888; font-size: 12px; margin-top: 10px; word-break: break-all;"></div>
+                </div>
+
+                <!-- Main: Table -->
+                <div class="gallery-main">
+                    <div class="gallery-table-container">
+                        <table class="gallery-table">
+                            <thead>
+                                <tr>
+                                    <th class="th-center action-col">操作</th>
+                                    <th class="th-left">ID</th>
+                                    <th class="th-left">标题</th>
+                                    <th class="th-left">描述</th>
+                                    <th class="th-left">文件名</th>
+                                    <th class="th-left">标签</th>
+                                    <th class="th-left">页码</th>
+                                    <th class="th-left">限制级</th>
+                                    <th class="th-left">日期</th>
+                                    <th class="th-left">浏览</th>
+                                    <th class="th-left">收藏</th>
+                                </tr>
+                            </thead>
+                            <tbody id="galleryTableBody">
+                                <!-- Data injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination Controls -->
+                    <div id="galleryPagination" class="pager-row">
+                        <label for="perPageSelect" style="color:#b19cd9;">每页</label>
+                        <select id="perPageSelect" class="pager-select">
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <button id="prevPageBtn" class="pager-btn">上一页</button>
+                        <button id="nextPageBtn" class="pager-btn">下一页</button>
+                        <span id="pageInfo" style="color:#888; font-size:12px;">第 1 / 1 页</span>
+                        <input id="pageInput" type="number" min="1" value="1" class="pager-input">
+                        <button id="jumpPageBtn" class="pager-btn">跳转</button>
+                    </div>
+                    
+                    <div id="galleryLoading" style="text-align: center; padding: 20px; display: none;">
+                        <span class="loading"></span> 正在加载数据...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let csvFilesConfig = [];
+        let isOriginalSize = false;
+        let originalUrl = '';
+        let replacedUrl = '';
+        let hasAccessedSecret = false; // 标记是否访问过
+        let currentFunction = 'static'; // 当前功能：static或Another
+
+        // --- Gallery Browser Variables ---
+        let galleryData = [];
+        let galleryTags = new Set();
+        let tagCountsMap = {};
+        let isGalleryLoaded = false;
+        // -------------------------------------
+
+        function initCsvSelect() {
+            const select = document.getElementById('galleryCsvSelect');
+            if (!select) return;
+            select.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = '请选择CSV文件';
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            select.appendChild(placeholder);
+            csvFilesConfig.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file;
+                option.textContent = file;
+                select.appendChild(option);
+            });
+            if (csvFilesConfig.length > 0) {
+                select.value = csvFilesConfig[0];
+            }
+        }
+        async function loadCsvConfig() {
+            try {
+                const resp = await fetch('csv.json');
+                if (!resp.ok) throw new Error();
+                const data = await resp.json();
+                const files = Array.isArray(data) ? data : (Array.isArray(data.files) ? data.files : []);
+                csvFilesConfig = files && files.length ? files : [];
+            } catch (e) {
+                csvFilesConfig = [];
+            }
+            initCsvSelect();
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            loadCsvConfig();
+        });
+
+        // 切换功能
+        function switchFunction(func) {
+            currentFunction = func;
+            
+            // 更新按钮状态
+            document.getElementById('staticResourceBtn').classList.toggle('active', func === 'static');
+            document.getElementById('AnotherBtn').classList.toggle('active', func === 'Another');
+            
+            // 显示/隐藏对应部分
+            document.getElementById('staticResourceSection').style.display = func === 'static' ? 'block' : 'none';
+            document.getElementById('AnotherSection').style.display = func === 'Another' ? 'block' : 'none';
+        }
+
+        // 代码检测
+        function checkSecretCode() {
+            const input = document.getElementById('urlInput');
+            const value = input.value.toLowerCase();
+            const container = document.getElementById('quickAccessContainer');
+            const btnProx = document.getElementById('quickAccessBtn');
+            const btnGallery = document.getElementById('galleryBtn');
+            
+            if (value === 'prox') {
+                input.value = ''; // 清空输入框
+                hasAccessedSecret = true;
+                container.style.display = 'flex';
+                btnProx.style.display = 'flex';
+                // 自动打开设置菜单 (可选，保留原逻辑)
+                openSecretSettings();
+            } else if (value === 'random') {
+                input.value = '';
+                hasAccessedSecret = true;
+                container.style.display = 'flex';
+                btnGallery.style.display = 'flex';
+                // 自动打开图库
+                openGalleryBrowser();
+            }
+        }
+
+        function fillUrl(url, itemData = null) {
+            const input = document.getElementById('urlInput');
+            input.value = url;
+            
+            // If item data is provided, show details
+            if (itemData) {
+                const detailsContainer = document.getElementById('detailsContainer');
+                const detailsGrid = document.getElementById('detailsGrid');
+                
+                detailsContainer.style.display = 'block';
+                detailsGrid.innerHTML = '';
+                
+                for (const key in itemData) {
+                    if (Object.prototype.hasOwnProperty.call(itemData, key)) {
+                        const value = itemData[key];
+                        
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'detail-item';
+                        
+                        // Make description and tags full width
+                        if (key.toLowerCase().includes('description') || key.toLowerCase().includes('tag')) {
+                             itemDiv.style.gridColumn = '1 / -1';
+                        }
+
+                        const labelSpan = document.createElement('span');
+                        labelSpan.className = 'detail-label';
+                        labelSpan.textContent = key;
+                        
+                        const valueDiv = document.createElement('div');
+                        valueDiv.className = 'detail-value';
+
+                        if (key === 'tags_transl' && value) {
+                             value.split(',').forEach(tag => {
+                                const span = document.createElement('span');
+                                span.className = 'tag-pill';
+                                span.textContent = tag.trim();
+                                valueDiv.appendChild(span);
+                            });
+                        } else {
+                            valueDiv.textContent = value;
+                        }
+
+                        itemDiv.appendChild(labelSpan);
+                        itemDiv.appendChild(valueDiv);
+                        detailsGrid.appendChild(itemDiv);
+                    }
+                }
+            } else {
+                // Hide details if no data (e.g. manual entry or random from unknown source)
+                document.getElementById('detailsContainer').style.display = 'none';
+            }
+        }
+
+
+
+        // CSV Parser
+        function parseCSV(text) {
+            const lines = [];
+            let row = [];
+            let inQuote = false;
+            let currentValue = '';
+            
+            // Remove BOM if present
+            if (text.charCodeAt(0) === 0xFEFF) {
+                text = text.slice(1);
+            }
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+
+                if (char === '"') {
+                    if (inQuote && nextChar === '"') {
+                        currentValue += '"';
+                        i++; 
+                    } else {
+                        inQuote = !inQuote;
+                    }
+                } else if (char === ',' && !inQuote) {
+                    row.push(currentValue);
+                    currentValue = '';
+                } else if ((char === '\r' || char === '\n') && !inQuote) {
+                    if (currentValue || row.length > 0) {
+                        row.push(currentValue);
+                        lines.push(row);
+                        row = [];
+                        currentValue = '';
+                    }
+                    if (char === '\r' && nextChar === '\n') i++;
+                } else {
+                    currentValue += char;
+                }
+            }
+            if (currentValue || row.length > 0) {
+                row.push(currentValue);
+                lines.push(row);
+            }
+            
+            if (lines.length < 2) return [];
+            
+            const headers = lines[0].map(h => h.trim());
+            return lines.slice(1).map(line => {
+                const obj = {};
+                headers.forEach((h, i) => {
+                    obj[h] = line[i] || '';
+                });
+                return obj;
+            });
+        }
+
+        // Initialize listeners when DOM is loaded (but here we are in script at end of body)
+        // Add event listeners for Random Menu
+
+        // --- Gallery Browser Functions ---
+        function openGalleryBrowser() {
+            document.getElementById('galleryBrowser').style.display = 'flex';
+            if (!isGalleryLoaded) {
+                loadGalleryData();
+            }
+        }
+
+        function pickRandomImage() {
+            if (galleryData.length === 0) {
+                alert('请先加载数据！');
+                return;
+            }
+            
+            // Use current filtered data if available? No, usually random means from all data or current view.
+            // Let's use all data for true random, or maybe respect filters? 
+            // User just said "Random Image", let's pick from ALL loaded data to be safe.
+            const randomIndex = Math.floor(Math.random() * galleryData.length);
+            const item = galleryData[randomIndex];
+            
+            const useThumb = document.getElementById('useThumbCheckbox') && document.getElementById('useThumbCheckbox').checked;
+            
+            // Fill URL and process
+            fillUrl(useThumb ? (item.thumb || item.original) : item.original, item);
+            closeGalleryBrowser();
+            
+            // Trigger load
+            processLink();
+        }
+
+        function closeGalleryBrowser() {
+            document.getElementById('galleryBrowser').style.display = 'none';
+        }
+        
+        // 防抖工具函数
+        function debounce(fn, delay = 300) {
+            let timer = null;
+            return (...args) => {
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(() => fn(...args), delay);
+            };
+        }
+
+        async function loadGalleryData() {
+            const loading = document.getElementById('galleryLoading');
+            const status = document.getElementById('galleryStatus');
+            const selectedFile = document.getElementById('galleryCsvSelect').value;
+            
+            if (!selectedFile) {
+                status.textContent = '请选择一个CSV文件';
+                return;
+            }
+
+            loading.style.display = 'block';
+            status.textContent = '正在尝试加载数据...';
+            
+            try {
+                const response = await fetch(selectedFile);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const text = await response.text();
+                galleryData = parseCSV(text);
+                
+                // Extract Tags and Count Frequency
+                const tagCounts = {};
+                galleryData.forEach(item => {
+                    if (item.tags_transl) {
+                        // Split by comma, trim whitespace
+                        item.tags_transl.split(',').forEach(t => {
+                            const tag = t.trim();
+                            if (tag) {
+                                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+                tagCountsMap = tagCounts;
+                
+                // Populate Tag Panels
+                const includePanel = document.getElementById('tagIncludePanel');
+                const excludePanel = document.getElementById('tagExcludePanel');
+                includePanel.innerHTML = '';
+                excludePanel.innerHTML = '';
+                
+                // Sort by count desc
+                Object.keys(tagCounts)
+                    .sort((a, b) => {
+                        const diff = tagCounts[b] - tagCounts[a];
+                        if (diff !== 0) return diff;
+                        return a.localeCompare(b, 'zh-CN');
+                    })
+                    .forEach(tag => {
+                        const inc = document.createElement('div');
+                        inc.className = 'tag-item';
+                        inc.dataset.value = tag;
+                        inc.textContent = `${tag} (${tagCounts[tag]})`;
+                        includePanel.appendChild(inc);
+                        const exc = document.createElement('div');
+                        exc.className = 'tag-item';
+                        exc.dataset.value = tag;
+                        exc.textContent = `${tag} (${tagCounts[tag]})`;
+                        excludePanel.appendChild(exc);
+                    });
+
+                isGalleryLoaded = true;
+                status.textContent = `加载成功: ${selectedFile} (共 ${galleryData.length} 条数据)`;
+                renderGalleryTable();
+            } catch (err) {
+                console.error(err);
+                status.textContent = `加载失败: ${err.message} (请确保 ${selectedFile} 存在)`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        let currentPage = 1;
+        let perPage = 50;
+        function updatePaginationUI(totalFiltered, totalPages) {
+            const info = document.getElementById('pageInfo');
+            const input = document.getElementById('pageInput');
+            if (info) info.textContent = `第 ${currentPage} / ${totalPages} 页`;
+            if (input) {
+                input.max = Math.max(1, totalPages);
+                input.value = currentPage;
+            }
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
+            if (prevBtn) prevBtn.disabled = currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+        }
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderGalleryTable();
+            }
+        }
+        function nextPage() {
+            currentPage++;
+            renderGalleryTable();
+        }
+        function goToPage(p) {
+            const total = Math.max(1, Math.ceil(galleryData.length / perPage));
+            currentPage = Math.min(Math.max(1, parseInt(p, 10) || 1), total);
+            renderGalleryTable();
+        }
+        
+        function renderGalleryTable() {
+            const tbody = document.getElementById('galleryTableBody');
+            const status = document.getElementById('galleryStatus');
+            tbody.innerHTML = '';
+            
+            const tStart = performance.now();
+                const searchText = document.getElementById('gallerySearch').value.toLowerCase();
+                const sortMode = document.getElementById('gallerySort').value;
+                const includeTags = Array.from(document.querySelectorAll('#tagIncludePanel .tag-item.selected')).map(el => el.dataset.value);
+                const excludeTags = Array.from(document.querySelectorAll('#tagExcludePanel .tag-item.selected')).map(el => el.dataset.value);
+                const filterAi = document.getElementById('galleryAiFilter').value;
+            const dateFormatEl = document.getElementById('galleryDateFormat');
+            const dateFormat = dateFormatEl ? dateFormatEl.value : 'raw';
+            
+            // Filter
+            let items = galleryData.filter(item => {
+                const matchSearch = !searchText || 
+                    (item.title || '').toLowerCase().includes(searchText) || 
+                    (item.description || '').toLowerCase().includes(searchText) || 
+                    (item.id || '').toLowerCase().includes(searchText);
+                
+                // 精确标签匹配
+                const tagArr = (item.tags_transl || '').split(',').map(t => t.trim()).filter(Boolean);
+                const matchTagInclude = includeTags.length === 0 || includeTags.some(t => tagArr.includes(t));
+                const matchTagExclude = excludeTags.length === 0 || excludeTags.every(t => !tagArr.includes(t));
+                const matchTag = matchTagInclude && matchTagExclude;
+                
+                // AI Filter (YES/NO)
+                const matchAi = !filterAi || (item.AI || '').toUpperCase() === filterAi;
+
+                return matchSearch && matchTag && matchAi;
+            });
+            
+            // Sort
+            items.sort((a, b) => {
+                const dA = Date.parse(a.date || '') || 0;
+                const dB = Date.parse(b.date || '') || 0;
+                switch (sortMode) {
+                    case 'newest': return dB - dA;
+                    case 'oldest': return dA - dB;
+                    case 'id_desc': return parseInt(b.id || 0) - parseInt(a.id || 0);
+                    case 'id_asc': return parseInt(a.id || 0) - parseInt(b.id || 0);
+                    case 'view_desc': return parseInt(b.viewCount || 0) - parseInt(a.viewCount || 0);
+                    case 'like_desc': return parseInt(b.likeCount || 0) - parseInt(a.likeCount || 0);
+                    default: return 0;
+                }
+            });
+            
+            const totalFiltered = items.length;
+            const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+            const startIndex = (currentPage - 1) * perPage;
+            const endIndex = startIndex + perPage;
+            const pageItems = items.slice(startIndex, endIndex);
+            updatePaginationUI(totalFiltered, totalPages);
+            
+            status.textContent = `显示 ${pageItems.length} / ${totalFiltered} 条数据 (总计 ${galleryData.length})`;
+            
+            const frag = document.createDocumentFragment();
+            pageItems.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'gallery-row';
+                
+                // --- Action Column (Moved to first) ---
+                const tdAction = document.createElement('td');
+                tdAction.className = 'action-col cell-action';
+
+                const btnOriginal = document.createElement('button');
+                btnOriginal.textContent = '填入链接';
+                btnOriginal.className = 'fill-url-btn action-btn';
+                btnOriginal.onclick = () => {
+                    const useThumb = document.getElementById('useThumbCheckbox') && document.getElementById('useThumbCheckbox').checked;
+                    fillUrl(useThumb ? (item.thumb || item.original) : item.original, item);
+                    closeGalleryBrowser();
+                };
+                tdAction.appendChild(btnOriginal);
+                tr.appendChild(tdAction);
+
+                const tdId = document.createElement('td');
+                tdId.textContent = item.id;
+                tdId.className = 'cell-id';
+                tr.appendChild(tdId);
+                
+                const tdTitle = document.createElement('td');
+                tdTitle.textContent = item.title;
+                tdTitle.className = 'cell-title';
+                tdTitle.title = item.title;
+                tr.appendChild(tdTitle);
+                
+                const tdDesc = document.createElement('td');
+                tdDesc.textContent = item.description;
+                tdDesc.className = 'cell-desc';
+                tdDesc.title = item.description;
+                tr.appendChild(tdDesc);
+                
+                const tdFile = document.createElement('td');
+                tdFile.textContent = item.fileName || '';
+                tdFile.className = 'cell-file';
+                tr.appendChild(tdFile);
+                
+                const tdTags = document.createElement('td');
+                tdTags.className = 'cell-tags';
+                if (item.tags_transl) {
+                    const tags = item.tags_transl.split(',').map(x => x.trim()).filter(Boolean);
+                    const threshold = 3;
+                    const spans = [];
+                    tags.forEach((t, idx) => {
+                        const span = document.createElement('span');
+                        span.className = 'tag-pill';
+                        if (idx >= threshold) span.style.display = 'none';
+                        span.textContent = t;
+                        tdTags.appendChild(span);
+                        spans.push(span);
+                    });
+                    if (tags.length > threshold) {
+                        const btn = document.createElement('button');
+                        btn.className = 'tag-toggle';
+                        btn.textContent = '展开';
+                        btn.setAttribute('data-expanded', '0');
+                        btn.onclick = () => {
+                            const expanded = btn.getAttribute('data-expanded') === '1';
+                            if (expanded) {
+                                spans.forEach((s, idx) => { if (idx >= threshold) s.style.display = 'none'; });
+                                btn.textContent = '展开';
+                                btn.setAttribute('data-expanded', '0');
+                            } else {
+                                spans.forEach(s => { s.style.display = 'inline-block'; });
+                                btn.textContent = '收起';
+                                btn.setAttribute('data-expanded', '1');
+                            }
+                        };
+                        tdTags.appendChild(btn);
+                    }
+                }
+                tr.appendChild(tdTags);
+
+                const tdPage = document.createElement('td');
+                tdPage.className = 'cell-meta';
+                const pageSpan = document.createElement('span');
+                pageSpan.className = 'meta-pill';
+                pageSpan.textContent = `页码: ${item.page || '-'}`;
+                pageSpan.style.border = '1px solid #ff6b6b';
+                pageSpan.style.color = '#ff6b6b';
+                tdPage.appendChild(pageSpan);
+                tr.appendChild(tdPage);
+
+                const tdRestrict = document.createElement('td');
+                tdRestrict.className = 'cell-meta';
+                const rSpan = document.createElement('span');
+                rSpan.className = 'meta-pill';
+                rSpan.textContent = `限制级: ${item.xRestrict || '0'}`;
+                tdRestrict.appendChild(rSpan);
+                tr.appendChild(tdRestrict);
+
+                // Date
+                const tdDate = document.createElement('td');
+                tdDate.textContent = dateFormat === 'local' && item.date ? new Date(item.date).toLocaleString() : (item.date || '-');
+                tr.appendChild(tdDate);
+
+                // View Count
+                const tdView = document.createElement('td');
+                tdView.textContent = item.viewCount || '0';
+                tr.appendChild(tdView);
+
+                // Collection (Bookmark) Count
+                const tdBookmark = document.createElement('td');
+                tdBookmark.textContent = item.bookmark || '0';
+                tr.appendChild(tdBookmark);
+                
+                frag.appendChild(tr);
+            });
+            tbody.appendChild(frag);
+            const tElapsed = performance.now() - tStart;
+            status.textContent += `，渲染耗时 ${tElapsed.toFixed(1)} ms`;
+        }
+        
+        // 搜索与筛选监听（防抖）
+        const debouncedRender = debounce(renderGalleryTable, 300);
+        document.getElementById('gallerySearch').addEventListener('input', debouncedRender);
+        const tagIncludePanel = document.getElementById('tagIncludePanel');
+        const tagExcludePanel = document.getElementById('tagExcludePanel');
+        const aiFilterEl = document.getElementById('galleryAiFilter');
+        const sortEl = document.getElementById('gallerySort');
+        const dateFmtEl = document.getElementById('galleryDateFormat');
+        const perPageEl = document.getElementById('perPageSelect');
+        const prevBtn = document.getElementById('prevPageBtn');
+        const nextBtn = document.getElementById('nextPageBtn');
+        const jumpBtn = document.getElementById('jumpPageBtn');
+        const pageInput = document.getElementById('pageInput');
+        const selectedInclude = document.getElementById('selectedInclude');
+        const selectedExclude = document.getElementById('selectedExclude');
+        const clearSelectedBtn = document.getElementById('clearSelectedTags');
+
+        function updateSelectedTagsSummary() {
+            if (!selectedInclude || !selectedExclude) return;
+            const inc = Array.from(document.querySelectorAll('#tagIncludePanel .tag-item.selected')).map(el => el.dataset.value);
+            const exc = Array.from(document.querySelectorAll('#tagExcludePanel .tag-item.selected')).map(el => el.dataset.value);
+            selectedInclude.innerHTML = '';
+            selectedExclude.innerHTML = '';
+            inc.forEach(tag => {
+                const pill = document.createElement('span');
+                pill.className = 'tag-pill';
+                pill.dataset.tag = tag;
+                pill.textContent = tag;
+                selectedInclude.appendChild(pill);
+            });
+            exc.forEach(tag => {
+                const pill = document.createElement('span');
+                pill.className = 'tag-pill';
+                pill.dataset.tag = tag;
+                pill.textContent = tag;
+                selectedExclude.appendChild(pill);
+            });
+        }
+        function reorderTagPanel(panel) {
+            if (!panel) return;
+            const items = Array.from(panel.querySelectorAll('.tag-item'));
+            items.sort((a, b) => {
+                const aSel = a.classList.contains('selected') ? 1 : 0;
+                const bSel = b.classList.contains('selected') ? 1 : 0;
+                if (aSel !== bSel) return bSel - aSel;
+                const ta = a.dataset.value || '';
+                const tb = b.dataset.value || '';
+                const ca = tagCountsMap[ta] || 0;
+                const cb = tagCountsMap[tb] || 0;
+                if (ca !== cb) return cb - ca;
+                return ta.localeCompare(tb, 'zh-CN');
+            });
+            items.forEach(it => panel.appendChild(it));
+        }
+        function bindPanelClick(panel) {
+            if (!panel) return;
+            panel.addEventListener('click', (e) => {
+                const item = e.target.closest('.tag-item');
+                if (!item || !panel.contains(item)) return;
+                item.classList.toggle('selected');
+                updateSelectedTagsSummary();
+                reorderTagPanel(panel);
+                debouncedRender();
+            });
+        }
+        bindPanelClick(tagIncludePanel);
+        bindPanelClick(tagExcludePanel);
+        if (clearSelectedBtn) {
+            clearSelectedBtn.addEventListener('click', () => {
+                document.querySelectorAll('#tagIncludePanel .tag-item.selected, #tagExcludePanel .tag-item.selected').forEach(el => el.classList.remove('selected'));
+                updateSelectedTagsSummary();
+                debouncedRender();
+            });
+        }
+        if (selectedInclude) {
+            selectedInclude.addEventListener('click', (e) => {
+                const pill = e.target.closest('.tag-pill');
+                if (!pill) return;
+                const tag = pill.dataset.tag;
+                const item = document.querySelector(`#tagIncludePanel .tag-item[data-value="${tag}"]`);
+                if (item) item.classList.remove('selected');
+                updateSelectedTagsSummary();
+                debouncedRender();
+            });
+        }
+        if (selectedExclude) {
+            selectedExclude.addEventListener('click', (e) => {
+                const pill = e.target.closest('.tag-pill');
+                if (!pill) return;
+                const tag = pill.dataset.tag;
+                const item = document.querySelector(`#tagExcludePanel .tag-item[data-value="${tag}"]`);
+                if (item) item.classList.remove('selected');
+                updateSelectedTagsSummary();
+                debouncedRender();
+            });
+        }
+        if (aiFilterEl) aiFilterEl.addEventListener('change', debouncedRender);
+        if (sortEl) sortEl.addEventListener('change', renderGalleryTable);
+        if (dateFmtEl) dateFmtEl.addEventListener('change', renderGalleryTable);
+        if (perPageEl) perPageEl.addEventListener('change', () => { perPage = parseInt(perPageEl.value, 10) || 50; currentPage = 1; renderGalleryTable(); });
+        if (prevBtn) prevBtn.addEventListener('click', prevPage);
+        if (nextBtn) nextBtn.addEventListener('click', nextPage);
+        if (jumpBtn && pageInput) jumpBtn.addEventListener('click', () => { const p = parseInt(pageInput.value, 10); if (!isNaN(p)) { goToPage(p); } });
+        
+        // Dropdown toggles
+        const openTagIncludeBtn = document.getElementById('openTagInclude');
+        const openTagExcludeBtn = document.getElementById('openTagExclude');
+        function togglePanel(btn, panel) {
+            if (!btn || !panel) return;
+            btn.addEventListener('click', () => {
+                panel.classList.toggle('open');
+                reorderTagPanel(panel);
+            });
+        }
+        togglePanel(openTagIncludeBtn, tagIncludePanel);
+        togglePanel(openTagExcludeBtn, tagExcludePanel);
+        document.addEventListener('click', (e) => {
+            const incWrap = openTagIncludeBtn ? openTagIncludeBtn.parentElement : null;
+            const excWrap = openTagExcludeBtn ? openTagExcludeBtn.parentElement : null;
+            if (incWrap && !incWrap.contains(e.target)) { tagIncludePanel.classList.remove('open'); }
+            if (excWrap && !excWrap.contains(e.target)) { tagExcludePanel.classList.remove('open'); }
+        });
+
+
+
+        function openSecretSettings() {
+            document.getElementById('secretSettings').style.display = 'flex';
+            // 标记已访问过页面，并显示快速访问按钮
+            hasAccessedSecret = true;
+            document.getElementById('quickAccessBtn').style.display = 'block';
+        }
+
+        function closeSecretSettings() {
+            document.getElementById('secretSettings').style.display = 'none';
+            // 清空输入框
+            document.getElementById('urlInput').value = '';
+            document.getElementById('secretInput').value = '';
+            document.getElementById('AnotherInput').value = '';
+        }
+
+        function handleSecretProxyChange() {
+            const secretProxySelect = document.getElementById('secretProxySelect');
+            const secretCustomProxyInput = document.getElementById('secretCustomProxyInput');
+            
+            if (secretProxySelect.value === 'custom') {
+                secretCustomProxyInput.style.display = 'block';
+            } else {
+                secretCustomProxyInput.style.display = 'none';
+            }
+        }
+
+        function handleSecretAction() {
+            if (currentFunction === 'static') {
+                handleStaticResource();
+            } else if (currentFunction === 'Another') {
+                handleAnotherAcceleration();
+            }
+        }
+
+        function handleStaticResource() {
+            const secretInput = document.getElementById('secretInput').value.trim();
+            const secretProxySelect = document.getElementById('secretProxySelect');
+            const secretCustomProxyInput = document.getElementById('secretCustomProxyInput');
+            
+            if (!secretInput) {
+                alert('❌ 请输入静态资源链接！');
+                return;
+            }
+            
+            // 获取选择的代理服务器
+            let proxyUrl;
+            if (secretProxySelect.value === 'custom') {
+                proxyUrl = secretCustomProxyInput.value.trim();
+                if (!proxyUrl) {
+                    alert('❌ 请输入自定义服务器地址！');
+                    return;
+                }
+            } else {
+                proxyUrl = secretProxySelect.value;
+            }
+
+            // 清理代理URL（移除末尾的斜杠）
+            const cleanProxyUrl = proxyUrl.replace(/\/+$/, '');
+            
+            // 处理输入内容：移除协议头，替换为~
+            let processedInput = secretInput;
+            
+            // 移除 http:// 或 https:// 协议头
+            processedInput = processedInput.replace(/^https?:\/\//, '');
+            
+            // 构建最终URL：代理服务器 + /~ + 处理后的输入内容
+            const finalUrl = cleanProxyUrl + '/~' + processedInput;
+            
+            // 在新标签页打开
+            window.open(finalUrl, '_blank');
+            
+            // 清空输入框
+            document.getElementById('secretInput').value = '';
+        }
+
+        function handleAnotherAcceleration() {
+            const AnotherInput = document.getElementById('AnotherInput').value.trim();
+            
+            if (!AnotherInput) {
+                alert('❌ 请输入链接！');
+                return;
+            }
+            
+            // 处理输入内容：移除协议头
+            let processedInput = AnotherInput;
+            
+            // 移除 http:// 或 https:// 协议头
+            // processedInput = processedInput.replace(/^https?:\/\//, '');
+            
+            // 构建最终URL：加速域名 + 处理后的输入内容
+            const finalUrl = 'https://p.futa.de5.net/' + processedInput;
+            
+            // 在新标签页打开
+            window.open(finalUrl, '_blank');
+            
+            // 清空输入框
+            document.getElementById('AnotherInput').value = '';
+        }
+
+        function getProxyUrl() {
+            const proxySelect = document.getElementById('proxySelect');
+            const customProxyInput = document.getElementById('customProxyInput');
+            
+            if (proxySelect.value === 'custom') {
+                return customProxyInput.value.trim();
+            } else {
+                return proxySelect.value;
+            }
+        }
+
+        function handleProxyChange() {
+            const proxySelect = document.getElementById('proxySelect');
+            const customProxyInput = document.getElementById('customProxyInput');
+            
+            if (proxySelect.value === 'custom') {
+                customProxyInput.style.display = 'block';
+            } else {
+                customProxyInput.style.display = 'none';
+            }
+        }
+
+        async function loadImageWithProgress(url) {
+            const loadingText = document.getElementById('loadingText');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressStats = document.getElementById('progressStats');
+            const resultImage = document.getElementById('resultImage');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            loadingText.textContent = '正在建立连接...';
+            progressContainer.style.display = 'block';
+            progressStats.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressStats.textContent = '0%';
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const contentLength = response.headers.get('content-length');
+                const total = contentLength ? parseInt(contentLength, 10) : 0;
+                let loaded = 0;
+
+                const reader = response.body.getReader();
+                const chunks = [];
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    chunks.push(value);
+                    loaded += value.length;
+
+                    if (total) {
+                        const percent = Math.round((loaded / total) * 100);
+                        progressBar.style.width = percent + '%';
+                        progressStats.textContent = `${percent}% (${(loaded / 1024 / 1024).toFixed(2)} MB / ${(total / 1024 / 1024).toFixed(2)} MB)`;
+                    } else {
+                        progressStats.textContent = `已下载: ${(loaded / 1024 / 1024).toFixed(2)} MB`;
+                    }
+                }
+
+                loadingText.textContent = '正在渲染图片...';
+                
+                const blob = new Blob(chunks);
+                const objectUrl = URL.createObjectURL(blob);
+                
+                resultImage.onload = function() {
+                    loadingIndicator.style.display = 'none';
+                    resultImage.style.display = 'block';
+                };
+                
+                resultImage.onerror = function() {
+                    loadingIndicator.style.display = 'none';
+                    showError('❌ 图片渲染失败');
+                };
+
+                resultImage.src = objectUrl;
+                // Update global replacedUrl for download button
+                replacedUrl = objectUrl;
+
+            } catch (err) {
+                console.error(err);
+                // Fallback for CORS or other fetch errors
+                console.warn('Fetch failed (likely CORS), falling back to direct img src loading...');
+                
+                loadingText.textContent = '流式加载失败，尝试直接加载...';
+                progressContainer.style.display = 'none';
+                progressStats.style.display = 'none';
+                
+                // Clear blob URL if any
+                if (resultImage.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(resultImage.src);
+                }
+
+                resultImage.onload = function() {
+                    loadingIndicator.style.display = 'none';
+                    resultImage.style.display = 'block';
+                };
+                
+                resultImage.onerror = function() {
+                    loadingIndicator.style.display = 'none';
+                    showError('❌ 图片加载失败: 无法访问图片资源 (CORS限制且直接加载失败)');
+                };
+                
+                resultImage.src = url;
+                replacedUrl = url;
+            }
+        }
+
+        function processLink() {
+            const input = document.getElementById('urlInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const infoMsg = document.getElementById('infoMsg');
+            const imageContainer = document.getElementById('imageContainer');
+            const resultImage = document.getElementById('resultImage');
+            const resultLinkContainer = document.getElementById('resultLinkContainer');
+            const resultLink = document.getElementById('resultLink');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            // 隐藏之前的消息和图片
+            errorMsg.style.display = 'none';
+            infoMsg.style.display = 'none';
+            imageContainer.style.display = 'none';
+            resultLinkContainer.style.display = 'none';
+            resultImage.style.display = 'none';
+            loadingIndicator.style.display = 'none';
+
+            if (!input) {
+                showError('❌ 请先输入一个链接！');
+                return;
+            }
+
+            // 检查是否是代码
+            if (input.toLowerCase() === 'prox') {
+                openSecretSettings();
+                // 标记已访问过页面，并显示快速访问按钮
+                hasAccessedSecret = true;
+                document.getElementById('quickAccessBtn').style.display = 'block';
+                return;
+            }
+
+            try {
+                originalUrl = input;
+
+                // 如果用户没输入协议，我们默认补上 https://
+                if (!originalUrl.startsWith('http://') && !originalUrl.startsWith('https://')) {
+                    originalUrl = 'https://' + originalUrl;
+                }
+
+                // 获取代理URL
+                const proxyUrl = getProxyUrl();
+                if (!proxyUrl) {
+                    showError('❌ 请选择或输入代理服务器地址！');
+                    return;
+                }
+
+                // 清理代理URL（移除末尾的斜杠）
+                const cleanProxyUrl = proxyUrl.replace(/\/+$/, '');
+                
+                // 执行替换：i.pximg.net → 选择的代理域名
+                replacedUrl = originalUrl.replace(
+                    /i\.pximg\.net/g, 
+                    cleanProxyUrl.replace(/^https?:\/\//, '')
+                );
+
+                if (replacedUrl === originalUrl) {
+                    showError('⚠️ <br> 此非Pixiv原图链接 <br> 链接应为 https://i.pximg.net/img-original/img/... <br> 无法打开。请检查输入的链接是否正确。');
+                    return;
+                }
+
+                // 显示提示信息
+                showInfo(`✅ <br> 已转接：<br> i.pximg.net → ${cleanProxyUrl} <br>正在加载图片内容...`);
+
+                // 显示转换后的链接
+                resultLink.textContent = replacedUrl;
+                resultLinkContainer.style.display = 'block';
+
+                // 重置为缩放模式
+                isOriginalSize = false;
+                resultImage.className = 'scaled-image';
+                
+                // 显示加载指示器
+                loadingIndicator.style.display = 'block';
+                imageContainer.style.display = 'block';
+                
+                // 使用流式加载
+                loadImageWithProgress(replacedUrl);
+
+            } catch (err) {
+                showError('❌ 处理链接时出错：' + err.message);
+            }
+        }
+
+        function openInNewTab() {
+            const input = document.getElementById('urlInput').value.trim();
+            
+            if (!input) {
+                showError('❌ 请先输入一个链接！');
+                return;
+            }
+
+            // 检查是否是代码
+            if (input.toLowerCase() === 'prox') {
+                openSecretSettings();
+                // 标记已访问过页面，并显示快速访问按钮
+                hasAccessedSecret = true;
+                document.getElementById('quickAccessBtn').style.display = 'block';
+                return;
+            }
+
+            try {
+                let urlToOpen = input;
+
+                // 如果用户没输入协议，我们默认补上 https://
+                if (!urlToOpen.startsWith('http://') && !urlToOpen.startsWith('https://')) {
+                    urlToOpen = 'https://' + urlToOpen;
+                }
+
+                // 获取代理URL
+                const proxyUrl = getProxyUrl();
+                if (!proxyUrl) {
+                    showError('❌ 请选择或输入服务器地址！');
+                    return;
+                }
+
+                // 清理代理URL（移除末尾的斜杠）
+                const cleanProxyUrl = proxyUrl.replace(/\/+$/, '');
+                
+                // 执行替换：i.pximg.net → 选择的代理域名
+                const newTabUrl = urlToOpen.replace(
+                    /i\.pximg\.net/g, 
+                    cleanProxyUrl.replace(/^https?:\/\//, '')
+                );
+
+                if (newTabUrl === urlToOpen) {
+                    showError('⚠️ <br> 此非Pixiv原图链接 <br> 链接应为 https://i.pximg.net/img-original/img/... <br> 无法打开。请检查输入的链接是否正确。');
+                    return;
+                }
+
+                // 在新标签页打开
+                window.open(newTabUrl, '_blank');
+
+            } catch (err) {
+                showError('❌ 处理链接时出错：' + err.message);
+            }
+        }
+
+        function downloadImage() {
+            if (!replacedUrl) {
+                showError('❌ 没有可下载的图片链接');
+                return;
+            }
+
+            // 创建一个隐藏的a标签用于下载
+            const a = document.createElement('a');
+            a.href = replacedUrl;
+            
+            // 从URL中提取文件名
+            let filename = 'pixiv-image.png';
+            if (originalUrl) {
+                filename = originalUrl.split('/').pop();
+            } else if (replacedUrl && !replacedUrl.startsWith('blob:')) {
+                filename = replacedUrl.split('/').pop();
+            }
+            a.download = filename;
+            
+            // 触发下载
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function showError(msg) {
+            const elem = document.getElementById('errorMsg');
+            elem.innerHTML = msg;
+            elem.style.display = 'block';
+        }
+
+        function showInfo(msg) {
+            const elem = document.getElementById('infoMsg');
+            elem.innerHTML = msg;
+            elem.style.display = 'block';
+        }
+
+        function copyToClipboard(element) {
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const notification = document.createElement('div');
+                notification.className = 'copy-notification show-copy-notification';
+                notification.textContent = '已复制!';
+                element.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.classList.remove('show-copy-notification');
+                    setTimeout(() => {
+                        element.removeChild(notification);
+                    }, 300);
+                }, 2000);
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        }
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            handleProxyChange(); // 初始化代理选择显示状态
+            handleSecretProxyChange(); // 初始化秘密设置代理选择显示状态
+            
+            // 每次刷新页面都重置状态，快速访问按钮默认隐藏
+            hasAccessedSecret = false;
+            document.getElementById('quickAccessBtn').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

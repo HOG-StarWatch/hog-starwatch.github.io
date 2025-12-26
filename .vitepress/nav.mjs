@@ -23,7 +23,7 @@ export default [
         { text: 'IP检测', link: '../../../IPcheck.html', target: '_self', },
         { text: '延迟&测速', link: '../../../ping-speedtest.html', target: '_self', },
         { text: 'RDAP-Whois', link: '../../../RDAP-whois.html', target: '_self', },
-        { text: 'Pixiv代理', link: '../../../i.pximg.net-prox.html', target: '_self', },
+        { text: 'Pixiv代理', link: '../../../i.pximg/i.pximg.net-prox.html', target: '_self', },
         { text: '图片处理',
           items:[
             { text: '画板&颜色格式转换&取色', link: '../../../drawbroad+color.html', target: '_self', },
@@ -80,6 +80,7 @@ export default [
         { text: 'Wordle', link: '../../../Wordle.html', target: '_self', },
         { text: '地址栏贪吃蛇-推荐无痕模式游玩;)', link: '../../../snake/index.html', target: '_self', },
         { text: 'Music-world.execute.me', link: '../../../world.execute.me.html', target: '_self', },
+        { text: '扫雷', link: '../../../minesearch.html', target: '_self', },
       ],
     },    
 ];
