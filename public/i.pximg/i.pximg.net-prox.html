@@ -822,6 +822,7 @@
                         <select id="galleryCsvSelect" onchange="loadGalleryData()" style="padding: 10px; background: #3a3a4a; border: 1px solid #4b0082; color: #e6e6fa; border-radius: 4px;">
                             <!-- Options injected via JS -->
                         </select>
+                        <input type="file" id="localCsvInput" accept=".csv" style="display:none;">
                     </div>
 
                     <div class="input-wrapper">
@@ -950,13 +951,13 @@
         let isGalleryLoaded = false;
         // -------------------------------------
 
-        function initCsvSelect() {
+        function initCsvSelect(failed = false) {
             const select = document.getElementById('galleryCsvSelect');
             if (!select) return;
             select.innerHTML = '';
             const placeholder = document.createElement('option');
             placeholder.value = '';
-            placeholder.textContent = '请选择CSV文件';
+            placeholder.textContent = failed ? 'CSV文件数据加载失败' : '请选择CSV文件';
             placeholder.disabled = true;
             placeholder.selected = true;
             select.appendChild(placeholder);
@@ -966,11 +967,16 @@
                 option.textContent = file;
                 select.appendChild(option);
             });
+            const localOpt = document.createElement('option');
+            localOpt.value = '__local__';
+            localOpt.textContent = '选择本地CSV文件...';
+            select.appendChild(localOpt);
             if (csvFilesConfig.length > 0) {
                 select.value = csvFilesConfig[0];
             }
         }
         async function loadCsvConfig() {
+            let failed = false;
             try {
                 const resp = await fetch('csv.json');
                 if (!resp.ok) throw new Error();
@@ -979,8 +985,9 @@
                 csvFilesConfig = files && files.length ? files : [];
             } catch (e) {
                 csvFilesConfig = [];
+                failed = true;
             }
-            initCsvSelect();
+            initCsvSelect(failed);
         }
         window.addEventListener('DOMContentLoaded', () => {
             loadCsvConfig();
@@ -1187,6 +1194,70 @@
             
             if (!selectedFile) {
                 status.textContent = '请选择一个CSV文件';
+                return;
+            }
+
+            if (selectedFile === '__local__') {
+                const input = document.getElementById('localCsvInput');
+                if (!input) return;
+                input.onchange = async () => {
+                    const file = input.files && input.files[0];
+                    if (!file) {
+                        status.textContent = '未选择本地CSV文件';
+                        loading.style.display = 'none';
+                        return;
+                    }
+                    loading.style.display = 'block';
+                    status.textContent = `正在从本地加载: ${file.name}`;
+                    try {
+                        const text = await file.text();
+                        galleryData = parseCSV(text);
+                        const tagCounts = {};
+                        galleryData.forEach(item => {
+                            if (item.tags_transl) {
+                                item.tags_transl.split(',').forEach(t => {
+                                    const tag = t.trim();
+                                    if (tag) {
+                                        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                                    }
+                                });
+                            }
+                        });
+                        tagCountsMap = tagCounts;
+                        const includePanel = document.getElementById('tagIncludePanel');
+                        const excludePanel = document.getElementById('tagExcludePanel');
+                        includePanel.innerHTML = '';
+                        excludePanel.innerHTML = '';
+                        Object.keys(tagCounts)
+                            .sort((a, b) => {
+                                const diff = tagCounts[b] - tagCounts[a];
+                                if (diff !== 0) return diff;
+                                return a.localeCompare(b, 'zh-CN');
+                            })
+                            .forEach(tag => {
+                                const inc = document.createElement('div');
+                                inc.className = 'tag-item';
+                                inc.dataset.value = tag;
+                                inc.textContent = `${tag} (${tagCounts[tag]})`;
+                                includePanel.appendChild(inc);
+                                const exc = document.createElement('div');
+                                exc.className = 'tag-item';
+                                exc.dataset.value = tag;
+                                exc.textContent = `${tag} (${tagCounts[tag]})`;
+                                excludePanel.appendChild(exc);
+                            });
+                        isGalleryLoaded = true;
+                        status.textContent = `加载成功: ${file.name} (共 ${galleryData.length} 条数据)`;
+                        renderGalleryTable();
+                    } catch (err) {
+                        console.error(err);
+                        status.textContent = `加载失败: ${err.message}`;
+                    } finally {
+                        loading.style.display = 'none';
+                        input.value = '';
+                    }
+                };
+                input.click();
                 return;
             }
 

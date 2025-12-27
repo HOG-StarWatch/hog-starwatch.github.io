@@ -2,6 +2,7 @@
 # [AI写的介绍](./extra_reedme.md)
 
 ``` CMD
+
 @echo off
 chcp 65001 >nul
 setlocal EnableDelayedExpansion
@@ -267,89 +268,110 @@ echo 6. 白名单 (-i): !cfg_whitelist!
 echo 7. 黑名单 (-e): !cfg_blacklist!
 echo.
 echo 8. 保存并返回 (Save ^& Back)
+echo 9. 重置配置 (Reset Config)
 echo 0. 不保存直接退出 (Exit without Saving)
 echo =================================================
-choice /c 123456780 /n /m "选择要修改的设置 (0-8): "
+choice /c 1234567890 /n /m "选择要修改的设置 (0-9): "
 set "schoice=%errorlevel%"
 
-if "%schoice%"=="9" goto RESET_CONFIG
+if "%schoice%"=="10" goto MAIN_MENU
+if "%schoice%"=="9" goto RESET_DEFAULTS
 if "%schoice%"=="8" goto SAVE_CONFIG
-if "%schoice%"=="7" (
-    cls
-    echo =================================================
-    echo              设置黑名单 (Blacklist)
-    echo =================================================
-    echo [格式说明]:
-    echo   • 使用逗号分隔多个文件扩展名
-    echo   • 不包含点号，只写扩展名本身
-    echo   • 留空表示不使用黑名单
-    echo.
-    echo [示例]:
-    echo   • 排除视频文件: mp4,avi,mkv,flv
-    echo   • 排除文档文件: pdf,doc,docx
-    echo   • 排除多种文件: mp4,avi,pdf,zip
-    echo.
-    echo 当前黑名单: !cfg_blacklist!
-    echo =================================================
-    echo.
-    set "input="
-    set /p "input=请输入黑名单 (使用逗号分隔，如 mp4,flv,avi): "
-    if defined input set "cfg_blacklist=!input!"
-    goto SETTINGS
-)
-if "%schoice%"=="6" (
-    cls
-    echo =================================================
-    echo              设置白名单 (Whitelist)
-    echo =================================================
-    echo [格式说明]:
-    echo   • 使用逗号分隔多个文件扩展名
-    echo   • 不包含点号，只写扩展名本身
-    echo   • 留空表示不使用白名单
-    echo.
-    echo [示例]:
-    echo   • 仅下载图片: jpg,jpeg,png,gif
-    echo   • 仅下载音频: mp3,wav,flac
-    echo   • 仅下载特定格式: pdf,docx,xlsx
-    echo.
-    echo 注意: 白名单和黑名单同时设置时，白名单优先级更高
-    echo.
-    echo 当前白名单: !cfg_whitelist!
-    echo =================================================
-    echo.
-    set "input="
-    set /p "input=请输入白名单 (使用逗号分隔，如 jpg,png,gif): "
-    if defined input set "cfg_whitelist=!input!"
-    goto SETTINGS
-)
-if "%schoice%"=="5" (
-    set "input="
-    set /p "input=请输入 JSON 文件路径 (默认 tdl-export.json): "
-    if defined input set "cfg_json=!input!"
-    goto SETTINGS
-)
-if "%schoice%"=="4" (
-    set "input="
-    set /p "input=请输入下载目录 (默认 .): "
-    if defined input set "cfg_dir=!input!"
-    goto SETTINGS
-)
-if "%schoice%"=="3" (
-    set "input="
-    set /p "input=请输入并发任务数 (默认 4): "
-    if defined input set "cfg_concurrent=!input!"
-    goto SETTINGS
-)
-if "%schoice%"=="2" (
-    set "input="
-    set /p "input=请输入线程数 (默认 8): "
-    if defined input set "cfg_threads=!input!"
-    goto SETTINGS
-)
-if "%schoice%"=="1" (
-    if "!cfg_skip_same!"=="false" (set "cfg_skip_same=true") else (set "cfg_skip_same=false")
-    goto SETTINGS
-)
+if "%schoice%"=="7" goto SET_BLACKLIST
+if "%schoice%"=="6" goto SET_WHITELIST
+if "%schoice%"=="5" goto SET_JSON
+if "%schoice%"=="4" goto SET_DIR
+if "%schoice%"=="3" goto SET_CONCURRENT
+if "%schoice%"=="2" goto SET_THREADS
+if "%schoice%"=="1" goto TOGGLE_SKIP_SAME
+goto SETTINGS
+
+:SET_BLACKLIST
+cls
+echo =================================================
+echo              设置黑名单 (Blacklist)
+echo =================================================
+echo [格式说明]:
+echo   • 使用逗号分隔多个文件扩展名
+echo   • 不包含点号，只写扩展名本身
+echo   • 留空表示不使用黑名单
+echo.
+echo [示例]:
+echo   • 排除视频文件: mp4,avi,mkv,flv
+echo   • 排除文档文件: pdf,doc,docx
+echo   • 排除多种文件: mp4,avi,pdf,zip
+echo.
+echo 当前黑名单: !cfg_blacklist!
+echo =================================================
+echo.
+set "input="
+set /p "input=请输入黑名单 (使用逗号分隔，如 mp4,flv,avi): "
+if defined input set "cfg_blacklist=!input!"
+goto SETTINGS
+
+:RESET_DEFAULTS
+set "cfg_skip_same=false"
+set "cfg_threads=8"
+set "cfg_concurrent=4"
+set "cfg_dir=."
+set "cfg_json=tdl-export.json"
+set "cfg_whitelist="
+set "cfg_blacklist="
+echo 已重置为默认值，可按 8 保存并返回
+timeout /t 1 >nul
+goto SETTINGS
+
+:SET_WHITELIST
+cls
+echo =================================================
+echo              设置白名单 (Whitelist)
+echo =================================================
+echo [格式说明]:
+echo   • 使用逗号分隔多个文件扩展名
+echo   • 不包含点号，只写扩展名本身
+echo   • 留空表示不使用白名单
+echo.
+echo [示例]:
+echo   • 仅下载图片: jpg,jpeg,png,gif
+echo   • 仅下载音频: mp3,wav,flac
+echo   • 仅下载特定格式: pdf,docx,xlsx
+echo.
+echo 注意: 白名单和黑名单同时设置时，白名单优先级更高
+echo.
+echo 当前白名单: !cfg_whitelist!
+echo =================================================
+echo.
+set "input="
+set /p "input=请输入白名单 (使用逗号分隔，如 jpg,png,gif): "
+if defined input set "cfg_whitelist=!input!"
+goto SETTINGS
+
+:SET_JSON
+set "input="
+set /p "input=请输入 JSON 文件路径 (默认 tdl-export.json): "
+if defined input set "cfg_json=!input!"
+goto SETTINGS
+
+:SET_DIR
+set "input="
+set /p "input=请输入下载目录 (默认 .): "
+if defined input set "cfg_dir=!input!"
+goto SETTINGS
+
+:SET_CONCURRENT
+set "input="
+set /p "input=请输入并发任务数 (默认 4): "
+if defined input set "cfg_concurrent=!input!"
+goto SETTINGS
+
+:SET_THREADS
+set "input="
+set /p "input=请输入线程数 (默认 8): "
+if defined input set "cfg_threads=!input!"
+goto SETTINGS
+
+:TOGGLE_SKIP_SAME
+if "!cfg_skip_same!"=="false" (set "cfg_skip_same=true") else (set "cfg_skip_same=false")
 goto SETTINGS
 
 :SAVE_CONFIG
@@ -439,6 +461,9 @@ for %%a in (%links%) do (
     set "URL_PARAMS=!URL_PARAMS! -u %%a"
 )
 
+set "count=0"
+for %%a in (%links%) do set /a count+=1
+
 echo.
 echo 下载设置:
 echo 下载目录: !cfg_dir!
@@ -448,7 +473,7 @@ if "!cfg_skip_same!"=="true" echo 跳过已存在: 是
 if defined cfg_whitelist echo 白名单: !cfg_whitelist!
 if defined cfg_blacklist echo 黑名单: !cfg_blacklist!
 echo.
-echo 链接数量:  %links: = % 个
+echo 链接数量: !count! 个
 echo.
 
 set "CMD="%TDL_EXE%" dl"
@@ -468,6 +493,7 @@ if not exist "!TDL_EXE!" (
 pause
 start "TDL Download Links" cmd /k "!CMD!"
 goto MAIN_MENU
+
 ```
 
 ::: details <^null
