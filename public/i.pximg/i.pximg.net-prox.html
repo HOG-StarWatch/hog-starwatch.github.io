@@ -676,6 +676,9 @@
             <button id="galleryBtn" class="quick-access-btn" style="background-color: #ff9f43; display: none;" onclick="openGalleryBrowser()" title="图库">
                 📂
             </button>
+            <button id="quickRandomBtn" class="quick-access-btn" style="background-color: #ff6b6b; display: none;" onclick="quickRandomImage()" title="随机一图">
+                🎲
+            </button>
         </div>
 
         <div class="input-group">
@@ -699,10 +702,19 @@
                 type="url" 
                 id="urlInput" 
                 placeholder="例如：https://i.pximg.net/img-original/img/..."
-                oninput="checkSecretCode()"
+                oninput="checkSecretCode(); updatePageControlFromUrl()"
             />
+            <div class="pager-control-row" style="display:flex; align-items:center; gap:10px; margin-top:10px; margin-bottom:10px;">
+                <button onclick="changeUrlPage(-1)" style="margin:0; flex:1; background-color: #5a4a9d;">◀ 上一张</button>
+                <div style="flex:0 0 100px; display:flex; align-items:center; justify-content:center; background:#3a3a4a; border:2px solid #4b0082; border-radius:6px; padding:0;">
+                     <span style="color:#b19cd9; margin-right:5px; font-weight:bold;">P</span>
+                     <input type="number" id="urlPageInput" value="1" min="1" style="background:transparent; border:none; color:#e6e6fa; width:50px; text-align:center; font-size:16px; padding:10px 0;" onchange="jumpUrlPage(this.value)">
+                </div>
+                <button onclick="changeUrlPage(1)" style="margin:0; flex:1; background-color: #5a4a9d;">下一张 ▶</button>
+            </div>
             <div class="button-row">
                 <button onclick="processLink()">🔄 加载图片</button>
+                <button onclick="loadApiImage()">🎲 API 随机图</button>
                 <button onclick="openInNewTab()">🔗 在新标签页打开原图</button>
             </div>
         </div>
@@ -768,7 +780,7 @@
                         type="url" 
                         id="secretCustomProxyInput" 
                         class="custom-proxy-input"
-                        placeholder="请输入自定义网址，例如：https://www.google.com/favicon.ico/"
+                        placeholder="请输入自定义网址，例如：https://prox.mydomain.com/"
                     />
                 </div>
                 <div class="secret-input-group">
@@ -1026,6 +1038,7 @@
                 hasAccessedSecret = true;
                 container.style.display = 'flex';
                 btnGallery.style.display = 'flex';
+                document.getElementById('quickRandomBtn').style.display = 'flex';
                 // 自动打开图库
                 openGalleryBrowser();
             }
@@ -2061,6 +2074,128 @@
             }).catch(err => {
                 console.error('复制失败:', err);
             });
+        }
+
+        // --- Feature 1: Pagination Logic ---
+        function getUrlPage(url) {
+            const match = url.match(/_p(\d+)(\.[a-zA-Z0-9]+)?$/);
+            if (match) {
+                return parseInt(match[1], 10);
+            }
+            return null; // Not found
+        }
+
+        function setUrlPage(url, page) {
+            // If URL has _p\d+, replace it.
+            if (/_p(\d+)(\.[a-zA-Z0-9]+)?$/.test(url)) {
+                return url.replace(/_p(\d+)(\.[a-zA-Z0-9]+)?$/, `_p${page}$2`);
+            }
+            // If not, try to insert before extension?
+            const extMatch = url.match(/(\.[a-zA-Z0-9]+)$/);
+            if (extMatch) {
+                return url.replace(/(\.[a-zA-Z0-9]+)$/, `_p${page}$1`);
+            }
+            return url + `_p${page}`;
+        }
+
+        function updatePageControlFromUrl() {
+            const input = document.getElementById('urlInput');
+            const pageInput = document.getElementById('urlPageInput');
+            if (!input || !pageInput) return;
+            const page = getUrlPage(input.value);
+            if (page !== null) {
+                pageInput.value = page + 1;
+            }
+        }
+
+        function changeUrlPage(delta) {
+            const input = document.getElementById('urlInput');
+            let val = input.value.trim();
+            if (!val) return;
+            
+            let page = getUrlPage(val);
+            if (page === null) page = 0; // Default start at 0
+            
+            let newPage = page + delta;
+            if (newPage < 0) newPage = 0;
+            
+            const newUrl = setUrlPage(val, newPage);
+            input.value = newUrl;
+            document.getElementById('urlPageInput').value = newPage + 1;
+            
+            // Trigger checkSecretCode just in case (though prox/random won't match)
+            // checkSecretCode(); 
+        }
+
+        function jumpUrlPage(page) {
+            const input = document.getElementById('urlInput');
+            let val = input.value.trim();
+            if (!val) return;
+            
+            let displayPage = parseInt(page, 10);
+            if (isNaN(displayPage) || displayPage < 1) displayPage = 1;
+            
+            let newPage = displayPage - 1;
+            if (newPage < 0) newPage = 0;
+            
+            const newUrl = setUrlPage(val, newPage);
+            input.value = newUrl;
+            document.getElementById('urlPageInput').value = displayPage;
+        }
+
+        // --- Feature 2: Quick Random Image ---
+        async function quickRandomImage() {
+            if (!isGalleryLoaded) {
+                 // Try to load default or currently selected
+                 await loadGalleryData();
+            }
+            
+            if (galleryData.length === 0) {
+                 alert('请先在图库中加载数据！');
+                 openGalleryBrowser(); 
+                 return;
+            }
+            
+            pickRandomImage();
+        }
+
+        // --- Feature 3: API Random Image ---
+        function loadApiImage() {
+            const apiUrl = 'https://img.futa.de5.net/1';
+            // User requested no timestamp
+            const targetUrl = apiUrl;
+            
+            const errorMsg = document.getElementById('errorMsg');
+            const infoMsg = document.getElementById('infoMsg');
+            const imageContainer = document.getElementById('imageContainer');
+            const resultImage = document.getElementById('resultImage');
+            const resultLinkContainer = document.getElementById('resultLinkContainer');
+            const resultLink = document.getElementById('resultLink');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            // Reset UI
+            errorMsg.style.display = 'none';
+            infoMsg.style.display = 'none';
+            imageContainer.style.display = 'block';
+            resultLinkContainer.style.display = 'block';
+            
+            // Show loading state
+            loadingIndicator.style.display = 'block';
+            resultImage.style.display = 'none';
+            
+            // Update Link Display
+            resultLink.textContent = apiUrl;
+            
+            // Reset global vars for download
+            originalUrl = ''; 
+            replacedUrl = targetUrl;
+            
+            // Reset Image Class
+            isOriginalSize = false;
+            resultImage.className = 'scaled-image';
+            
+            // Use existing stream loader (supports progress bar if CORS allows)
+            loadImageWithProgress(targetUrl);
         }
 
         // 初始化页面
