@@ -26,6 +26,8 @@ lastUpdated: true
 1. [ona-prox-prox.futa.de5.net=i.pximg.net](https://prox.futa.de5.net)
 2. [pikpakspeed-p.futa.de5.net/+原链](https://p.futa.de5.net)
 3. [gemini-gemini.futa.de5.net](https://gemiini.futa.de5.net)
+4. [grok-playground-grok.futa.de5.net](https://grok.futa.de5.net)
+5. [cf-rule-random-url-img.futa.de5.net/1](https://img.futa.de5.net/1)
 
 ce725a92-690d-4f9f-af42-0bcba945bac0
 
