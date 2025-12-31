@@ -5,6 +5,510 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Pixiv原图i.pximg.net</title>
     <style>
+        /* Cache Dashboard Floating Button */
+        .cache-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: #6a5acd;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            cursor: pointer;
+            z-index: 999;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .cache-fab:hover { transform: scale(1.1); background: #7b6be0; }
+
+        /* Cache Dashboard Modal */
+        .cache-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .cache-modal-content {
+            background: #2a2a3a;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        .cache-header {
+            padding: 20px;
+            border-bottom: 1px solid #4b0082;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cache-header h2 { margin: 0; color: #b19cd9; }
+        .cache-close {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+        }
+        .cache-body { padding: 20px; overflow-y: auto; flex: 1; }
+        .cache-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #3a3a4a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4b0082;
+            text-align: center;
+        }
+        .stat-val { font-size: 24px; font-weight: bold; color: #e6e6fa; }
+        .stat-label { font-size: 14px; color: #b19cd9; }
+        .cache-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            padding: 0;
+            margin: 0;
+        }
+        .cache-item {
+            display: flex;
+            flex-direction: column;
+            background: #3a3a4a;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #4b0082;
+        }
+        .cache-thumb { width: 100%; height: 100px; object-fit: cover; background: #000; }
+        .cache-info { padding: 8px; font-size: 12px; }
+        .cache-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; color: #add8e6; }
+        .cache-size { color: #888; }
+        .cache-footer {
+            padding: 20px;
+            border-top: 1px solid #4b0082;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .btn-danger { background: #ff4757; }
+        .btn-danger:hover { background: #ff6b81; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Main Dark Theme Styles */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a2e;
+            color: #e6e6fa;
+        }
+        .container {
+            background: #2a2a3a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        h1 { text-align: center; color: #b19cd9; margin-bottom: 30px; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #b19cd9; }
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #4b0082;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #3a3a4a;
+            color: #e6e6fa;
+        }
+        input[type="url"]:focus { border-color: #9370db; outline: none; }
+        select {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #4b0082;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #3a3a4a;
+            color: #e6e6fa;
+            margin-bottom: 10px;
+        }
+        select:focus { border-color: #9370db; outline: none; }
+        .custom-proxy-input { display: none; margin-top: 10px; }
+        button {
+            padding: 12px;
+            font-size: 16px;
+            background-color: #6a5acd;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover { background-color: #9370db; }
+        .button-row { display: flex; gap: 10px; }
+        .button-row button { flex: 1; }
+        .image-container {
+            margin-top: 30px;
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            min-height: 400px;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(2px);
+        }
+        .image-label {
+            background: #4b0082;
+            padding: 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #4b0082;
+            color: #fff;
+        }
+        .image-wrapper {
+            width: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+        }
+        .scaled-image { max-width: 100%; max-height: 600px; object-fit: contain; }
+        .original-image { max-width: none; max-height: none; width: auto; height: auto; }
+        .error {
+            color: #ff6b6b;
+            background: #3a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #ff6b6b;
+        }
+        .info {
+            background: #2a3a4a;
+            color: #add8e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .result-link-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #3a3a4a;
+            border-radius: 6px;
+            border: 1px solid #4b0082;
+        }
+        .result-link-label { font-weight: bold; margin-bottom: 10px; display: block; color: #b19cd9; }
+        .result-link {
+            word-break: break-all;
+            padding: 10px;
+            background: #2a2a3a;
+            border: 1px solid #4b0082;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            color: #e6e6fa;
+        }
+        .result-link:hover { background: #3a3a4a; }
+        .copy-notification {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            background: #6a5acd;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .show-copy-notification { opacity: 1; }
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px;
+            background: #3a3a4a;
+            border-top: 1px solid #4b0082;
+        }
+        .show-original-btn { width: auto; margin-top: 0; }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .secret-settings {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .secret-settings-content {
+            background: #2a2a3a;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .secret-settings h2 { color: #b19cd9; margin-bottom: 20px; text-align: center; }
+        .secret-input-group { margin-bottom: 20px; }
+        .secret-input-group label { display: block; margin-bottom: 8px; color: #b19cd9; }
+        .secret-input-group input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #4b0082;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #3a3a4a;
+            color: #e6e6fa;
+        }
+        .secret-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .secret-buttons button { flex: 1; }
+        .close-secret { background: #ff6b6b !important; }
+        .close-secret:hover { background: #ff5252 !important; }
+
+        .quick-access-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+            display: none;
+        }
+        .quick-access-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 0;
+        }
+        .quick-access-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.6); }
+
+        .details-container {
+            margin-top: 15px;
+            background: #2a2a3a;
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+            padding: 15px;
+            display: none;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+        .detail-item { display: flex; flex-direction: column; }
+        .detail-label { color: #b19cd9; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
+        .detail-value { color: #e6e6fa; word-break: break-all; }
+        .tag-pill {
+            display: inline-block;
+            background: #4b0082;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .function-toggle {
+            display: flex;
+            margin-bottom: 20px;
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .function-toggle button {
+            flex: 1;
+            margin: 0;
+            border-radius: 0;
+            background-color: #3a3a4a;
+        }
+        .function-toggle button.active { background-color: #6a5acd; }
+
+        /* Gallery Layout Styles */
+        .gallery-body { display: flex; gap: 20px; height: 70vh; margin-top: 10px; }
+        .gallery-sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 15px;
+            border-right: 1px solid #4b0082;
+        }
+        .gallery-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .gallery-table-container { flex: 1; overflow: auto; border: 1px solid #4b0082; border-radius: 6px; }
+        .gallery-table { width: 100%; border-collapse: collapse; min-width: 800px; font-size: 14px; }
+        .gallery-table thead { background: #4b0082; color: #fff; position: sticky; top: 0; z-index: 10; }
+        .gallery-table th, .gallery-table td { padding: 10px; }
+        .gallery-table th.th-center { text-align: center; }
+        .gallery-table th.th-left { text-align: left; }
+        .gallery-row { border-bottom: 1px solid #3a3a4a; color: #e6e6fa; }
+        .cell-title { min-width: 280px; max-width: 480px; white-space: normal; word-break: normal; overflow-wrap: break-word; }
+        .cell-desc { min-width: 380px; max-width: 640px; white-space: normal; word-break: normal; overflow-wrap: break-word; }
+        .cell-action { display: flex; gap: 5px; justify-content: center; }
+        .action-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #6a5acd;
+            color: #fff;
+            border: 1px solid #7a6eea;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+        .action-btn:hover { background: #7b6be0; }
+        .cell-tags { display: grid; grid-template-columns: repeat(2, max-content); gap: 6px 10px; align-items: center; }
+        .tag-toggle {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 12px;
+            background: #4b0082;
+            color: #fff;
+            border: 1px solid #7a6eea;
+            border-radius: 14px;
+            margin-left: 6px;
+            vertical-align: middle;
+            align-self: center;
+        }
+        .fill-url-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #6a5acd;
+            color: #fff;
+            border: 1px solid #7a6eea;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+        .fill-url-btn:hover { background: #7b6be0; }
+        .meta-pill { display: inline-block; background: #3a3a4a; color: #e6e6fa; padding: 2px 6px; border-radius: 12px; margin-right: 6px; font-size: 12px; white-space: nowrap; }
+        .cell-meta { white-space: nowrap; }
+        .tag-dropdown { position: relative; }
+        .tag-panel {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 100%;
+            z-index: 20;
+            background: #3a3a4a;
+            border: 1px solid #4b0082;
+            border-radius: 6px;
+            padding: 10px;
+            max-height: 220px;
+            overflow: auto;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .tag-panel.open { display: block; overflow-y: auto; overflow-x: hidden; }
+        .tag-item {
+            display: block;
+            padding: 4px 6px;
+            font-size: 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .tag-item.selected { background: #6a5acd; color: #fff; }
+        .tag-dropdown button { width: 100%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .filters-row { display: flex; gap: 8px; }
+        .filters-row .tag-dropdown { flex: 1; min-width: 0; }
+        .selected-tags-row { display: flex; align-items: center; gap: 10px; }
+        .selected-group { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
+        .selected-label { color: #b19cd9; font-size: 12px; }
+        .selected-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .selected-tags .tag-pill { cursor: pointer; }
+        .thumb-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: #3a3a4a;
+            border: 1px solid #4b0082;
+            color: #e6e6fa;
+            border-radius: 4px;
+        }
+        .pager-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+        .pager-select, .pager-input {
+            padding: 8px 10px;
+            background: #3a3a4a;
+            border: 1px solid #4b0082;
+            color: #e6e6fa;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+        .pager-row select, .pager-row input { width: auto !important; flex: 0 0 auto; }
+        .pager-btn {
+            padding: 8px 12px;
+            background: #6a5acd;
+            color: #fff;
+            border: 1px solid #7a6eea;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+        .pager-btn:hover { background: #7b6be0; }
+        .gallery-table thead th.action-col { position: sticky; left: 0; z-index: 11; background: #4b0082; }
+        .gallery-table tbody td.action-col { position: sticky; left: 0; z-index: 5; background: #2a2a3a; border-right: 1px solid #3a3a4a; }
+        .gallery-sidebar select, .gallery-sidebar input, .gallery-sidebar .input-wrapper { width: 100% !important; box-sizing: border-box; }
+        .gallery-sidebar .filters-row select, .gallery-sidebar .filters-row input { width: auto !important; flex: 0 0 auto; }
+        .gallery-sidebar .filters-row .thumb-option { flex: 0 0 auto; }
+ 
         body {
             font-family: Arial, sans-serif;
             max-width: 900px;
@@ -106,6 +610,20 @@
             border: 1px solid #4b0082;
             border-radius: 6px;
             overflow: hidden;
+            position: relative;
+            min-height: 400px; /* Layout stability */
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(2px);
         }
 
         .image-label {
@@ -719,14 +1237,6 @@
             </div>
         </div>
 
-        <!-- 详细信息展示区 -->
-        <div id="detailsContainer" class="details-container">
-            <h3 style="margin-top: 0; color: #b19cd9; margin-bottom: 10px;">📄 图片详情</h3>
-            <div id="detailsGrid" class="details-grid">
-                <!-- Content will be injected via JS -->
-            </div>
-        </div>
-
         <div id="errorMsg" class="error" style="display: none;"></div>
         <div id="infoMsg" class="info" style="display: none;"></div>
 
@@ -752,6 +1262,14 @@
             </div>
             <div class="button-container">
                 <button id="downloadBtn" class="show-original-btn" onclick="downloadImage()">下载原图</button>
+            </div>
+        </div>
+
+        <!-- 详细信息展示区 -->
+        <div id="detailsContainer" class="details-container">
+            <h3 style="margin-top: 0; color: #b19cd9; margin-bottom: 10px;">📄 图片详情</h3>
+            <div id="detailsGrid" class="details-grid">
+                <!-- Content will be injected via JS -->
             </div>
         </div>
     </div>
@@ -948,6 +1466,40 @@
         </div>
     </div>
 
+    <!-- Cache Dashboard FAB -->
+    <div class="cache-fab" onclick="openCacheDashboard()" title="缓存管理">
+        📊
+    </div>
+
+    <!-- Cache Dashboard Modal -->
+    <div id="cacheModal" class="cache-modal">
+        <div class="cache-modal-content">
+            <div class="cache-header">
+                <h2>缓存管理</h2>
+                <button class="cache-close" onclick="closeCacheDashboard()">×</button>
+            </div>
+            <div class="cache-body">
+                <div class="cache-stats">
+                    <div class="stat-card">
+                        <div class="stat-val" id="cacheCount">0</div>
+                        <div class="stat-label">缓存图片数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="cacheMemory">0 MB</div>
+                        <div class="stat-label">预估占用内存</div>
+                    </div>
+                </div>
+                <div class="cache-grid" id="cacheList">
+                    <!-- Items will be populated here -->
+                </div>
+            </div>
+            <div class="cache-footer">
+                <button class="btn-danger" onclick="clearCache()">清空缓存</button>
+                <button onclick="closeCacheDashboard()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let csvFilesConfig = [];
         let isOriginalSize = false;
@@ -955,6 +1507,221 @@
         let replacedUrl = '';
         let hasAccessedSecret = false; // 标记是否访问过
         let currentFunction = 'static'; // 当前功能：static或Another
+        
+        // --- Image Cache ---
+        // --- Performance & Optimization ---
+        
+        // 1. Image Cache Manager (LRU + Memory Cleanup)
+        class ImageCacheManager {
+            constructor(maxSize = 50) {
+                this.maxSize = maxSize;
+                this.cacheName = 'pximg-cache-v1';
+                this.initCache();
+            }
+
+            async initCache() {
+                if ('caches' in window) {
+                    this.cacheStorage = await caches.open(this.cacheName);
+                }
+            }
+
+            async has(key) { 
+                if (!this.cacheStorage) return false;
+                const match = await this.cacheStorage.match(key);
+                return !!match;
+            }
+
+            async get(key) {
+                if (!this.cacheStorage) return undefined;
+                const response = await this.cacheStorage.match(key);
+                if (response) {
+                    const blob = await response.blob();
+                    return URL.createObjectURL(blob);
+                }
+                return undefined;
+            }
+
+            async set(key, value, size = 0) {
+                // value is blob URL, but Cache API needs Response
+                // We should store the blob directly from fetch response if possible
+                // But here we might receive objectUrl. 
+                // Better approach: store fetch response directly in loadImageWithProgress
+                // This method is kept for compatibility but should be adapted
+                
+                // If we receive a Blob directly (which we should refactor to do)
+                // For now, let's fetch the blob from objectUrl and store it
+                if (!this.cacheStorage) return;
+
+                try {
+                    const blob = await fetch(value).then(r => r.blob());
+                    const response = new Response(blob, {
+                        headers: { 'Content-Type': blob.type }
+                    });
+                    await this.cacheStorage.put(key, response);
+                    
+                    // Manage LRU size manually or rely on browser quota?
+                    // Browser Cache API doesn't have built-in LRU.
+                    // We need to implement manual cleanup if we want strict limit.
+                    this.enforceLimit();
+                    
+                    updateCacheDashboard();
+                } catch (e) {
+                    console.error('Cache set error:', e);
+                }
+            }
+            
+            async enforceLimit() {
+                if (!this.cacheStorage) return;
+                const keys = await this.cacheStorage.keys();
+                if (keys.length > this.maxSize) {
+                    // Delete oldest (first ones)
+                    // Note: keys() order is insertion order in Chrome/Firefox
+                    const toDelete = keys.slice(0, keys.length - this.maxSize);
+                    for (const request of toDelete) {
+                        await this.cacheStorage.delete(request);
+                    }
+                }
+            }
+            
+            async delete(key) {
+                if (this.cacheStorage) {
+                    await this.cacheStorage.delete(key);
+                    updateCacheDashboard();
+                }
+            }
+            
+            async clear() {
+                if (this.cacheStorage) {
+                    const keys = await this.cacheStorage.keys();
+                    for (const request of keys) {
+                        await this.cacheStorage.delete(request);
+                    }
+                }
+                updateCacheDashboard();
+            }
+            
+            async getAll() {
+                if (!this.cacheStorage) return [];
+                const keys = await this.cacheStorage.keys();
+                const items = [];
+                
+                // Reverse to show newest first
+                for (let i = keys.length - 1; i >= 0; i--) {
+                    const request = keys[i];
+                    const response = await this.cacheStorage.match(request);
+                    const blob = await response.blob();
+                    items.push({
+                        key: request.url,
+                        size: blob.size,
+                        blob: blob
+                    });
+                }
+                return items;
+            }
+            
+            async getSize() {
+                if (!this.cacheStorage) return 0;
+                const keys = await this.cacheStorage.keys();
+                let total = 0;
+                for (const req of keys) {
+                    const res = await this.cacheStorage.match(req);
+                    const blob = await res.blob();
+                    total += blob.size;
+                }
+                return total;
+            }
+        }
+
+        const imageCache = new ImageCacheManager(50);
+        let currentFetchController = null; // For cancelling pending requests
+        let lastClickTime = 0; // For throttling
+        
+        // --- Cache Dashboard Functions ---
+        function openCacheDashboard() {
+            updateCacheDashboard();
+            document.getElementById('cacheModal').style.display = 'flex';
+        }
+
+        function closeCacheDashboard() {
+            document.getElementById('cacheModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('cacheModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        async function updateCacheDashboard() {
+            const list = document.getElementById('cacheList');
+            const countEl = document.getElementById('cacheCount');
+            const memEl = document.getElementById('cacheMemory');
+            
+            if (!list) return; // Not ready
+            
+            const items = await imageCache.getAll();
+            const totalSize = await imageCache.getSize();
+            
+            countEl.textContent = items.length;
+            memEl.textContent = (totalSize / 1024 / 1024).toFixed(2) + ' MB';
+            
+            list.innerHTML = '';
+            if (items.length === 0) {
+                list.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#888; padding:20px;">暂无缓存数据</div>';
+                return;
+            }
+            
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'cache-item';
+                
+                const sizeStr = (item.size / 1024).toFixed(1) + ' KB';
+                const objectUrl = URL.createObjectURL(item.blob);
+                
+                div.innerHTML = `
+                    <img src="${objectUrl}" class="cache-thumb" loading="lazy" alt="Cached Image">
+                    <div class="cache-info">
+                        <div class="cache-url" title="${item.key}">${item.key.split('/').pop()}</div>
+                        <div class="cache-size">${sizeStr}</div>
+                        <div style="display:flex; gap:5px; margin-top:5px;">
+                             <button onclick="downloadCacheItem('${item.key}')" style="flex:1; padding:4px; font-size:12px; background:#4b0082; margin:0;">⬇</button>
+                             <button onclick="deleteCacheItem('${item.key}')" style="flex:1; padding:4px; font-size:12px; background:#ff4757; margin:0;">✕</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function deleteCacheItem(key) {
+            await imageCache.delete(key);
+        }
+
+        async function downloadCacheItem(key) {
+            try {
+                const blobUrl = await imageCache.get(key);
+                if (blobUrl) {
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = key.split('/').pop() || 'image.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                }
+            } catch (e) {
+                console.error('Download failed:', e);
+                alert('下载失败');
+            }
+        }
+
+        async function clearCache() {
+            if (confirm('确定要清空所有缓存图片吗？')) {
+                await imageCache.clear();
+            }
+        }
 
         // --- Gallery Browser Variables ---
         let galleryData = [];
@@ -1798,14 +2565,55 @@
             const resultImage = document.getElementById('resultImage');
             const loadingIndicator = document.getElementById('loadingIndicator');
 
-            loadingText.textContent = '正在建立连接...';
+            // 1. Cancel previous request if exists (Fix: Fast switching/duplicate loading)
+            if (currentFetchController) {
+                currentFetchController.abort();
+            }
+            currentFetchController = new AbortController();
+            const signal = currentFetchController.signal;
+
+            // 2. Show Loading Overlay
+            loadingIndicator.className = 'loading-overlay'; 
+            loadingIndicator.style.display = 'flex';
+            
+            loadingText.textContent = '正在准备...';
             progressContainer.style.display = 'block';
             progressStats.style.display = 'block';
             progressBar.style.width = '0%';
             progressStats.textContent = '0%';
 
+            // 3. Check Cache
+            if (await imageCache.has(url)) {
+                console.log('Using cached image for:', url);
+                const blobUrl = await imageCache.get(url);
+                
+                loadingText.textContent = '⚡ 正在从缓存加载...';
+                
+                // Allow UI to update
+                await new Promise(r => requestAnimationFrame(r));
+                
+                if (signal.aborted) return;
+
+                resultImage.onload = function() {
+                    loadingIndicator.style.display = 'none';
+                    resultImage.style.display = 'block';
+                };
+                
+                resultImage.onerror = function() {
+                    // If cache is invalid, remove and retry or fail
+                    // imageCache.cache.delete(url); // Old Map method
+                    loadingIndicator.style.display = 'none';
+                    showError('❌ 缓存读取失败，请刷新重试');
+                };
+
+                resultImage.src = blobUrl;
+                replacedUrl = blobUrl;
+                return;
+            }
+
             try {
-                const response = await fetch(url);
+                loadingText.textContent = '正在建立连接...';
+                const response = await fetch(url, { signal });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -1838,6 +2646,11 @@
                 const blob = new Blob(chunks);
                 const objectUrl = URL.createObjectURL(blob);
                 
+                // Save to Cache
+                await imageCache.set(url, objectUrl, blob.size);
+
+                if (signal.aborted) return;
+
                 resultImage.onload = function() {
                     loadingIndicator.style.display = 'none';
                     resultImage.style.display = 'block';
@@ -1853,6 +2666,11 @@
                 replacedUrl = objectUrl;
 
             } catch (err) {
+                if (err.name === 'AbortError') {
+                    console.log('Fetch aborted: ' + url);
+                    return;
+                }
+                
                 console.error(err);
                 // Fallback for CORS or other fetch errors
                 console.warn('Fetch failed (likely CORS), falling back to direct img src loading...');
@@ -1865,6 +2683,8 @@
                 if (resultImage.src.startsWith('blob:')) {
                     URL.revokeObjectURL(resultImage.src);
                 }
+                
+                if (signal.aborted) return;
 
                 resultImage.onload = function() {
                     loadingIndicator.style.display = 'none';
@@ -1873,11 +2693,68 @@
                 
                 resultImage.onerror = function() {
                     loadingIndicator.style.display = 'none';
-                    showError('❌ 图片加载失败: 无法访问图片资源 (CORS限制且直接加载失败)');
+                    showError('❌ 图片加载失败: ' + err.message);
                 };
                 
                 resultImage.src = url;
                 replacedUrl = url;
+            } finally {
+                 if (currentFetchController && currentFetchController.signal === signal) {
+                     currentFetchController = null;
+                 }
+            }
+        }
+
+        // --- Preload Logic ---
+        async function preloadNextImages(currentUrl) {
+            // Determine current page
+            let currentPage = 0;
+            let baseUrl = currentUrl;
+            let suffix = ''; // e.g. .jpg
+            
+            const pMatch = currentUrl.match(/(_p)(\d+)(\.[a-zA-Z0-9]+)$/);
+            if (pMatch) {
+                // ..._p0.jpg
+                currentPage = parseInt(pMatch[2], 10);
+                baseUrl = currentUrl.substring(0, pMatch.index); // remove _p0.jpg part? No, easier to use setUrlPage logic or rebuild
+            } else {
+                // Maybe just ends with .jpg and no _p? (Usually _p0 is implicit or explicit)
+                // If the url doesn't match standard pattern, we might skip or try to append _p1
+                const extMatch = currentUrl.match(/(\.[a-zA-Z0-9]+)$/);
+                if (extMatch) {
+                   // treat as p0?
+                   // setUrlPage handles this
+                }
+            }
+
+            const preloadCount = 2; // Preload next 2 images
+            
+            for (let i = 1; i <= preloadCount; i++) {
+                const nextPage = currentPage + i;
+                const nextUrl = setUrlPage(currentUrl, nextPage);
+                
+                if (imageCache.has(nextUrl)) {
+                    console.log(`Page ${nextPage} already cached.`);
+                    continue;
+                }
+                
+                console.log(`Preloading page ${nextPage}: ${nextUrl}`);
+                
+                // Fetch in background
+                fetch(nextUrl)
+                    .then(resp => {
+                        if (!resp.ok) throw new Error(resp.status);
+                        return resp.blob();
+                    })
+                    .then(async blob => {
+                        const objectUrl = URL.createObjectURL(blob);
+                        await imageCache.set(nextUrl, objectUrl, blob.size);
+                        console.log(`Preloaded page ${nextPage} success.`);
+                    })
+                    .catch(err => {
+                        // 404 is expected if no more pages
+                        console.log(`Preload page ${nextPage} failed (likely end of gallery):`, err);
+                    });
             }
         }
 
@@ -1895,9 +2772,9 @@
             // 隐藏之前的消息和图片
             errorMsg.style.display = 'none';
             infoMsg.style.display = 'none';
-            imageContainer.style.display = 'none';
+            // imageContainer.style.display = 'none'; // Optimization: Keep container to prevent layout shift
             resultLinkContainer.style.display = 'none';
-            resultImage.style.display = 'none';
+            // resultImage.style.display = 'none'; // Optimization: Keep old image until new one loads (overlay mode)
             loadingIndicator.style.display = 'none';
 
             if (!input) {
@@ -1955,11 +2832,14 @@
                 resultImage.className = 'scaled-image';
                 
                 // 显示加载指示器
-                loadingIndicator.style.display = 'block';
+                // loadingIndicator.style.display = 'block'; // Moved to loadImageWithProgress for better control
                 imageContainer.style.display = 'block';
                 
                 // 使用流式加载
                 loadImageWithProgress(replacedUrl);
+
+                // 触发预加载
+                preloadNextImages(replacedUrl);
 
             } catch (err) {
                 showError('❌ 处理链接时出错：' + err.message);
@@ -2109,6 +2989,11 @@
         }
 
         function changeUrlPage(delta) {
+            // Optimization: Throttle clicks to prevent excessive processing
+            const now = Date.now();
+            if (now - lastClickTime < 300) return; 
+            lastClickTime = now;
+
             const input = document.getElementById('urlInput');
             let val = input.value.trim();
             if (!val) return;
@@ -2125,9 +3010,17 @@
             
             // Trigger checkSecretCode just in case (though prox/random won't match)
             // checkSecretCode(); 
+
+            // Auto load
+            processLink();
         }
 
         function jumpUrlPage(page) {
+            // Optimization: Throttle
+            const now = Date.now();
+            if (now - lastClickTime < 300) return; 
+            lastClickTime = now;
+
             const input = document.getElementById('urlInput');
             let val = input.value.trim();
             if (!val) return;
@@ -2141,6 +3034,9 @@
             const newUrl = setUrlPage(val, newPage);
             input.value = newUrl;
             document.getElementById('urlPageInput').value = displayPage;
+
+            // Auto load
+            processLink();
         }
 
         // --- Feature 2: Quick Random Image ---
@@ -2162,8 +3058,8 @@
         // --- Feature 3: API Random Image ---
         function loadApiImage() {
             const apiUrl = 'https://img.futa.de5.net/1';
-            // User requested no timestamp
-            const targetUrl = apiUrl;
+            // User requested no cache for random API image
+            const targetUrl = apiUrl + '?t=' + Date.now();
             
             const errorMsg = document.getElementById('errorMsg');
             const infoMsg = document.getElementById('infoMsg');
