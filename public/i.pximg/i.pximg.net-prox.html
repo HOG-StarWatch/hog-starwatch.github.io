@@ -3057,9 +3057,17 @@
 
         // --- Feature 3: API Random Image ---
         function loadApiImage() {
-            const apiUrl = 'https://img.futa.de5.net/1';
+            let apiUrl = 'https://img.futa.de5.net/1';
+            
+            // Check if custom proxy input has content, use it as API URL if present
+            const customInput = document.getElementById('customProxyInput');
+            if (customInput && customInput.value.trim() !== '') {
+                apiUrl = customInput.value.trim();
+            }
+
             // User requested no cache for random API image
-            const targetUrl = apiUrl + '?t=' + Date.now();
+            const separator = apiUrl.includes('?') ? '&' : '?';
+            const targetUrl = apiUrl + separator + 't=' + Date.now();
             
             const errorMsg = document.getElementById('errorMsg');
             const infoMsg = document.getElementById('infoMsg');
