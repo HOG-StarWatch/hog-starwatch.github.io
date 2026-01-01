@@ -24,6 +24,7 @@ export default [
         { text: '延迟&测速', link: '../../../ping-speedtest.html', target: '_self', },
         { text: 'RDAP-Whois', link: '../../../RDAP-whois.html', target: '_self', },
         { text: 'Pixiv代理', link: '../../../i.pximg/i.pximg.net-prox.html', target: '_self', },
+        { text: 'HTML混淆', link: '../../../htmlencrypt.html', target: '_self', },
         { text: '图片处理',
           items:[
             { text: '画板&颜色格式转换&取色', link: '../../../drawbroad+color.html', target: '_self', },
