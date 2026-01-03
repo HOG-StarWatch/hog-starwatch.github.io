@@ -13,8 +13,9 @@ lastUpdated: true
 6. [cloud-mail-mail.019425.xyz](https://mail.019425.xyz)
 7. [fileworker-file.019425.xyz](https://file.019425.xyz)
 8. [cloudflare-imgbed-img.019425.xyz](https://img.019425.xyz)
-9. [clawcloud--openlist-openlist.019425.xyz](https://openlist.019425.xyz)
+9. [openlist-worker-openlist.019425.xyz](https://openlist.019425.xyz)
 10. [ona-dop-dnsr.019425.xyz](https://dnsr.019425.xyz)
+11. [Eaglercraft_IR_1.8.8wasm-mc.019425.xyz](https://mc.019425.xyz)
 
 ## cloudemail.ggff.net
 

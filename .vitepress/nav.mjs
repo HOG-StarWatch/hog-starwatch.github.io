@@ -15,6 +15,7 @@ export default [
         { text: 'Windows/Office', link: '../../../MAS/', target: '_self', },
         { text: 'CF', link: '../../../CF/', target: '_self', },
         { text: 'TDL', link: '../../../TDL/', target: '_self', },
+        { text: '巴别图书馆', link: '../../../巴别图书馆.html', target: '_self', },
       ],
     },
     { text: '小工具',
