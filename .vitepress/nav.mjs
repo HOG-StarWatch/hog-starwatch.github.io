@@ -16,6 +16,7 @@ export default [
         { text: 'CF', link: '../../../CF/', target: '_self', },
         { text: 'TDL', link: '../../../TDL/', target: '_self', },
         { text: '巴别图书馆', link: '../../../巴别图书馆.html', target: '_self', },
+        { text: 'Epic Games免费游戏', link: '../../../epic.html', target: '_self', },
       ],
     },
     { text: '小工具',
@@ -28,6 +29,7 @@ export default [
         { text: 'HTML混淆', link: '../../../htmlencrypt.html', target: '_self', },
         { text: '图片处理',
           items:[
+            { text: '图片转Base64格式', link: '../../../imgBase64.html', target: '_self', },
             { text: '画板&颜色格式转换&取色', link: '../../../drawbroad+color.html', target: '_self', },
             { text: '图片像素化', link: '../../../pix.html', target: '_self', },
             { text: '图片混淆加密', link: '../../../ImgUnrecognizable.html', target: '_self', },

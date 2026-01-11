@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Epic免费游戏收集 | 喜加一汇总</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome图标 -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- 配置Tailwind自定义主题 -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#8b5cf6',
+            secondary: '#a78bfa',
+            accent: '#f0abfc',
+            dark: '#1e1b4b',
+            light: '#f5f3ff',
+            background: '#0f172a',
+            card: '#1e293b',
+            text: '#e2e8f0'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .card-hover {
+        @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:shadow-purple-900/30;
+      }
+      .btn-primary {
+        @apply bg-primary text-white px-4 py-2 rounded-lg shadow-md hover:bg-purple-700 transition-all;
+      }
+      .btn-refresh {
+        @apply bg-purple-900/50 text-accent px-3 py-1 rounded-lg shadow-md hover:bg-purple-800/50 transition-all flex items-center gap-2 backdrop-blur-sm;
+      }
+      .card-gradient {
+        @apply bg-gradient-to-br from-card to-purple-900/20;
+      }
+    }
+  </style>
+  <style>
+    /* 自定义滚动条 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #8b5cf6;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a78bfa;
+    }
+    /* 加载动画 */
+    .loader {
+      border-top-color: #8b5cf6;
+      animation: spinner 0.8s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* 图片加载过渡 */
+    .game-image {
+      transition: opacity 0.5s ease;
+    }
+    .game-image.loading {
+      opacity: 0;
+    }
+    .game-image.loaded {
+      opacity: 1;
+    }
+    /* 状态提示条样式 */
+    .alert-success {
+      @apply bg-green-900/30 text-green-300 border border-green-800/50;
+    }
+    .alert-error {
+      @apply bg-red-900/30 text-red-300 border border-red-800/50;
+    }
+    .alert-warning {
+      @apply bg-yellow-900/30 text-yellow-300 border border-yellow-800/50;
+    }
+    .alert-info {
+      @apply bg-blue-900/30 text-blue-300 border border-blue-800/50;
+    }
+  </style>
+</head>
+<body class="font-inter bg-background text-text min-h-screen flex flex-col dark">
+  <!-- 状态提示区 -->
+  <div id="status-alert" class="sticky top-0 z-50 mb-4 p-4 rounded-b-lg hidden backdrop-blur-sm"></div>
+  
+  <!-- 导航栏 -->
+  <header class="bg-card shadow-lg sticky top-0 z-40">
+    <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-2">
+        <i class="fa fa-gamepad text-2xl text-accent"></i>
+        <h1 class="text-xl md:text-2xl font-bold text-white">Epic免费游戏收集</h1>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+        <div class="relative w-full md:w-64">
+          <input 
+            type="text" 
+            id="search-input"
+            placeholder="搜索游戏名称..." 
+            class="w-full pl-10 pr-4 py-2 bg-purple-900/20 border border-purple-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-white placeholder-purple-300/50"
+          >
+          <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-purple-300/50"></i>
+        </div>
+        
+        <button id="refresh-btn" class="btn-refresh">
+          <i class="fa fa-refresh"></i>
+          <span>刷新</span>
+        </button>
+        
+        <span id="last-update" class="text-sm text-purple-300/70">
+          最后更新: 加载中...
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="flex-grow container mx-auto px-4 py-6">
+    <!-- 加载动画 -->
+    <div id="loading" class="flex justify-center items-center py-20">
+      <div class="loader h-12 w-12 rounded-full border-4 border-purple-900/30"></div>
+    </div>
+    
+    <!-- 游戏列表 -->
+    <div id="games-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden">
+      <!-- 游戏卡片将通过JS动态生成 -->
+    </div>
+    
+    <!-- 空状态 -->
+    <div id="empty-state" class="flex flex-col items-center justify-center py-20 hidden">
+      <div class="bg-purple-900/20 p-6 rounded-full mb-4">
+        <i class="fa fa-inbox text-4xl text-purple-400/50"></i>
+      </div>
+      <h3 class="text-xl font-semibold text-text mb-2">暂无免费游戏</h3>
+      <p class="text-purple-300/70 text-center max-w-md">
+        目前没有可领取的免费游戏，或没有找到符合搜索条件的游戏。<br>
+        请稍后再试或尝试其他搜索关键词。
+      </p>
+    </div>
+    
+    <!-- 错误状态 -->
+    <div id="error-state" class="flex flex-col items-center justify-center py-20 hidden">
+      <div class="bg-red-900/20 p-6 rounded-full mb-4">
+        <i class="fa fa-exclamation-circle text-4xl text-red-400"></i>
+      </div>
+      <h3 class="text-xl font-semibold text-text mb-2">数据获取失败</h3>
+      <p class="text-purple-300/70 text-center max-w-md mb-4">
+        无法连接到Epic游戏服务器，请检查网络连接或稍后重试。<br>
+        可能是跨域限制或API暂时不可用。
+      </p>
+      <button id="retry-btn" class="btn-primary flex items-center">
+        <i class="fa fa-refresh mr-1"></i> 重试连接
+      </button>
+      <p class="text-xs text-purple-300/50 mt-4">
+        已自动尝试多个代理地址
+      </p>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-card text-purple-300 py-6 mt-8">
+    <div class="container mx-auto px-4 text-center">
+      <p class="mb-2">数据来源于 Epic Games Store 公开API</p>
+      <p class="text-sm text-purple-400/50">
+        自动更新周期: 30分钟 | 游戏领取请在截止时间前完成
+      </p>
+      <div class="mt-4 flex justify-center gap-4">
+        <a href="https://store.epicgames.com/free-games" target="_blank" class="text-purple-300 hover:text-accent transition-colors">
+          <i class="fa fa-external-link mr-1"></i> 前往Epic官网
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 游戏卡片模板（不显示，仅作为JS克隆用） -->
+  <template id="game-card-template">
+    <div class="game-card card-gradient rounded-xl shadow-lg overflow-hidden card-hover border border-purple-800/30">
+      <!-- 游戏封面图 -->
+      <div class="relative h-48 overflow-hidden">
+        <img class="game-image w-full h-full object-cover loading" alt="游戏封面">
+        <div class="absolute top-2 right-2 bg-gradient-to-r from-primary to-accent text-white text-xs font-bold px-2 py-1 rounded backdrop-blur-sm">
+          免费领取
+        </div>
+        <!-- 图片加载动画 -->
+        <div class="absolute inset-0 flex items-center justify-center bg-purple-900/10 game-image-loading">
+          <div class="loader h-8 w-8 rounded-full border-4 border-primary/30"></div>
+        </div>
+      </div>
+      
+      <!-- 游戏信息 -->
+      <div class="p-4">
+        <h3 class="game-title font-bold text-lg mb-2 line-clamp-1 text-white"></h3>
+        
+        <div class="flex items-center text-accent text-sm mb-3">
+          <i class="fa fa-clock-o mr-1"></i>
+          <span class="game-end-date"></span>
+        </div>
+        
+        <p class="game-description text-purple-200/70 text-sm mb-4 line-clamp-3"></p>
+        
+        <a href="#" class="game-link btn-primary w-full inline-block text-center" target="_blank" rel="noopener noreferrer">
+          <i class="fa fa-gift mr-1"></i> 立即领取
+        </a>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // 全局变量
+    const EPIC_API_URL = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=zh";
+    // 10个备用CORS代理地址
+    const CORS_PROXIES = [
+      "https://api.allorigins.win/get?url=",
+      "https://corsproxy.io/?",
+      "https://cors-anywhere.herokuapp.com/",
+      "https://proxy.cors.sh/",
+      "https://thingproxy.freeboard.io/fetch/",
+      "https://api.codetabs.com/v1/proxy?quest=",
+      "https://cors.eu.org/",
+      "https://yacdn.org/proxy/",
+      "https://www.cors-proxy.com/",
+      "https://crossorigin.me/"
+    ];
+    const CACHE_KEY = "epic_free_games";
+    const CACHE_EXPIRE_MINUTES = 30; // 缓存过期时间（分钟）
+    let gamesData = []; // 存储游戏数据
+    let currentProxyIndex = 0; // 当前使用的代理索引
+    let proxyAttempts = 0; // 代理尝试次数
+
+    // DOM元素
+    const loadingEl = document.getElementById('loading');
+    const gamesContainerEl = document.getElementById('games-container');
+    const emptyStateEl = document.getElementById('empty-state');
+    const errorStateEl = document.getElementById('error-state');
+    const refreshBtnEl = document.getElementById('refresh-btn');
+    const searchInputEl = document.getElementById('search-input');
+    const lastUpdateEl = document.getElementById('last-update');
+    const statusAlertEl = document.getElementById('status-alert');
+    const gameCardTemplate = document.getElementById('game-card-template');
+    const retryBtnEl = document.getElementById('retry-btn');
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      // 加载缓存数据
+      loadCachedGames();
+      
+      // 绑定事件
+      refreshBtnEl.addEventListener('click', refreshGames);
+      searchInputEl.addEventListener('input', filterGames);
+      retryBtnEl.addEventListener('click', retryAllProxies);
+      
+      // 自动刷新
+      setInterval(refreshGames, CACHE_EXPIRE_MINUTES * 60 * 1000);
+      
+      // 预请求代理
+      preflightProxy();
+    });
+
+    /**
+     * 加载缓存数据
+     */
+    async function loadCachedGames() {
+      try {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+          const { games, timestamp } = JSON.parse(cachedData);
+          const now = new Date().getTime();
+          
+          // 检查缓存是否过期
+          if (now - timestamp < CACHE_EXPIRE_MINUTES * 60 * 1000) {
+            gamesData = games;
+            renderGames(games);
+            updateLastUpdate(timestamp);
+            showAlert('success', `已加载缓存数据 (${games.length} 款游戏)`);
+            return;
+          }
+        }
+        
+        // 缓存过期或无缓存，获取新数据
+        await fetchGamesWithProxy();
+      } catch (error) {
+        console.error('加载缓存失败:', error);
+        await fetchGamesWithProxy();
+      }
+    }
+
+    /**
+     * 使用CORS代理获取游戏数据
+     */
+    async function fetchGamesWithProxy() {
+      showLoading();
+      proxyAttempts = 0;
+      let success = false;
+      
+      try {
+        // 尝试所有代理地址
+        for (let i = 0; i < CORS_PROXIES.length; i++) {
+          const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
+          const proxyUrl = CORS_PROXIES[proxyIndex];
+          let apiUrl;
+          
+          proxyAttempts++;
+          
+          // 处理不同代理的URL格式
+          if (proxyUrl.includes("allorigins") || proxyUrl.includes("corsproxy") || proxyUrl.includes("codetabs")) {
+            apiUrl = `${proxyUrl}${encodeURIComponent(EPIC_API_URL)}`;
+          } else if (proxyUrl.includes("proxy?quest=") || proxyUrl.includes("cors.eu.org")) {
+            apiUrl = `${proxyUrl}${EPIC_API_URL}`;
+          } else {
+            apiUrl = `${proxyUrl}${EPIC_API_URL}`;
+          }
+          
+          showAlert('info', `尝试使用代理 ${proxyIndex + 1}/${CORS_PROXIES.length}...`);
+          
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            
+            const response = await fetch(apiUrl, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              },
+              signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+            
+            let data;
+            // 处理不同代理的响应格式
+            if (proxyUrl.includes("allorigins")) {
+              const result = await response.json();
+              data = JSON.parse(result.contents);
+            } else if (proxyUrl.includes("corsproxy")) {
+              const result = await response.json();
+              data = result;
+            } else {
+              data = await response.json();
+            }
+            
+            const elements = data?.data?.Catalog?.searchStore?.elements || [];
+            
+            // 过滤和处理游戏数据
+            const freeGames = processGameData(elements);
+            gamesData = freeGames;
+            
+            // 缓存数据
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+              games: freeGames,
+              timestamp: new Date().getTime()
+            }));
+            
+            // 更新当前使用的代理索引（下次优先使用成功的代理）
+            currentProxyIndex = proxyIndex;
+            
+            renderGames(freeGames);
+            updateLastUpdate(new Date().getTime());
+            showAlert('success', `成功获取 ${freeGames.length} 款免费游戏 (使用代理 ${proxyIndex + 1})`);
+            success = true;
+            break; // 成功后退出循环
+          } catch (proxyError) {
+            console.error(`代理 ${proxyIndex + 1} 失败:`, proxyError);
+            showAlert('warning', `代理 ${proxyIndex + 1} 失败，尝试下一个...`);
+          }
+        }
+        
+        if (!success) {
+          throw new Error("所有代理地址都无法连接");
+        }
+      } catch (error) {
+        console.error('获取游戏数据失败:', error);
+        showAlert('error', '获取游戏数据失败，请检查网络连接或稍后重试');
+        
+        // 如果有缓存数据，使用缓存
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+          const { games, timestamp } = JSON.parse(cachedData);
+          gamesData = games;
+          renderGames(games);
+          updateLastUpdate(timestamp);
+          showAlert('warning', '已加载缓存数据，可能不是最新的');
+        } else {
+          // 无缓存，显示错误状态
+          showErrorState();
+        }
+      } finally {
+        hideLoading();
+      }
+    }
+
+    /**
+     * 重试所有代理
+     */
+    async function retryAllProxies() {
+      showLoading();
+      await fetchGamesWithProxy();
+    }
+
+    /**
+     * 处理游戏数据（过滤、格式化）
+     */
+    function processGameData(elements) {
+      const freeGames = [];
+      
+      elements.forEach(game => {
+        const promotions = game?.promotions;
+        if (!promotions || !promotions?.promotionalOffers || promotions?.promotionalOffers.length === 0) {
+          return;
+        }
+        
+        // 检查是否有免费优惠
+        let isFree = false;
+        let endDateStr = "未知";
+        
+        promotions.promotionalOffers.forEach(offerGroup => {
+          offerGroup.promotionalOffers.forEach(offer => {
+            if (offer.discountSetting.discountPercentage === 0) {
+              isFree = true;
+              
+              // 格式化截止时间
+              if (offer.endDate) {
+                try {
+                  const dtEnd = new Date(offer.endDate.split('.')[0]);
+                  const now = new Date();
+                  const diffDays = Math.floor((dtEnd - now) / (1000 * 60 * 60 * 24));
+                  const diffHours = Math.floor((dtEnd - now) / (1000 * 60 * 60));
+                  
+                  if (diffDays > 0) {
+                    endDateStr = `${diffDays}天后截止`;
+                  } else if (diffHours > 0) {
+                    endDateStr = `${diffHours}小时后截止`;
+                  } else {
+                    endDateStr = "即将截止";
+                  }
+                } catch (e) {
+                  endDateStr = offer.endDate;
+                }
+              }
+            }
+          });
+        });
+        
+        if (isFree) {
+          // 获取游戏链接
+          const slug = game.productSlug || game.urlSlug;
+          const link = slug ? `https://store.epicgames.com/p/${slug}` : "https://store.epicgames.com/free-games";
+          
+          // 获取游戏图片
+          let imageUrl = "";
+          game.keyImages?.forEach(img => {
+            if ((img.type === 'Thumbnail' || img.type === 'OfferImageWide') && !imageUrl) {
+              imageUrl = img.url;
+            }
+          });
+          
+          freeGames.push({
+            title: game.title || "未知游戏",
+            description: game.description || "暂无描述",
+            link: link,
+            image: imageUrl,
+            endDate: endDateStr,
+            originalData: game
+          });
+        }
+      });
+      
+      // 按截止时间排序（最近到期的在前）
+      return freeGames.sort((a, b) => {
+        try {
+          const dateA = new Date(a.originalData?.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]?.endDate || 0);
+          const dateB = new Date(b.originalData?.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]?.endDate || 0);
+          return dateA - dateB;
+        } catch (e) {
+          return 0;
+        }
+      });
+    }
+
+    /**
+     * 渲染游戏列表
+     */
+    function renderGames(games) {
+      gamesContainerEl.innerHTML = '';
+      
+      if (games.length === 0) {
+        showEmptyState();
+        return;
+      }
+      
+      games.forEach(game => {
+        const card = gameCardTemplate.content.cloneNode(true);
+        
+        // 获取卡片元素
+        const cardEl = card.querySelector('.game-card');
+        const imgEl = card.querySelector('.game-image');
+        const loadingEl = card.querySelector('.game-image-loading');
+        
+        // 设置卡片数据
+        if (game.image) {
+          imgEl.src = game.image;
+          imgEl.alt = game.title;
+          
+          // 图片加载事件处理
+          imgEl.onload = () => {
+            imgEl.classList.remove('loading');
+            imgEl.classList.add('loaded');
+            if (loadingEl) loadingEl.style.display = 'none';
+          };
+          
+          imgEl.onerror = () => {
+            imgEl.src = 'https://via.placeholder.com/400x225/1e293b/8b5cf6?text=图片加载失败';
+            imgEl.classList.remove('loading');
+            imgEl.classList.add('loaded');
+            if (loadingEl) loadingEl.style.display = 'none';
+          };
+        } else {
+          imgEl.src = 'https://via.placeholder.com/400x225/1e293b/8b5cf6?text=暂无图片';
+          imgEl.classList.remove('loading');
+          imgEl.classList.add('loaded');
+          if (loadingEl) loadingEl.style.display = 'none';
+        }
+        
+        card.querySelector('.game-title').textContent = game.title;
+        card.querySelector('.game-end-date').textContent = `截止: ${game.endDate}`;
+        card.querySelector('.game-description').textContent = game.description;
+        
+        const linkEl = card.querySelector('.game-link');
+        linkEl.href = game.link;
+        linkEl.target = "_blank";
+        linkEl.rel = "noopener noreferrer";
+        
+        gamesContainerEl.appendChild(card);
+      });
+      
+      gamesContainerEl.classList.remove('hidden');
+      emptyStateEl.classList.add('hidden');
+      errorStateEl.classList.add('hidden');
+    }
+
+    /**
+     * 过滤游戏（搜索功能）
+     */
+    function filterGames() {
+      const searchTerm = searchInputEl.value.trim().toLowerCase();
+      
+      if (!searchTerm) {
+        renderGames(gamesData);
+        return;
+      }
+      
+      const filteredGames = gamesData.filter(game => 
+        game.title.toLowerCase().includes(searchTerm) || 
+        game.description.toLowerCase().includes(searchTerm)
+      );
+      
+      renderGames(filteredGames);
+      
+      if (filteredGames.length === 0) {
+        showAlert('warning', `未找到包含"${searchTerm}"的游戏`);
+        showEmptyState();
+      } else {
+        hideAlert();
+      }
+    }
+
+    /**
+     * 刷新游戏数据
+     */
+    async function refreshGames() {
+      refreshBtnEl.disabled = true;
+      refreshBtnEl.innerHTML = '<i class="fa fa-refresh fa-spin"></i><span>刷新中...</span>';
+      
+      try {
+        await fetchGamesWithProxy();
+      } finally {
+        refreshBtnEl.disabled = false;
+        refreshBtnEl.innerHTML = '<i class="fa fa-refresh"></i><span>刷新</span>';
+      }
+    }
+
+    /**
+     * 更新最后更新时间显示
+     */
+    function updateLastUpdate(timestamp) {
+      const date = new Date(timestamp);
+      const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      lastUpdateEl.textContent = `最后更新: ${formattedDate}`;
+    }
+
+    /**
+     * 显示加载状态
+     */
+    function showLoading() {
+      loadingEl.classList.remove('hidden');
+      gamesContainerEl.classList.add('hidden');
+      emptyStateEl.classList.add('hidden');
+      errorStateEl.classList.add('hidden');
+      hideAlert();
+    }
+
+    /**
+     * 隐藏加载状态
+     */
+    function hideLoading() {
+      loadingEl.classList.add('hidden');
+    }
+
+    /**
+     * 显示空状态
+     */
+    function showEmptyState() {
+      emptyStateEl.classList.remove('hidden');
+      gamesContainerEl.classList.add('hidden');
+      errorStateEl.classList.add('hidden');
+    }
+
+    /**
+     * 显示错误状态
+     */
+    function showErrorState() {
+      errorStateEl.classList.remove('hidden');
+      gamesContainerEl.classList.add('hidden');
+      emptyStateEl.classList.add('hidden');
+    }
+
+    /**
+     * 显示状态提示
+     */
+    function showAlert(type, message) {
+      const typeClasses = {
+        success: 'alert-success',
+        error: 'alert-error',
+        warning: 'alert-warning',
+        info: 'alert-info'
+      };
+      
+      statusAlertEl.className = `sticky top-0 z-50 mb-4 p-4 rounded-b-lg ${typeClasses[type]} backdrop-blur-sm`;
+      statusAlertEl.innerHTML = `
+        <div class="flex items-center">
+          <i class="fa ${getAlertIcon(type)} mr-2"></i>
+          <span>${message}</span>
+        </div>
+      `;
+      statusAlertEl.classList.remove('hidden');
+      
+      // 自动隐藏信息提示（错误提示不自动隐藏）
+      if (type !== 'error') {
+        setTimeout(hideAlert, 5000);
+      }
+    }
+
+    /**
+     * 获取提示图标
+     */
+    function getAlertIcon(type) {
+      const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+      };
+      return icons[type] || 'fa-info-circle';
+    }
+
+    /**
+     * 隐藏提示
+     */
+    function hideAlert() {
+      statusAlertEl.classList.add('hidden');
+    }
+
+    /**
+     * 代理预请求
+     */
+    async function preflightProxy() {
+      try {
+        // 尝试访问一个简单的代理测试
+        await fetch('https://api.allorigins.win/get?url=https://example.com', {
+          method: 'GET',
+          timeout: 3000
+        }).catch(() => {});
+        console.log('代理预请求完成');
+      } catch (e) {
+        console.log('代理预请求失败:', e);
+      }
+    }
+  </script>
+</body>
+</html>

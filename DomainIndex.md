@@ -16,6 +16,7 @@ lastUpdated: true
 9. [openlist-worker-openlist.019425.xyz](https://openlist.019425.xyz)
 10. [ona-dop-dnsr.019425.xyz](https://dnsr.019425.xyz)
 11. [Eaglercraft_IR_1.8.8wasm-mc.019425.xyz](https://mc.019425.xyz)
+12. [Slug-slug.019425.xyz](https://slug.019425.xyz)
 
 ## cloudemail.ggff.net
 
