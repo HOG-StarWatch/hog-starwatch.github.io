@@ -17,6 +17,7 @@ export default [
         { text: 'TDL', link: '../../../TDL/', target: '_self', },
         { text: '巴别图书馆', link: '../../../巴别图书馆.html', target: '_self', },
         { text: 'Epic Games免费游戏', link: '../../../epic.html', target: '_self', },
+        { text: '排序算法可视化', link: '../../../sorting_visualizer.html', target: '_self', },
       ],
     },
     { text: '小工具',
