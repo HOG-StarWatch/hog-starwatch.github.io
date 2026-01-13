@@ -35,6 +35,8 @@ export default [
         { text: 'RDAP-Whois', link: '../../../RDAP-whois.html', target: '_self', },
         { text: 'Pixiv代理', link: '../../../i.pximg/i.pximg.net-prox.html', target: '_self', },
         { text: 'HTML混淆', link: '../../../htmlencrypt.html', target: '_self', },
+        { text: 'Base64储存文件', link: '../../../Base64.html', target: '_self', },
+        { text: 'Base64强制转文件', link: '../../../Base642file.html', target: '_self', },
         { text: '图片处理',
           items:[
             { text: '图片转Base64格式', link: '../../../imgBase64.html', target: '_self', },

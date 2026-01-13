@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Base64转文件下载</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h3>Base64转文件下载</h3>
+    
+    <div>
+        <label>文件名：</label>
+        <input type="text" id="filename" placeholder="输入文件名" value="download">
+    </div>
+    
+    <div style="margin: 10px 0;">
+        <label>文件类型：</label>
+        <select id="filetype">
+            <option value="application/octet-stream">通用二进制</option>
+            <option value="image/png">PNG图片</option>
+            <option value="image/jpeg">JPEG图片</option>
+            <option value="application/pdf">PDF文档</option>
+            <option value="text/plain">文本文件</option>
+            <option value="application/zip">ZIP压缩包</option>
+        </select>
+    </div>
+    
+    <div>
+        <textarea id="base64Input" rows="10" cols="80" placeholder="粘贴Base64编码数据（不需要data:前缀）"></textarea>
+    </div>
+    
+    <div style="margin: 10px 0;">
+        <button onclick="downloadFromBase64()">下载文件</button>
+        <button onclick="clearInput()">清空</button>
+    </div>
+    
+    <div id="status" style="color: green; margin: 10px 0;"></div>
+    
+    <script>
+        function base64ToBlob(base64, mimeType) {
+            // 移除可能的data:前缀
+            const base64Data = base64.replace(/^data:[^;]+;base64,/, '');
+            
+            try {
+                // 解码Base64字符串
+                const byteCharacters = atob(base64Data);
+                const byteArrays = [];
+                
+                // 分片处理，避免内存问题
+                const sliceSize = 512;
+                for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                    const slice = byteCharacters.slice(offset, offset + sliceSize);
+                    const byteNumbers = new Array(slice.length);
+                    
+                    for (let i = 0; i < slice.length; i++) {
+                        byteNumbers[i] = slice.charCodeAt(i);
+                    }
+                    
+                    byteArrays.push(new Uint8Array(byteNumbers));
+                }
+                
+                return new Blob(byteArrays, { type: mimeType });
+            } catch (error) {
+                showStatus('Base64解码失败：' + error.message, 'red');
+                return null;
+            }
+        }
+        
+        function downloadFromBase64() {
+            const base64 = document.getElementById('base64Input').value.trim();
+            const filename = document.getElementById('filename').value.trim() || 'download';
+            const mimeType = document.getElementById('filetype').value;
+            
+            if (!base64) {
+                showStatus('请输入Base64编码数据', 'red');
+                return;
+            }
+            
+            const blob = base64ToBlob(base64, mimeType);
+            if (!blob) return;
+            
+            // 创建下载链接
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            // 根据文件类型添加扩展名
+            let finalFilename = filename;
+            if (!filename.includes('.')) {
+                const extMap = {
+                    'image/png': '.png',
+                    'image/jpeg': '.jpg',
+                    'application/pdf': '.pdf',
+                    'text/plain': '.txt',
+                    'application/zip': '.zip'
+                };
+                if (extMap[mimeType]) {
+                    finalFilename += extMap[mimeType];
+                }
+            }
+            
+            a.download = finalFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // 释放URL对象
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+            
+            showStatus('文件下载成功: ' + finalFilename + ' (' + formatFileSize(blob.size) + ')', 'green');
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function showStatus(message, color) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.style.color = color || 'green';
+            
+            // 3秒后清除状态
+            setTimeout(() => {
+                if (statusEl.textContent === message) {
+                    statusEl.textContent = '';
+                }
+            }, 3000);
+        }
+        
+        function clearInput() {
+            document.getElementById('base64Input').value = '';
+            document.getElementById('status').textContent = '';
+        }
+        
+        // 示例：当点击文本域时显示示例数据
+        document.getElementById('base64Input').addEventListener('click', function() {
+            if (!this.value) {
+                this.placeholder = '示例：iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg== （这是一个1x1像素的PNG图片）';
+            }
+        });
+    </script>
+</body>
+</html>

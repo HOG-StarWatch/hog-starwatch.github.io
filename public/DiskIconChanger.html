@@ -150,7 +150,7 @@
             color: var(--muted);
             margin-top: 6px;
         }
-        #icon-preview {
+        .icon-preview {
             max-width: 64px;
             max-height: 64px;
             margin-top: 10px;
@@ -201,6 +201,35 @@
         /* Ensure horizontal scrollbar aligns flush with container */
         .preview-container { padding-bottom: 0; }
         #code-preview { display: block; }
+        .tabs {
+            display: block;
+        }
+        .tab-nav {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .tab-btn {
+            background-color: #221a44;
+            border: 1px solid var(--panel-border);
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            border-color: #7c3aed;
+        }
+        .tab-content {
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            background-color: rgba(20, 17, 40, 0.7);
+            padding: 12px;
+        }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
         .tips {
             font-size: 13px;
             color: var(--muted);
@@ -255,78 +284,93 @@
     </div>
 
     <div class="layout">
-        <!-- Left Panel: Inputs & Actions -->
+        <!-- Left Panel: Tabs -->
         <div class="left-panel">
-            
-            <!-- Global Settings -->
-            <div class="section">
-                <h2>配置参数</h2>
-                <div class="form-group">
-                    <label for="drive-letter">选择磁盘盘符:</label>
-                    <select id="drive-letter">
-                        <option value="C">C:</option>
-                        <option value="D">D:</option>
-                        <option value="E">E:</option>
-                        <option value="F">F:</option>
-                        <option value="G">G:</option>
-                        <option value="H">H:</option>
-                        <option value="I">I:</option>
-                        <option value="J">J:</option>
-                        <option value="K">K:</option>
-                        <option value="L">L:</option>
-                        <option value="M">M:</option>
-                        <option value="N">N:</option>
-                        <option value="O">O:</option>
-                        <option value="P">P:</option>
-                        <option value="Q">Q:</option>
-                        <option value="R">R:</option>
-                        <option value="S">S:</option>
-                        <option value="T">T:</option>
-                        <option value="U">U:</option>
-                        <option value="V">V:</option>
-                        <option value="W">W:</option>
-                        <option value="X">X:</option>
-                        <option value="Y">Y:</option>
-                        <option value="Z">Z:</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>选择图标 (.ico):</label>
-                    <!-- File input for embedding -->
-                    <input type="file" id="icon-file" accept=".ico" onchange="handleFileSelect()">
-                    <img id="icon-preview" alt="Icon Preview">
-                    <div class="note">选择文件可生成内嵌图标的 CMD/Python 脚本 (无需手动输入路径)。</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="icon-path-manual">或者输入图标路径:</label>
-                    <input type="text" id="icon-path-manual" placeholder="例如: C:\Users\Name\icon.ico">
-                    <div class="note">如果要生成 .reg 文件，必须填写此项。</div>
-                </div>
-            </div>
-
-            <!-- Actions -->
             <div class="section">
                 <h2>生成脚本</h2>
-                <div class="note" style="margin-bottom: 10px;">点击下方按钮生成代码 可在右侧预览代码，偏下方“下载脚本”按钮，注意CMD脚本请以管理员身份运行。</div>
-                
-                <label>安装图标:</label>
-                <div class="btn-group" style="margin-bottom: 15px;">
-                    <button class="btn-reg" onclick="previewReg()">.reg</button>
-                    <button class="btn-py" onclick="previewPy()">.py</button>
-                    <button class="btn-cmd" onclick="previewCmd()">.cmd</button>
-                </div>
-
-                <label>U盘/移动硬盘 (Autorun.inf):</label>
-                <div class="btn-group" style="margin-bottom: 15px;">
-                    <button class="btn-cmd" onclick="previewInfCmd()">生成 .cmd</button>
-                </div>
-
-                <label>还原与修复:</label>
-                <div class="btn-group">
-                    <button class="btn-reset" onclick="previewReset()">还原单盘 (.cmd)</button>
-                    <button class="btn-fix" onclick="previewFix()">修复网络驱动器 (.reg)</button>
+                <div class="note" style="margin-bottom: 10px;">请选择服务</div>
+                <div class="tabs">
+                    <div class="tab-nav">
+                        <button class="tab-btn" onclick="switchTab('reg')">安装图标 .reg</button>
+                        <button class="tab-btn" onclick="switchTab('py')">安装图标 .py</button>
+                        <button class="tab-btn active" onclick="switchTab('cmd')">安装图标 .cmd</button>
+                        <button class="tab-btn" onclick="switchTab('inf')">U/移动盘 inf 安装</button>
+                        <button class="tab-btn" onclick="switchTab('repair')">还原与修复</button>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane" id="tab-reg">
+                            <div class="form-group">
+                                <label for="drive-letter-reg">选择磁盘盘符:</label>
+                                <select id="drive-letter-reg"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="icon-path-manual-reg">输入图标路径:</label>
+                                <input type="text" id="icon-path-manual-reg" placeholder="例如: C:\Users\Name\icon.ico">
+                                <div class="note">生成 .reg 必须填写图标路径。</div>
+                            </div>
+                            <div class="btn-group" style="grid-template-columns: 1fr;">
+                                <button class="btn-reg" onclick="previewReg()">生成 .reg</button>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-py">
+                            <div class="form-group">
+                                <label for="drive-letter-py">选择磁盘盘符:</label>
+                                <select id="drive-letter-py"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>选择图标 (.ico):</label>
+                                <input type="file" id="icon-file-py" accept=".ico" onchange="handleFileSelect(this, 'py')">
+                                <img id="icon-preview-py" class="icon-preview" alt="Icon Preview">
+                                <div class="note">生成 Python 脚本需选择图标文件以嵌入。</div>
+                            </div>
+                            <div class="btn-group" style="grid-template-columns: 1fr;">
+                                <button class="btn-py" onclick="previewPy()">生成 .py</button>
+                            </div>
+                        </div>
+                        <div class="tab-pane active" id="tab-cmd">
+                            <div class="form-group">
+                                <label for="drive-letter-cmd">选择磁盘盘符:</label>
+                                <select id="drive-letter-cmd"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>选择图标 (.ico) 或输入路径:</label>
+                                <input type="file" id="icon-file-cmd" accept=".ico" onchange="handleFileSelect(this, 'cmd')">
+                                <img id="icon-preview-cmd" class="icon-preview" alt="Icon Preview">
+                                <input type="text" id="icon-path-manual-cmd" placeholder="例如: C:\Users\Name\icon.ico" style="margin-top:8px;">
+                                <div class="note">优先使用内嵌图标，其次复制路径图标。</div>
+                                <div class="note"><strong>请以管理员身份运行</strong></div>
+                            </div>
+                            <div class="btn-group" style="grid-template-columns: 1fr;">
+                                <button class="btn-cmd" onclick="previewCmd()">生成 .cmd</button>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-inf">
+                            <div class="form-group">
+                                <label for="drive-letter-inf">选择磁盘盘符:</label>
+                                <select id="drive-letter-inf"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>选择图标 (.ico) 或输入路径:</label>
+                                <input type="file" id="icon-file-inf" accept=".ico" onchange="handleFileSelect(this, 'inf')">
+                                <img id="icon-preview-inf" class="icon-preview" alt="Icon Preview">
+                                <input type="text" id="icon-path-manual-inf" placeholder="例如: C:\Users\Name\icon.ico" style="margin-top:8px;">
+                                <div class="note">U盘/移动硬盘使用 autorun.inf 设置图标。</div>
+                            </div>
+                            <div class="btn-group" style="grid-template-columns: 1fr;">
+                                <button class="btn-cmd" onclick="previewInfCmd()">生成 .cmd</button>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-repair">
+                            <div class="form-group">
+                                <label for="drive-letter-reset">选择磁盘盘符:</label>
+                                <select id="drive-letter-reset"></select>
+                            </div>
+                            <div class="btn-group" style="grid-template-columns: repeat(2, 1fr);">
+                                <button class="btn-reset" onclick="previewReset()">还原单盘 (.cmd)</button>
+                                <button class="btn-fix" onclick="previewFix()">修复网络驱动器 (.reg)</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -348,24 +392,46 @@
 <script>
     let currentFileContent = "";
     let currentFileName = "";
-    let selectedFileBase64 = null;
-    let selectedFileName = "icon.ico";
+    let activeTab = "cmd";
+    const selectedFileData = { reg: null, py: null, cmd: null, inf: null };
+    const DRIVE_LETTERS = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ').slice(2);
+    function populateDriveSelects() {
+        ['reg','py','cmd','inf','reset'].forEach(k => {
+            const el = document.getElementById(`drive-letter-${k}`);
+            if (!el) return;
+            el.innerHTML = DRIVE_LETTERS.map(l => `<option value="${l}">${l}:</option>`).join('');
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', populateDriveSelects);
+    } else {
+        populateDriveSelects();
+    }
 
-    function handleFileSelect() {
-        const fileInput = document.getElementById('icon-file');
-        const file = fileInput.files[0];
+    function switchTab(tab) {
+        activeTab = tab;
+        const panes = document.querySelectorAll('.tab-pane');
+        panes.forEach(p => p.classList.remove('active'));
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(b => b.classList.remove('active'));
+        const pane = document.getElementById(`tab-${tab}`);
+        const btn = Array.from(btns).find(b => b.textContent.includes(tab === 'inf' ? 'inf' : tab === 'repair' ? '还原' : tab));
+        if (pane) pane.classList.add('active');
+        if (btn) btn.classList.add('active');
+    }
+
+    function handleFileSelect(el, tab) {
+        const file = el.files[0];
         if (file) {
-            selectedFileName = file.name;
             const reader = new FileReader();
             reader.onload = function(e) {
-                selectedFileBase64 = e.target.result.split(',')[1]; // Remove data:image/x-icon;base64, prefix
-                // Show preview
-                const img = document.getElementById('icon-preview');
-                img.src = e.target.result;
-                img.style.display = 'block';
-                
-                // Clear manual path to avoid confusion, or keep it?
-                // document.getElementById('icon-path-manual').value = ""; 
+                const base64 = e.target.result.split(',')[1];
+                selectedFileData[tab] = { base64: base64, name: file.name, src: e.target.result };
+                const img = document.getElementById(`icon-preview-${tab}`);
+                if (img) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -400,18 +466,19 @@
         URL.revokeObjectURL(url);
     }
 
-    function getDrive() { return document.getElementById('drive-letter').value; }
+    function getDrive(tab) {
+        if (tab === 'repair') return document.getElementById('drive-letter-reset').value;
+        return document.getElementById(`drive-letter-${tab}`).value;
+    }
     
-    function getIconPath() {
-        return document.getElementById('icon-path-manual').value.trim();
+    function getIconPath(tab) {
+        const el = document.getElementById(`icon-path-manual-${tab}`);
+        return el ? el.value.trim() : "";
     }
 
-    // --- Generators ---
-
-    // 1. REG Preview
     function previewReg() {
-        const drive = getDrive();
-        const iconPath = getIconPath();
+        const drive = getDrive('reg');
+        const iconPath = getIconPath('reg');
 
         if (!iconPath) {
             alert("生成 .reg 文件需要手动填写【图标路径】！");
@@ -427,15 +494,13 @@
         updatePreview(`Install_Icon_${drive}.reg`, content);
     }
 
-    // 2. CMD Preview (Smart: Embedded or Copy, English messages)
     function previewCmd() {
-        const drive = getDrive();
-        const iconPath = getIconPath();
+        const drive = getDrive('cmd');
+        const iconPath = getIconPath('cmd');
+        const fileData = selectedFileData.cmd;
         
-        // Mode 1: Embedded Base64 (Preferred if file selected)
-        if (selectedFileBase64) {
-            // Split into 64-char lines to mimic PEM format (stable for certutil)
-            const chunks = selectedFileBase64.match(/.{1,64}/g);
+        if (fileData && fileData.base64) {
+            const chunks = fileData.base64.match(/.{1,64}/g);
             let echoLines = "";
             chunks.forEach(chunk => {
                 echoLines += `echo ${chunk}>>temp.b64\n`;
@@ -446,7 +511,7 @@ setlocal
 echo Installing drive icon (Drive: ${drive}) [Embedded mode]...
 
 set "TARGET_DIR=C:\\Windows\\_XizoDiskIconChanger\\icon"
-set "TARGET_ICON=%TARGET_DIR%\\${selectedFileName}"
+set "TARGET_ICON=%TARGET_DIR%\\${fileData.name}"
 set "DRIVE=${drive}"
 
 if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
@@ -486,7 +551,6 @@ pause
             return;
         }
 
-        // Mode 2: Path Copy (Fallback)
         if (iconPath) {
             const content = `@echo off
 setlocal
@@ -532,11 +596,11 @@ pause
         alert("Please select an icon file or enter an icon path first!");
     }
 
-    // 3. Python Preview (sanitize Base64 to remove newlines/whitespace)
     function previewPy() {
-        const drive = getDrive();
+        const drive = getDrive('py');
+        const fileData = selectedFileData.py;
         
-        if (!selectedFileBase64) {
+        if (!fileData || !fileData.base64) {
             alert("Select an icon file first to generate embedded Python script!");
             return;
         }
@@ -550,9 +614,9 @@ import re
 
 # Configuration
 DRIVE_LETTER = "${drive}"
-ICON_NAME = "${selectedFileName}"
+ICON_NAME = "${fileData.name}"
 # Embedded Base64 icon data (may contain newlines)
-ICON_DATA = b"""${selectedFileBase64}"""
+ICON_DATA = b"""${fileData.base64}"""
 
 def is_admin():
     try:
@@ -612,14 +676,13 @@ if __name__ == "__main__":
         updatePreview(`Install_Icon_${drive}.py`, content);
     }
 
-    // 4. INF CMD Preview (English, PEM headers for certutil)
     function previewInfCmd() {
-        const drive = getDrive();
-        const iconPath = getIconPath();
+        const drive = getDrive('inf');
+        const iconPath = getIconPath('inf');
+        const fileData = selectedFileData.inf;
         
-        // Similar logic: Embed or Copy
-        if (selectedFileBase64) {
-             const chunks = selectedFileBase64.match(/.{1,64}/g);
+        if (fileData && fileData.base64) {
+             const chunks = fileData.base64.match(/.{1,64}/g);
             let echoLines = "";
             chunks.forEach(chunk => {
                 echoLines += `echo ${chunk}>>temp.b64\n`;
@@ -713,9 +776,8 @@ pause
         alert("Please select an icon file or enter an icon path first!");
     }
 
-    // 5. Reset Preview (English)
     function previewReset() {
-        const drive = getDrive();
+        const drive = getDrive('repair');
         const content = `@echo off
 echo Resetting drive ${drive} icon...
 
@@ -741,7 +803,6 @@ pause
         updatePreview(`Reset_Icon_${drive}.cmd`, content);
     }
 
-    // 6. Fix Preview
     function previewFix() {
         const content = `Windows Registry Editor Version 5.00
 
@@ -760,9 +821,9 @@ pause
             <p>图片格式支持 <strong>ico、png、jpg、bmp、tif</strong> 等常用格式，建议图片格式为 <strong>ico</strong>，比例为 <strong>1:1</strong>，分辨率 <strong>大于 48×48</strong>。</p>
             <p>程序会在 <strong>C:\Windows\_XizoDiskIconChanger</strong> 下创建文件夹，其中保存程序配置和所有图标文件，用于防止 Windows 图标缓存丢失。</p>
             <p>正常情况这些缓存文件会在重置时移除，无需手动清理。</p>
-            <p><strong>.cmd 嵌入模式：</strong>脚本内置图标数据，无需依赖本地图标文件路径，因此可直接分享/备份使用；运行后会自动释放图标并写入注册表。</p>
+            <p><strong>.cmd/.py 嵌入模式：</strong>脚本内置图标数据，无需依赖本地图标文件路径，因此可直接分享/备份使用；运行后会自动释放图标并写入注册表。</p>
             <p><strong>.cmd</strong>脚本可能遇到设置新图标不成功的问题，请检查<strong>C:\Windows\_XizoDiskIconChanger\icon</strong>路径下是否存在重名文件，此问题是因为出于安全考虑脚本不会替换已存在文件导致图标释放失败</p>
-            <p><strong>.cmd</strong>脚本下载后可能无法运行，<strong>Windows 安全中心</strong>弹窗提示:<strong>你的 Internet 安全设置阻止打开一个或多个文件。</strong> 遇到这个问题请<strong>右键</strong>文件，选择<strong>属性</strong>，然后勾选<strong>常规</strong>标签页的<strong>安全：此文件来自其他计算机，可能被阻止以帮助保护该计算机</strong>的复选框<strong>解除锁定(K)</strong>。</p>
+            <p><strong>.cmd</strong>脚本下载后可能无法运行，<strong>Windows 安全中心</strong>弹窗提示:<strong>你的 Internet 安全设置阻止打开一个或多个文件。</strong> 遇到这个问题请<strong>右键</strong>脚本，打开<strong>属性</strong>，然后勾选<strong>常规</strong>标签页下<strong>安全：此文件来自其他计算机，可能被阻止以帮助保护该计算机</strong>的复选框<strong>解除锁定(K)</strong>。</p>
         </div>
     </div>
 </div>

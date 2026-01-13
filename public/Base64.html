@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>文件转文本与还原工具</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0f1220;color:#e6e6ea;margin:0}
+.container{max-width:980px;margin:0 auto;padding:24px}
+h1{font-size:22px;margin:0 0 16px}
+section{background:#151836;border:1px solid #262a4b;border-radius:12px;padding:16px;margin-bottom:18px}
+h2{font-size:18px;margin:0 0 12px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+input[type="file"]{padding:6px 8px;border:1px solid #3b3f62;border-radius:10px;background:#0f1220;color:#e6e6ea}
+button{background:#4c6fff;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer}
+button[disabled]{opacity:.5;cursor:not-allowed}
+textarea{width:100%;min-height:180px;background:#0f1220;color:#cfd2ff;border:1px solid #3b3f62;border-radius:12px;padding:10px}
+.actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.small{font-size:12px;color:#9aa0d0}
+ul#restoreResults{list-style:none;margin:12px 0 0;padding:0}
+ul#restoreResults li{display:flex;align-items:center;justify-content:space-between;background:#0f1220;border:1px solid #262a4b;border-radius:10px;padding:10px;margin-bottom:8px}
+.filemeta{display:flex;gap:10px;flex-wrap:wrap}
+.badge{display:inline-block;background:#262a4b;color:#cfd2ff;border-radius:999px;padding:2px 8px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>文件转文本与还原</h1>
+
+  <section>
+    <h2>转换为文本</h2>
+    <div class="row">
+      <input type="file" id="fileInput" multiple>
+      <select id="compressionSelect">
+        <option value="none">无压缩</option>
+        <option value="gzip">gzip</option>
+        <option value="deflate">deflate</option>
+      </select>
+      <button id="encodeBtn">生成文本</button>
+    </div>
+    <div class="small">选择一个或多个文件，生成可存储的文本(JSON)。压缩使用浏览器原生能力。</div>
+    <textarea id="outputText" placeholder="生成的文本(JSON)"></textarea>
+    <div class="actions">
+      <button id="downloadTextBtn" disabled>下载文本</button>
+      <button id="copyTextBtn" disabled>复制文本</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>从文本还原</h2>
+    <div class="row">
+      <input type="file" id="textFileInput" accept=".json,.txt">
+      <button id="loadTextFileBtn">读取文本文件</button>
+    </div>
+    <div class="small">可直接粘贴文本到下方或选择文本文件。</div>
+    <textarea id="restoreText" placeholder="粘贴或加载文本(JSON)"></textarea>
+    <div class="actions">
+      <button id="restoreBtn">解析并生成下载</button>
+    </div>
+    <ul id="restoreResults"></ul>
+  </section>
+</div>
+<script>
+const fileInput=document.getElementById('fileInput');
+const encodeBtn=document.getElementById('encodeBtn');
+const compressionSelect=document.getElementById('compressionSelect');
+const outputText=document.getElementById('outputText');
+const downloadTextBtn=document.getElementById('downloadTextBtn');
+const copyTextBtn=document.getElementById('copyTextBtn');
+const textFileInput=document.getElementById('textFileInput');
+const loadTextFileBtn=document.getElementById('loadTextFileBtn');
+const restoreText=document.getElementById('restoreText');
+const restoreBtn=document.getElementById('restoreBtn');
+const restoreResults=document.getElementById('restoreResults');
+
+function bytesToBase64(bytes){
+  let binary='';
+  const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk){
+    const sub=bytes.subarray(i,Math.min(i+chunk,bytes.length));
+    binary+=String.fromCharCode.apply(null,sub);
+  }
+  return btoa(binary);
+}
+
+function base64ToBytes(b64){
+  const bin=atob(b64);
+  const len=bin.length;
+  const bytes=new Uint8Array(len);
+  for(let i=0;i<len;i++)bytes[i]=bin.charCodeAt(i);
+  return bytes;
+}
+
+function extOf(name){
+  const i=name.lastIndexOf('.');
+  return i>=0?name.slice(i+1):'';
+}
+
+function supportsCompression(){
+  return typeof CompressionStream!=='undefined'&&typeof DecompressionStream!=='undefined';
+}
+
+async function bytesToBase64ViaBlob(bytes){
+  const blob=new Blob([bytes]);
+  return await new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const url=String(reader.result||'');
+      const i=url.indexOf(',');
+      resolve(i>=0?url.slice(i+1):url);
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function streamToUint8Array(stream){
+  const reader=stream.getReader();
+  const chunks=[];
+  let total=0;
+  while(true){
+    const {done,value}=await reader.read();
+    if(done)break;
+    chunks.push(value);
+    total+=value.byteLength;
+  }
+  const out=new Uint8Array(total);
+  let offset=0;
+  for(const c of chunks){
+    out.set(c,offset);
+    offset+=c.byteLength;
+  }
+  return out;
+}
+
+async function compressBytes(bytes,fmt){
+  const blob=new Blob([bytes]);
+  const cs=new CompressionStream(fmt);
+  const stream=blob.stream().pipeThrough(cs);
+  return await streamToUint8Array(stream);
+}
+
+async function encodeFiles(files){
+  const list=[];
+  const reqFmt=String(compressionSelect.value||'none');
+  const canCompress=supportsCompression();
+  for(const file of files){
+    const buf=await file.arrayBuffer();
+    const raw=new Uint8Array(buf);
+    let usedFmt='none';
+    let payloadBytes=raw;
+    if(reqFmt!=='none'&&canCompress){
+      usedFmt=reqFmt;
+      payloadBytes=await compressBytes(raw,reqFmt);
+    }
+    list.push({
+      name:file.name,
+      extension:extOf(file.name),
+      type:file.type||'',
+      size:file.size,
+      lastModified:file.lastModified||Date.now(),
+      encoding:'base64',
+      compression:usedFmt,
+      compressedSize:payloadBytes.length,
+      data:await bytesToBase64ViaBlob(payloadBytes)
+    });
+  }
+  const payload={
+    version:'1.1',
+    createdAt:new Date().toISOString(),
+    compressionSupported:supportsCompression(),
+    files:list
+  };
+  const text=JSON.stringify(payload,null,2);
+  outputText.value=text;
+  downloadTextBtn.disabled=false;
+  copyTextBtn.disabled=false;
+}
+
+function base64ToBlob(b64,type){
+  const bytes=base64ToBytes(b64);
+  return new Blob([bytes],{type:type||''});
+}
+
+function downloadBlob(blob,filename){
+  const a=document.createElement('a');
+  const url=URL.createObjectURL(blob);
+  a.href=url;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),0);
+}
+
+encodeBtn.addEventListener('click',async()=>{
+  const files=fileInput.files;
+  if(!files||files.length===0){
+    alert('请先选择文件');
+    return;
+  }
+  encodeBtn.disabled=true;
+  try{
+    await encodeFiles(files);
+  }catch(e){
+    alert('生成失败：'+(e&&e.message?e.message:e));
+  }finally{
+    encodeBtn.disabled=false;
+  }
+});
+
+downloadTextBtn.addEventListener('click',()=>{
+  const text=outputText.value.trim();
+  if(!text){alert('没有可下载的文本');return;}
+  const blob=new Blob([text],{type:'application/json;charset=utf-8'});
+  const name='filebundle_'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';
+  downloadBlob(blob,name);
+});
+
+copyTextBtn.addEventListener('click',async()=>{
+  const text=outputText.value.trim();
+  if(!text){alert('没有可复制的文本');return;}
+  try{
+    await navigator.clipboard.writeText(text);
+    copyTextBtn.textContent='已复制';
+    setTimeout(()=>copyTextBtn.textContent='复制文本',1200);
+  }catch(e){
+    alert('复制失败：'+(e&&e.message?e.message:e));
+  }
+});
+
+loadTextFileBtn.addEventListener('click',async()=>{
+  const f=textFileInput.files&&textFileInput.files[0];
+  if(!f){alert('请选择文本文件');return;}
+  loadTextFileBtn.disabled=true;
+  try{
+    const t=await f.text();
+    restoreText.value=t;
+  }catch(e){
+    alert('读取失败：'+(e&&e.message?e.message:e));
+  }finally{
+    loadTextFileBtn.disabled=false;
+  }
+});
+
+async function decompressBytes(bytes,fmt){
+  const blob=new Blob([bytes]);
+  const ds=new DecompressionStream(fmt);
+  const stream=blob.stream().pipeThrough(ds);
+  return await streamToUint8Array(stream);
+}
+
+restoreBtn.addEventListener('click',async()=>{
+  restoreResults.innerHTML='';
+  const text=restoreText.value.trim();
+  if(!text){alert('请粘贴或加载文本');return;}
+  let obj;
+  try{
+    obj=JSON.parse(text);
+  }catch(e){
+    alert('文本不是有效的JSON');
+    return;
+  }
+  if(!obj||!Array.isArray(obj.files)||obj.files.length===0){
+    alert('未发现可还原的文件数据');
+    return;
+  }
+  for(const f of obj.files){
+    if(!f||!f.data||f.encoding!=='base64'){
+      continue;
+    }
+    const bytes=base64ToBytes(f.data);
+    let outBytes=bytes;
+    const fmt=f.compression||'none';
+    if(fmt!=='none'){
+      if(!supportsCompression()){
+        alert('当前浏览器不支持解压：'+fmt);
+        continue;
+      }
+      try{
+        outBytes=await decompressBytes(bytes,fmt);
+      }catch(e){
+        alert('解压失败：'+fmt);
+        continue;
+      }
+    }
+    const blob=new Blob([outBytes],{type:f.type||''});
+    const filename=f.name||('restored'+(f.extension?('.'+f.extension):''));
+    const li=document.createElement('li');
+    const left=document.createElement('div');
+    left.className='filemeta';
+    const n=document.createElement('span');
+    n.className='badge';
+    n.textContent=filename;
+    left.appendChild(n);
+    if(f.type){
+      const t=document.createElement('span');
+      t.className='badge';
+      t.textContent=f.type;
+      left.appendChild(t);
+    }
+    const s=document.createElement('span');
+    s.className='badge';
+    s.textContent=(f.size||outBytes.length)+' bytes';
+    left.appendChild(s);
+    if(f.compression&&f.compression!=='none'){
+      const c=document.createElement('span');
+      c.className='badge';
+      c.textContent=f.compression+' '+(f.compressedSize||bytes.length)+'B';
+      left.appendChild(c);
+    }
+    li.appendChild(left);
+    const btn=document.createElement('button');
+    btn.textContent='下载';
+    btn.addEventListener('click',()=>downloadBlob(blob,filename));
+    li.appendChild(btn);
+    restoreResults.appendChild(li);
+  }
+});
+</script>
+</body>
+</html>
+
