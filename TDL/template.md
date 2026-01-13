@@ -36,7 +36,7 @@
 
 ### 示例：
 
-```go-template
+```
 {{ .DialogID }}_{{ .MessageID }}_{{ replace .FileCaption `/` `_` `\` `_` `:` `_` }}
 
 {{ .FileName }}_{{ formatDate .DownloadDate }}_{{ .FileSize }}
@@ -50,6 +50,6 @@
 
 ### 默认：
 
-```go-template
+```
 {{ .DialogID }}_{{ .MessageID }}_{{ filenamify .FileName }}
 ```

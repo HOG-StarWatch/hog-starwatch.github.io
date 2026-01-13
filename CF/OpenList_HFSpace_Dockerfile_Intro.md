@@ -22,7 +22,7 @@ VOLUME /opt/openlist/data
 
 ## 注意：需要在README文件中添加一行
 
-```README
+```
 app_port: 5244
 ```
 

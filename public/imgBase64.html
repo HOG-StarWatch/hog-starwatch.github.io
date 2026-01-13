@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base64图片转换工具</title>
+    <title>Base64图片双向转换工具</title>
     <style>
+        /* 所有CSS样式保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -143,7 +144,6 @@
 
         textarea {
             width: 100%;
-            height: 200px;
             padding: 15px;
             border: 1px solid #444;
             border-radius: 8px;
@@ -241,6 +241,17 @@
         .btn-tertiary:hover {
             background: linear-gradient(45deg, #7209b7, #560bad);
             box-shadow: 0 5px 20px rgba(114, 9, 183, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #00c853, #00e676);
+            color: white;
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(45deg, #00e676, #00c853);
+            box-shadow: 0 5px 20px rgba(0, 230, 118, 0.4);
         }
 
         .format-options {
@@ -361,6 +372,112 @@
             transform: translateY(0);
         }
 
+        /* 新增：Base64输入区域样式 */
+        .base64-input-container {
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        .base64-input-container label {
+            display: block;
+            margin-bottom: 8px;
+            color: #bb86fc;
+            font-weight: 600;
+        }
+        
+        .base64-input-container textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+        }
+        
+        .base64-input-container .hint {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        
+        /* 新增：Base64解码预览区域样式 */
+        .decode-preview {
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        #decodeImagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            margin-bottom: 15px;
+            border: 2px solid rgba(187, 134, 252, 0.2);
+        }
+        
+        .decode-info {
+            background: rgba(40, 40, 60, 0.6);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            border: 1px solid rgba(187, 134, 252, 0.1);
+        }
+        
+        .decode-info p {
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        
+        .decode-info strong {
+            color: #bb86fc;
+        }
+        
+        /* 新增：转换方向切换样式 */
+        .conversion-mode {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(40, 40, 60, 0.6);
+            border: 1px solid rgba(187, 134, 252, 0.1);
+        }
+        
+        .conversion-mode button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #b0b0b0;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .conversion-mode button.active {
+            background: linear-gradient(45deg, #6200ea, #9d4edd);
+            color: white;
+        }
+        
+        .conversion-mode button:hover:not(.active) {
+            background: rgba(187, 134, 252, 0.1);
+        }
+        
+        /* 新增：面板内容区域 */
+        .panel-content {
+            display: block;
+        }
+        
+        /* 新增：下载按钮样式 */
+        .download-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
         /* 滚动条样式 */
         ::-webkit-scrollbar {
             width: 10px;
@@ -407,32 +524,97 @@
         .glow-effect:hover::after {
             opacity: 0.3;
         }
+        
+        /* 新增：错误信息样式 */
+        .error-message {
+            color: #ff6b6b;
+            background: rgba(207, 102, 121, 0.1);
+            border: 1px solid rgba(207, 102, 121, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        /* 新增：手动解码按钮样式 */
+        .decode-btn {
+            margin-top: 10px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Base64图片转换工具</h1>
-            <p class="subtitle">上传图片，转换为Base64编码，并导出可直接插入HTML的格式</p>
+            <h1>Base64图片双向转换工具</h1>
+            <p class="subtitle">支持图片转Base64编码和Base64解码为图片</p>
         </header>
 
         <div class="main-content">
             <div class="panel">
-                <h2>上传图片</h2>
-                <div class="upload-area glow-effect" id="uploadArea">
-                    <div class="icon">📁</div>
-                    <p>点击选择图片或拖拽图片到此处</p>
-                    <p>支持 JPG, PNG, GIF, SVG, WebP 格式</p>
-                    <input type="file" id="fileInput" accept="image/*">
+                <div class="conversion-mode">
+                    <button id="toBase64Btn" class="active">图片转Base64</button>
+                    <button id="toImageBtn">Base64转图片</button>
                 </div>
+                
+                <!-- 图片转Base64面板 -->
+                <div id="toBase64Panel" class="panel-content">
+                    <h2>上传图片</h2>
+                    <div class="upload-area glow-effect" id="uploadArea">
+                        <div class="icon">📁</div>
+                        <p>点击选择图片或拖拽图片到此处</p>
+                        <p>支持 JPG, PNG, GIF, SVG, WebP 格式</p>
+                        <input type="file" id="fileInput" accept="image/*">
+                    </div>
 
-                <div class="preview-container" id="previewContainer" style="display: none;">
-                    <img id="imagePreview" src="" alt="图片预览">
-                    <div class="file-info">
-                        <p><strong>文件名:</strong> <span id="fileName"></span></p>
-                        <p><strong>文件大小:</strong> <span id="fileSize"></span></p>
-                        <p><strong>图片尺寸:</strong> <span id="imageDimensions"></span></p>
-                        <p><strong>MIME类型:</strong> <span id="fileType"></span></p>
+                    <div class="preview-container" id="previewContainer" style="display: none;">
+                        <img id="imagePreview" src="" alt="图片预览">
+                        <div class="file-info">
+                            <p><strong>文件名:</strong> <span id="fileName"></span></p>
+                            <p><strong>文件大小:</strong> <span id="fileSize"></span></p>
+                            <p><strong>图片尺寸:</strong> <span id="imageDimensions"></span></p>
+                            <p><strong>MIME类型:</strong> <span id="fileType"></span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Base64转图片面板 -->
+                <div id="toImagePanel" class="panel-content" style="display: none;">
+                    <h2>输入Base64编码</h2>
+                    <div class="base64-input-container">
+                        <label for="base64Input">Base64编码字符串：</label>
+                        <textarea id="base64Input" placeholder="粘贴Base64编码字符串或data URI..."></textarea>
+                        <div class="error-message" id="base64Error"></div>
+                        <div class="hint">提示：可以粘贴完整的data URI（如data:image/png;base64,xxx）或纯Base64编码</div>
+                        <button class="btn btn-primary decode-btn" id="decodeBtn">
+                            <span class="icon">🔍</span> 解码Base64
+                        </button>
+                    </div>
+                    
+                    <div class="decode-preview" id="decodePreviewContainer">
+                        <img id="decodeImagePreview" src="" alt="解码图片预览">
+                        <div class="decode-info">
+                            <p><strong>解码状态:</strong> <span id="decodeStatus"></span></p>
+                            <p><strong>图片格式:</strong> <span id="decodeFormat"></span></p>
+                            <p><strong>数据长度:</strong> <span id="decodeLength"></span> 字符</p>
+                            <p><strong>文件大小:</strong> <span id="decodeFileSize"></span></p>
+                        </div>
+                        <div class="download-actions">
+                            <button class="btn btn-success btn-small" id="downloadImageBtn">
+                                <span class="icon">💾</span> 下载图片
+                            </button>
+                            <button class="btn btn-tertiary btn-small" id="copyBase64Btn">
+                                <span class="icon">📋</span> 复制Base64
+                            </button>
+                            <button class="btn btn-tertiary btn-small" id="clearBase64Btn">
+                                <span class="icon">🗑️</span> 清除
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="loading" id="decodeLoading">
+                        <div class="spinner"></div>
+                        <p>正在解码中，请稍候...</p>
                     </div>
                 </div>
 
@@ -486,20 +668,20 @@
             <h3>使用说明</h3>
             <div class="steps">
                 <div class="step">
-                    <h4>1. 上传图片</h4>
-                    <p>点击上传区域或拖拽图片文件到指定区域。支持常见图片格式。</p>
+                    <h4>1. 选择转换方向</h4>
+                    <p>选择"图片转Base64"或"Base64转图片"模式。</p>
                 </div>
                 <div class="step">
-                    <h4>2. 选择输出格式</h4>
-                    <p>选择你需要的Base64输出格式：完整格式、原始编码、CSS或HTML格式。</p>
+                    <h4>2. 上传或输入</h4>
+                    <p>上传图片文件或粘贴Base64编码字符串。</p>
                 </div>
                 <div class="step">
-                    <h4>3. 复制或导出</h4>
-                    <p>复制Base64代码直接使用，或导出为HTML/CSS文件方便后续使用。</p>
+                    <h4>3. 验证和解码</h4>
+                    <p>点击"解码Base64"按钮验证并解码图片。</p>
                 </div>
                 <div class="step">
-                    <h4>4. 在项目中使用</h4>
-                    <p>将生成的代码插入到你的HTML或CSS文件中，减少HTTP请求。</p>
+                    <h4>4. 复制或下载</h4>
+                    <p>复制Base64代码或下载解码后的图片文件。</p>
                 </div>
             </div>
         </div>
@@ -521,6 +703,25 @@
         const loading = document.getElementById('loading');
         const toast = document.getElementById('toast');
         const formatRadios = document.querySelectorAll('input[name="format"]');
+        
+        // 新增DOM元素
+        const toBase64Btn = document.getElementById('toBase64Btn');
+        const toImageBtn = document.getElementById('toImageBtn');
+        const toBase64Panel = document.getElementById('toBase64Panel');
+        const toImagePanel = document.getElementById('toImagePanel');
+        const base64Input = document.getElementById('base64Input');
+        const decodePreviewContainer = document.getElementById('decodePreviewContainer');
+        const decodeImagePreview = document.getElementById('decodeImagePreview');
+        const decodeLoading = document.getElementById('decodeLoading');
+        const downloadImageBtn = document.getElementById('downloadImageBtn');
+        const clearBase64Btn = document.getElementById('clearBase64Btn');
+        const copyBase64Btn = document.getElementById('copyBase64Btn');
+        const decodeBtn = document.getElementById('decodeBtn');
+        const base64Error = document.getElementById('base64Error');
+        const decodeStatus = document.getElementById('decodeStatus');
+        const decodeFormat = document.getElementById('decodeFormat');
+        const decodeLength = document.getElementById('decodeLength');
+        const decodeFileSize = document.getElementById('decodeFileSize');
 
         // 文件信息元素
         const fileName = document.getElementById('fileName');
@@ -532,6 +733,12 @@
         let currentImageData = null;
         let currentFileName = '';
         let currentMimeType = '';
+        
+        // Base64解码相关变量
+        let decodedImageData = null;
+        let decodedMimeType = '';
+        let decodedFileName = 'decoded-image';
+        let originalBase64String = '';
 
         // 显示提示消息
         function showToast(message, type = 'success') {
@@ -548,6 +755,17 @@
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            base64Error.textContent = message;
+            base64Error.style.display = 'block';
+        }
+
+        // 隐藏错误信息
+        function hideError() {
+            base64Error.style.display = 'none';
         }
 
         // 格式化文件大小
@@ -570,6 +788,85 @@
                 'image/webp': 'data:image/webp;base64,'
             };
             return mimeMap[mimeType] || 'data:image;base64,';
+        }
+
+        // 验证Base64字符串
+        function validateBase64(base64String) {
+            // 清除空白字符
+            const cleanString = base64String.trim();
+            
+            if (!cleanString) {
+                return { valid: false, error: '请输入Base64编码字符串' };
+            }
+            
+            // 检查是否为完整的data URI
+            if (cleanString.startsWith('data:image/')) {
+                const matches = cleanString.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+                if (!matches || matches.length !== 3) {
+                    return { valid: false, error: '无效的data URI格式。格式应为: data:image/格式;base64,编码' };
+                }
+                
+                const mimeType = matches[1];
+                const base64Data = matches[2];
+                
+                // 验证Base64数据
+                if (!isValidBase64(base64Data)) {
+                    return { valid: false, error: 'Base64数据格式不正确' };
+                }
+                
+                return { 
+                    valid: true, 
+                    mimeType, 
+                    base64Data,
+                    isDataURI: true,
+                    original: cleanString
+                };
+            } else {
+                // 纯Base64字符串
+                if (!isValidBase64(cleanString)) {
+                    return { valid: false, error: '无效的Base64编码字符串' };
+                }
+                
+                // 尝试检测MIME类型
+                let mimeType = 'image/png'; // 默认
+                if (cleanString.charAt(0) === '/') {
+                    mimeType = 'image/jpeg';
+                } else if (cleanString.charAt(0) === 'i') {
+                    mimeType = 'image/png';
+                } else if (cleanString.startsWith('R0lGOD')) {
+                    mimeType = 'image/gif';
+                } else if (cleanString.startsWith('UklGR')) {
+                    mimeType = 'image/webp';
+                }
+                
+                return { 
+                    valid: true, 
+                    mimeType, 
+                    base64Data: cleanString,
+                    isDataURI: false,
+                    original: cleanString
+                };
+            }
+        }
+
+        // 检查是否为有效的Base64字符串
+        function isValidBase64(str) {
+            try {
+                // 移除可能的换行符和空格
+                const cleanStr = str.replace(/\s/g, '');
+                
+                // Base64正则表达式
+                const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+                if (!base64Regex.test(cleanStr)) {
+                    return false;
+                }
+                
+                // 尝试解码
+                const decoded = atob(cleanStr);
+                return true;
+            } catch (e) {
+                return false;
+            }
         }
 
         // 转换图片为Base64
@@ -826,6 +1123,158 @@
             }
         }
 
+        // Base64转图片功能
+        async function decodeBase64ToImage() {
+            const base64String = base64Input.value.trim();
+            
+            // 隐藏之前的错误
+            hideError();
+            
+            // 验证输入
+            const validation = validateBase64(base64String);
+            if (!validation.valid) {
+                showError(validation.error);
+                showToast('请输入有效的Base64编码', 'error');
+                return;
+            }
+            
+            // 显示加载状态
+            decodeLoading.style.display = 'block';
+            decodePreviewContainer.style.display = 'none';
+            
+            try {
+                const { mimeType, base64Data, isDataURI, original } = validation;
+                originalBase64String = original;
+                
+                // 解码Base64
+                const binaryString = atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                // 创建Blob对象
+                const blob = new Blob([bytes], { type: mimeType });
+                const objectUrl = URL.createObjectURL(blob);
+                
+                // 预览图片
+                decodeImagePreview.src = objectUrl;
+                
+                // 获取图片信息
+                await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = function() {
+                        // 生成文件名
+                        const extension = mimeType.split('/')[1] || 'png';
+                        decodedFileName = `decoded-image-${Date.now()}.${extension}`;
+                        decodedMimeType = mimeType;
+                        decodedImageData = objectUrl;
+                        
+                        // 更新解码信息
+                        decodeStatus.textContent = '解码成功';
+                        decodeFormat.textContent = mimeType;
+                        decodeLength.textContent = base64Data.length;
+                        decodeFileSize.textContent = formatFileSize(bytes.length);
+                        
+                        resolve();
+                    };
+                    img.onerror = () => {
+                        reject(new Error('图片加载失败，可能不是有效的图片数据'));
+                    };
+                    img.src = objectUrl;
+                });
+                
+                // 显示预览
+                decodePreviewContainer.style.display = 'block';
+                showToast('Base64解码成功！');
+                
+            } catch (error) {
+                console.error('解码错误:', error);
+                showError('解码失败: ' + (error.message || '未知错误'));
+                showToast('解码失败，请检查Base64编码', 'error');
+                decodeStatus.textContent = '解码失败';
+                decodeFormat.textContent = '未知';
+                decodeLength.textContent = '0';
+                decodeFileSize.textContent = '0 Bytes';
+            } finally {
+                // 隐藏加载状态
+                decodeLoading.style.display = 'none';
+            }
+        }
+
+        // 下载解码后的图片
+        function downloadDecodedImage() {
+            if (!decodedImageData) {
+                showToast('没有可下载的图片', 'error');
+                return;
+            }
+            
+            try {
+                const a = document.createElement('a');
+                a.href = decodedImageData;
+                a.download = decodedFileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showToast('图片下载成功');
+            } catch (error) {
+                console.error('下载失败:', error);
+                showToast('下载失败: ' + error.message, 'error');
+            }
+        }
+
+        // 复制原始Base64字符串
+        async function copyOriginalBase64() {
+            if (!originalBase64String) {
+                showToast('没有可复制的Base64编码', 'error');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(originalBase64String);
+                showToast('Base64编码已复制到剪贴板');
+            } catch (err) {
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = originalBase64String;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('Base64编码已复制到剪贴板');
+            }
+        }
+
+        // 切换转换模式
+        function switchConversionMode(mode) {
+            if (mode === 'toBase64') {
+                toBase64Btn.classList.add('active');
+                toImageBtn.classList.remove('active');
+                toBase64Panel.style.display = 'block';
+                toImagePanel.style.display = 'none';
+                // 清除Base64输入区域
+                base64Input.value = '';
+                hideError();
+                decodePreviewContainer.style.display = 'none';
+            } else {
+                toBase64Btn.classList.remove('active');
+                toImageBtn.classList.add('active');
+                toBase64Panel.style.display = 'none';
+                toImagePanel.style.display = 'block';
+                // 清除文件上传区域
+                previewContainer.style.display = 'none';
+                fileInput.value = '';
+            }
+        }
+
+        // 清除Base64输入
+        function clearBase64Input() {
+            base64Input.value = '';
+            hideError();
+            decodePreviewContainer.style.display = 'none';
+            showToast('已清除输入', 'warning');
+        }
+
         // 事件监听器
         uploadArea.addEventListener('click', () => {
             fileInput.click();
@@ -866,10 +1315,32 @@
         exportHtmlBtn.addEventListener('click', exportHtml);
         exportCssBtn.addEventListener('click', exportCss);
         resetBtn.addEventListener('click', resetAll);
+        
+        // 新增事件监听器
+        toBase64Btn.addEventListener('click', () => switchConversionMode('toBase64'));
+        toImageBtn.addEventListener('click', () => switchConversionMode('toImage'));
+        
+        // 解码按钮事件
+        decodeBtn.addEventListener('click', decodeBase64ToImage);
+        
+        // Base64输入区域回车解码
+        base64Input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                decodeBase64ToImage();
+            }
+        });
+        
+        downloadImageBtn.addEventListener('click', downloadDecodedImage);
+        copyBase64Btn.addEventListener('click', copyOriginalBase64);
+        clearBase64Btn.addEventListener('click', clearBase64Input);
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
-            showToast('欢迎使用Base64图片转换工具！请上传图片开始转换。');
+            showToast('欢迎使用Base64图片双向转换工具！');
+            
+            // 示例Base64编码
+            const exampleBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+            base64Input.placeholder = `粘贴Base64编码字符串或data URI...\n\n示例：\n${exampleBase64}`;
         });
     </script>
 </body>

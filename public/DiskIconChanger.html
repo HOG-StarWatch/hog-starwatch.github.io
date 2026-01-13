@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>硬盘图标修改器 (Web生成版)</title>
+    <style>
+        :root {
+            --bg: #0b0914;
+            --panel: #141128;
+            --panel-border: #2a2348;
+            --text: #e9e6ff;
+            --muted: #b3abdb;
+            --accent: #7c3aed;
+            --accent-2: #a78bfa;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #22c55e;
+        }
+        body {
+            font-family: 'Microsoft YaHei', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(1200px 500px at 30% -10%, #2b2358 0%, #0b0914 50%), var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: var(--panel);
+            padding: 28px;
+            border-radius: 14px;
+            box-shadow: 0 12px 40px rgba(124, 58, 237, 0.25);
+            width: 960px;
+            max-width: 100%;
+            border: 1px solid var(--panel-border);
+        }
+        h1 {
+            text-align: center;
+            color: var(--text);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+        .description {
+            text-align: center;
+            color: var(--muted);
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        .meta {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .meta a {
+            color: var(--accent-2);
+            text-decoration: none;
+        }
+        .layout {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 24px;
+            align-items: start;
+        }
+        .left-panel {
+            min-width: 0;
+        }
+        .right-panel {
+            position: sticky;
+            top: 24px;
+            min-width: 0;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 18px;
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            background-color: rgba(20, 17, 40, 0.7);
+        }
+        .section h2 {
+            margin-top: 0;
+            font-size: 1.1em;
+            color: var(--accent-2);
+            border-bottom: 1px dashed var(--panel-border);
+            padding-bottom: 8px;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+        input[type="text"], select, input[type="file"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--panel-border);
+            background-color: #0f0d1f;
+            color: var(--text);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+            outline: none;
+        }
+        input[type="text"]:focus, select:focus, input[type="file"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+        }
+        .btn-group {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: transform 0.08s ease, box-shadow 0.2s ease;
+            color: white;
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        .btn-reg { background: linear-gradient(135deg, #6d28d9, #7c3aed); }
+        .btn-cmd { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+        .btn-py  { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+        .btn-reset { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .btn-fix { background: linear-gradient(135deg, #6d28d9, #a78bfa); }
+        .btn-download { 
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px;
+            font-size: 16px;
+            box-shadow: 0 10px 20px rgba(124, 58, 237, 0.35);
+        }
+        .btn-download:disabled {
+            background: #3b2e68;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        button:hover:not(:disabled) { box-shadow: 0 8px 16px rgba(124, 58, 237, 0.35); }
+        .note {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+        #icon-preview {
+            max-width: 64px;
+            max-height: 64px;
+            margin-top: 10px;
+            border: 1px solid var(--panel-border);
+            display: none;
+            border-radius: 8px;
+        }
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            background-color: #0f0d1f;
+            overflow: hidden;
+            min-height: 420px;
+        }
+        .preview-header {
+            background-color: #0d0b19;
+            color: var(--muted);
+            padding: 8px 12px;
+            font-size: 12px;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+        }
+        #code-preview {
+            width: 100%;
+            flex: 1 1 auto;
+            background-color: #0f0d1f;
+            color: #e6e2ff;
+            border: none;
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            resize: none;
+            outline: none;
+            white-space: pre;
+            overflow-y: scroll;
+            overflow-x: auto;
+            max-height: 520px;
+            box-sizing: border-box;
+            scrollbar-color: #4c3a8f #0d0b19;
+            scrollbar-width: thin;
+        }
+        #code-preview::-webkit-scrollbar { width: 12px; height: 12px; }
+        #code-preview::-webkit-scrollbar-track { background: #0d0b19; border-radius: 8px; }
+        #code-preview::-webkit-scrollbar-thumb { background: #4c3a8f; border-radius: 8px; border: 2px solid #0d0b19; }
+        /* Ensure horizontal scrollbar aligns flush with container */
+        .preview-container { padding-bottom: 0; }
+        #code-preview { display: block; }
+        .tips {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        .tips strong {
+            color: var(--accent-2);
+        }
+        @media (max-width: 1080px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            .right-panel {
+                position: static;
+            }
+            .btn-group {
+                grid-template-columns: repeat(2, minmax(140px, 1fr));
+            }
+            .preview-container {
+                min-height: 360px;
+            }
+        }
+        @media (max-width: 640px) {
+            .container {
+                padding: 18px;
+            }
+            .section {
+                padding: 14px;
+            }
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+            input[type="text"], select, input[type="file"] {
+                font-size: 15px;
+                padding: 12px;
+            }
+            button {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>硬盘图标修改器 (Web生成版)</h1>
+    <p class="description">复刻自 Xizo 的 Python 程序，支持生成 .reg、.cmd、.py 脚本。</p>
+    <div class="meta">
+        <span>原作者仓库：</span>
+        <a href="https://github.com/Xizo-114514/DiskIconChangerByXizo" target="_blank" rel="noopener">GitHub - DiskIconChangerByXizo</a>
+    </div>
+
+    <div class="layout">
+        <!-- Left Panel: Inputs & Actions -->
+        <div class="left-panel">
+            
+            <!-- Global Settings -->
+            <div class="section">
+                <h2>配置参数</h2>
+                <div class="form-group">
+                    <label for="drive-letter">选择磁盘盘符:</label>
+                    <select id="drive-letter">
+                        <option value="C">C:</option>
+                        <option value="D">D:</option>
+                        <option value="E">E:</option>
+                        <option value="F">F:</option>
+                        <option value="G">G:</option>
+                        <option value="H">H:</option>
+                        <option value="I">I:</option>
+                        <option value="J">J:</option>
+                        <option value="K">K:</option>
+                        <option value="L">L:</option>
+                        <option value="M">M:</option>
+                        <option value="N">N:</option>
+                        <option value="O">O:</option>
+                        <option value="P">P:</option>
+                        <option value="Q">Q:</option>
+                        <option value="R">R:</option>
+                        <option value="S">S:</option>
+                        <option value="T">T:</option>
+                        <option value="U">U:</option>
+                        <option value="V">V:</option>
+                        <option value="W">W:</option>
+                        <option value="X">X:</option>
+                        <option value="Y">Y:</option>
+                        <option value="Z">Z:</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>选择图标 (.ico):</label>
+                    <!-- File input for embedding -->
+                    <input type="file" id="icon-file" accept=".ico" onchange="handleFileSelect()">
+                    <img id="icon-preview" alt="Icon Preview">
+                    <div class="note">选择文件可生成内嵌图标的 CMD/Python 脚本 (无需手动输入路径)。</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="icon-path-manual">或者输入图标路径:</label>
+                    <input type="text" id="icon-path-manual" placeholder="例如: C:\Users\Name\icon.ico">
+                    <div class="note">如果要生成 .reg 文件，必须填写此项。</div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="section">
+                <h2>生成脚本</h2>
+                <div class="note" style="margin-bottom: 10px;">点击下方按钮生成代码 可在右侧预览代码，偏下方“下载脚本”按钮，注意CMD脚本请以管理员身份运行。</div>
+                
+                <label>安装图标:</label>
+                <div class="btn-group" style="margin-bottom: 15px;">
+                    <button class="btn-reg" onclick="previewReg()">.reg</button>
+                    <button class="btn-py" onclick="previewPy()">.py</button>
+                    <button class="btn-cmd" onclick="previewCmd()">.cmd</button>
+                </div>
+
+                <label>U盘/移动硬盘 (Autorun.inf):</label>
+                <div class="btn-group" style="margin-bottom: 15px;">
+                    <button class="btn-cmd" onclick="previewInfCmd()">生成 .cmd</button>
+                </div>
+
+                <label>还原与修复:</label>
+                <div class="btn-group">
+                    <button class="btn-reset" onclick="previewReset()">还原单盘 (.cmd)</button>
+                    <button class="btn-fix" onclick="previewFix()">修复网络驱动器 (.reg)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Preview & Download -->
+        <div class="right-panel">
+            <div class="preview-container">
+                <div class="preview-header">
+                    <span id="preview-filename">等待生成...</span>
+                    <span id="preview-size">0 bytes</span>
+                </div>
+                <textarea id="code-preview" readonly spellcheck="false"></textarea>
+            </div>
+            <button id="download-btn" class="btn-download" onclick="downloadCurrent()" disabled>下载脚本</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentFileContent = "";
+    let currentFileName = "";
+    let selectedFileBase64 = null;
+    let selectedFileName = "icon.ico";
+
+    function handleFileSelect() {
+        const fileInput = document.getElementById('icon-file');
+        const file = fileInput.files[0];
+        if (file) {
+            selectedFileName = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                selectedFileBase64 = e.target.result.split(',')[1]; // Remove data:image/x-icon;base64, prefix
+                // Show preview
+                const img = document.getElementById('icon-preview');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                
+                // Clear manual path to avoid confusion, or keep it?
+                // document.getElementById('icon-path-manual').value = ""; 
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function updatePreview(filename, content) {
+        currentFileName = filename;
+        currentFileContent = content;
+        
+        const previewArea = document.getElementById('code-preview');
+        previewArea.value = content;
+        
+        document.getElementById('preview-filename').textContent = filename;
+        document.getElementById('preview-size').textContent = content.length + " chars";
+        
+        const downloadBtn = document.getElementById('download-btn');
+        downloadBtn.disabled = false;
+        downloadBtn.textContent = "下载 " + filename;
+    }
+
+    function downloadCurrent() {
+        if (!currentFileContent || !currentFileName) return;
+        
+        const blob = new Blob([currentFileContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function getDrive() { return document.getElementById('drive-letter').value; }
+    
+    function getIconPath() {
+        return document.getElementById('icon-path-manual').value.trim();
+    }
+
+    // --- Generators ---
+
+    // 1. REG Preview
+    function previewReg() {
+        const drive = getDrive();
+        const iconPath = getIconPath();
+
+        if (!iconPath) {
+            alert("生成 .reg 文件需要手动填写【图标路径】！");
+            return;
+        }
+
+        const escapedPath = iconPath.replace(/\\/g, "\\\\");
+        const content = `Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\${drive}\\DefaultIcon]
+@="${escapedPath}"
+`;
+        updatePreview(`Install_Icon_${drive}.reg`, content);
+    }
+
+    // 2. CMD Preview (Smart: Embedded or Copy, English messages)
+    function previewCmd() {
+        const drive = getDrive();
+        const iconPath = getIconPath();
+        
+        // Mode 1: Embedded Base64 (Preferred if file selected)
+        if (selectedFileBase64) {
+            // Split into 64-char lines to mimic PEM format (stable for certutil)
+            const chunks = selectedFileBase64.match(/.{1,64}/g);
+            let echoLines = "";
+            chunks.forEach(chunk => {
+                echoLines += `echo ${chunk}>>temp.b64\n`;
+            });
+
+            const content = `@echo off
+setlocal
+echo Installing drive icon (Drive: ${drive}) [Embedded mode]...
+
+set "TARGET_DIR=C:\\Windows\\_XizoDiskIconChanger\\icon"
+set "TARGET_ICON=%TARGET_DIR%\\${selectedFileName}"
+set "DRIVE=${drive}"
+
+if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
+
+echo Releasing icon file...
+echo -----BEGIN CERTIFICATE----- > temp.b64
+${echoLines}echo -----END CERTIFICATE----- >> temp.b64
+certutil -decode temp.b64 "%TARGET_ICON%" >nul
+del temp.b64
+
+if not exist "%TARGET_ICON%" (
+    echo Error: Failed to write icon file. Try running as Administrator.
+    pause
+    exit /b
+)
+
+echo Modifying registry...
+rem Ensure key path exists (64-bit registry view) by creating placeholder values
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons" /v "_" /t REG_SZ /d "_" /f /reg:64
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%" /v "_" /t REG_SZ /d "_" /f /reg:64
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%\\DefaultIcon" /v "_" /t REG_SZ /d "_" /f /reg:64
+rem Set default value to icon path
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%\\DefaultIcon" /ve /t REG_SZ /d "%TARGET_ICON%" /f /reg:64
+rem Cleanup placeholder values
+reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%\\DefaultIcon" /v "_" /f /reg:64
+reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%" /v "_" /f /reg:64
+reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons" /v "_" /f /reg:64
+
+echo Restarting Explorer...
+taskkill /f /im explorer.exe
+start explorer.exe
+
+echo Done!
+pause
+`;
+            updatePreview(`Install_Icon_${drive}_Embedded.cmd`, content);
+            return;
+        }
+
+        // Mode 2: Path Copy (Fallback)
+        if (iconPath) {
+            const content = `@echo off
+setlocal
+echo Installing drive icon (Drive: ${drive})...
+
+set "SOURCE_ICON=${iconPath}"
+set "TARGET_DIR=C:\\Windows\\_XizoDiskIconChanger\\icon"
+set "DRIVE=${drive}"
+
+if not exist "%SOURCE_ICON%" (
+    echo Error: Source icon not found "%SOURCE_ICON%"
+    pause
+    exit /b
+)
+
+if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
+for %%F in ("%SOURCE_ICON%") do set "FILENAME=%%~nxF"
+copy /Y "%SOURCE_ICON%" "%TARGET_DIR%\\%FILENAME%"
+
+echo Modifying registry...
+rem Ensure key path exists (64-bit registry view) by creating placeholder values
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons" /v "_" /t REG_SZ /d "_" /f /reg:64
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%" /v "_" /t REG_SZ /d "_" /f /reg:64
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%\\DefaultIcon" /v "_" /t REG_SZ /d "_" /f /reg:64
+rem Set default value to icon path
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%\\DefaultIcon" /ve /t REG_SZ /d "%TARGET_DIR%\\%FILENAME%" /f /reg:64
+rem Cleanup placeholder values
+reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%\\DefaultIcon" /v "_" /f /reg:64
+reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\%DRIVE%" /v "_" /f /reg:64
+reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons" /v "_" /f /reg:64
+
+echo Restarting Explorer...
+taskkill /f /im explorer.exe
+start explorer.exe
+
+echo Done!
+pause
+`;
+            updatePreview(`Install_Icon_${drive}.cmd`, content);
+            return;
+        }
+
+        alert("Please select an icon file or enter an icon path first!");
+    }
+
+    // 3. Python Preview (sanitize Base64 to remove newlines/whitespace)
+    function previewPy() {
+        const drive = getDrive();
+        
+        if (!selectedFileBase64) {
+            alert("Select an icon file first to generate embedded Python script!");
+            return;
+        }
+
+        const content = `import os
+import sys
+import base64
+import winreg
+import ctypes
+import re
+
+# Configuration
+DRIVE_LETTER = "${drive}"
+ICON_NAME = "${selectedFileName}"
+# Embedded Base64 icon data (may contain newlines)
+ICON_DATA = b"""${selectedFileBase64}"""
+
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+def install():
+    print(f"Installing icon for drive {DRIVE_LETTER}: {ICON_NAME}...")
+    
+    # 1. Prepare target directory
+    target_dir = r"C:\\Windows\\_XizoDiskIconChanger\\icon"
+    if not os.path.exists(target_dir):
+        try:
+            os.makedirs(target_dir)
+        except Exception as e:
+            print(f"Failed to create directory: {e}")
+            return
+
+    # 2. Write icon file (sanitize Base64)
+    icon_path = os.path.join(target_dir, ICON_NAME)
+    try:
+        cleaned = re.sub(rb"\\s+", b"", ICON_DATA)
+        raw = base64.b64decode(cleaned)
+        with open(icon_path, "wb") as f:
+            f.write(raw)
+        print(f"Icon written: {icon_path}")
+    except Exception as e:
+        print(f"Failed to save icon: {e}")
+        return
+
+    # 3. Modify registry (set default value)
+    try:
+        key_path = f"SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\DriveIcons\\\\{DRIVE_LETTER}\\\\DefaultIcon"
+        key = winreg.CreateKey(winreg.HKEY_LOCAL_MACHINE, key_path)
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, icon_path)
+        winreg.CloseKey(key)
+        print("Registry updated.")
+    except Exception as e:
+        print(f"Failed to update registry: {e}")
+        return
+
+    # 4. Restart Explorer
+    print("Restarting Explorer...")
+    os.system("taskkill /f /im explorer.exe")
+    os.system("start explorer.exe")
+    print("Done!")
+
+if __name__ == "__main__":
+    if is_admin():
+        install()
+        input("Press Enter to exit...")
+    else:
+        print("Requesting Administrator privileges...")
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+`;
+        updatePreview(`Install_Icon_${drive}.py`, content);
+    }
+
+    // 4. INF CMD Preview (English, PEM headers for certutil)
+    function previewInfCmd() {
+        const drive = getDrive();
+        const iconPath = getIconPath();
+        
+        // Similar logic: Embed or Copy
+        if (selectedFileBase64) {
+             const chunks = selectedFileBase64.match(/.{1,64}/g);
+            let echoLines = "";
+            chunks.forEach(chunk => {
+                echoLines += `echo ${chunk}>>temp.b64\n`;
+            });
+
+            const content = `@echo off
+setlocal
+echo Configuring Autorun.inf (Drive: ${drive}) [Embedded mode]...
+
+set "DRIVE=${drive}:"
+
+if not exist "%DRIVE%\\" (
+    echo Error: Drive %DRIVE% not found
+    pause
+    exit /b
+)
+
+:: 清理旧文件
+if exist "%DRIVE%\\autorun.inf" (
+    attrib -h -r -s "%DRIVE%\\autorun.inf"
+    del "%DRIVE%\\autorun.inf"
+)
+if exist "%DRIVE%\\icon.ico" (
+    attrib -h -r -s "%DRIVE%\\icon.ico"
+    del "%DRIVE%\\icon.ico"
+)
+
+:: Write icon via Base64
+echo Writing icon...
+echo -----BEGIN CERTIFICATE----- > temp.b64
+${echoLines}echo -----END CERTIFICATE----- >> temp.b64
+
+certutil -decode temp.b64 "%DRIVE%\\icon.ico" >nul
+del temp.b64
+attrib +h "%DRIVE%\\icon.ico"
+
+:: 创建 autorun.inf
+echo [autorun] > "%DRIVE%\\autorun.inf"
+echo icon=icon.ico >> "%DRIVE%\\autorun.inf"
+attrib +h "%DRIVE%\\autorun.inf"
+
+echo Done! Please replug the drive.
+pause
+`;
+            updatePreview(`Install_Inf_${drive}_Embedded.cmd`, content);
+            return;
+        }
+
+        if (iconPath) {
+             const content = `@echo off
+setlocal
+echo Configuring Autorun.inf (Drive: ${drive})...
+
+set "SOURCE_ICON=${iconPath}"
+set "DRIVE=${drive}:"
+
+if not exist "%SOURCE_ICON%" (
+    echo Error: Source icon not found "%SOURCE_ICON%"
+    pause
+    exit /b
+)
+if not exist "%DRIVE%\\" (
+    echo Error: Drive %DRIVE% not found
+    pause
+    exit /b
+)
+
+if exist "%DRIVE%\\autorun.inf" (
+    attrib -h -r -s "%DRIVE%\\autorun.inf"
+    del "%DRIVE%\\autorun.inf"
+)
+if exist "%DRIVE%\\icon.ico" (
+    attrib -h -r -s "%DRIVE%\\icon.ico"
+    del "%DRIVE%\\icon.ico"
+)
+
+copy /Y "%SOURCE_ICON%" "%DRIVE%\\icon.ico"
+attrib +h "%DRIVE%\\icon.ico"
+
+echo [autorun] > "%DRIVE%\\autorun.inf"
+echo icon=icon.ico >> "%DRIVE%\\autorun.inf"
+attrib +h "%DRIVE%\\autorun.inf"
+
+echo Done!
+pause
+`;
+            updatePreview(`Install_Inf_${drive}.cmd`, content);
+            return;
+        }
+        
+        alert("Please select an icon file or enter an icon path first!");
+    }
+
+    // 5. Reset Preview (English)
+    function previewReset() {
+        const drive = getDrive();
+        const content = `@echo off
+echo Resetting drive ${drive} icon...
+
+reg delete "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DriveIcons\\${drive}" /f 2>nul
+
+set "DRIVE=${drive}:"
+if exist "%DRIVE%\\autorun.inf" (
+    attrib -h -r -s "%DRIVE%\\autorun.inf"
+    del "%DRIVE%\\autorun.inf"
+)
+if exist "%DRIVE%\\icon.ico" (
+    attrib -h -r -s "%DRIVE%\\icon.ico"
+    del "%DRIVE%\\icon.ico"
+)
+
+echo Restarting Explorer...
+taskkill /f /im explorer.exe
+start explorer.exe
+
+echo Reset done.
+pause
+`;
+        updatePreview(`Reset_Icon_${drive}.cmd`, content);
+    }
+
+    // 6. Fix Preview
+    function previewFix() {
+        const content = `Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System]
+"EnableLinkedConnections"=dword:00000001
+`;
+        updatePreview(`Fix_Network.reg`, content);
+    }
+
+</script>
+
+<div class="container" style="margin-top:16px;">
+    <div class="section">
+        <h2>使用说明与提示</h2>
+        <div class="tips">
+            <p>图片格式支持 <strong>ico、png、jpg、bmp、tif</strong> 等常用格式，建议图片格式为 <strong>ico</strong>，比例为 <strong>1:1</strong>，分辨率 <strong>大于 48×48</strong>。</p>
+            <p>程序会在 <strong>C:\Windows\_XizoDiskIconChanger</strong> 下创建文件夹，其中保存程序配置和所有图标文件，用于防止 Windows 图标缓存丢失。</p>
+            <p>正常情况这些缓存文件会在重置时移除，无需手动清理。</p>
+            <p><strong>.cmd 嵌入模式：</strong>脚本内置图标数据，无需依赖本地图标文件路径，因此可直接分享/备份使用；运行后会自动释放图标并写入注册表。</p>
+            <p><strong>.cmd</strong>脚本可能遇到设置新图标不成功的问题，请检查<strong>C:\Windows\_XizoDiskIconChanger\icon</strong>路径下是否存在重名文件，此问题是因为出于安全考虑脚本不会替换已存在文件导致图标释放失败</p>
+            <p><strong>.cmd</strong>脚本下载后可能无法运行，<strong>Windows 安全中心</strong>弹窗提示:<strong>你的 Internet 安全设置阻止打开一个或多个文件。</strong> 遇到这个问题请<strong>右键</strong>文件，选择<strong>属性</strong>，然后勾选<strong>常规</strong>标签页的<strong>安全：此文件来自其他计算机，可能被阻止以帮助保护该计算机</strong>的复选框<strong>解除锁定(K)</strong>。</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
