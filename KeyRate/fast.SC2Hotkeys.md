@@ -1,4 +1,4 @@
-新建一个txt文件修改文件名.后缀名为*.SC2Hotkeys即可
+新建一个txt文件修改**文件名.后缀名**为**\*.SC2Hotkeys**即可
 以下是内容
 ```json
 [Settings]

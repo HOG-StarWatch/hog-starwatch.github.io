@@ -5,7 +5,7 @@
 
 ## [获取方式](./Keyrate.cmd.md)
 
-**另外提供一个SCII的快捷施法快捷键设置**[*.SC2Hotkeys](.\fast.SC2Hotkeys.md)
+**另外提供一个SCII的快捷施法快捷键设置**[*.SC2Hotkeys](./fast.SC2Hotkeys.md)
 
 应放在路径
 
