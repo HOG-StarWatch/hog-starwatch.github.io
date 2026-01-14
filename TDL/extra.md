@@ -497,8 +497,8 @@ goto MAIN_MENU
 ```
 
 ::: details <^null
-1. [配套预编译版：Windows_64bit_v0.20.1](https://hog-starwatch.github.io/TDL/tdl.exe.7z.tar)
-2. [TDL.bat.tar](https://hog-starwatch.github.io/TDL/TDL.bat.tar)
+1. [配套预编译版：Windows_64bit_v0.20.1](./tdl.exe.7z.md)
+2. [TDL.bat](./TDL.bat.md)
 
 **手动下载预编译版tdl时**
 

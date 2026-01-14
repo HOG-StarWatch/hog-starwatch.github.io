@@ -1,9 +1,7 @@
 ## 本站链接
 [激活方式对比表](./chart.md)
 
-[MAS英文版](https://hog-starwatch.github.io/MAS/MAS_AIO_v3.7_En_W.tar)
-
-[MAS中文版](https://hog-starwatch.github.io/MAS/MAS_AIO_v3.7_Chs_W.tar)
+[MASv3.7下载](./MAS_AIO_v3.7.md)
 
 [Windows&Office下载](./download.md)
 
