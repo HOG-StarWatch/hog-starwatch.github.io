@@ -9,7 +9,7 @@
 
 应放在路径
 
-> C:\Users\\\%Username\%\Documents\StarCraft II\Accounts\\\<AccountsNum\>\Hotkeys
+> C:\Users\\\%Username\%\Documents\StarCraft II\Accounts\\\<AccountsID\>\Hotkeys
 
 ## 主要功能
 1.  **开启加速键盘 (150 10)**

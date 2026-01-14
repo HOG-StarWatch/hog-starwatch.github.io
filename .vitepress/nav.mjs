@@ -29,6 +29,7 @@ export default [
         },
         { text: 'TDL', link: '../../../TDL/', target: '_self', },
         { text: '加速键盘', link: '../../../KeyRate/KeyRate.md', target: '_self', },
+        { text: 'CMDPack', link: '../../../CMDPack/', target: '_self', },
       ],
     },
     { text: '网页小工具',
