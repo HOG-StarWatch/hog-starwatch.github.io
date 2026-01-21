@@ -3,6 +3,7 @@ layout: doc
 lastUpdated: true
 ---
 
+# W3
 ## 019425.xyz
 
 1. [sd-inspector-sd.019425.xyz](https://sd.019425.xyz)
@@ -24,17 +25,18 @@ lastUpdated: true
 
 1. [cloud-mail-cloudemail.ggff.net](https://cloudemail.ggff.net)
 
-
-## futa.de5.net
-
-1. [ona-prox-prox.futa.de5.net=i.pximg.net](https://prox.futa.de5.net)
-2. [pikpakspeed-p.futa.de5.net/+原链](https://p.futa.de5.net)
-3. [gemini-gemini.futa.de5.net](https://gemiini.futa.de5.net)
-4. [grok-playground-grok.futa.de5.net](https://grok.futa.de5.net)
-5. [cf-rule-random-url-img.futa.de5.net/1](https://img.futa.de5.net/1)
-
-ce725a92-690d-4f9f-af42-0bcba945bac0
-
 ## mxmail.de5.net
 
 1. [cloud-mail-mxmail.de5.net](https://mxmail.de5.net)
+   
+# Amxm
+## futa.de5.net
+
+1. [ona-prox-prox.futa.de5.net=i.pximg.net](https://prox.futa.de5.net)
+2. prox-cfmxm[pikpakspeed-p.futa.de5.net/+原链](https://p.futa.de5.net)
+3. [grok-playground-grok.futa.de5.net](https://grok.futa.de5.net)
+4. [zi-hf-prox-zi.futa.de5.net/](https://zi.futa.de5.net/)
+5. [tg.futa.de5.net](https://tg.futa.de5.net)
+
+ce725a92-690d-4f9f-af42-0bcba945bac0
+trahs.de5.net

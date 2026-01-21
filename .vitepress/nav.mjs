@@ -76,8 +76,6 @@ export default [
         { text: '文件处理',
           items: [
             { text: '文件破坏器', link: '../../../filebroker.html', target: '_self', },
-            { text: 'm3u8在线下载', link: '../../../m3u8/index.html', target: '_self', },
-            { text: 'm3u8在线下载-DIY', link: '../../../m3u8-/m3u8.html', target: '_self', },
             { text: 'Word转MarkDown', link: '../../../word2md.html', target: '_self', },
             { text: 'PDF查看器', link: '../../../pdfviewer.html', target: '_self', },
             { text: 'Video查看器', link: '../../../video.html', target: '_self', },
