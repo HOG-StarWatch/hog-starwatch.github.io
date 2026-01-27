@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII 艺术生成</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            background: transparent;
+            color: var(--text-main);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .layout {
+            display: flex;
+            gap: 1rem;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: rgba(20, 25, 40, 0.6);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+        
+        .main-view {
+            flex: 1;
+            background: rgba(20, 25, 40, 0.6);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #ascii-output {
+            flex: 1;
+            white-space: pre;
+            /* Using a safer monospace font stack for better alignment */
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 8px; /* Dynamic */
+            line-height: 8px;
+            overflow: auto;
+            background: #000;
+            color: #fff;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #ascii-output.has-content {
+            display: block; /* Restore block for scrolling content */
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+        
+        select, input[type="number"], input[type="color"] {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+        }
+        
+        /* Video hidden style */
+        video {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="panel-title">设置</div>
+            
+            <div class="control-group">
+                <label>上传媒体 (图片/视频/GIF)</label>
+                <input type="file" id="fileInput" accept="image/*,video/*" style="display:none">
+                <button class="btn btn-secondary" style="width:100%; justify-content:center;" onclick="document.getElementById('fileInput').click()">选择文件</button>
+            </div>
+            
+            <div class="control-group">
+                <label>字符密度 (字符集)</label>
+                <select id="densitySelect">
+                    <option value=" .:-=+*#%@">简单</option>
+                    <option value=" .,:;+*?%S#@">经典</option>
+                    <option value=" .'`^&quot;,:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$">复杂</option>
+                    <option value=" ░▒▓█">方块</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>宽度 (字符数)</label>
+                <input type="number" id="widthInput" value="100" min="20" max="300">
+            </div>
+            
+            <div class="control-group">
+                <label>颜色模式</label>
+                <select id="colorMode">
+                    <option value="text">纯文本 (单色)</option>
+                    <option value="color">彩色 HTML</option>
+                </select>
+            </div>
+            
+            <div class="control-group" id="color-picker-group">
+                <label>文本颜色</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+            
+            <div id="video-controls" class="control-group" style="display:none;">
+                <label>视频控制</label>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="btn btn-secondary" id="playPauseBtn" style="flex:1; justify-content:center;">暂停</button>
+                </div>
+            </div>
+            
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:0.5rem;">
+                <button class="btn btn-primary" onclick="generateASCII()" style="justify-content:center;">生成/刷新</button>
+                <button class="btn btn-secondary" onclick="downloadText()" style="justify-content:center;">下载文本 (.txt)</button>
+                <button class="btn btn-secondary" onclick="app.copy('ascii-text-hidden')" style="justify-content:center;">复制文本</button>
+            </div>
+        </div>
+        
+        <div class="main-view">
+            <div id="ascii-output">
+                <div style="color:gray;">
+                    请上传图片/视频并点击生成
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden textarea for copying -->
+    <textarea id="ascii-text-hidden" style="position:absolute; left:-9999px;"></textarea>
+    <!-- Hidden canvas for processing -->
+    <canvas id="processCanvas" style="display:none;"></canvas>
+    <!-- Hidden Video Element -->
+    <video id="sourceVideo" loop muted playsinline crossorigin="anonymous"></video>
+
+    <script src="../js/app.js"></script>
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const densitySelect = document.getElementById('densitySelect');
+        const widthInput = document.getElementById('widthInput');
+        const colorMode = document.getElementById('colorMode');
+        const textColor = document.getElementById('textColor');
+        const outputDiv = document.getElementById('ascii-output');
+        const hiddenText = document.getElementById('ascii-text-hidden');
+        const canvas = document.getElementById('processCanvas');
+        const ctx = canvas.getContext('2d');
+        const videoEl = document.getElementById('sourceVideo');
+        const videoControls = document.getElementById('video-controls');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        
+        let currentSource = null; // 'image' or 'video'
+        let currentImg = null;
+        let isVideoPlaying = false;
+        let animationFrameId = null;
+        
+        // Worker Init
+        let asciiWorker = null;
+        let isWorkerBusy = false;
+        
+        if (window.Worker) {
+            asciiWorker = new Worker('../js/workers/ascii.worker.js');
+            asciiWorker.onmessage = (e) => {
+                const { type, html, text, error } = e.data;
+                isWorkerBusy = false;
+                
+                if (type === 'complete') {
+                    // Update UI
+                    outputDiv.classList.add('has-content');
+                    const isColor = colorMode.value === 'color';
+                    outputDiv.style.color = isColor ? 'inherit' : textColor.value;
+                    
+                    if (isColor) {
+                        outputDiv.innerHTML = html;
+                    } else {
+                        outputDiv.innerText = text;
+                    }
+                    hiddenText.value = text;
+                    
+                    // Font adjustment
+                    const containerWidth = outputDiv.clientWidth;
+                    const width = parseInt(widthInput.value);
+                    const estFontSize = Math.max(4, Math.floor(containerWidth / width * 1.6));
+                    outputDiv.style.fontSize = `${estFontSize}px`;
+                    outputDiv.style.lineHeight = `${estFontSize}px`;
+                } else if (type === 'error') {
+                    console.error(error);
+                }
+            };
+        }
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            
+            // Stop previous video if any
+            stopVideo();
+            
+            const url = URL.createObjectURL(file);
+            
+            if (file.type.startsWith('video/')) {
+                currentSource = 'video';
+                videoEl.src = url;
+                videoEl.onloadeddata = () => {
+                    videoEl.play();
+                    isVideoPlaying = true;
+                    videoControls.style.display = 'block';
+                    playPauseBtn.innerText = '暂停';
+                    renderLoop();
+                    app.showToast('视频已加载');
+                };
+            } else {
+                currentSource = 'image';
+                videoControls.style.display = 'none';
+                const img = new Image();
+                img.onload = () => {
+                    currentImg = img;
+                    app.showToast('图片已加载');
+                    generateASCII(); // Auto generate for image
+                };
+                img.src = url;
+            }
+        });
+        
+        playPauseBtn.addEventListener('click', () => {
+            if (videoEl.paused) {
+                videoEl.play();
+                playPauseBtn.innerText = '暂停';
+                isVideoPlaying = true;
+                renderLoop();
+            } else {
+                videoEl.pause();
+                playPauseBtn.innerText = '播放';
+                isVideoPlaying = false;
+                cancelAnimationFrame(animationFrameId);
+            }
+        });
+        
+        function stopVideo() {
+            if (currentSource === 'video') {
+                videoEl.pause();
+                videoEl.src = '';
+                cancelAnimationFrame(animationFrameId);
+                isVideoPlaying = false;
+            }
+        }
+        
+        colorMode.addEventListener('change', () => {
+            document.getElementById('color-picker-group').style.display = colorMode.value === 'text' ? 'block' : 'none';
+        });
+
+        function renderLoop() {
+            if (!isVideoPlaying || currentSource !== 'video') return;
+            
+            processFrame(videoEl);
+            animationFrameId = requestAnimationFrame(renderLoop);
+        }
+
+        function generateASCII() {
+            if (currentSource === 'image' && currentImg) {
+                processFrame(currentImg);
+            } else if (currentSource === 'video') {
+                // If video is paused, render current frame
+                processFrame(videoEl);
+            } else {
+                app.showToast('请先选择媒体文件');
+            }
+        }
+
+        function processFrame(source) {
+            // Drop frame if worker is busy
+            if (isWorkerBusy && currentSource === 'video') return;
+
+            const width = parseInt(widthInput.value);
+            // Safety check for width
+            if (width < 10) return;
+            
+            let srcWidth, srcHeight;
+            if (source.videoWidth) {
+                srcWidth = source.videoWidth;
+                srcHeight = source.videoHeight;
+            } else {
+                srcWidth = source.width;
+                srcHeight = source.height;
+            }
+            
+            const aspectRatio = srcHeight / srcWidth;
+            const height = Math.floor(width * aspectRatio * 0.55);
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            ctx.drawImage(source, 0, 0, width, height);
+            const imageData = ctx.getImageData(0, 0, width, height);
+            
+            const config = {
+                chars: densitySelect.value,
+                isColor: colorMode.value === 'color'
+            };
+
+            if (asciiWorker) {
+                isWorkerBusy = true;
+                // Transfer buffer
+                asciiWorker.postMessage({
+                    type: 'process',
+                    imageData: imageData,
+                    config: config
+                }, [imageData.data.buffer]);
+            } else {
+                // Fallback (Original Logic)
+                const data = imageData.data;
+                const chars = config.chars;
+                const isColor = config.isColor;
+                
+                let htmlOutput = '';
+                let rawText = '';
+                
+                for(let y = 0; y < height; y++) {
+                    let lineHtml = '';
+                    let lineText = '';
+                    for(let x = 0; x < width; x++) {
+                        const offset = (y * width + x) * 4;
+                        const r = data[offset];
+                        const g = data[offset+1];
+                        const b = data[offset+2];
+                        
+                        const avg = (r + g + b) / 3;
+                        const charIndex = Math.floor((avg / 255) * (chars.length - 1));
+                        const char = chars[charIndex];
+                        
+                        let displayChar = char;
+                        if (isColor) {
+                             if (char === '<') displayChar = '&lt;';
+                             else if (char === '>') displayChar = '&gt;';
+                             else if (char === '&') displayChar = '&amp;';
+                             else if (char === ' ') displayChar = '&nbsp;';
+                        }
+                        
+                        if(isColor) {
+                            lineHtml += `<span style="color: rgb(${r},${g},${b})">${displayChar}</span>`;
+                        } else {
+                            lineHtml += displayChar;
+                        }
+                        lineText += char;
+                    }
+                    htmlOutput += lineHtml + (isColor ? '<br>' : '\n');
+                    rawText += lineText + '\n';
+                }
+                
+                outputDiv.classList.add('has-content');
+                outputDiv.style.color = isColor ? 'inherit' : textColor.value;
+                
+                if (isColor) {
+                    outputDiv.innerHTML = htmlOutput;
+                } else {
+                    outputDiv.innerText = rawText;
+                }
+                hiddenText.value = rawText;
+                
+                const containerWidth = outputDiv.clientWidth;
+                const estFontSize = Math.max(4, Math.floor(containerWidth / width * 1.6));
+                outputDiv.style.fontSize = `${estFontSize}px`;
+                outputDiv.style.lineHeight = `${estFontSize}px`;
+            }
+        }
+        
+        function downloadText() {
+            if(!hiddenText.value) return;
+            const link = document.createElement('a');
+            link.download = 'ascii_art.txt';
+            link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(hiddenText.value);
+            link.click();
+        }
+    </script>
+</body>
+</html>

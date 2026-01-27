@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本转码</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/punycode@1.4.1/punycode.min.js'"></script>
+</head>
+<body>
+    <div class="workspace" style="flex-direction: column;">
+        <div class="sub-tab-group">
+            <div class="sub-tab active" onclick="transcoder.setMode('url', this)">URL</div>
+            <div class="sub-tab" onclick="transcoder.setMode('base64', this)">Base64 (UTF-8)</div>
+            <div class="sub-tab" onclick="transcoder.setMode('unicode', this)">Unicode (\u)</div>
+            <div class="sub-tab" onclick="transcoder.setMode('html', this)">HTML实体</div>
+            <div class="sub-tab" onclick="transcoder.setMode('hex', this)">Hex (16进制)</div>
+            <div class="sub-tab" onclick="transcoder.setMode('bin', this)">Binary (2进制)</div>
+            <div class="sub-tab" onclick="transcoder.setMode('punycode', this)">Punycode</div>
+        </div>
+
+        <div class="workspace">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">待转码</div>
+                    <div class="panel-actions">
+                        <button class="btn btn-icon" onclick="app.clear('code')">清空</button>
+                    </div>
+                </div>
+                <textarea id="code-input" placeholder="输入内容..."></textarea>
+            </div>
+
+            <div class="toolbar">
+                <div class="tool-group">
+                    <div class="group-label">操作</div>
+                    <button class="btn btn-primary" onclick="transcoder.run('encode')">编码 (Encode) →</button>
+                    <button class="btn btn-primary" onclick="transcoder.run('decode')">解码 (Decode) ←</button>
+                    <button class="btn" onclick="transcoder.swap()">↕ 交换内容</button>
+                </div>
+                <div class="tool-group">
+                    <div class="group-label">说明</div>
+                    <div style="font-size:0.8rem; color:var(--text-dim); padding:0.5rem; line-height:1.4">
+                        当前模式：<span id="current-mode-label" style="color:var(--secondary)">URL</span>
+                        <br><br>
+                        Base64模式已优化中文支持。
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">结果</div>
+                    <div class="panel-actions">
+                        <button class="btn btn-icon btn-secondary" onclick="app.copy('code-output')">复制</button>
+                    </div>
+                </div>
+                <textarea id="code-output" readonly placeholder="转换结果..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        const transcoder = {
+            mode: 'url',
+
+            setMode: function(m, el) {
+                this.mode = m;
+                document.querySelectorAll('.sub-tab').forEach(c => c.classList.remove('active'));
+                el.classList.add('active');
+                document.getElementById('current-mode-label').innerText = el.innerText;
+            },
+
+            run: function(action) {
+                const input = document.getElementById('code-input').value;
+                let res = '';
+
+                try {
+                    if (this.mode === 'url') {
+                        res = action === 'encode' ? encodeURIComponent(input) : decodeURIComponent(input);
+                    } else if (this.mode === 'base64') {
+                        if (action === 'encode') {
+                            res = btoa(unescape(encodeURIComponent(input)));
+                        } else {
+                            res = decodeURIComponent(escape(atob(input)));
+                        }
+                    } else if (this.mode === 'unicode') {
+                        if (action === 'encode') {
+                            res = input.split('').map(c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')).join('');
+                        } else {
+                            res = input.replace(/\\u[\dA-F]{4}/gi, match => String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16)));
+                        }
+                    } else if (this.mode === 'html') {
+                        if (action === 'encode') {
+                            res = input.replace(/[\u00A0-\u9999<>&]/g, i => '&#'+i.charCodeAt(0)+';');
+                        } else {
+                            const doc = new DOMParser().parseFromString(input, "text/html");
+                            res = doc.documentElement.textContent;
+                        }
+                    } else if (this.mode === 'hex') {
+                        if (action === 'encode') {
+                            res = input.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
+                        } else {
+                            res = input.replace(/\s+/g, '').match(/.{1,2}/g).map(byte => String.fromCharCode(parseInt(byte, 16))).join('');
+                        }
+                    } else if (this.mode === 'bin') {
+                        if (action === 'encode') {
+                            res = input.split('').map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+                        } else {
+                            res = input.replace(/\s+/g, '').match(/.{1,8}/g).map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
+                        }
+                    } else if (this.mode === 'punycode') {
+                        if (typeof punycode === 'undefined') {
+                            throw new Error("Punycode 库未加载");
+                        }
+                        if (action === 'encode') {
+                             res = punycode.toASCII(input);
+                        } else {
+                            res = punycode.toUnicode(input);
+                        }
+                    }
+                } catch (e) {
+                    res = "错误: " + e.message;
+                    app.showToast('转换出错', 'error');
+                }
+                document.getElementById('code-output').value = res;
+            },
+
+            swap: function() {
+                const inp = document.getElementById('code-input');
+                const out = document.getElementById('code-output');
+                [inp.value, out.value] = [out.value, inp.value];
+            }
+        };
+    </script>
+</body>
+</html>

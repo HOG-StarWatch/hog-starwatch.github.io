@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片格式转换</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .converter-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            min-height: 200px;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(192, 132, 252, 0.05);
+            color: var(--text-main);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .upload-area.drag-over {
+            border-color: var(--secondary);
+            background: rgba(45, 212, 191, 0.1);
+            transform: scale(1.02);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+        
+        .preview-item {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+            position: relative;
+        }
+        
+        .preview-img {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            background: rgba(255,255,255,0.05); /* Checkerboard would be better */
+            border-radius: var(--radius-sm);
+        }
+
+        /* Base64 Tool Animations & Styles */
+        .tab-content {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .tab-content.hidden {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        
+        .mode-btn {
+            flex: 1; 
+            text-align: center; 
+            padding: 0.8rem; 
+            border-radius: var(--radius-sm); 
+            border: 1px solid var(--border); 
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            border-color: var(--primary);
+            font-weight: 600;
+        }
+        .mode-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body style="padding: 1rem;">
+    <div class="sub-tab-group">
+        <div class="sub-tab active" onclick="switchSubTab('format', this)">格式转换</div>
+        <div class="sub-tab" onclick="switchSubTab('base64', this)">Base64 转换</div>
+    </div>
+
+    <div class="workspace">
+        <!-- Format Converter -->
+        <div id="tab-format" class="panel" style="padding: 1.5rem;">
+            <div class="converter-container">
+                <div class="panel-title">图片格式转换器</div>
+                
+                <!-- Controls -->
+                <div class="input-row" style="flex-wrap: wrap; gap: 1rem;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label>目标格式</label>
+                        <select id="target-format" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.5rem;">
+                            <option value="image/png">PNG</option>
+                            <option value="image/jpeg">JPEG</option>
+                            <option value="image/webp">WEBP</option>
+                            <option value="image/bmp">BMP</option>
+                            <option value="image/gif">GIF (仅首帧)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label>质量 (JPEG/WEBP)</label>
+                        <input type="range" id="target-quality" min="0.1" max="1.0" step="0.1" value="0.9" oninput="document.getElementById('quality-val').innerText = Math.round(this.value * 100) + '%'">
+                        <span id="quality-val" style="font-size: 0.8rem; color: var(--primary);">90%</span>
+                    </div>
+                </div>
+
+                <!-- Upload -->
+                <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📂</div>
+                    <div>点击或拖拽图片到此处</div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">支持 PNG, JPG, WEBP, BMP, GIF 等</div>
+                    <input type="file" id="file-input" accept="image/*" multiple style="display: none;">
+                </div>
+
+                <!-- Actions -->
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="imgConverter.convertAll()">全部转换</button>
+                    <button class="btn btn-secondary" onclick="imgConverter.clearAll()">清空列表</button>
+                </div>
+
+                <!-- Preview List -->
+                <div class="preview-grid" id="preview-list">
+                    <!-- Items will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Base64 Converter -->
+        <div id="tab-base64" class="panel" style="padding: 1.5rem; display:none;">
+            <div class="panel-title">Base64 图片转换</div>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <button class="mode-btn active" id="mode-to-base64" onclick="base64Tool.switchMode('toBase64')">图片转 Base64</button>
+                <button class="mode-btn" id="mode-to-image" onclick="base64Tool.switchMode('toImage')">Base64 转图片</button>
+            </div>
+
+            <!-- Image to Base64 -->
+            <div id="view-to-base64" class="tab-content">
+                <div class="upload-area" id="b64-drop-zone" onclick="document.getElementById('b64-file-input').click()">
+                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.8;">🖼️</div>
+                    <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 0.5rem;">点击或拖拽图片到此处</div>
+                    <div style="font-size: 0.85rem; color: var(--text-dim); opacity: 0.7;">支持 PNG, JPG, WEBP, GIF (自动转换为 Base64)</div>
+                    <input type="file" id="b64-file-input" accept="image/*" style="display: none;" onchange="base64Tool.handleFile(this.files[0])">
+                </div>
+                
+                <div id="b64-result-area" style="display:none; margin-top:1.5rem;">
+                    <div class="input-row">
+                        <label>Base64 结果</label>
+                        <textarea id="b64-output" style="width:100%; height:150px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); padding:0.8rem; resize:vertical;" readonly></textarea>
+                    </div>
+                    <div style="display:flex; gap:1rem; margin-top:1rem;">
+                        <button class="btn btn-primary" onclick="app.copy('b64-output')">复制结果</button>
+                        <button class="btn btn-secondary" onclick="base64Tool.copyAsCSS()">复制为 CSS</button>
+                        <button class="btn btn-secondary" onclick="base64Tool.copyAsHTML()">复制为 HTML img</button>
+                    </div>
+                    <div style="margin-top:1rem; text-align:center;">
+                        <img id="b64-preview-img" style="max-width:100%; max-height:200px; border-radius:var(--radius-md); box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+                        <div id="b64-file-info" style="font-size:0.8rem; color:var(--text-dim); margin-top:0.5rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Base64 to Image -->
+            <div id="view-to-image" class="tab-content hidden">
+                <div class="input-row">
+                    <label>Base64 字符串</label>
+                    <textarea id="b64-input" spellcheck="false" placeholder="粘贴 Base64 字符串..." style="width:100%; height:150px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); padding:0.8rem; resize:vertical;"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="base64Tool.decode()" style="margin-top:1rem;">解码并预览</button>
+                
+                <div id="decode-result-area" style="display:none; margin-top:1.5rem; text-align:center;">
+                    <img id="decode-preview-img" style="max-width:100%; max-height:300px; border-radius:var(--radius-md); box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+                    <div style="margin-top:1rem;">
+                        <button class="btn btn-secondary" onclick="base64Tool.download()">下载图片</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        function switchSubTab(tab, el) {
+            document.querySelectorAll('.sub-tab-group .sub-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            
+            document.getElementById('tab-format').style.display = tab === 'format' ? 'block' : 'none';
+            document.getElementById('tab-base64').style.display = tab === 'base64' ? 'block' : 'none';
+        }
+
+        const base64Tool = {
+            currentMode: 'toBase64',
+            currentMime: '',
+            
+            init: function() {
+                const dropZone = document.getElementById('b64-drop-zone');
+                if(!dropZone) return;
+                
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('drag-over');
+                });
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('drag-over');
+                });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('drag-over');
+                    this.handleFile(e.dataTransfer.files[0]);
+                });
+            },
+            
+            switchMode: function(mode) {
+                this.currentMode = mode;
+                // Update buttons
+                const btn1 = document.getElementById('mode-to-base64');
+                const btn2 = document.getElementById('mode-to-image');
+                
+                if (mode === 'toBase64') {
+                    btn1.classList.add('active');
+                    btn2.classList.remove('active');
+                } else {
+                    btn1.classList.remove('active');
+                    btn2.classList.add('active');
+                }
+                
+                // Animate views
+                const view1 = document.getElementById('view-to-base64');
+                const view2 = document.getElementById('view-to-image');
+                
+                // Fade out current visible one? No, just toggle classes
+                // Simple fade switch
+                if (mode === 'toBase64') {
+                    view2.classList.add('hidden');
+                    setTimeout(() => {
+                        view2.style.display = 'none';
+                        view1.style.display = 'block';
+                        // Small delay to allow display block to apply before removing opacity class
+                        requestAnimationFrame(() => {
+                            view1.classList.remove('hidden');
+                        });
+                    }, 300); // Match CSS transition time
+                } else {
+                    view1.classList.add('hidden');
+                    setTimeout(() => {
+                        view1.style.display = 'none';
+                        view2.style.display = 'block';
+                        requestAnimationFrame(() => {
+                            view2.classList.remove('hidden');
+                        });
+                    }, 300);
+                }
+            },
+
+            handleFile: function(file) {
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const res = e.target.result;
+                    document.getElementById('b64-output').value = res;
+                    document.getElementById('b64-preview-img').src = res;
+                    document.getElementById('b64-file-info').innerText = `${file.name} (${(file.size/1024).toFixed(2)} KB)`;
+                    document.getElementById('b64-result-area').style.display = 'block';
+                    this.currentMime = res.split(';')[0].split(':')[1];
+                };
+                reader.readAsDataURL(file);
+            },
+
+            copyAsCSS: function() {
+                const b64 = document.getElementById('b64-output').value;
+                if(!b64) return;
+                const css = `background-image: url('${b64}');`;
+                this.copyToClip(css, 'CSS 已复制');
+            },
+
+            copyAsHTML: function() {
+                const b64 = document.getElementById('b64-output').value;
+                if(!b64) return;
+                const html = `<img src="${b64}" alt="image" />`;
+                this.copyToClip(html, 'HTML img 标签已复制');
+            },
+
+            decode: function() {
+                let val = document.getElementById('b64-input').value.trim();
+                if(!val) {
+                    app.showToast('请输入 Base64 字符串');
+                    return;
+                }
+                
+                // Add prefix if missing (simple check)
+                if(!val.startsWith('data:image')) {
+                    // Try to guess or just let browser handle it if it's raw base64
+                    // If raw base64, we might need to know mime type or try common ones
+                    // For now, assume user might paste full Data URI or raw.
+                    // If raw, try adding png prefix as fallback
+                    if(!val.includes(',')) {
+                         val = 'data:image/png;base64,' + val;
+                    }
+                }
+
+                const img = document.getElementById('decode-preview-img');
+                img.src = val;
+                img.onload = () => {
+                    document.getElementById('decode-result-area').style.display = 'block';
+                };
+                img.onerror = () => {
+                    app.showToast('解码失败，无效的 Base64 图片数据');
+                };
+            },
+
+            download: function() {
+                const src = document.getElementById('decode-preview-img').src;
+                if(!src) return;
+                
+                const link = document.createElement('a');
+                link.download = 'decoded-image.png'; // Default name
+                link.href = src;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            },
+            
+            copyToClip: function(text, msg) {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                app.showToast(msg);
+            }
+        };
+
+        const imgConverter = {
+            files: [],
+            
+            init: function() {
+                const dropZone = document.getElementById('drop-zone');
+                const fileInput = document.getElementById('file-input');
+
+                if(!dropZone) return;
+
+                // Drag & Drop
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('drag-over');
+                });
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('drag-over');
+                });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('drag-over');
+                    this.handleFiles(e.dataTransfer.files);
+                });
+
+                // File Input
+                fileInput.addEventListener('change', (e) => {
+                    this.handleFiles(e.target.files);
+                    fileInput.value = ''; // Reset
+                });
+            },
+
+            handleFiles: function(fileList) {
+                Array.from(fileList).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const fileObj = {
+                                id: Date.now() + Math.random().toString(16).slice(2),
+                                file: file,
+                                src: e.target.result,
+                                convertedSrc: null
+                            };
+                            this.files.push(fileObj);
+                            this.renderItem(fileObj);
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        app.showToast('跳过非图片文件: ' + file.name, 'error');
+                    }
+                });
+            },
+
+            renderItem: function(item) {
+                const list = document.getElementById('preview-list');
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.id = 'item-' + item.id;
+                div.innerHTML = `
+                    <img src="${item.src}" class="preview-img">
+                    <div class="file-info" title="${item.file.name}">${item.file.name}</div>
+                    <div class="file-info">${(item.file.size / 1024).toFixed(1)} KB</div>
+                    <div class="action-row">
+                        <span class="status-badge" style="font-size: 0.8rem; color: var(--secondary);">待转换</span>
+                        <button class="btn btn-icon btn-sm" onclick="imgConverter.removeItem('${item.id}')" title="删除">✕</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            },
+
+            removeItem: function(id) {
+                this.files = this.files.filter(f => f.id !== id);
+                document.getElementById('item-' + id).remove();
+            },
+
+            clearAll: function() {
+                this.files = [];
+                document.getElementById('preview-list').innerHTML = '';
+            },
+
+            convertAll: function() {
+                if(this.files.length === 0) {
+                    app.showToast('请先上传图片');
+                    return;
+                }
+
+                const format = document.getElementById('target-format').value;
+                const quality = parseFloat(document.getElementById('target-quality').value);
+                
+                let processed = 0;
+                
+                this.files.forEach(item => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Handle transparent background for JPEG (fill white)
+                        if (format === 'image/jpeg') {
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        }
+                        
+                        ctx.drawImage(img, 0, 0);
+                        
+                        const convertedDataUrl = canvas.toDataURL(format, quality);
+                        item.convertedSrc = convertedDataUrl;
+                        
+                        // Update UI
+                        const el = document.getElementById('item-' + item.id);
+                        if (el) {
+                            const ext = format.split('/')[1];
+                            const badge = el.querySelector('.status-badge');
+                            badge.innerText = '已完成';
+                            badge.style.color = 'var(--primary)';
+                            
+                            // Add download button if not exists
+                            if (!el.querySelector('.btn-download')) {
+                                const btn = document.createElement('button');
+                                btn.className = 'btn btn-secondary btn-sm btn-download';
+                                btn.innerText = `下载 .${ext}`;
+                                btn.style.marginTop = '0.5rem';
+                                btn.onclick = () => this.download(item, ext);
+                                el.appendChild(btn);
+                            }
+                        }
+                        
+                        processed++;
+                        if(processed === this.files.length) {
+                            app.showToast('所有图片转换完成');
+                        }
+                    };
+                    img.src = item.src;
+                });
+            },
+            
+            download: function(item, ext) {
+                const link = document.createElement('a');
+                link.download = item.file.name.split('.')[0] + '_converted.' + ext;
+                link.href = item.convertedSrc;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+        // Initialize
+        window.onload = function() {
+             imgConverter.init();
+             base64Tool.init();
+        };
+    </script>
+</body>
+</html>

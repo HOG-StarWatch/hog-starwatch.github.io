@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎使用极光工具箱</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .home-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-main);
+        }
+        
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+        
+        .hero-desc {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 3rem;
+        }
+
+        .btn-action {
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text-main);
+        }
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, #8b5cf6, #c084fc);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+        .btn-purple:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: transform 0.3s, background 0.3s;
+            cursor: pointer;
+            text-align: left;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--secondary);
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-text {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <div class="hero-title">AURORA❤极光</div>
+        <div class="hero-desc">
+            极光工具箱<br>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-action btn-outline" onclick="expandIndexNav()">
+                <span>📂 展开导航</span>
+            </button>
+            <button class="btn-action btn-purple" onclick="alert('即将推出，敬请期待！')">
+                <span>❤</span>
+            </button>
+        </div>
+        
+        <!-- Text Tools -->
+        
+        <div class="features-grid">
+            <div class="feature-card" onclick="parent.switchTab('tools/home.html')">
+                <span class="feature-icon"></span>
+                <div class="feature-title"></div>
+                <div class="feature-text"></div>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        function expandIndexNav() {
+            // Check if we are inside an iframe
+            if (window.parent && window.parent.document) {
+                const nav = window.parent.document.querySelector('nav.nav-tabs');
+                if (nav) {
+                    const dropdowns = window.parent.document.querySelectorAll('.dropdown');
+                    let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; text-align:left;">';
+                    
+                    dropdowns.forEach(dd => {
+                        const title = dd.querySelector('.dropdown-toggle').innerText.trim();
+                        html += `<div style="margin-bottom:10px;"><strong>${title}</strong><div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">`;
+                        dd.querySelectorAll('.dropdown-content .tab-btn').forEach(btn => {
+                            html += `<button class="btn-action btn-outline" style="font-size:0.8rem; padding:5px 10px;" onclick="parent.switchTab('${btn.dataset.src}')">${btn.innerText}</button>`;
+                        });
+                        html += '</div></div>';
+                    });
+                    html += '</div>';
+                    
+                    // Simple Modal
+                    const modal = document.createElement('div');
+                    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000; backdrop-filter:blur(5px);';
+                    modal.innerHTML = `
+                        <div style="background:var(--bg-panel); padding:30px; border-radius:15px; border:1px solid var(--border); max-width:800px; width:90%; max-height:80vh; overflow-y:auto; position:relative;">
+                            <h3 style="margin-top:0; margin-bottom:20px; color:var(--primary);">所有工具导航</h3>
+                            <button onclick="this.closest('div').parentElement.remove()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer;">×</button>
+                            ${html}
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

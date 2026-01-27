@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加密解密</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js'"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js'"></script>
+</head>
+<body style="padding: 1rem;">
+    <div class="sub-tab-group">
+        <div class="sub-tab active" onclick="cryptoTool.switchSubTab('std', this)">标准加密 (AES/DES)</div>
+        <div class="sub-tab" onclick="cryptoTool.switchSubTab('custom', this)">自定义加密 (Custom)</div>
+        <div class="sub-tab" onclick="cryptoTool.switchSubTab('zerowidth', this)">零宽隐写 (ZeroWidth)</div>
+    </div>
+    
+    <div class="workspace">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">加密配置 & 输入</div>
+                <div class="panel-actions">
+                     <button class="btn btn-icon" onclick="app.clear('crypto')">清空</button>
+                </div>
+            </div>
+            <div style="padding: 1rem; flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+                
+                <!-- Standard Crypto Config -->
+                <div id="crypto-std-config" class="crypto-config">
+                    <div class="input-row">
+                        <label>算法:</label>
+                        <select id="std-algo">
+                            <option value="AES">AES</option>
+                            <option value="DES">DES</option>
+                            <option value="TripleDES">TripleDES</option>
+                            <option value="Rabbit">Rabbit</option>
+                            <option value="RC4">RC4</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <label>密钥:</label>
+                        <input type="text" id="std-key" placeholder="在此输入密钥...">
+                    </div>
+                </div>
+                
+                <!-- Custom Crypto Config -->
+                <div id="crypto-custom-config" class="crypto-config" style="display:none;">
+                    <div class="input-row">
+                        <label>模式:</label>
+                        <select id="custom-mode" onchange="cryptoTool.updateCustomUI()">
+                            <option value="16char">16字符映射 (字节级 - 压缩优化)</option>
+                            <option value="4char">4字符映射 (位流级 - 压缩优化)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 16 Char Settings -->
+                    <div id="custom-16-settings">
+                        <div class="input-row">
+                            <label>预设:</label>
+                            <select id="custom-16-preset" onchange="cryptoTool.apply16Preset()">
+                                <option value="default">默认</option>
+                                <option value="orgasm">木珠</option>
+                                <option value="sound">拟声词</option>
+                                <option value="symbol">符号</option>
+                                <option value="custom">自定义...</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <label>映射表:</label>
+                            <input type="text" id="custom-16-chars" maxlength="16" placeholder="输入16个不重复字符" value="0123456789abcdef">
+                        </div>
+                    </div>
+
+                    <!-- 4 Char Settings -->
+                    <div id="custom-4-settings" style="display:none;">
+                        <div class="input-row">
+                            <label>预设:</label>
+                            <select id="custom-4-preset" onchange="cryptoTool.apply4Preset()">
+                                <option value="default">默认 (HOG❤)</option>
+                                <option value="orgasm">木珠</option>
+                                <option value="letters">字母 (ABCD)</option>
+                                <option value="symbol">符号 (!@#$)</option>
+                                <option value="custom">自定义...</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <label>密钥:</label>
+                            <input type="text" id="custom-4-chars" maxlength="4" placeholder="输入4个不重复字符" value="HOG❤">
+                        </div>
+                    </div>
+                    
+                    <div class="preview-chars" id="custom-preview">当前字符集: 0123456789abcdef</div>
+                </div>
+
+                <!-- Zero Width Config -->
+                <div id="crypto-zerowidth-config" class="crypto-config" style="display:none;">
+                    <div style="font-size:0.8rem; color:var(--text-dim); margin-bottom:10px;">
+                        将隐秘信息隐藏在普通文本中，肉眼不可见。
+                    </div>
+                    <div class="input-row">
+                        <label>伪装文本:</label>
+                        <input type="text" id="zw-cover" placeholder="在此输入用于伪装的公开文本...">
+                    </div>
+                </div>
+                
+                <textarea id="crypto-input" placeholder="输入需要加密/解密的内容..." style="border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2);"></textarea>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="tool-group">
+                <div class="group-label">操作</div>
+                <button class="btn btn-primary" onclick="cryptoTool.run('encrypt')">加密 (Encrypt) →</button>
+                <button class="btn btn-primary" onclick="cryptoTool.run('decrypt')">解密 (Decrypt) ←</button>
+            </div>
+            <div class="tool-group">
+                <div class="group-label">信息</div>
+                <div style="font-size:0.8rem; color:var(--text-dim); padding:0.5rem; line-height:1.4">
+                    标准加密使用 Crypto-JS 库。<br>
+                    自定义加密已启用 LZString 压缩优化。<br>
+                    零宽隐写解密时只需输入含隐写内容的文本。
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">结果</div>
+                <div class="panel-actions">
+                    <button class="btn btn-icon btn-secondary" onclick="app.copy('crypto-output')">复制</button>
+                </div>
+            </div>
+            <textarea id="crypto-output" readonly placeholder="结果..." style="border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2);"></textarea>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        const cryptoTool = {
+            subTab: 'std',
+            
+            switchSubTab: function(tab, el) {
+                this.subTab = tab;
+                document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+                el.classList.add('active');
+                
+                document.getElementById('crypto-std-config').style.display = 'none';
+                document.getElementById('crypto-custom-config').style.display = 'none';
+                document.getElementById('crypto-zerowidth-config').style.display = 'none';
+
+                if(tab === 'std') {
+                    document.getElementById('crypto-std-config').style.display = 'block';
+                } else if(tab === 'custom') {
+                    document.getElementById('crypto-custom-config').style.display = 'block';
+                } else {
+                    document.getElementById('crypto-zerowidth-config').style.display = 'block';
+                }
+            },
+            
+            updateCustomUI: function() {
+                const mode = document.getElementById('custom-mode').value;
+                if(mode === '16char') {
+                    document.getElementById('custom-16-settings').style.display = 'block';
+                    document.getElementById('custom-4-settings').style.display = 'none';
+                    this.updatePreview('16');
+                } else {
+                    document.getElementById('custom-16-settings').style.display = 'none';
+                    document.getElementById('custom-4-settings').style.display = 'block';
+                    this.updatePreview('4');
+                }
+            },
+            
+            updatePreview: function(type) {
+                const chars = document.getElementById(`custom-${type}-chars`).value;
+                document.getElementById('custom-preview').innerText = `当前字符集: ${chars}`;
+            },
+            
+            apply16Preset: function() {
+                const presets = {
+                    default: '0123456789abcdef',
+                    orgasm: '齁哦啊嗯呃哈呜咿唔哼咕咯喔噢~❤',
+                    sound: '喵呜嗷喔嘎吼嗯啊唔哼呃呼哈!~❤',
+                    symbol: '!@#$%^&*()-_=+/*.',
+                    custom: ''
+                };
+                const val = document.getElementById('custom-16-preset').value;
+                if(val !== 'custom') {
+                    document.getElementById('custom-16-chars').value = presets[val];
+                    this.updatePreview('16');
+                }
+            },
+            
+            apply4Preset: function() {
+                const presets = {
+                    default: 'HOG~',
+                    orgasm: '齁哦咿~',
+                    letters: 'ABCD',
+                    symbol: '!@#$',
+                    custom: ''
+                };
+                const val = document.getElementById('custom-4-preset').value;
+                if(val !== 'custom') {
+                    document.getElementById('custom-4-chars').value = presets[val];
+                    this.updatePreview('4');
+                }
+            },
+
+            run: function(action) {
+                const input = document.getElementById('crypto-input').value;
+                if(!input) return;
+                
+                let res = '';
+                
+                try {
+                    if(this.subTab === 'std') {
+                        // Standard Crypto using CryptoJS
+                        if(typeof CryptoJS === 'undefined') {
+                            throw new Error("CryptoJS 库加载失败，请检查网络连接");
+                        }
+                        const algo = document.getElementById('std-algo').value;
+                        const key = document.getElementById('std-key').value;
+                        
+                        if(action === 'encrypt') {
+                            res = CryptoJS[algo].encrypt(input, key).toString();
+                        } else {
+                            const bytes = CryptoJS[algo].decrypt(input, key);
+                            res = bytes.toString(CryptoJS.enc.Utf8);
+                            if(!res) throw new Error("解密失败，密钥错误或内容损坏");
+                        }
+                    } else if(this.subTab === 'custom') {
+                        // Custom Crypto
+                        const mode = document.getElementById('custom-mode').value;
+                        if(mode === '16char') {
+                            res = this.run16Char(action, input);
+                        } else {
+                            res = this.run4Char(action, input);
+                        }
+                    } else {
+                        // Zero Width Crypto
+                        res = this.runZeroWidth(action, input);
+                    }
+                } catch(e) {
+                    res = "错误: " + e.message;
+                    app.showToast('操作失败', 'error');
+                    console.error(e);
+                }
+                
+                document.getElementById('crypto-output').value = res;
+            },
+            
+            // 压缩辅助函数
+            compress: function(str) {
+                if(typeof LZString === 'undefined') return str;
+                return LZString.compressToUint8Array(str);
+            },
+            
+            decompress: function(uint8Array) {
+                if(typeof LZString === 'undefined') return new TextDecoder().decode(uint8Array);
+                const res = LZString.decompressFromUint8Array(uint8Array);
+                return res || new TextDecoder().decode(uint8Array); // Fallback if not compressed
+            },
+
+            run16Char: function(action, input) {
+                let charset = document.getElementById('custom-16-chars').value;
+                if(new Set(charset).size !== 16) throw new Error("16字符集必须包含16个不重复字符");
+                
+                if(action === 'encrypt') {
+                    // Compress first
+                    const bytes = this.compress(input);
+                    // If compress failed or not loaded, fallback to utf8
+                    const data = bytes instanceof Uint8Array ? bytes : new TextEncoder().encode(input);
+                    
+                    let encoded = '';
+                    for(let byte of data) {
+                        encoded += charset[(byte >> 4) & 0x0F] + charset[byte & 0x0F];
+                    }
+                    return `#CE=${charset}\n${encoded}`;
+                } else {
+                    // Decrypt
+                    if(input.startsWith('#CE=')) {
+                        const idx = input.indexOf('\n');
+                        if(idx > -1) {
+                            charset = input.substring(4, idx);
+                            input = input.substring(idx + 1);
+                        }
+                    }
+                    if(input.length % 2 !== 0) throw new Error("无效的编码长度");
+                    
+                    const map = {};
+                    for(let i=0; i < 16; i++) map[charset[i]] = i;
+                    
+                    const bytes = [];
+                    for(let i=0; i < input.length; i+=2) {
+                        const h = map[input[i]];
+                        const l = map[input[i+1]];
+                        if(h === undefined || l === undefined) throw new Error(`字符集中未找到字符: ${input[i]}${input[i+1]}`);
+                        bytes.push((h << 4) | l);
+                    }
+                    
+                    return this.decompress(new Uint8Array(bytes));
+                }
+            },
+            
+            run4Char: function(action, input) {
+                let keys = document.getElementById('custom-4-chars').value;
+                if(new Set(keys).size !== 4) throw new Error("4字符密钥必须包含4个不重复字符");
+                
+                // Map 00, 01, 10, 11
+                const bitMap = [keys[0], keys[1], keys[2], keys[3]];
+                
+                if(action === 'encrypt') {
+                    // Compress
+                    const bytes = this.compress(input);
+                    const data = bytes instanceof Uint8Array ? bytes : new TextEncoder().encode(input);
+
+                    let res = '';
+                    for(let byte of data) {
+                        // 1 byte = 8 bits = 4 chars (2 bits per char)
+                        res += bitMap[(byte >> 6) & 0x03];
+                        res += bitMap[(byte >> 4) & 0x03];
+                        res += bitMap[(byte >> 2) & 0x03];
+                        res += bitMap[byte & 0x03];
+                    }
+                    return `${keys}|${res}`;
+                } else {
+                    if(input.includes('|')) {
+                        const parts = input.split('|');
+                        keys = parts[0];
+                        input = parts[1];
+                    }
+                    
+                    const revMap = {};
+                    for(let i=0; i < 4; i++) revMap[keys[i]] = i;
+                    
+                    const bytes = [];
+                    if(input.length % 4 !== 0) throw new Error("内容长度不匹配，可能损坏");
+                    
+                    for(let i=0; i < input.length; i+=4) {
+                        let val = 0;
+                        for(let j=0; j<4; j++) {
+                            const char = input[i+j];
+                            if(revMap[char] === undefined) throw new Error(`无效字符: ${char}`);
+                            val = (val << 2) | revMap[char];
+                        }
+                        bytes.push(val);
+                    }
+                    
+                    return this.decompress(new Uint8Array(bytes));
+                }
+            },
+
+            runZeroWidth: function(action, input) {
+                const zw = {
+                    space: '\u200B', // Zero Width Space (0)
+                    joiner: '\u200C' // Zero Width Non-Joiner (1)
+                };
+                
+                if(action === 'encrypt') {
+                    const cover = document.getElementById('zw-cover').value || "这是一个普通的文本。";
+                    
+                    // Always use LZString compression
+                    if (typeof LZString === 'undefined') {
+                        app.showToast('LZString 库加载失败，无法进行压缩加密', 'error');
+                        return "加密失败";
+                    }
+
+                    const compressed = LZString.compressToUint8Array(input);
+                    if (!compressed) return "压缩失败";
+
+                    // Bytes -> Binary
+                    let bin = '';
+                    for(let i=0; i<compressed.length; i++) {
+                        bin += compressed[i].toString(2).padStart(8, '0');
+                    }
+                    
+                    let hidden = '';
+                    for(let b of bin) {
+                        hidden += (b === '0' ? zw.space : zw.joiner);
+                    }
+                    
+                    // Insert hidden after first char of cover
+                    if(cover.length > 0) {
+                        return cover[0] + hidden + cover.slice(1);
+                    } else {
+                        return hidden;
+                    }
+                } else {
+                    // Extract
+                    let bin = '';
+                    for(let char of input) {
+                        if(char === zw.space) bin += '0';
+                        else if(char === zw.joiner) bin += '1';
+                    }
+                    
+                    if(!bin) return "未检测到隐写信息";
+
+                    try {
+                        const bytes = [];
+                        // Process 8 bits at a time
+                        for(let i=0; i<bin.length; i+=8) {
+                            bytes.push(parseInt(bin.substr(i, 8), 2));
+                        }
+                        const uint8 = new Uint8Array(bytes);
+                        const decompressed = LZString.decompressFromUint8Array(uint8);
+                        if(decompressed) return decompressed;
+                        return "解密失败：无法解压缩数据";
+                    } catch(e) {
+                        console.error(e);
+                        return "解密出错";
+                    }
+                }
+            }
+        };
+        
+        // Init logic
+        cryptoTool.updateCustomUI();
+    </script>
+</body>
+</html>

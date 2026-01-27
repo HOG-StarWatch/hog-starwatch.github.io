@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图种生成器</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body {
+            background: transparent;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-section {
+            text-align: center; 
+            margin-bottom: 20px;
+        }
+
+        /* Layout Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+                align-items: start;
+            }
+            .full-width {
+                grid-column: 1 / -1;
+            }
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .tab-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            background: rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+        }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.05);
+        }
+        .upload-zone img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            display: none;
+            object-fit: contain;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .control-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        input[type="text"], input[type="number"] {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: var(--radius-sm);
+        }
+        input[type="color"] {
+            background: transparent;
+            border: none;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
+
+        .file-list {
+            margin-top: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            text-align: left;
+            width: 100%;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+        }
+        .file-item:last-child { border-bottom: none; }
+        .file-size { color: var(--text-dim); font-size: 0.8rem; }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white; 
+        }
+        .btn-primary:hover {
+            box-shadow: 0 4px 15px rgba(192, 132, 252, 0.4);
+        }
+        .btn-success {
+            background: var(--success);
+            color: white;
+            text-decoration: none;
+            display: none;
+        }
+
+        .element-item {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header-section">
+            <h1 style="color: var(--primary); margin-bottom: 10px;">🌱 图种生成器</h1>
+            <p style="color: var(--text-dim);">将文件隐藏在图片中。修改后缀为 .zip 或用解压软件打开即可提取。</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- 1. Cover Image -->
+            <div class="panel">
+                <div class="section-title">
+                    <span>1. 封面图片 (Cover)</span>
+                </div>
+
+                <div class="tab-group">
+                    <button class="tab-btn active" onclick="switchCoverTab('upload')">📤 上传图片</button>
+                    <button class="tab-btn" onclick="switchCoverTab('generate')">🎨 自动生成</button>
+                </div>
+
+                <!-- Upload Mode -->
+                <div id="cover-upload" class="cover-content" style="flex:1; display:flex; flex-direction:column;">
+                    <input type="file" id="input-cover" accept="image/*" style="display: none;">
+                    <div class="upload-zone" onclick="document.getElementById('input-cover').click()">
+                        <p id="ph-cover" style="color: var(--text-dim);">点击上传封面图片 (JPG/PNG/GIF)</p>
+                        <img id="img-preview">
+                    </div>
+                </div>
+
+                <!-- Generate Mode -->
+                <div id="cover-generate" class="cover-content" style="display: none; flex:1; flex-direction:column;">
+                    <div class="control-row">
+                        <label>背景颜色:</label>
+                        <input type="color" id="gen-color" value="#8b5cf6" onchange="renderCanvas()">
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display:block; margin-bottom:10px; color:var(--text-main);">自定义元素:</label>
+                        <div id="element-list"></div>
+                        <button class="tab-btn" style="width:100%; border-style:dashed;" onclick="addCustomElement()">➕ 添加 Emoji / 文字</button>
+                    </div>
+
+                    <div class="upload-zone" style="cursor: default; background: transparent; padding: 10px;">
+                        <canvas id="gen-canvas" width="600" height="400" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Hidden Content -->
+            <div class="panel">
+                <div class="section-title">
+                    <span>2. 隐藏内容 (Hidden Content)</span>
+                </div>
+
+                <div class="tab-group">
+                    <button class="tab-btn active" onclick="switchHiddenTab('files')">📄 选择文件</button>
+                    <button class="tab-btn" onclick="switchHiddenTab('zip')">📦 选择压缩包</button>
+                </div>
+
+                <!-- Files Mode -->
+                <div id="hidden-files" class="hidden-content" style="flex:1; display:flex; flex-direction:column;">
+                    <input type="file" id="input-files" multiple style="display: none;">
+                    <div class="upload-zone" onclick="document.getElementById('input-files').click()" style="min-height: 120px;">
+                        <p style="color: var(--text-dim);">点击选择一个或多个文件<br>(将自动打包为 .zip)</p>
+                        <div id="file-list" class="file-list"></div>
+                    </div>
+                </div>
+
+                <!-- Zip Mode -->
+                <div id="hidden-zip" class="hidden-content" style="display: none; flex:1; flex-direction:column;">
+                    <input type="file" id="input-zip" accept=".zip,.rar,.7z,.tar" style="display: none;">
+                    <div class="upload-zone" onclick="document.getElementById('input-zip').click()" style="min-height: 120px;">
+                        <p id="ph-zip" style="color: var(--text-dim);">点击上传已有的压缩包 (.zip/.rar等)</p>
+                        <div id="zip-info" style="display:none; color: var(--success); font-weight: bold; margin-top: 10px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action -->
+            <div class="full-width">
+                <button class="btn btn-primary" id="btn-create">🔨 生成图种</button>
+                <a id="btn-download" class="btn btn-success">💾 下载结果</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- State ---
+        let coverBlob = null;
+        let coverExt = 'png';
+        let hiddenBlob = null;
+        let hiddenFiles = [];
+        let hiddenMode = 'files';
+        let coverMode = 'upload';
+
+        // --- Tabs ---
+        function switchCoverTab(mode) {
+            document.querySelectorAll('.cover-content').forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('active-flex');
+            });
+            const target = document.getElementById('cover-' + mode);
+            target.style.display = 'flex';
+            target.style.flexDirection = 'column';
+            coverMode = mode;
+            
+            const btns = document.querySelectorAll('.panel:first-of-type .tab-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            if(mode === 'upload') btns[0].classList.add('active'); else btns[1].classList.add('active');
+
+            if(mode === 'generate') renderCanvas();
+        }
+
+        function switchHiddenTab(mode) {
+            document.querySelectorAll('.hidden-content').forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('active-flex');
+            });
+            const target = document.getElementById('hidden-' + mode);
+            target.style.display = 'flex';
+            target.style.flexDirection = 'column';
+            hiddenMode = mode;
+            
+            const btns = document.querySelectorAll('.panel:nth-of-type(2) .tab-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            if(mode === 'files') btns[0].classList.add('active'); else btns[1].classList.add('active');
+        }
+
+        // --- Cover Logic ---
+        document.getElementById('input-cover').onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            
+            coverExt = file.name.split('.').pop().toLowerCase();
+            if(coverExt === 'jpg') coverExt = 'jpeg';
+            
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = document.getElementById('img-preview');
+                img.src = ev.target.result;
+                img.style.display = 'block';
+                document.getElementById('ph-cover').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+            coverBlob = file;
+        };
+
+        // --- Generator Logic ---
+        const cvs = document.getElementById('gen-canvas');
+        const ctx = cvs.getContext('2d');
+        let customElements = [
+            { type: 'text', content: 'SECRET FILE', x: 300, y: 200, size: 60, color: '#ffffff' },
+            { type: 'text', content: '🌱', x: 300, y: 120, size: 40, color: '#ffffff' }
+        ];
+
+        function renderCanvas() {
+            const color = document.getElementById('gen-color').value;
+            
+            ctx.fillStyle = color;
+            ctx.fillRect(0, 0, cvs.width, cvs.height);
+            
+            // Grid
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 2;
+            const step = 40;
+            for(let x=0; x<cvs.width; x+=step) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,cvs.height); ctx.stroke(); }
+            for(let y=0; y<cvs.height; y+=step) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(cvs.width,y); ctx.stroke(); }
+
+            // Elements
+            customElements.forEach(el => {
+                ctx.fillStyle = el.color || 'white';
+                ctx.font = `bold ${el.size}px Segoe UI, Apple Color Emoji, Segoe UI Emoji`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 10;
+                ctx.fillText(el.content, el.x, el.y);
+                ctx.shadowBlur = 0;
+            });
+            
+            cvs.toBlob(blob => {
+                coverBlob = blob;
+                coverExt = 'png';
+            }, 'image/png');
+        }
+
+        function renderElementsUI() {
+            const list = document.getElementById('element-list');
+            list.innerHTML = '';
+            
+            customElements.forEach((el, idx) => {
+                const div = document.createElement('div');
+                div.className = 'element-item';
+                div.innerHTML = `
+                    <div style="display:flex; gap:10px; margin-bottom:5px;">
+                        <input type="text" value="${el.content}" oninput="updateElement(${idx}, 'content', this.value)" style="flex:1;" placeholder="内容">
+                        <input type="color" value="${el.color}" oninput="updateElement(${idx}, 'color', this.value)">
+                        <button onclick="removeElement(${idx})" style="background:#ef4444; border:none; color:white; border-radius:4px; padding:0 10px; cursor:pointer;">🗑️</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">
+                        <label style="font-size:0.8rem; color:var(--text-dim);">Size <input type="number" value="${el.size}" oninput="updateElement(${idx}, 'size', this.value)" style="width:50px; padding:4px;"></label>
+                        <label style="font-size:0.8rem; color:var(--text-dim);">X <input type="number" value="${el.x}" oninput="updateElement(${idx}, 'x', this.value)" style="width:50px; padding:4px;"></label>
+                        <label style="font-size:0.8rem; color:var(--text-dim);">Y <input type="number" value="${el.y}" oninput="updateElement(${idx}, 'y', this.value)" style="width:50px; padding:4px;"></label>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        window.updateElement = (idx, key, val) => {
+            if(key === 'x' || key === 'y' || key === 'size') val = parseInt(val);
+            customElements[idx][key] = val;
+            renderCanvas();
+        };
+        window.removeElement = (idx) => { customElements.splice(idx, 1); renderElementsUI(); renderCanvas(); };
+        window.addCustomElement = () => {
+            customElements.push({ type: 'text', content: 'New', x: 300, y: 200, size: 40, color: '#ffffff' });
+            renderElementsUI();
+            renderCanvas();
+        };
+
+        renderElementsUI();
+        setTimeout(renderCanvas, 100);
+
+        // --- Hidden Files Logic ---
+        document.getElementById('input-files').onchange = (e) => {
+            hiddenFiles = Array.from(e.target.files);
+            const list = document.getElementById('file-list');
+            list.innerHTML = '';
+            if(hiddenFiles.length === 0) { list.style.display = 'none'; return; }
+            list.style.display = 'block';
+            hiddenFiles.forEach(f => {
+                list.innerHTML += `<div class="file-item"><span>${f.name}</span><span class="file-size">${(f.size/1024).toFixed(1)} KB</span></div>`;
+            });
+        };
+
+        document.getElementById('input-zip').onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            hiddenBlob = file;
+            document.getElementById('ph-zip').style.display = 'none';
+            const info = document.getElementById('zip-info');
+            info.style.display = 'block';
+            info.innerText = `✅ ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+        };
+
+        // --- Create Logic ---
+        document.getElementById('btn-create').onclick = async () => {
+            const btn = document.getElementById('btn-create');
+            
+            if (coverMode === 'generate' && !coverBlob) {
+                await new Promise(r => cvs.toBlob(b => { coverBlob = b; coverExt='png'; r(); }));
+            }
+            if (!coverBlob) return alert("请先上传或生成封面图片！");
+
+            let finalZipBlob = null;
+            btn.disabled = true;
+            btn.innerText = "⏳ 正在打包...";
+
+            try {
+                if (hiddenMode === 'zip') {
+                    if (!hiddenBlob) throw new Error("请上传压缩包文件！");
+                    finalZipBlob = hiddenBlob;
+                } else {
+                    if (hiddenFiles.length === 0) throw new Error("请至少选择一个文件！");
+                    if (typeof JSZip === 'undefined') throw new Error("JSZip 库加载失败，请检查网络连接。");
+                    
+                    const zip = new JSZip();
+                    hiddenFiles.forEach(f => zip.file(f.name, f));
+                    btn.innerText = "⏳ 正在压缩...";
+                    finalZipBlob = await zip.generateAsync({type:"blob"});
+                }
+
+                btn.innerText = "⏳ 正在合并...";
+                const resultBlob = new Blob([coverBlob, finalZipBlob], { type: coverBlob.type });
+                
+                const dl = document.getElementById('btn-download');
+                const url = URL.createObjectURL(resultBlob);
+                dl.href = url;
+                dl.download = `seed_image.${coverExt}`; 
+                dl.style.display = 'flex';
+                
+                btn.innerText = "✅ 生成成功！";
+                setTimeout(() => { btn.disabled = false; btn.innerText = "🔨 生成图种"; }, 3000);
+
+            } catch (err) {
+                alert("错误: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "🔨 生成图种";
+            }
+        };
+    </script>
+</body>
+</html>

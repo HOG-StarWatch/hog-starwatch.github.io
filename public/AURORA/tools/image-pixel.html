@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片像素化</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: transparent;
+            color: var(--text-main);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .controls {
+            background: rgba(20, 25, 40, 0.6);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 350px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+        }
+        
+        .preview {
+            background: rgba(20, 25, 40, 0.6);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+        
+        .control-group {
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+        
+        label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+        
+        label i {
+            margin-right: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(192, 132, 252, 0.1);
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            margin: 1rem 0;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: rgba(0,0,0,0.2);
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            height: 6px;
+            border-radius: 3px;
+            appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="controls">
+            <div class="control-group">
+                <label><i class="fas fa-upload"></i> 上传图片</label>
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-dim);"></i>
+                    <div style="font-size: 0.9rem;">点击或拖放图片</div>
+                    <input type="file" id="imageUpload" accept="image/*" hidden>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label><i class="fas fa-th-large"></i> 像素块大小: <span id="pixelValue" style="color:var(--primary)">8</span>px</label>
+                <input type="range" id="pixelSize" min="2" max="50" value="8">
+            </div>
+            
+            <div class="control-group" style="display:flex; flex-direction:column; gap:0.5rem;">
+                <button id="processBtn" class="btn btn-primary" style="justify-content:center" disabled>
+                    <i class="fas fa-magic"></i> 处理图片
+                </button>
+                <button id="downloadBtn" class="btn btn-secondary" style="justify-content:center" disabled>
+                    <i class="fas fa-download"></i> 下载图片
+                </button>
+                <button id="resetBtn" class="btn btn-secondary" style="justify-content:center">
+                    <i class="fas fa-redo"></i> 重置
+                </button>
+            </div>
+        </div>
+        
+        <div class="preview">
+            <div class="canvas-container">
+                <div id="previewPlaceholder" style="text-align:center; color:var(--text-dim);">
+                    <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <div>图片处理预览区域</div>
+                </div>
+                <canvas id="originalCanvas" style="display:none;"></canvas>
+                <canvas id="pixelatedCanvas" style="display:none;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+        const uploadArea = document.getElementById('uploadArea');
+        const pixelSize = document.getElementById('pixelSize');
+        const pixelValue = document.getElementById('pixelValue');
+        const processBtn = document.getElementById('processBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const pixelatedCanvas = document.getElementById('pixelatedCanvas');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        
+        let originalCtx = originalCanvas.getContext('2d');
+        let pixelatedCtx = pixelatedCanvas.getContext('2d');
+        let originalImage = null;
+        let pixelSizeValue = 8;
+
+        pixelSize.addEventListener('input', (e) => {
+            pixelSizeValue = parseInt(e.target.value);
+            pixelValue.innerText = pixelSizeValue;
+        });
+
+        uploadArea.addEventListener('click', () => imageUpload.click());
+        imageUpload.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border)'; });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--border)';
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        function handleFile(file) {
+            if(!file || !file.type.startsWith('image/')) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    processBtn.disabled = false;
+                    
+                    // Show original
+                    resizeCanvas(originalCanvas, img.width, img.height);
+                    originalCtx.drawImage(img, 0, 0);
+                    
+                    previewPlaceholder.style.display = 'none';
+                    originalCanvas.style.display = 'block';
+                    pixelatedCanvas.style.display = 'none';
+                    
+                    // Auto process preview if small enough? Or just wait for button.
+                    // Let's wait for button to save performance on large images
+                    app.showToast('图片已加载');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resizeCanvas(canvas, w, h) {
+            canvas.width = w;
+            canvas.height = h;
+        }
+
+        processBtn.addEventListener('click', () => {
+            if(!originalImage) return;
+            
+            const w = originalImage.width;
+            const h = originalImage.height;
+            
+            resizeCanvas(pixelatedCanvas, w, h);
+            
+            // Pixelation Logic
+            // Draw small
+            const scaledW = Math.ceil(w / pixelSizeValue);
+            const scaledH = Math.ceil(h / pixelSizeValue);
+            
+            // We can use a temporary canvas to scale down then up
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = scaledW;
+            tempCanvas.height = scaledH;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Turn off smoothing
+            tempCtx.imageSmoothingEnabled = false;
+            pixelatedCtx.imageSmoothingEnabled = false;
+            
+            tempCtx.drawImage(originalImage, 0, 0, scaledW, scaledH);
+            
+            // Draw back to large canvas
+            pixelatedCtx.drawImage(tempCanvas, 0, 0, scaledW, scaledH, 0, 0, w, h);
+            
+            originalCanvas.style.display = 'none';
+            pixelatedCanvas.style.display = 'block';
+            downloadBtn.disabled = false;
+            app.showToast('处理完成');
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'pixelated.png';
+            link.href = pixelatedCanvas.toDataURL();
+            link.click();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            originalImage = null;
+            processBtn.disabled = true;
+            downloadBtn.disabled = true;
+            originalCanvas.style.display = 'none';
+            pixelatedCanvas.style.display = 'none';
+            previewPlaceholder.style.display = 'block';
+            imageUpload.value = '';
+        });
+    </script>
+</body>
+</html>

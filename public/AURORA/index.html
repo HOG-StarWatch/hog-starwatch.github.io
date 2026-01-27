@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>极光工具箱 (Aurora Toolbox)</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body { overflow: hidden; }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            flex: 1;
+            display: block;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display:flex; align-items:center;">
+            <div class="logo" style="cursor: pointer;" onclick="switchToHome()">AURORA <span style="font-weight:300; opacity:0.7">TOOLBOX</span></div>
+            <button id="theme-btn" title="切换主题" style="margin-left: 15px; background:rgba(255,255,255,0.1); border:none; color:var(--text-main); cursor:pointer; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:0.2s;" onclick="toggleThemeModal()">
+                ❤
+            </button>
+        </div>
+        <nav class="nav-tabs">
+            <button class="btn" onclick="window.location.href = window.location.origin">
+            <span>↩❤↩</span>
+            </button>
+            <button class="tab-btn active" data-src="tools/home.html">工具箱主页</button>
+
+            <!-- Text Dropdown -->
+            <div class="dropdown">
+                <button class="tab-btn dropdown-toggle">文本工具</button>
+                <div class="dropdown-content">
+                    <button class="tab-btn" data-src="tools/text.html">文本处理</button>
+                    <button class="tab-btn" data-src="tools/format.html">文本格式化</button>
+                    <button class="tab-btn" data-src="tools/diff.html">文本对比</button>
+                    <button class="tab-btn" data-src="tools/transcode.html">文本转码</button>
+                    <button class="tab-btn" data-src="tools/encrypt.html">加密解密</button>
+                    <button class="tab-btn" data-src="tools/obfuscator.html">HTML混淆</button>
+                    <button class="tab-btn" data-src="tools/markdown.html">MD/WD/HTML</button>
+                </div>
+            </div>
+
+            <!-- File Dropdown -->
+            <div class="dropdown">
+                <button class="tab-btn dropdown-toggle">文件工具</button>
+                <div class="dropdown-content">
+                    <button class="tab-btn" data-src="tools/file.html">文件处理</button>
+                </div>
+            </div>
+
+            <!-- Image Dropdown -->
+            <div class="dropdown">
+                <button class="tab-btn dropdown-toggle">图片工具</button>
+                <div class="dropdown-content">
+                    <button class="tab-btn" data-src="tools/image-visual.html">视觉变换</button>
+                    <button class="tab-btn" data-src="tools/image-convert.html">编码转换</button>
+                </div>
+            </div>
+
+            <!-- Other Dropdown -->
+            <div class="dropdown">
+                <button class="tab-btn dropdown-toggle">其他工具</button>
+                <div class="dropdown-content">
+                    <button class="tab-btn" data-src="tools/hash.html">哈希计算</button>
+                    <button class="tab-btn" data-src="tools/generator.html">生成器</button>
+                    <button class="tab-btn" data-src="tools/qrcode.html">二维码</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <iframe id="app-frame" src="tools/home.html"></iframe>
+    </main>
+
+    <!-- Theme Modal -->
+    <div id="theme-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:var(--bg-deep); width:400px; padding:20px; border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3 style="margin:0; color:var(--text-main);">主题设置 (Theme)</h3>
+                <button onclick="toggleThemeModal()" style="background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer;">×</button>
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <h4 style="color:var(--text-dim); margin-bottom:10px;">标准 (Standard)</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <button onclick="setTheme('aurora')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #0b0f19, #201a30); color:#c084fc; cursor:pointer;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#c084fc; border-radius:50%; margin-right:5px;"></span> 极光 (Aurora)
+                    </button>
+                    <button onclick="setTheme('cyberpunk')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #050505, #1a0b1a); color:#f0f; cursor:pointer;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#f0f; border-radius:50%; margin-right:5px;"></span> 赛博 (Cyber)
+                    </button>
+                    <button onclick="setTheme('ocean')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #001e2b, #00334e); color:#00a8ff; cursor:pointer;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#00a8ff; border-radius:50%; margin-right:5px;"></span> 深海 (Ocean)
+                    </button>
+                    <button onclick="setTheme('forest')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #0a1a0a, #142814); color:#4ade80; cursor:pointer;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#4ade80; border-radius:50%; margin-right:5px;"></span> 森林 (Forest)
+                    </button>
+                    <button onclick="setTheme('sunset')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #1a0a0a, #2d1b0e); color:#fb923c; cursor:pointer;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#fb923c; border-radius:50%; margin-right:5px;"></span> 日落 (Sunset)
+                    </button>
+                    <button onclick="setTheme('monster')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #2a0a1a, #4a1a2a); color:#f472b6; cursor:pointer;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#f472b6; border-radius:50%; margin-right:5px;"></span> 魔物 (Monster)
+                    </button>
+                    <button onclick="setTheme('coffee')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #2c211b, #43332d); color:#d4a373; cursor:pointer;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#d4a373; border-radius:50%; margin-right:5px;"></span> 咖啡 (Coffee)
+                    </button>
+                    <button onclick="setTheme('monochrome')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #000000, #1a1a1a); color:#ffffff; cursor:pointer;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#ffffff; border-radius:50%; margin-right:5px;"></span> 黑白 (Mono)
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <h4 style="color:var(--text-dim); margin-bottom:10px;">高对比度 (High Contrast)</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <button onclick="setTheme('hc-dark')" style="padding:10px; border:2px solid #fff; border-radius:8px; background:#000; color:#ff0; cursor:pointer; font-weight:bold;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#ff0; border-radius:50%; margin-right:5px;"></span> 辣个配色 <br> (That Color)
+                    </button>
+                    <button onclick="setTheme('hc-light')" style="padding:10px; border:2px solid #000; border-radius:8px; background:#fff; color:#000; cursor:pointer; font-weight:bold;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#000; border-radius:50%; margin-right:5px;"></span> 唯一开灯 <br> (Only Light)
+                    </button>
+                    <button onclick="setTheme('neon')" style="padding:10px; border:2px solid #0f0; border-radius:8px; background:#000; color:#0f0; cursor:pointer; font-weight:bold; text-shadow:0 0 5px #0f0;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#0f0; border-radius:50%; margin-right:5px;"></span> 古早印象 <br> (Old School)
+                    </button>
+                    <button onclick="setTheme('blue-safe')" style="padding:10px; border:2px solid #fff; border-radius:8px; background:#000033; color:#ffffff; cursor:pointer; font-weight:bold;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#fff; border-radius:50%; margin-right:5px;"></span> 矫揉造作 <br> (Pretentious)
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="color:var(--text-dim); margin-bottom:10px;">自定义 (Custom)</h4>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-main);">Primary Color (主色)</span>
+                        <input type="color" id="custom-primary" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-main);">Secondary Color (辅色)</span>
+                        <input type="color" id="custom-secondary" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-main);">Accent Color (强调色)</span>
+                        <input type="color" id="custom-accent" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-main);">Background (背景)</span>
+                        <input type="color" id="custom-bg" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-main);">Text Main (主文本)</span>
+                        <input type="color" id="custom-text-main" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-main);">Text Dim (次文本)</span>
+                        <input type="color" id="custom-text-dim" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        const frame = document.getElementById('app-frame');
+        // Only select tab buttons that have a data-src attribute (exclude dropdown toggles)
+        const buttons = document.querySelectorAll('.tab-btn[data-src]');
+
+        function switchToHome() {
+            const homeBtn = document.querySelector('.tab-btn[data-src="tools/home.html"]');
+            if (homeBtn) homeBtn.click();
+        }
+
+        // Expose switchTab for iframe content (e.g., home.html cards)
+        window.switchTab = function(url) {
+            const btn = document.querySelector(`.tab-btn[data-src="${url}"]`);
+            if(btn) {
+                // If the button is inside a dropdown, we might want to ensure the dropdown is visible or just click it
+                btn.click();
+                // Scroll button into view if needed (less relevant now with dropdowns, but good for Home)
+                btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        };
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.src;
+                if (!target) return;
+
+                // Remove active class from all buttons
+                buttons.forEach(b => b.classList.remove('active'));
+                
+                // Add active class to clicked button
+                btn.classList.add('active');
+
+                // Also handle Parent Dropdown Active State if needed
+                // Reset all dropdown toggles
+                document.querySelectorAll('.dropdown-toggle').forEach(t => t.classList.remove('active'));
+                
+                // If button is inside a dropdown-content, highlight the parent dropdown toggle
+                const dropdownContent = btn.closest('.dropdown-content');
+                if (dropdownContent) {
+                    const dropdown = dropdownContent.parentElement;
+                    const toggle = dropdown.querySelector('.dropdown-toggle');
+                    if (toggle) toggle.classList.add('active');
+                }
+
+                // Avoid reloading if clicking same tab
+                if (frame.contentWindow.location.pathname.endsWith(target)) return;
+                frame.src = target;
+            });
+        });
+
+        // Theme Logic
+        let currentThemeData = null; // Store current theme in memory
+
+        const themes = {
+            aurora: {
+                '--bg-deep': '#0b0f19',
+                '--bg-panel': 'rgba(20, 25, 40, 0.65)',
+                '--primary': '#c084fc',
+                '--secondary': '#2dd4bf',
+                '--accent': '#f472b6',
+                '--text-main': '#f1f5f9',
+                '--text-dim': '#94a3b8'
+            },
+            cyberpunk: {
+                '--bg-deep': '#050505',
+                '--bg-panel': 'rgba(20, 10, 30, 0.75)',
+                '--primary': '#ff00ff',
+                '--secondary': '#00ffff',
+                '--accent': '#ffff00',
+                '--text-main': '#e0e0e0',
+                '--text-dim': '#808080'
+            },
+            ocean: {
+                '--bg-deep': '#001e2b',
+                '--bg-panel': 'rgba(0, 40, 60, 0.65)',
+                '--primary': '#00a8ff',
+                '--secondary': '#00ffcc',
+                '--accent': '#ffaa00',
+                '--text-main': '#e6f7ff',
+                '--text-dim': '#8ab6d6'
+            },
+            forest: {
+                '--bg-deep': '#0a1a0a',
+                '--bg-panel': 'rgba(20, 40, 20, 0.65)',
+                '--primary': '#4ade80',
+                '--secondary': '#facc15',
+                '--accent': '#f87171',
+                '--text-main': '#f0fdf4',
+                '--text-dim': '#86efac'
+            },
+            sunset: {
+                '--bg-deep': '#1a0a0a',
+                '--bg-panel': 'rgba(40, 20, 10, 0.65)',
+                '--primary': '#fb923c',
+                '--secondary': '#c084fc',
+                '--accent': '#f43f5e',
+                '--text-main': '#fff7ed',
+                '--text-dim': '#fdba74'
+            },
+            monster: {
+                '--bg-deep': '#1a0510',
+                '--bg-panel': 'rgba(40, 10, 30, 0.75)',
+                '--primary': '#f472b6',
+                '--secondary': '#c084fc',
+                '--accent': '#fb7185',
+                '--text-main': '#fce7f3',
+                '--text-dim': '#fda4af'
+            },
+            coffee: {
+                '--bg-deep': '#2c211b',
+                '--bg-panel': 'rgba(67, 51, 45, 0.7)',
+                '--primary': '#d4a373',
+                '--secondary': '#e9edc9',
+                '--accent': '#faedcd',
+                '--text-main': '#fefae0',
+                '--text-dim': '#ccd5ae'
+            },
+            monochrome: {
+                '--bg-deep': '#000000',
+                '--bg-panel': 'rgba(25, 25, 25, 0.8)',
+                '--primary': '#ffffff',
+                '--secondary': '#888888',
+                '--accent': '#aaaaaa',
+                '--text-main': '#ffffff',
+                '--text-dim': '#666666'
+            },
+            'hc-dark': {
+                '--bg-deep': '#000000',
+                '--bg-panel': '#000000',
+                '--primary': '#ffff00',
+                '--secondary': '#00ffff',
+                '--accent': '#ff0000',
+                '--text-main': '#ffffff',
+                '--text-dim': '#dddddd'
+            },
+            'hc-light': {
+                '--bg-deep': '#ffffff',
+                '--bg-panel': '#ffffff',
+                '--primary': '#0000ff',
+                '--secondary': '#008800',
+                '--accent': '#aa0000',
+                '--text-main': '#000000',
+                '--text-dim': '#333333'
+            },
+            'neon': {
+                '--bg-deep': '#000000',
+                '--bg-panel': 'rgba(10, 10, 10, 0.9)',
+                '--primary': '#00ff00',
+                '--secondary': '#ff00ff',
+                '--accent': '#ffff00',
+                '--text-main': '#00ff00',
+                '--text-dim': '#00cc00'
+            },
+            'blue-safe': {
+                '--bg-deep': '#000033',
+                '--bg-panel': '#000044',
+                '--primary': '#ffffff',
+                '--secondary': '#88ccff',
+                '--accent': '#ffaa00',
+                '--text-main': '#ffffff',
+                '--text-dim': '#cccccc'
+            }
+        };
+
+        function toggleThemeModal() {
+            const modal = document.getElementById('theme-modal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        // Close modal when clicking outside (on the backdrop)
+        document.getElementById('theme-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+
+        function setTheme(name) {
+            const theme = themes[name];
+            if(!theme) return;
+            
+            applyThemeVariables(theme);
+            syncCustomInputs(theme);
+            currentThemeData = theme;
+        }
+
+        function syncCustomInputs(theme) {
+            // Helper to safe-set input values (handles potential rgba issues by just ignoring or trying)
+            // Note: HTML color input only takes HEX. Our themes have hex for most colors except bg-panel.
+            // We only expose hex-compatible variables in custom inputs.
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if(el && val && val.startsWith('#')) el.value = val;
+            };
+
+            setVal('custom-primary', theme['--primary']);
+            setVal('custom-secondary', theme['--secondary']);
+            setVal('custom-accent', theme['--accent']);
+            setVal('custom-bg', theme['--bg-deep']);
+            setVal('custom-text-main', theme['--text-main']);
+            setVal('custom-text-dim', theme['--text-dim']);
+        }
+
+        function updateCustomTheme() {
+            const theme = {
+                '--primary': document.getElementById('custom-primary').value,
+                '--secondary': document.getElementById('custom-secondary').value,
+                '--accent': document.getElementById('custom-accent').value,
+                '--bg-deep': document.getElementById('custom-bg').value,
+                '--text-main': document.getElementById('custom-text-main').value,
+                '--text-dim': document.getElementById('custom-text-dim').value,
+                // Derive panel from bg-deep roughly or keep default
+                '--bg-panel': 'rgba(255, 255, 255, 0.05)'
+            };
+            applyThemeVariables(theme);
+            currentThemeData = theme;
+        }
+
+        function applyThemeVariables(theme) {
+            const root = document.documentElement;
+            for (const [key, value] of Object.entries(theme)) {
+                root.style.setProperty(key, value);
+            }
+            
+            // Sync with iframe
+            if(frame && frame.contentWindow) {
+                const frameRoot = frame.contentWindow.document.documentElement;
+                for (const [key, value] of Object.entries(theme)) {
+                    frameRoot.style.setProperty(key, value);
+                }
+            }
+        }
+
+        // Initialize with Aurora but don't persist
+        // Pre-fill inputs with default aurora values
+        syncCustomInputs(themes['aurora']);
+        
+        // Also listen for iframe load to re-apply theme
+        frame.addEventListener('load', () => {
+             if(currentThemeData) {
+                 applyThemeVariables(currentThemeData);
+             }
+        });
+
+    </script>
+</body>
+</html>

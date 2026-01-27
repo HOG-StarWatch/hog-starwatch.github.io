@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>故障艺术生成器</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            background: transparent;
+            padding: 20px;
+            overflow-y: auto;
+            display: block;
+            height: auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-tabs {
+            display: flex;
+            margin-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-dim);
+            border-bottom: 2px solid transparent;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab:hover:not(.active) {
+            color: var(--text-main);
+        }
+
+        .control-group {
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .control-group:last-child { border-bottom: none; }
+
+        .control-title {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .slider-row label { flex: 1; font-size: 0.85rem; color: var(--text-main); }
+        .slider-row span { font-size: 0.85rem; color: var(--secondary); width: 30px; text-align: right; }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            appearance: none;
+            flex: 2;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white; 
+        }
+        .btn-primary:hover { 
+            box-shadow: 0 4px 15px rgba(192, 132, 252, 0.4); 
+        }
+        .btn-secondary { 
+            background: transparent;
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+        }
+        .btn-secondary:hover { 
+            background: rgba(45, 212, 191, 0.1);
+        }
+        .btn-upload {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-main);
+            border: 1px dashed var(--border);
+        }
+        .btn-upload:hover {
+            border-color: var(--primary);
+            background: rgba(192, 132, 252, 0.1);
+        }
+
+        .preview-container {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: var(--radius-md);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        @media (max-width: 800px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Controls -->
+        <div class="panel">
+            <h2 style="margin:0 0 10px 0; color:var(--primary); font-size:1.5rem;">故障艺术生成器</h2>
+            
+            <div class="file-input-wrapper">
+                <button class="btn btn-upload">📂 上传图片</button>
+                <input type="file" id="input-file" accept="image/*">
+            </div>
+
+            <div class="mode-tabs">
+                <div class="tab active" onclick="setMode('layer')">图层故障</div>
+                <div class="tab" onclick="setMode('data')">数据破坏</div>
+            </div>
+
+            <!-- MODE: Layer Glitch (Canvas) -->
+            <div id="controls-layer">
+                <div class="control-group">
+                    <div class="control-title">
+                        <span>RGB 通道偏移</span>
+                        <input type="checkbox" id="chk-rgb" checked>
+                    </div>
+                    <div class="slider-row">
+                        <label>水平偏移 X</label>
+                        <input type="range" id="rgb-amount" min="0" max="50" value="10">
+                        <span id="val-rgb">10</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>垂直偏移 Y</label>
+                        <input type="range" id="rgb-angle" min="0" max="50" value="0">
+                        <span id="val-rgb-y">0</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-title">
+                        <span>切片与错位</span>
+                        <input type="checkbox" id="chk-slice" checked>
+                    </div>
+                    <div class="slider-row">
+                        <label>切片数量</label>
+                        <input type="range" id="slice-amount" min="0" max="20" value="5">
+                        <span id="val-slice">5</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>切片高度</label>
+                        <input type="range" id="slice-height" min="1" max="50" value="5">
+                        <span id="val-slice-h">5</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>最大偏移</label>
+                        <input type="range" id="slice-offset" min="0" max="100" value="20">
+                        <span id="val-slice-o">20</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-title">
+                        <span>扫描线纹理</span>
+                        <input type="checkbox" id="chk-scan">
+                    </div>
+                    <div class="slider-row">
+                        <label>线条密度</label>
+                        <input type="range" id="scan-density" min="2" max="10" value="3">
+                        <span id="val-scan">3</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>透明度</label>
+                        <input type="range" id="scan-opacity" min="0" max="100" value="50">
+                        <span id="val-scan-o">50</span>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" id="btn-render">⚡ 重新渲染</button>
+                <button class="btn btn-secondary" id="btn-random">🎲 随机参数</button>
+            </div>
+
+            <!-- MODE: Data Glitch (Binary) -->
+            <div id="controls-data" style="display: none;">
+                <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px;">
+                    ⚠️ 警告：这是对 JPEG 二进制数据的破坏性编辑，结果不可预测且可能导致图片无法显示。
+                </p>
+                
+                <div class="control-group">
+                    <div class="control-title">二进制数据腐蚀</div>
+                    <div class="slider-row">
+                        <label>随机种子</label>
+                        <input type="range" id="data-seed" min="0" max="100" value="50">
+                        <span id="val-data-seed">50</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>破坏数量</label>
+                        <input type="range" id="data-amount" min="1" max="100" value="10">
+                        <span id="val-data-amt">10</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>迭代次数</label>
+                        <input type="range" id="data-iter" min="1" max="20" value="5">
+                        <span id="val-data-iter">5</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" id="btn-mosh">☠️ 破坏数据 (MOSH)</button>
+            </div>
+            
+            <a id="btn-download" class="btn btn-success" style="text-align:center; text-decoration:none; margin-top: auto; display: none;">💾 保存图片</a>
+        </div>
+
+        <!-- Preview -->
+        <div class="preview-container">
+            <div id="placeholder-text" style="color:var(--text-dim);">请先上传图片</div>
+            <canvas id="cvs-main" style="display:none;"></canvas>
+            <img id="img-mosh" style="display: none; max-width: 100%; max-height: 80vh; border-radius: 8px;">
+        </div>
+
+    </div>
+
+    <script>
+        // --- Core Variables ---
+        let srcImg = new Image();
+        let srcLoaded = false;
+        const cvs = document.getElementById('cvs-main');
+        const ctx = cvs.getContext('2d', { willReadFrequently: true });
+        let currentMode = 'layer';
+        
+        // Worker Init
+        let glitchWorker = null;
+        if(window.Worker) {
+            glitchWorker = new Worker('../js/workers/glitch.worker.js');
+            glitchWorker.onmessage = (e) => {
+                const { type, imageData, error } = e.data;
+                if(type === 'complete') {
+                    ctx.putImageData(imageData, 0, 0);
+                    updateDownload(cvs.toDataURL('image/jpeg', 0.9));
+                    document.getElementById('btn-render').innerText = "⚡ 重新渲染";
+                    document.getElementById('btn-render').disabled = false;
+                } else if(type === 'error') {
+                    console.error(error);
+                    alert('Worker Error: ' + error);
+                    document.getElementById('btn-render').disabled = false;
+                }
+            };
+        }
+
+        // --- UI Utils ---
+        function updateVal(id, val) { document.getElementById(id).innerText = val; }
+        
+        const idMap = {
+            'rgb-amount': 'val-rgb',
+            'rgb-angle': 'val-rgb-y',
+            'slice-amount': 'val-slice',
+            'slice-height': 'val-slice-h',
+            'slice-offset': 'val-slice-o',
+            'scan-density': 'val-scan',
+            'scan-opacity': 'val-scan-o',
+            'data-seed': 'val-data-seed',
+            'data-amount': 'val-data-amt',
+            'data-iter': 'val-data-iter'
+        };
+
+        Object.keys(idMap).forEach(id => {
+            const el = document.getElementById(id);
+            const span = document.getElementById(idMap[id]);
+            if(el && span) {
+                el.oninput = () => { span.innerText = el.value; if(currentMode === 'layer') requestAnimationFrame(renderLayerGlitch); };
+            }
+        });
+        
+        document.querySelectorAll('input[type=checkbox]').forEach(el => {
+            el.onchange = () => { if(currentMode === 'layer') renderLayerGlitch(); };
+        });
+
+        // --- Mode Switching ---
+        window.setMode = (mode) => {
+            currentMode = mode;
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('controls-layer').style.display = mode === 'layer' ? 'block' : 'none';
+            document.getElementById('controls-data').style.display = mode === 'data' ? 'block' : 'none';
+            
+            if(mode === 'layer') {
+                if(srcLoaded) {
+                    cvs.style.display = 'block';
+                    document.getElementById('img-mosh').style.display = 'none';
+                    renderLayerGlitch();
+                }
+            } else {
+                // Keep showing last result until clicked
+            }
+        };
+
+        // --- File Loading ---
+        document.getElementById('input-file').onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            
+            document.getElementById('placeholder-text').style.display = 'none';
+            
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                srcImg.onload = () => {
+                    srcLoaded = true;
+                    // Reset Canvas size
+                    const maxW = 1200;
+                    const scale = Math.min(1, maxW / srcImg.width);
+                    cvs.width = srcImg.width * scale;
+                    cvs.height = srcImg.height * scale;
+                    
+                    if(currentMode === 'layer') {
+                        cvs.style.display = 'block';
+                        renderLayerGlitch();
+                    }
+                    else document.getElementById('img-mosh').src = srcImg.src;
+                };
+                srcImg.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // --- Layer Glitch Logic ---
+        function renderLayerGlitch() {
+            if(!srcLoaded) return;
+            
+            const w = cvs.width;
+            const h = cvs.height;
+            
+            // 1. Draw Original
+            ctx.drawImage(srcImg, 0, 0, w, h);
+            
+            // A. Slice & Displace (Draw parts shifted) - KEEP IN MAIN THREAD (Faster with drawImage)
+            if(document.getElementById('chk-slice').checked) {
+                const amount = parseInt(document.getElementById('slice-amount').value);
+                const height = parseInt(document.getElementById('slice-height').value);
+                const maxOffset = parseInt(document.getElementById('slice-offset').value);
+                
+                for(let i=0; i<amount; i++) {
+                    const y = Math.random() * h;
+                    const sh = Math.random() * height + 2;
+                    const off = (Math.random() - 0.5) * maxOffset * 2;
+                    
+                    // Draw a slice shifted
+                    ctx.drawImage(srcImg, 
+                        0, y / (h/srcImg.height), srcImg.width, sh / (h/srcImg.height), // Source
+                        off, y, w, sh // Dest
+                    );
+                }
+            }
+
+            // If no pixel manip needed, stop here
+            if(!document.getElementById('chk-rgb').checked && !document.getElementById('chk-scan').checked) {
+                updateDownload(cvs.toDataURL('image/jpeg', 0.9));
+                return;
+            }
+
+            // Use Worker for Pixel Manipulation (RGB & Scanlines)
+            if (glitchWorker) {
+                const btn = document.getElementById('btn-render');
+                btn.innerText = "处理中...";
+                btn.disabled = true;
+
+                const imgData = ctx.getImageData(0, 0, w, h);
+                
+                const config = {
+                    rgb: {
+                        enabled: document.getElementById('chk-rgb').checked,
+                        amount: parseInt(document.getElementById('rgb-amount').value),
+                        angle: parseInt(document.getElementById('rgb-angle').value)
+                    },
+                    scan: {
+                        enabled: document.getElementById('chk-scan').checked,
+                        density: parseInt(document.getElementById('scan-density').value),
+                        opacity: parseInt(document.getElementById('scan-opacity').value) / 100
+                    }
+                };
+
+                glitchWorker.postMessage({
+                    type: 'process',
+                    imageData: imgData,
+                    config: config
+                }, [imgData.data.buffer]);
+                
+                return; // Worker handles the rest
+            }
+
+            // Fallback for no worker (Original Code)
+            // B. RGB Shift (Composite Operation)
+            if(document.getElementById('chk-rgb').checked) {
+                const offX = parseInt(document.getElementById('rgb-amount').value);
+                const offY = parseInt(document.getElementById('rgb-angle').value);
+                
+                if(offX > 0 || offY > 0) {
+                    const imgData = ctx.getImageData(0, 0, w, h);
+                    const original = ctx.getImageData(0, 0, w, h); // Copy
+                    const d = imgData.data;
+                    const s = original.data;
+                    
+                    for(let y=0; y<h; y++) {
+                        for(let x=0; x<w; x++) {
+                            const idx = (y * w + x) * 4;
+                            
+                            // Red Channel: Shift Left/Up
+                            let rx = x - offX;
+                            let ry = y - offY;
+                            if(rx >= 0 && rx < w && ry >= 0 && ry < h) {
+                                d[idx] = s[(ry * w + rx) * 4]; 
+                            }
+                            
+                            // Blue Channel: Shift Right/Down
+                            let bx = x + offX;
+                            let by = y + offY;
+                            if(bx >= 0 && bx < w && by >= 0 && by < h) {
+                                d[idx+2] = s[(by * w + bx) * 4 + 2];
+                            }
+                        }
+                    }
+                    ctx.putImageData(imgData, 0, 0);
+                }
+            }
+            
+            // C. Scanlines
+            if(document.getElementById('chk-scan').checked) {
+                const density = parseInt(document.getElementById('scan-density').value);
+                const opacity = parseInt(document.getElementById('scan-opacity').value) / 100;
+                
+                ctx.fillStyle = `rgba(0,0,0,${opacity})`;
+                for(let y=0; y<h; y+=density) {
+                    ctx.fillRect(0, y, w, 1);
+                }
+            }
+            
+            updateDownload(cvs.toDataURL('image/jpeg', 0.9));
+        }
+
+        // --- Data Mosh Logic ---
+        document.getElementById('btn-mosh').onclick = () => {
+            if(!srcLoaded) return alert("请先上传图片！");
+            
+            const btn = document.getElementById('btn-mosh');
+            btn.disabled = true;
+            btn.innerText = "破坏中...";
+            
+            cvs.toBlob(blob => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const buffer = e.target.result; // ArrayBuffer
+                    const uint8 = new Uint8Array(buffer);
+                    
+                    const seed = parseInt(document.getElementById('data-seed').value);
+                    const amount = parseInt(document.getElementById('data-amount').value); 
+                    const iter = parseInt(document.getElementById('data-iter').value); 
+                    
+                    // Clone buffer
+                    const corrupted = new Uint8Array(uint8);
+                    
+                    for(let i=0; i<iter; i++) {
+                        // Pick a random spot, strictly after header
+                        const maxIdx = corrupted.length - 100;
+                        const minIdx = Math.floor(corrupted.length / 20); // Skip first 5%
+                        
+                        const idx = Math.floor(minIdx + Math.random() * (maxIdx - minIdx));
+                        
+                        // Action: Replace byte
+                        const val = Math.floor(Math.random() * 256);
+                        corrupted[idx] = val;
+                        
+                        // Action: Replace chunk with 0
+                        if(Math.random() > 0.5) {
+                            for(let j=0; j<amount; j++) {
+                                if(idx+j < maxIdx) corrupted[idx+j] = 0;
+                            }
+                        }
+                    }
+                    
+                    const newBlob = new Blob([corrupted], {type: 'image/jpeg'});
+                    const url = URL.createObjectURL(newBlob);
+                    
+                    const imgMosh = document.getElementById('img-mosh');
+                    imgMosh.src = url;
+                    imgMosh.style.display = 'block';
+                    cvs.style.display = 'none';
+                    
+                    updateDownload(url);
+                    btn.disabled = false;
+                    btn.innerText = "☠️ 破坏数据 (MOSH)";
+                };
+                reader.readAsArrayBuffer(blob);
+            }, 'image/jpeg', 0.8);
+        };
+
+        // --- Utils ---
+        document.getElementById('btn-render').onclick = renderLayerGlitch;
+        
+        document.getElementById('btn-random').onclick = () => {
+            document.getElementById('rgb-amount').value = Math.random() * 50;
+            document.getElementById('slice-amount').value = Math.random() * 20;
+            document.getElementById('slice-offset').value = Math.random() * 100;
+            updateVal('val-rgb', parseInt(document.getElementById('rgb-amount').value));
+            updateVal('val-slice', parseInt(document.getElementById('slice-amount').value));
+            updateVal('val-slice-o', parseInt(document.getElementById('slice-offset').value));
+            renderLayerGlitch();
+        };
+
+        function updateDownload(url) {
+            const btn = document.getElementById('btn-download');
+            btn.style.display = 'flex';
+            btn.href = url;
+            btn.download = `glitch_${Date.now()}.jpg`;
+        }
+    </script>
+</body>
+</html>

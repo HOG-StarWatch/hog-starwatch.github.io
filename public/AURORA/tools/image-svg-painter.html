@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG 画板</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/app.js"></script>
+    <style>
+        body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100vh;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: var(--bg-panel);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px dashed var(--border);
+        }
+        #svg-canvas {
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            cursor: crosshair;
+        }
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tool-btn.active {
+            background: var(--secondary);
+            color: var(--bg-deep);
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-header">
+        <div class="panel-title">SVG 矢量画板</div>
+        <div class="panel-actions">
+            <button class="btn btn-secondary" onclick="window.location.href='image-drawing.html'">返回色板转换</button>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="color-picker-wrapper">
+            <span>描边:</span>
+            <input type="color" id="stroke-color" value="#000000">
+        </div>
+        <div class="color-picker-wrapper">
+            <span>填充:</span>
+            <input type="color" id="fill-color" value="#ffffff">
+            <label><input type="checkbox" id="enable-fill"> 启用</label>
+        </div>
+        <div class="color-picker-wrapper">
+            <span>粗细:</span>
+            <input type="range" id="stroke-width" min="1" max="50" value="3" style="width:100px">
+            <span id="width-val">3</span>
+        </div>
+        <div class="color-picker-wrapper">
+            <span>透明度:</span>
+            <input type="range" id="opacity" min="0" max="100" value="100" style="width:80px">
+            <span id="opacity-val">100%</span>
+        </div>
+        <div class="color-picker-wrapper">
+            <span>笔触:</span>
+            <select id="line-cap" style="background:var(--bg-deep); color:var(--text-main); border:1px solid var(--border); border-radius:4px; padding:2px;">
+                <option value="round">圆头</option>
+                <option value="square">方头</option>
+                <option value="butt">平头</option>
+            </select>
+        </div>
+        
+        <div style="width:100%; height:1px; background:var(--border); margin:10px 0;"></div>
+        
+        <button class="btn btn-primary tool-btn active" onclick="setMode('path', this)">✏️ 自由笔</button>
+        <button class="btn tool-btn" onclick="setMode('line', this)">📏 直线</button>
+        <button class="btn tool-btn" onclick="setMode('rect', this)">⬜ 矩形</button>
+        <button class="btn tool-btn" onclick="setMode('circle', this)">⭕ 圆形</button>
+        <button class="btn tool-btn" onclick="setMode('ellipse', this)">🥚 椭圆</button>
+        <button class="btn tool-btn" onclick="setMode('text', this)">T 文本</button>
+        <!-- Spray brush is complex in pure SVG DOM, simulated by multiple circles -->
+        <button class="btn tool-btn" onclick="setMode('spray', this)">🚿 喷枪</button>
+        <button class="btn tool-btn" onclick="setMode('calligraphy', this)">✒️ 书法笔</button>
+        
+        <div style="width:1px; height:20px; background:var(--border); margin:0 10px;"></div>
+        
+        <button class="btn btn-danger" onclick="clearCanvas()">🗑️ 清空</button>
+        <button class="btn btn-success" onclick="undo()">↩️ 撤销</button>
+        <button class="btn btn-primary" onclick="exportSVG()">💾 导出 SVG</button>
+    </div>
+
+    <div class="canvas-container">
+        <svg id="svg-canvas" width="512" height="512" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <script>
+        const svg = document.getElementById('svg-canvas');
+        let isDrawing = false;
+        let startX, startY;
+        let currentElement = null;
+        let mode = 'path';
+        let history = [];
+        let sprayInterval = null;
+        let lastPos = {x: 0, y: 0};
+
+        // Setup Controls
+        document.getElementById('stroke-width').addEventListener('input', (e) => {
+            document.getElementById('width-val').innerText = e.target.value;
+        });
+        document.getElementById('opacity').addEventListener('input', (e) => {
+            document.getElementById('opacity-val').innerText = e.target.value + '%';
+        });
+
+        function setMode(m, btn) {
+            mode = m;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            app.showToast(`切换模式: ${m}`);
+        }
+
+        function getMousePos(evt) {
+            const rect = svg.getBoundingClientRect();
+            // Calculate scale if svg is resized by css
+            const scaleX = 512 / rect.width;
+            const scaleY = 512 / rect.height;
+            return {
+                x: (evt.clientX - rect.left) * scaleX,
+                y: (evt.clientY - rect.top) * scaleY
+            };
+        }
+
+        function getStyles() {
+            const stroke = document.getElementById('stroke-color').value;
+            const fillEnabled = document.getElementById('enable-fill').checked;
+            const fill = fillEnabled ? document.getElementById('fill-color').value : 'none';
+            const width = document.getElementById('stroke-width').value;
+            const opacity = document.getElementById('opacity').value / 100;
+            const lineCap = document.getElementById('line-cap').value;
+            return { stroke, fill, width, opacity, lineCap };
+        }
+
+        svg.addEventListener('mousedown', (e) => {
+            if(mode === 'text') {
+                const text = prompt("请输入文本:", "Text");
+                if(text) {
+                    const pos = getMousePos(e);
+                    const styles = getStyles();
+                    const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    el.setAttribute('x', pos.x);
+                    el.setAttribute('y', pos.y);
+                    el.setAttribute('fill', styles.stroke); // Text uses fill as color usually
+                    el.setAttribute('font-size', styles.width * 5); // Scale font size with stroke width
+                    el.setAttribute('font-family', 'Arial, sans-serif');
+                    el.setAttribute('opacity', styles.opacity);
+                    el.textContent = text;
+                    svg.appendChild(el);
+                    history.push(el);
+                }
+                return;
+            }
+
+            isDrawing = true;
+            const pos = getMousePos(e);
+            startX = pos.x;
+            startY = pos.y;
+            lastPos = pos;
+            const styles = getStyles();
+
+            if (mode === 'spray') {
+                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                currentElement.setAttribute('class', 'spray-group');
+                svg.appendChild(currentElement);
+                
+                // Start spraying
+                sprayInterval = setInterval(() => {
+                    if(!isDrawing) return;
+                    const styles = getStyles();
+                    spray(lastPos.x, lastPos.y, styles);
+                }, 50);
+                spray(pos.x, pos.y, styles); 
+                return;
+            }
+
+            if (mode === 'calligraphy') {
+                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                currentElement.setAttribute('fill', styles.stroke);
+                currentElement.setAttribute('opacity', styles.opacity);
+                svg.appendChild(currentElement);
+                // Initial dab
+                drawCalligraphy(pos.x, pos.y, styles);
+                return;
+            }
+
+            if (mode === 'path') {
+                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                currentElement.setAttribute('d', `M ${startX} ${startY}`);
+                currentElement.setAttribute('fill', 'none'); 
+                currentElement.setAttribute('stroke-linecap', styles.lineCap); // Use selected lineCap
+                currentElement.setAttribute('stroke-linejoin', 'round');
+            } else if (mode === 'line') {
+                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                currentElement.setAttribute('x1', startX);
+                currentElement.setAttribute('y1', startY);
+                currentElement.setAttribute('x2', startX);
+                currentElement.setAttribute('y2', startY);
+                currentElement.setAttribute('fill', 'none');
+                currentElement.setAttribute('stroke-linecap', styles.lineCap);
+            } else if (mode === 'rect') {
+                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                currentElement.setAttribute('x', startX);
+                currentElement.setAttribute('y', startY);
+                currentElement.setAttribute('width', 0);
+                currentElement.setAttribute('height', 0);
+                currentElement.setAttribute('fill', styles.fill);
+                currentElement.setAttribute('stroke-linejoin', 'round'); // Rect corners
+            } else if (mode === 'circle') {
+                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                currentElement.setAttribute('cx', startX);
+                currentElement.setAttribute('cy', startY);
+                currentElement.setAttribute('r', 0);
+                currentElement.setAttribute('fill', styles.fill);
+            } else if (mode === 'ellipse') {
+                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                currentElement.setAttribute('cx', startX);
+                currentElement.setAttribute('cy', startY);
+                currentElement.setAttribute('rx', 0);
+                currentElement.setAttribute('ry', 0);
+                currentElement.setAttribute('fill', styles.fill);
+            }
+
+            if(currentElement) {
+                if(mode !== 'spray' && mode !== 'calligraphy') {
+                    currentElement.setAttribute('stroke', styles.stroke);
+                    currentElement.setAttribute('stroke-width', styles.width);
+                    currentElement.setAttribute('opacity', styles.opacity);
+                }
+                svg.appendChild(currentElement);
+            }
+        });
+
+        function drawCalligraphy(x, y, styles) {
+            if(!currentElement) return;
+            // Draw a slanted line at 45 degrees
+            const size = styles.width;
+            const angle = Math.PI / 4; // 45 deg
+            const dx = Math.cos(angle) * size;
+            const dy = Math.sin(angle) * size;
+            
+            const segment = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            segment.setAttribute('x1', x - dx);
+            segment.setAttribute('y1', y + dy);
+            segment.setAttribute('x2', x + dx);
+            segment.setAttribute('y2', y - dy);
+            segment.setAttribute('stroke', styles.stroke);
+            segment.setAttribute('stroke-width', 2); // Thin stroke for the nib edge
+            
+            currentElement.appendChild(segment);
+        }
+
+        function spray(x, y, styles) {
+            if(!currentElement) return;
+            const density = 5;
+            const radius = styles.width * 2;
+            
+            for(let i=0; i<density; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const r = Math.random() * radius;
+                const dotX = x + r * Math.cos(angle);
+                const dotY = y + r * Math.sin(angle);
+                
+                const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot.setAttribute('cx', dotX);
+                dot.setAttribute('cy', dotY);
+                dot.setAttribute('r', Math.random() * 1.5);
+                dot.setAttribute('fill', styles.stroke);
+                dot.setAttribute('opacity', styles.opacity);
+                currentElement.appendChild(dot);
+            }
+        }
+
+        svg.addEventListener('mousemove', (e) => {
+            const pos = getMousePos(e);
+            lastPos = pos;
+            
+            if (isDrawing && mode === 'spray') {
+                const styles = getStyles();
+                spray(pos.x, pos.y, styles);
+                return;
+            }
+
+            if (isDrawing && mode === 'calligraphy') {
+                const styles = getStyles();
+                drawCalligraphy(pos.x, pos.y, styles);
+                return;
+            }
+
+            if (!isDrawing || !currentElement) return;
+
+            if (mode === 'path') {
+                const d = currentElement.getAttribute('d');
+                currentElement.setAttribute('d', `${d} L ${pos.x} ${pos.y}`);
+            } else if (mode === 'line') {
+                currentElement.setAttribute('x2', pos.x);
+                currentElement.setAttribute('y2', pos.y);
+            } else if (mode === 'rect') {
+                const w = pos.x - startX;
+                const h = pos.y - startY;
+                currentElement.setAttribute('x', w < 0 ? pos.x : startX);
+                currentElement.setAttribute('y', h < 0 ? pos.y : startY);
+                currentElement.setAttribute('width', Math.abs(w));
+                currentElement.setAttribute('height', Math.abs(h));
+            } else if (mode === 'circle') {
+                const r = Math.sqrt(Math.pow(pos.x - startX, 2) + Math.pow(pos.y - startY, 2));
+                currentElement.setAttribute('r', r);
+            } else if (mode === 'ellipse') {
+                currentElement.setAttribute('rx', Math.abs(pos.x - startX));
+                currentElement.setAttribute('ry', Math.abs(pos.y - startY));
+            }
+        });
+
+        svg.addEventListener('mouseup', () => {
+            if (isDrawing) {
+                if(sprayInterval) clearInterval(sprayInterval);
+                if(currentElement) history.push(currentElement);
+            }
+            isDrawing = false;
+            currentElement = null;
+        });
+
+        svg.addEventListener('mouseleave', () => {
+            if (isDrawing) {
+                 if(sprayInterval) clearInterval(sprayInterval);
+                 if(currentElement) history.push(currentElement);
+            }
+            isDrawing = false;
+            currentElement = null;
+        });
+
+        function undo() {
+            if (history.length > 0) {
+                const el = history.pop();
+                svg.removeChild(el);
+            }
+        }
+
+        function clearCanvas() {
+            if(confirm('确定清空画板吗？')) {
+                svg.innerHTML = '';
+                history = [];
+            }
+        }
+
+        function exportSVG() {
+            const serializer = new XMLSerializer();
+            let source = serializer.serializeToString(svg);
+            // Add xml declaration
+            source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+            
+            const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `drawing-${Date.now()}.svg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            app.showToast('SVG 已导出');
+        }
+    </script>
+</body>
+</html>

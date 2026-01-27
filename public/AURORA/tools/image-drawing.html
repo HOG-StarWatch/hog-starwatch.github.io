@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式画板</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        :root {
+            --bg-secondary: rgba(0, 0, 0, 0.2);
+            --success: #2dd4bf;
+            --danger: #f472b6;
+        }
+        
+        body {
+            background: transparent;
+            padding: 20px;
+            overflow-y: auto;
+            display: block;
+            height: auto;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-panel);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-top: 0;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-dim);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-family: inherit;
+        }
+        
+        .btn:hover {
+            box-shadow: 0 0 15px rgba(192, 132, 252, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .card {
+            background: var(--bg-panel);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background: rgba(192, 132, 252, 0.1);
+            color: var(--text-main);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* 画板样式 */
+        .canvas-container {
+            width: 100%;
+            height: 500px;
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            position: relative;
+            cursor: crosshair;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        /* 橡皮擦预览层 */
+        .eraser-preview {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+            background: transparent;
+        }
+        
+        .tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+        
+        .tool-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .tool-section h3 {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+            margin-top: 0;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-option.active {
+            border-color: white;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        
+        .brush-size {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+        
+        .brush-size input {
+            width: 150px;
+        }
+        
+        .tool-buttons {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-danger {
+            background: rgba(244, 114, 182, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(244, 114, 182, 0.5);
+        }
+        
+        .btn-danger:hover {
+            background: rgba(244, 114, 182, 0.3);
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--secondary), #22c55e);
+        }
+        
+        /* 绘图工具选择 */
+        .drawing-tools {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tool-btn {
+            padding: 0.6rem 1.2rem;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .tool-btn:hover {
+            border-color: var(--primary);
+            background: rgba(192, 132, 252, 0.1);
+        }
+        
+        .tool-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* 颜色工具侧边栏 */
+        .color-tools {
+            flex: 0 0 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .color-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .color-section h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            color: var(--text-main);
+        }
+        
+        .color-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .color-input-group label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        .color-input-group input {
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            font-family: monospace;
+        }
+        
+        .color-display {
+            width: 100%;
+            height: 60px;
+            border-radius: var(--radius-md);
+            margin: 10px 0;
+            border: 1px solid var(--border);
+        }
+        
+        .color-history {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .history-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease;
+        }
+        
+        .history-color:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-result {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+        
+        .color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .palette-color {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease;
+            position: relative;
+        }
+        
+        .palette-color:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+        
+        .palette-color .color-code {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 10px;
+            color: white;
+            white-space: nowrap;
+            display: none;
+        }
+        
+        .palette-color:hover .color-code {
+            display: block;
+        }
+        
+        /* 图片上传和预览区域 */
+        .image-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: var(--radius-md);
+            margin-top: 10px;
+            display: none;
+            border: 1px solid var(--border);
+            object-fit: contain;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.2);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: rgba(192, 132, 252, 0.1);
+            border-color: var(--primary);
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .color-tools {
+                flex: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .tools {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .tool-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .drawing-tools {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="flex: 1;">
+            <header>
+                <h1>交互式画板</h1>
+                <p class="subtitle">集成颜色工具、橡皮擦预览和钢笔功能的创作工具</p>
+            </header>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>开始创作</h2>
+                </div>
+                <div class="card-body">
+                    <!-- 绘图工具选择 -->
+                    <div class="drawing-tools">
+                        <button class="tool-btn active" id="brushTool" data-tool="brush">🖌️ 画笔</button>
+                        <button class="tool-btn" id="eraserTool" data-tool="eraser">🧽 橡皮</button>
+                        <button class="tool-btn" id="penTool" data-tool="pen">✒️ 钢笔</button>
+                    </div>
+                    
+                    <div class="canvas-container" id="canvasContainer">
+                        <canvas id="drawingCanvas"></canvas>
+                        <canvas id="eraserPreview" class="eraser-preview"></canvas>
+                    </div>
+                    
+                    <div class="tools">
+                        <div class="tool-section">
+                            <h3>颜色选择</h3>
+                            <div class="color-picker">
+                                <div class="color-option active" style="background-color: #000000;" data-color="#000000"></div>
+                                <div class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                                <div class="color-option" style="background-color: #c084fc;" data-color="#c084fc"></div>
+                                <div class="color-option" style="background-color: #2dd4bf;" data-color="#2dd4bf"></div>
+                                <div class="color-option" style="background-color: #f472b6;" data-color="#f472b6"></div>
+                                <div class="color-option" style="background-color: #ef4444;" data-color="#ef4444"></div>
+                                <div class="color-option" style="background-color: #eab308;" data-color="#eab308"></div>
+                                <div class="color-option" style="background-color: #3b82f6;" data-color="#3b82f6"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="tool-section">
+                            <h3>笔刷设置</h3>
+                            <div class="brush-size">
+                                <span>大小:</span>
+                                <input type="range" id="brushSize" min="1" max="50" value="5">
+                                <span id="brushSizeValue">5px</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-buttons">
+                        <button id="clearCanvas" class="btn btn-danger">清空画布</button>
+                        <button id="saveCanvas" class="btn btn-success">保存图像</button>
+                        <button id="fillBackground" class="btn">填充背景</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="color-tools">
+            <div class="card">
+                <div class="card-header">
+                    <h2>颜色转换器</h2>
+                </div>
+                <div class="card-body">
+                    <div class="color-section">
+                        <div class="color-input-group">
+                            <label>HEX 颜色代码</label>
+                            <input type="text" id="hexInput" placeholder="#000000" value="#000000">
+                        </div>
+                        <div class="color-input-group">
+                            <label>RGB 颜色代码</label>
+                            <input type="text" id="rgbInput" placeholder="rgb(0, 0, 0)">
+                        </div>
+                        <div class="color-display" id="colorDisplay" style="background-color: #000000;"></div>
+                        <div class="color-result" id="colorResult"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 基于图片的色卡生成 (新增) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>基于图片的色卡生成</h2>
+                </div>
+                <div class="card-body">
+                    <div class="color-section">
+                        <div class="image-upload">
+                            <div class="file-input-wrapper">
+                                <label class="file-input-label" for="fileInput">选择图片</label>
+                                <input type="file" id="fileInput" accept="image/*">
+                            </div>
+                            <img id="imagePreview" class="image-preview" alt="图片预览">
+                            <button class="btn" id="generatePaletteBtn" style="width: 100%;">生成色卡</button>
+                        </div>
+                        <div class="color-palette" id="imageColorPalette"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>历史颜色</h2>
+                </div>
+                <div class="card-body">
+                    <div class="color-history" id="colorHistory">
+                        <!-- 历史颜色将在这里生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>随机色板</h2>
+                </div>
+                <div class="card-body">
+                    <button class="btn" id="randomPaletteBtn" style="width: 100%; margin-bottom: 10px;">生成随机色板</button>
+                    <div class="color-palette" id="colorPalette">
+                        <!-- 随机色板将在这里生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>更多功能</h2>
+                </div>
+                <div class="card-body">
+                    <button class="btn" onclick="window.location.href='image-svg-painter.html'" style="width: 100%;">SVG 矢量画板</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 画布相关
+            const canvas = document.getElementById('drawingCanvas');
+            const ctx = canvas.getContext('2d');
+            const eraserPreviewCanvas = document.getElementById('eraserPreview');
+            const eraserCtx = eraserPreviewCanvas.getContext('2d');
+            const container = document.getElementById('canvasContainer');
+            
+            // 工具按钮
+            const brushToolBtn = document.getElementById('brushTool');
+            const eraserToolBtn = document.getElementById('eraserTool');
+            const penToolBtn = document.getElementById('penTool');
+            const clearBtn = document.getElementById('clearCanvas');
+            const saveBtn = document.getElementById('saveCanvas');
+            const fillBtn = document.getElementById('fillBackground');
+            
+            // 属性设置
+            const brushSizeInput = document.getElementById('brushSize');
+            const brushSizeValue = document.getElementById('brushSizeValue');
+            const colorOptions = document.querySelectorAll('.color-option');
+            
+            // 状态变量
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+            let currentTool = 'brush'; // brush, eraser, pen
+            let currentColor = '#000000';
+            let brushSize = 5;
+            let startX = 0;
+            let startY = 0;
+            
+            // 初始化画布尺寸
+            function resizeCanvas() {
+                const rect = container.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+                eraserPreviewCanvas.width = rect.width;
+                eraserPreviewCanvas.height = rect.height;
+                
+                // 设置白色背景
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 恢复上下文设置
+                updateContext();
+            }
+            
+            resizeCanvas();
+            window.addEventListener('resize', function() {
+                // 保存当前内容
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(canvas, 0, 0);
+                
+                resizeCanvas();
+                
+                // 恢复内容
+                ctx.drawImage(tempCanvas, 0, 0);
+            });
+            
+            // 更新绘图上下文
+            function updateContext() {
+                ctx.strokeStyle = currentColor;
+                ctx.fillStyle = currentColor;
+                ctx.lineWidth = brushSize;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+            }
+            
+            // 获取鼠标位置
+            function getPosition(e) {
+                const rect = canvas.getBoundingClientRect();
+                return [
+                    e.clientX - rect.left,
+                    e.clientY - rect.top
+                ];
+            }
+            
+            // 绘图事件监听
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            // 橡皮擦预览
+            container.addEventListener('mousemove', function(e) {
+                if (currentTool === 'eraser') {
+                    const [x, y] = getPosition(e);
+                    eraserCtx.clearRect(0, 0, eraserPreviewCanvas.width, eraserPreviewCanvas.height);
+                    
+                    eraserCtx.beginPath();
+                    eraserCtx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+                    eraserCtx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    eraserCtx.strokeStyle = '#000';
+                    eraserCtx.lineWidth = 1;
+                    eraserCtx.fill();
+                    eraserCtx.stroke();
+                    eraserPreviewCanvas.style.display = 'block';
+                } else {
+                    eraserPreviewCanvas.style.display = 'none';
+                }
+            });
+            
+            container.addEventListener('mouseout', function() {
+                eraserPreviewCanvas.style.display = 'none';
+            });
+            
+            function startDrawing(e) {
+                isDrawing = true;
+                [lastX, lastY] = getPosition(e);
+                [startX, startY] = [lastX, lastY];
+                
+                if (currentTool === 'pen') {
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                }
+            }
+            
+            function draw(e) {
+                if (!isDrawing) return;
+                
+                const [x, y] = getPosition(e);
+                
+                if (currentTool === 'brush') {
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    
+                    [lastX, lastY] = [x, y];
+                } else if (currentTool === 'eraser') {
+                    ctx.save();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                    [lastX, lastY] = [x, y];
+                }
+            }
+            
+            function stopDrawing(e) {
+                if (!isDrawing) return;
+                isDrawing = false;
+                
+                if (currentTool === 'pen') {
+                    const [x, y] = getPosition(e);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                }
+            }
+            
+            // 工具切换
+            function setActiveTool(tool) {
+                currentTool = tool;
+                
+                document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+                
+                if (tool === 'brush') brushToolBtn.classList.add('active');
+                if (tool === 'eraser') eraserToolBtn.classList.add('active');
+                if (tool === 'pen') penToolBtn.classList.add('active');
+                
+                if (tool === 'eraser') {
+                    canvas.style.cursor = 'none';
+                } else {
+                    canvas.style.cursor = 'crosshair';
+                }
+            }
+            
+            brushToolBtn.addEventListener('click', () => setActiveTool('brush'));
+            eraserToolBtn.addEventListener('click', () => setActiveTool('eraser'));
+            penToolBtn.addEventListener('click', () => setActiveTool('pen'));
+            
+            // 颜色选择
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    currentColor = this.getAttribute('data-color');
+                    updateContext();
+                    
+                    hexInput.value = currentColor;
+                    updateColorFromHex(currentColor);
+                });
+            });
+            
+            // 笔刷大小
+            brushSizeInput.addEventListener('input', function() {
+                brushSize = this.value;
+                brushSizeValue.textContent = brushSize + 'px';
+                updateContext();
+            });
+            
+            // 按钮功能
+            clearBtn.addEventListener('click', function() {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                updateContext(); 
+            });
+            
+            fillBtn.addEventListener('click', function() {
+                ctx.fillStyle = currentColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                updateContext();
+            });
+            
+            saveBtn.addEventListener('click', function() {
+                const link = document.createElement('a');
+                link.download = 'my-drawing.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+            
+            // 颜色转换器逻辑
+            const hexInput = document.getElementById('hexInput');
+            const rgbInput = document.getElementById('rgbInput');
+            const colorDisplay = document.getElementById('colorDisplay');
+            const colorResult = document.getElementById('colorResult');
+            const colorHistory = document.getElementById('colorHistory');
+            
+            updateColorFromHex('#000000');
+            
+            hexInput.addEventListener('input', function() {
+                let hex = this.value;
+                if (!hex.startsWith('#')) hex = '#' + hex;
+                if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                    updateColorFromHex(hex);
+                }
+            });
+            
+            function updateColorFromHex(hex) {
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                
+                const rgb = `rgb(${r}, ${g}, ${b})`;
+                rgbInput.value = rgb;
+                colorDisplay.style.backgroundColor = hex;
+                
+                currentColor = hex;
+                updateContext();
+                
+                addToHistory(hex);
+            }
+            
+            function addToHistory(color) {
+                const existing = Array.from(colorHistory.children).find(child => 
+                    child.getAttribute('data-color') === color
+                );
+                
+                if (!existing) {
+                    const div = document.createElement('div');
+                    div.className = 'history-color';
+                    div.style.backgroundColor = color;
+                    div.setAttribute('data-color', color);
+                    div.addEventListener('click', function() {
+                        currentColor = color;
+                        updateContext();
+                        hexInput.value = color;
+                        updateColorFromHex(color);
+                    });
+                    
+                    if (colorHistory.children.length >= 10) {
+                        colorHistory.removeChild(colorHistory.lastChild);
+                    }
+                    colorHistory.prepend(div);
+                }
+            }
+            
+            // ================= 新增功能 =================
+            
+            // 1. 随机色板生成
+            const randomPaletteBtn = document.getElementById('randomPaletteBtn');
+            const colorPalette = document.getElementById('colorPalette');
+            
+            function generateRandomPalette() {
+                colorPalette.innerHTML = '';
+                for (let i = 0; i < 8; i++) {
+                    const color = getRandomColor();
+                    const div = document.createElement('div');
+                    div.className = 'palette-color';
+                    div.style.backgroundColor = color;
+                    
+                    const code = document.createElement('span');
+                    code.className = 'color-code';
+                    code.textContent = color;
+                    div.appendChild(code);
+                    
+                    div.addEventListener('click', function() {
+                        currentColor = color;
+                        updateContext();
+                        hexInput.value = color;
+                        updateColorFromHex(color);
+                    });
+                    
+                    colorPalette.appendChild(div);
+                }
+            }
+            
+            function getRandomColor() {
+                const letters = '0123456789ABCDEF';
+                let color = '#';
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+            
+            randomPaletteBtn.addEventListener('click', generateRandomPalette);
+            generateRandomPalette(); // 初始化
+            
+            // 2. 基于图片的色卡生成
+            const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const generatePaletteBtn = document.getElementById('generatePaletteBtn');
+            const imageColorPalette = document.getElementById('imageColorPalette');
+            
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            generatePaletteBtn.addEventListener('click', function() {
+                if (!imagePreview.src || imagePreview.src === '') {
+                    alert('请先上传一张图片');
+                    return;
+                }
+                
+                if (!imagePreview.complete) {
+                    alert('图片尚未加载完成，请稍后再试');
+                    return;
+                }
+                
+                try {
+                    const palette = extractColorsFromImage(imagePreview);
+                    displayImageColorPalette(palette);
+                } catch (error) {
+                    console.error('提取颜色失败:', error);
+                    alert('无法从图片中提取颜色，请尝试其他图片');
+                }
+            });
+            
+            function extractColorsFromImage(img) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                const colors = [];
+                const samplePoints = 1000;
+                
+                for (let i = 0; i < samplePoints; i++) {
+                    const x = Math.floor(Math.random() * canvas.width);
+                    const y = Math.floor(Math.random() * canvas.height);
+                    const pixelIndex = (y * canvas.width + x) * 4;
+                    
+                    const r = data[pixelIndex];
+                    const g = data[pixelIndex + 1];
+                    const b = data[pixelIndex + 2];
+                    
+                    colors.push([r, g, b]);
+                }
+                
+                return kMeansClustering(colors, 5);
+            }
+            
+            function kMeansClustering(colors, k) {
+                let centroids = [];
+                for (let i = 0; i < k; i++) {
+                    centroids.push(colors[Math.floor(Math.random() * colors.length)]);
+                }
+                
+                for (let iteration = 0; iteration < 10; iteration++) {
+                    const clusters = Array(k).fill().map(() => []);
+                    
+                    colors.forEach(color => {
+                        let minDistance = Infinity;
+                        let closestCentroidIndex = 0;
+                        
+                        centroids.forEach((centroid, index) => {
+                            const distance = colorDistance(color, centroid);
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                closestCentroidIndex = index;
+                            }
+                        });
+                        
+                        clusters[closestCentroidIndex].push(color);
+                    });
+                    
+                    let newCentroids = [];
+                    clusters.forEach(cluster => {
+                        if (cluster.length > 0) {
+                            const sum = cluster.reduce((acc, color) => {
+                                return [acc[0] + color[0], acc[1] + color[1], acc[2] + color[2]];
+                            }, [0, 0, 0]);
+                            
+                            newCentroids.push([
+                                Math.round(sum[0] / cluster.length),
+                                Math.round(sum[1] / cluster.length),
+                                Math.round(sum[2] / cluster.length)
+                            ]);
+                        } else {
+                            newCentroids.push(colors[Math.floor(Math.random() * colors.length)]);
+                        }
+                    });
+                    
+                    centroids = newCentroids;
+                }
+                
+                return centroids;
+            }
+            
+            function colorDistance(color1, color2) {
+                const dr = color1[0] - color2[0];
+                const dg = color1[1] - color2[1];
+                const db = color1[2] - color2[2];
+                return Math.sqrt(dr * dr + dg * dg + db * db);
+            }
+            
+            function displayImageColorPalette(palette) {
+                imageColorPalette.innerHTML = '';
+                palette.forEach(color => {
+                    const hexColor = rgbToHex(color[0], color[1], color[2]);
+                    const div = document.createElement('div');
+                    div.className = 'palette-color';
+                    div.style.backgroundColor = hexColor;
+                    
+                    const code = document.createElement('span');
+                    code.className = 'color-code';
+                    code.textContent = hexColor;
+                    div.appendChild(code);
+                    
+                    div.addEventListener('click', function() {
+                        currentColor = hexColor;
+                        updateContext();
+                        hexInput.value = hexColor;
+                        updateColorFromHex(hexColor);
+                    });
+                    
+                    imageColorPalette.appendChild(div);
+                });
+            }
+            
+            function rgbToHex(r, g, b) {
+                return "#" + [r, g, b].map(x => {
+                    const hex = x.toString(16);
+                    return hex.length === 1 ? '0' + hex : hex;
+                }).join('');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本对比</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js" onerror="this.onerror=null;this.src='https://cdn.bootcdn.net/ajax/libs/diff_match_patch/20121119/diff_match_patch.js'"></script>
+    <style>
+        /* Custom Diff Styles for Dark Mode */
+        ins {
+            background-color: rgba(46, 160, 67, 0.4); /* Dark Green */
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+        del {
+            background-color: rgba(200, 50, 50, 0.5); /* Dark Red */
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+        /* Update Legend Colors */
+        .legend-ins { background: rgba(46, 160, 67, 0.4); color: #fff; padding: 2px 4px; border-radius: 2px; }
+        .legend-del { background: rgba(200, 50, 50, 0.5); color: #fff; padding: 2px 4px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <div class="workspace" style="flex-direction: column;">
+        <div class="diff-container">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">原文 (Old)</div>
+                    <div class="panel-actions">
+                        <button class="btn btn-icon" onclick="document.getElementById('file-old').click()" title="加载文件">📂</button>
+                        <input type="file" id="file-old" style="display:none" onchange="diffTool.loadFile(this, 'diff-old')">
+                        <button class="btn btn-icon" onclick="document.getElementById('diff-old').value=''">清空</button>
+                    </div>
+                </div>
+                <textarea id="diff-old" placeholder="输入原始内容..."></textarea>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">新文 (New)</div>
+                    <div class="panel-actions">
+                        <button class="btn btn-icon" onclick="document.getElementById('file-new').click()" title="加载文件">📂</button>
+                        <input type="file" id="file-new" style="display:none" onchange="diffTool.loadFile(this, 'diff-new')">
+                        <button class="btn btn-icon" onclick="document.getElementById('diff-new').value=''">清空</button>
+                    </div>
+                </div>
+                <textarea id="diff-new" placeholder="输入修改后的内容..."></textarea>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; align-items: center; padding: 0.5rem 0;">
+            <button class="btn btn-primary" onclick="diffTool.compare()">开始对比 (Compare)</button>
+            <div style="font-size: 0.8rem; color: var(--text-dim);">
+                <span style="background:rgba(46, 160, 67, 0.3); color:#e6ffec; padding:2px 4px; border-radius:2px;">新增</span>
+                <span style="background:rgba(248, 81, 73, 0.3); color:#ffdcd7; padding:2px 4px; border-radius:2px;">删除</span>
+            </div>
+        </div>
+
+        <div class="panel" style="flex: 1; min-height: 0;">
+             <div class="panel-header">
+                <div class="panel-title">对比结果</div>
+            </div>
+            <div id="diff-output" style="padding: 1rem; overflow: auto; flex: 1; font-family: monospace; white-space: pre-wrap; color: var(--text-main);"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        const diffTool = {
+            compare: function() {
+                const oldTxt = document.getElementById('diff-old').value;
+                const newTxt = document.getElementById('diff-new').value;
+                
+                if (typeof diff_match_patch === 'undefined') {
+                    app.showToast('Diff 库未加载', 'error');
+                    return;
+                }
+
+                const dmp = new diff_match_patch();
+                const diffs = dmp.diff_main(oldTxt, newTxt);
+                dmp.diff_cleanupSemantic(diffs);
+                
+                // Custom pretty HTML generation
+                const html = [];
+                for (let x = 0; x < diffs.length; x++) {
+                    const op = diffs[x][0];    // Operation (insert, delete, equal)
+                    const data = diffs[x][1];  // Text of change
+                    const text = data.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                    
+                    switch (op) {
+                        case DIFF_INSERT:
+                            html[x] = '<ins>' + text + '</ins>';
+                            break;
+                        case DIFF_DELETE:
+                            html[x] = '<del>' + text + '</del>';
+                            break;
+                        case DIFF_EQUAL:
+                            html[x] = '<span>' + text + '</span>';
+                            break;
+                    }
+                }
+                
+                document.getElementById('diff-output').innerHTML = html.join('');
+            },
+
+            loadFile: function(input, targetId) {
+                const file = input.files[0];
+                if(!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const buf = e.target.result;
+                    const bytes = new Uint8Array(buf);
+                    
+                    // Check for null bytes to detect binary (heuristic)
+                    let isBinary = false;
+                    const checkLen = Math.min(bytes.length, 1000);
+                    for(let i=0; i<checkLen; i++) {
+                        if(bytes[i] === 0) {
+                            isBinary = true;
+                            break;
+                        }
+                    }
+                    
+                    if(isBinary) {
+                        // Convert to Hex view for comparison
+                        let hexOutput = '';
+                        const len = bytes.length;
+                        for(let i=0; i<len; i++) {
+                            const b = bytes[i];
+                            hexOutput += (b < 16 ? '0' : '') + b.toString(16);
+                            // Add space every byte, newline every 16 bytes
+                            if ((i + 1) % 16 === 0) {
+                                hexOutput += '\n';
+                            } else {
+                                hexOutput += ' ';
+                            }
+                        }
+                        
+                        document.getElementById(targetId).value = hexOutput.trim();
+                        app.showToast('检测到二进制文件，已转换为 Hex 视图', 'info');
+                    } else {
+                        // Decode as text
+                        const decoder = new TextDecoder('utf-8');
+                        const text = decoder.decode(bytes);
+                        document.getElementById(targetId).value = text;
+                        app.showToast('文件加载成功');
+                    }
+                };
+                
+                reader.onerror = () => app.showToast('读取文件失败', 'error');
+                reader.readAsArrayBuffer(file);
+                
+                // Reset input
+                input.value = '';
+            }
+        };
+    </script>
+</body>
+</html>

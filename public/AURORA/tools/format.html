@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码格式化</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/loader.js"></script>
+</head>
+<body>
+    <div class="workspace">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">源码输入</div>
+                <div class="panel-actions">
+                    <button class="btn btn-icon" onclick="app.clear('fmt')">清空</button>
+                </div>
+            </div>
+            <textarea id="fmt-input" placeholder="粘贴 JSON, HTML, CSS, JS 代码..."></textarea>
+        </div>
+
+        <div class="toolbar">
+            <div class="tool-group">
+                <div class="group-label">JSON</div>
+                <button class="btn" onclick="fmtTool.format('json')">格式化 JSON</button>
+                <button class="btn" onclick="fmtTool.minify('json')">压缩 JSON</button>
+            </div>
+            <div class="tool-group">
+                <div class="group-label">Web</div>
+                <button class="btn" onclick="fmtTool.format('html')">格式化 HTML</button>
+                <button class="btn" onclick="fmtTool.format('css')">格式化 CSS</button>
+                <button class="btn" onclick="fmtTool.format('js')">格式化 JS</button>
+            </div>
+            <div class="tool-group">
+                <div class="group-label">Other</div>
+                <button class="btn" onclick="fmtTool.minify('xml')">XML 压缩</button>
+                <button class="btn" onclick="fmtTool.minify('sql')">SQL 压缩</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">格式化结果</div>
+                <div class="panel-actions">
+                    <button class="btn btn-icon btn-secondary" onclick="app.copy('fmt-output')">复制</button>
+                </div>
+            </div>
+            <textarea id="fmt-output" readonly placeholder="结果..."></textarea>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        const fmtTool = {
+            format: function(type) {
+                const input = document.getElementById('fmt-input').value;
+                if (!input) return;
+
+                const runFormat = () => {
+                    let res = '';
+                    try {
+                        if (type === 'json') {
+                            const obj = JSON.parse(input);
+                            res = JSON.stringify(obj, null, 4);
+                        } else if (type === 'html') {
+                            res = html_beautify(input, { indent_size: 4 });
+                        } else if (type === 'css') {
+                            res = css_beautify(input, { indent_size: 4 });
+                        } else if (type === 'js') {
+                            res = js_beautify(input, { indent_size: 4 });
+                        }
+                        document.getElementById('fmt-output').value = res;
+                        app.showToast('格式化完成');
+                    } catch (e) {
+                        app.showToast('格式化出错: ' + e.message, 'error');
+                    }
+                };
+
+                if (['html', 'css', 'js'].includes(type)) {
+                    app.showToast('正在加载资源...', 'info');
+                    ResourceLoader.load(['js-beautify', 'js-beautify-css', 'js-beautify-html'])
+                        .then(() => runFormat())
+                        .catch(err => app.showToast('资源加载失败: ' + err, 'error'));
+                } else {
+                    runFormat();
+                }
+            },
+            minify: function(type) {
+                const input = document.getElementById('fmt-input').value;
+                let res = '';
+                try {
+                    if (type === 'json') {
+                        const obj = JSON.parse(input);
+                        res = JSON.stringify(obj);
+                    } else if (type === 'xml') {
+                         let xml = input.replace(/>\s*</g, '>\n<');
+                         res = xml;
+                    } else if (type === 'sql') {
+                         res = input.replace(/\s+/g, ' ').replace(/\s*([,()])\s*/g, '$1 ').trim();
+                    }
+                     document.getElementById('fmt-output').value = res;
+                } catch (e) {
+                     app.showToast('处理出错: ' + e.message, 'error');
+                }
+            }
+        };
+    </script>
+</body>
+</html>

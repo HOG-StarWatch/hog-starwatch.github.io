@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>趣味图像生成</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .nav-pills {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        
+        .nav-pill {
+            padding: 8px 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+        
+        .nav-pill.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(192, 132, 252, 0.4);
+        }
+        
+        .nav-pill:hover:not(.active) {
+            border-color: var(--primary);
+            color: var(--text-main);
+        }
+        
+        .content-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-pills">
+        <div class="nav-pill active" onclick="switchFunTool('phantom', this)">👻 幻影坦克</div>
+        <div class="nav-pill" onclick="switchFunTool('hybrid', this)">👁️ 视觉混合图</div>
+    </div>
+    
+    <iframe id="fun-frame" class="content-frame" src="image-phantom.html"></iframe>
+    
+    <script>
+        function switchFunTool(tool, el) {
+            document.querySelectorAll('.nav-pill').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            
+            const frame = document.getElementById('fun-frame');
+            if (tool === 'phantom') {
+                frame.src = 'image-phantom.html';
+            } else if (tool === 'hybrid') {
+                frame.src = 'image-hybrid.html';
+            }
+        }
+    </script>
+</body>
+</html>

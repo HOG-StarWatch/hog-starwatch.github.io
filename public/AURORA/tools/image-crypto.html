@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终极图片加密工具箱</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/utils/canvas-utils.js"></script>
+    <script src="../js/utils/drag-drop.js"></script>
+    <style>
+        :root {
+            --bg-dark: transparent;
+            --bg-panel-local: rgba(20, 25, 40, 0.6);
+            --primary-hover: #9333ea;
+            --success: #10b981;
+            --sidebar-width: 240px;
+        }
+
+        body {
+            background: transparent;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            width: 100%;
+            background: var(--bg-panel-local);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            height: 60px;
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 20px;
+            margin-bottom: 0;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            text-align: center;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 36px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .nav-btn.active {
+            background: rgba(192, 132, 252, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(192, 132, 252, 0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 30px;
+            position: relative;
+        }
+
+        .tool-section {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .desc-box {
+            background: rgba(168, 85, 247, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .tool-section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 { margin-bottom: 10px; font-size: 1.8rem; font-weight: 600; color: var(--text-main); }
+        h2 { font-size: 1.4rem; margin-bottom: 15px; color: var(--text-main); }
+        h3 { font-size: 1.1rem; margin-bottom: 10px; color: var(--text-dim); }
+        p.subtitle { color: var(--text-dim); margin-bottom: 30px; line-height: 1.5; font-size: 0.95rem; }
+
+        .card {
+            background: var(--bg-panel-local);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(5px);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem; }
+        
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 3px;
+            appearance: none;
+            vertical-align: middle;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+        }
+
+        .btn-success { background: var(--success); color: white; text-decoration: none; justify-content: center; }
+        .btn-success:hover { background: #059669; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dim); justify-content: center; }
+        .btn-outline:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .file-upload {
+            border: 2px dashed var(--border);
+            padding: 30px;
+            text-align: center;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-dim);
+        }
+        .file-upload:hover, .file-upload.drag-active { 
+            border-color: var(--primary); 
+            background: rgba(192, 132, 252, 0.05);
+            color: var(--text-main);
+        }
+
+        .preview-container {
+            margin-top: 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+        .preview-img, canvas {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            margin: 0 auto 15px;
+            object-fit: contain;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+        .tab {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text-dim);
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+        .tab.active {
+            background: rgba(20, 25, 40, 0.8);
+            color: var(--primary);
+            border: 1px solid var(--border);
+            border-bottom: none;
+        }
+
+        progress {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.3);
+            border: none;
+        }
+        progress::-webkit-progress-bar { background: rgba(0,0,0,0.3); }
+        progress::-webkit-progress-value { background: var(--primary); transition: width 0.3s; }
+        progress::-moz-progress-bar { background: var(--primary); }
+
+        .canvas-stack {
+            position: relative; 
+            display: inline-block; 
+            margin: 0 auto;
+        }
+        .canvas-stack canvas {
+            display: block;
+        }
+        
+        .helper-text {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; height: auto; overflow: auto; }
+            .navbar { flex-wrap: wrap; height: auto; padding: 10px; justify-content: center; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+    <div class="logo">
+        <span>🛡️</span> 图片加密工具箱
+    </div>
+    <div style="display:flex; gap:10px; overflow-x:auto;">
+        <button class="nav-btn active" onclick="showTool('gilbert')">
+            <span>🍅</span> 吉尔伯特混淆
+        </button>
+        <button class="nav-btn" onclick="showTool('visual')">
+            <span>🔐</span> 视觉加密
+        </button>
+        <button class="nav-btn" onclick="showTool('diff')">
+            <span>🌓</span> 差值分离
+        </button>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+    <!-- ========================= -->
+    <!-- Gilbert Tool -->
+    <!-- ========================= -->
+    <div id="tool-gilbert" class="tool-section active">
+        <h1>吉尔伯特像素混淆 (Gilbert Shuffle)</h1>
+        <p class="subtitle">基于 <strong>Chaos Theory (混沌理论)</strong> 与 <strong>Space-Filling Curves (空间填充曲线)</strong> 的无损像素置乱算法。</p>
+        
+        <div class="card">
+            <div class="control-group">
+                <label>加密密钥 (Seed Key)</label>
+                <input type="number" id="gb-key" value="123456" placeholder="请输入数字密钥 (Enter numeric seed)...">
+            </div>
+            
+            <div class="grid-2">
+                <button class="btn btn-primary" id="gb-btn-enc">🔒 加密图片 (Encrypt)</button>
+                <button class="btn btn-outline" id="gb-btn-dec">🔓 解密图片 (Decrypt)</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <input type="file" id="gb-input" accept="image/*" style="display: none;">
+            <div id="gb-dropzone" class="file-upload">
+                <p>点击上传图片 或 拖拽至此 (Upload Image)</p>
+            </div>
+            
+            <div class="preview-container">
+                <img id="gb-img-preview" class="preview-img" style="display: none;">
+                <div id="gb-loading" style="display:none; color: var(--primary);">Processing...</div>
+                <a id="gb-download" class="btn btn-success" style="display: none;">💾 保存图片 (Save Image)</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!-- Visual Encryption Tool -->
+    <!-- ========================= -->
+    <div id="tool-visual" class="tool-section">
+        <h1>视觉加密 & 模糊隐写 (Visual Crypto & Stego)</h1>
+        <p class="subtitle">基于 <strong>Visual Secret Sharing (视觉秘密共享)</strong> 方案。</p>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('visual', 'enc')">加密 (Encryption / Split)</div>
+            <div class="tab" onclick="switchTab('visual', 'dec')">解密 (Decryption / Merge)</div>
+        </div>
+
+        <!-- Encrypt Tab -->
+        <div id="visual-enc" class="visual-tab-content">
+            <div id="vs-desc" class="desc-box"></div>
+
+            <div class="card grid-2">
+                <div>
+                    <div class="control-group">
+                        <label>核心算法 (Core Algorithm)</label>
+                        <select id="vs-algo">
+                            <option value="arithmetic">标准视觉加密 (Arithmetic - 无损)</option>
+                            <option value="xor">异或视觉加密 (XOR - 无损)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>视觉层样式 (Mask Style)</label>
+                        <select id="vs-style">
+                            <option value="mosaic">马赛克 (Mosaic / Pixelation)</option>
+                            <option value="blur">高斯模糊 (Gaussian Blur)</option>
+                            <option value="dot">半调点阵 (Halftone Dot)</option>
+                            <option value="stripe">线性条纹 (Linear Stripe)</option>
+                            <option value="cross">网格纹理 (Crosshatching)</option>
+                            <option value="edge">边缘检测 (Sobel Edge Detection)</option>
+                            <option value="invert">反色 (Negative Inversion)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <div class="control-group">
+                        <label>样式强度 (Kernel Size / Radius): <span id="vs-val-1">10</span></label>
+                        <input type="range" id="vs-param-1" min="1" max="50" value="10">
+                    </div>
+                    <div class="control-group">
+                        <label>加密/噪点强度 (Noise Intensity): <span id="vs-val-2">30</span></label>
+                        <input type="range" id="vs-param-2" min="0" max="100" value="30">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <input type="file" id="vs-input-a" accept="image/*" style="display: none;">
+                <div id="vs-dropzone-a" class="file-upload" style="margin-bottom: 20px;">
+                    <p>📸 上传源图 (Source Image)</p>
+                </div>
+
+                <div id="vs-progress-enc" style="display: none; margin-bottom: 20px;">
+                    <label>加密进度 (Encrypting...)</label>
+                    <progress id="vs-bar-enc" value="0" max="100"></progress>
+                </div>
+
+                <div class="grid-2">
+                    <div class="preview-container">
+                        <h3>视觉掩码 (Visual Mask / Surface)</h3>
+                        <img id="vs-img-b" class="preview-img" style="display: none;">
+                        <a id="vs-dl-b" class="btn btn-success" style="display: none;">下载掩码 (Download Mask)</a>
+                    </div>
+                    <div class="preview-container">
+                        <h3>加密秘钥 (Hidden Key / Latent)</h3>
+                        <img id="vs-img-c" class="preview-img" style="display: none;">
+                        <a id="vs-dl-c" class="btn btn-success" style="display: none;">下载秘钥 (Download Key)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decrypt Tab -->
+        <div id="visual-dec" class="visual-tab-content" style="display: none;">
+            <div class="card">
+                <div class="control-group">
+                    <label>解密算法 (Decryption Algorithm)</label>
+                    <select id="vs-algo-dec">
+                        <option value="arithmetic">标准视觉加密 (Arithmetic)</option>
+                        <option value="xor">异或视觉加密 (XOR)</option>
+                    </select>
+                </div>
+                
+                <div class="grid-2">
+                    <div id="vs-dropzone-b" class="file-upload">
+                        <p>1. 上传视觉掩码 (Upload Mask)</p>
+                        <input type="file" id="vs-input-b" accept="image/*" style="display: none;">
+                    </div>
+                    <div id="vs-dropzone-c" class="file-upload">
+                        <p>2. 上传加密秘钥 (Upload Key)</p>
+                        <input type="file" id="vs-input-c" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <button id="vs-btn-dec" class="btn btn-primary" style="justify-content:center;" disabled>🔄 开始合并解密 (Merge & Decrypt)</button>
+                    <p id="vs-err" style="color: #ef4444; margin-top: 10px; display: none;">❌ 图片尺寸不一致 (Image Dimensions Mismatch)</p>
+                </div>
+
+                <div id="vs-progress-dec" style="display: none; margin-bottom: 20px;">
+                    <label>解密进度 (Decrypting...)</label>
+                    <progress id="vs-bar-dec" value="0" max="100"></progress>
+                </div>
+
+                <div class="preview-container">
+                    <h3>还原结果 A (Restored Result)</h3>
+                    <img id="vs-img-result" class="preview-img" style="display: none;">
+                    <a id="vs-dl-result" class="btn btn-success" style="display: none;">下载还原图 (Download Result)</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!-- Difference Separation Tool -->
+    <!-- ========================= -->
+    <div id="tool-diff" class="tool-section">
+        <h1>差值分离图像加密 (Difference Separation)</h1>
+        <p class="subtitle">将图片拆分为两个层，通过<strong>差值混合模式</strong>还原。支持<strong>局部涂抹加密</strong>与<strong>参考图诱导</strong>功能。</p>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('diff', 'enc')">加密 (Encrypt / Split)</div>
+            <div class="tab" onclick="switchTab('diff', 'dec')">解密 (Decrypt / Restore)</div>
+        </div>
+
+        <!-- Diff Encrypt -->
+        <div id="diff-enc" class="diff-tab-content">
+            <div class="card">
+                <div class="grid-2">
+                    <!-- Target Image Area -->
+                    <div>
+                        <h3>1. 目标图 (Target Image)</h3>
+                        <p class="helper-text">这是你要隐藏的真实图片。支持在上方涂抹以指定高强度加密区域。</p>
+                        <div class="canvas-stack" id="diff-stack-container">
+                            <canvas id="diff-preview-enc"></canvas>
+                            <canvas id="diff-overlay" style="position:absolute; left:0; top:0; pointer-events:auto; cursor: crosshair; display:none;"></canvas>
+                        </div>
+                        <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <input type="file" id="diff-file-enc" accept="image/*" style="display:none;">
+                            <button class="btn btn-outline" onclick="document.getElementById('diff-file-enc').click()">📁 选择图片</button>
+                            <button class="btn btn-outline" id="diff-undo-btn">↩️ 撤回涂抹</button>
+                            <button class="btn btn-outline" id="diff-clear-btn">🗑️ 清空涂抹</button>
+                        </div>
+                        <div style="margin-top: 10px; display: flex; gap: 15px; justify-content: center; align-items: center;">
+                            <label style="margin:0;">🖌️ 大小: <input id="diff-brush-size" type="range" min="2" max="100" value="30" style="width: 100px;"></label>
+                            <label style="margin:0;">🎨 颜色: <input id="diff-brush-color" type="color" value="#000000"></label>
+                        </div>
+                    </div>
+
+                    <!-- Reference Image Area -->
+                    <div>
+                        <h3>2. 参考图 (Reference Image) - 可选</h3>
+                        <p class="helper-text">加密后的图片将伪装成这张图的样子（可选）。</p>
+                        <div class="preview-container" style="background: rgba(0,0,0,0.3);">
+                            <canvas id="diff-preview-ref"></canvas>
+                        </div>
+                        <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center; flex-direction: column;">
+                            <input type="file" id="diff-file-ref" accept="image/*" style="display:none;">
+                            <button class="btn btn-outline" onclick="document.getElementById('diff-file-ref').click()">📁 选择参考图 (Optional)</button>
+                            <label style="display:flex; align-items:center; gap:8px; justify-content: center; color: var(--text-main);">
+                                <input type="checkbox" id="diff-use-guided"> 启用参考图诱导 (Enable Guided Mode)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="control-group">
+                    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1;">
+                            <label>输出格式 (Format)</label>
+                            <select id="diff-format-enc">
+                                <option value="png" selected>PNG (推荐)</option>
+                                <option value="jpeg">JPG</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; padding-top: 24px;">
+                            <label style="display:flex; align-items:center; gap:8px; color: var(--text-main); cursor: pointer;">
+                                <input type="checkbox" id="diff-merge-side"> 左右拼接为单图 (Merge Side-by-Side)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="diff-start-enc" style="width: 100%; justify-content:center;">🚀 开始加密 (Start Encryption)</button>
+            </div>
+
+            <!-- Result Preview Area -->
+            <div class="card" id="diff-result-card" style="display:none;">
+                <h3>加密结果预览 (Encryption Result)</h3>
+                
+                <!-- Split Mode -->
+                <div id="diff-result-split" class="grid-2" style="display:none;">
+                    <div class="preview-container">
+                        <h4>层 A (Layer A)</h4>
+                        <img id="diff-img-res-a" class="preview-img">
+                        <a id="diff-dl-a" class="btn btn-success">⬇️ 下载层 A</a>
+                    </div>
+                    <div class="preview-container">
+                        <h4>层 B (Layer B)</h4>
+                        <img id="diff-img-res-b" class="preview-img">
+                        <a id="diff-dl-b" class="btn btn-success">⬇️ 下载层 B</a>
+                    </div>
+                </div>
+
+                <!-- Merged Mode -->
+                <div id="diff-result-merged" class="preview-container" style="display:none;">
+                    <h4>合并结果 (Merged Result)</h4>
+                    <img id="diff-img-res-merged" class="preview-img">
+                    <a id="diff-dl-merged" class="btn btn-success">⬇️ 下载合并图</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diff Decrypt -->
+        <div id="diff-dec" class="diff-tab-content" style="display: none;">
+            <div class="card">
+                <div class="grid-2">
+                    <div class="preview-container">
+                        <h3>第一张图片 / 左半部分</h3>
+                        <canvas id="diff-preview-dec-a"></canvas>
+                        <input type="file" id="diff-file-dec-a" accept="image/*" style="display:none;">
+                        <button class="btn btn-outline" onclick="document.getElementById('diff-file-dec-a').click()">📁 选择图片 A</button>
+                    </div>
+                    <div class="preview-container">
+                        <h3>第二张图片 / 右半部分</h3>
+                        <canvas id="diff-preview-dec-b"></canvas>
+                        <input type="file" id="diff-file-dec-b" accept="image/*" style="display:none;">
+                        <button class="btn btn-outline" onclick="document.getElementById('diff-file-dec-b').click()">📁 选择图片 B</button>
+                    </div>
+                </div>
+                <p class="helper-text" style="text-align: center; margin: 10px 0;">提示：如果只上传一张图片，工具将尝试将其左右拆分为两部分进行解密。</p>
+            </div>
+
+            <div class="card">
+                <div class="control-group">
+                    <div style="display: flex; gap: 20px;">
+                        <div style="flex: 1;">
+                            <label>输出格式 (Format)</label>
+                            <select id="diff-format-dec">
+                                <option value="png" selected>PNG</option>
+                                <option value="jpeg">JPG</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="diff-start-dec" style="width: 100%; justify-content:center;">🔓 开始解密 (Start Decryption)</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// --- Worker Manager ---
+class CryptoWorker {
+    constructor() {
+        this.worker = new Worker('../js/workers/crypto.worker.js');
+        this.callbacks = new Map();
+        this.worker.onmessage = (e) => {
+            const { id, success, error, progress, ...data } = e.data;
+            if (this.callbacks.has(id)) {
+                const task = this.callbacks.get(id);
+                if (progress !== undefined) {
+                    if (task.onProgress) task.onProgress(progress);
+                } else {
+                    this.callbacks.delete(id);
+                    if (success) {
+                        task.resolve(data);
+                    } else {
+                        console.error('Worker Task Failed:', error);
+                        task.reject(new Error(typeof error === 'string' ? error : JSON.stringify(error)));
+                    }
+                }
+            }
+        };
+        this.worker.onerror = (e) => console.error('Worker Error:', e);
+    }
+
+    run(command, args, transferables = []) {
+        return new Promise((resolve, reject) => {
+            const id = Date.now() + Math.random();
+            this.callbacks.set(id, { resolve, reject });
+            this.worker.postMessage({ command, id, ...args }, transferables);
+        });
+    }
+}
+
+const worker = new CryptoWorker();
+
+// --- Navigation ---
+function showTool(id) {
+    document.querySelectorAll('.tool-section').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tool-' + id).classList.add('active');
+    
+    const btns = document.querySelectorAll('.nav-btn');
+    if(id === 'gilbert') btns[0].classList.add('active');
+    if(id === 'visual') btns[1].classList.add('active');
+    if(id === 'diff') btns[2].classList.add('active');
+}
+
+function switchTab(tool, mode) {
+    const container = document.getElementById('tool-' + tool);
+    container.querySelectorAll(`.${tool}-tab-content`).forEach(el => el.style.display = 'none');
+    container.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(`${tool}-${mode}`).style.display = 'block';
+    event.currentTarget.classList.add('active');
+}
+
+// ==========================================
+// TOOL 1: Gilbert Shuffle
+// ==========================================
+(function(){
+    const imgPreview = document.getElementById("gb-img-preview");
+    const keyInput = document.getElementById("gb-key");
+    const dlBtn = document.getElementById("gb-download");
+    const loading = document.getElementById("gb-loading");
+    let currentImg = null;
+
+    new DragDropHandler({
+        dropZone: document.getElementById('gb-dropzone'),
+        input: document.getElementById('gb-input'),
+        accept: ['image/*'],
+        onFile: async (file) => {
+            currentImg = await CanvasUtils.loadImage(file);
+            imgPreview.src = currentImg.src;
+            imgPreview.style.display = 'block';
+            dlBtn.style.display = 'none';
+        }
+    });
+
+    async function process(isEncrypt) {
+        if (!currentImg) return alert("请先上传图片");
+        
+        loading.style.display = 'block';
+        imgPreview.style.opacity = '0.5';
+
+        try {
+            const imageData = CanvasUtils.getImageData(currentImg);
+            const key = parseInt(keyInput.value) || 0;
+
+            const result = await worker.run(
+                isEncrypt ? 'gilbert-encrypt' : 'gilbert-decrypt', 
+                {
+                    pixels: imageData.data,
+                    width: imageData.width,
+                    height: imageData.height,
+                    key: key
+                },
+                [imageData.data.buffer] // Transfer ownership
+            );
+
+            const url = CanvasUtils.pixelsToDataURL(result.pixels, imageData.width, imageData.height);
+            imgPreview.src = url;
+            imgPreview.style.display = 'block';
+            
+            dlBtn.href = url;
+            dlBtn.download = (isEncrypt?"gb_enc_":"gb_dec_") + Date.now() + ".png";
+            dlBtn.style.display = 'inline-flex';
+            
+            // Update currentImg so we can chain operations
+            currentImg = new Image();
+            currentImg.src = url;
+
+        } catch (e) {
+            alert('Error: ' + e.message);
+        } finally {
+            loading.style.display = 'none';
+            imgPreview.style.opacity = '1';
+        }
+    }
+
+    document.getElementById("gb-btn-enc").onclick = () => process(true);
+    document.getElementById("gb-btn-dec").onclick = () => process(false);
+})();
+
+// ==========================================
+// TOOL 2: Visual Crypto
+// ==========================================
+(function(){
+    const p1 = document.getElementById('vs-param-1');
+    const p2 = document.getElementById('vs-param-2');
+    const v1 = document.getElementById('vs-val-1');
+    const v2 = document.getElementById('vs-val-2');
+    
+    p1.oninput = () => v1.innerText = p1.value;
+    p2.oninput = () => v2.innerText = p2.value;
+
+    let sourceImg = null;
+    let decB = null, decC = null;
+
+    // --- Descriptions ---
+    const descriptions = {
+        algo: {
+            'arithmetic': '<strong>标准视觉加密 (Arithmetic):</strong> 基于加法模运算 (A = B + C) 的无损加密。生成的密钥层 C 为确定性噪点，安全性极高，还原后无画质损失。',
+            'xor': '<strong>异或视觉加密 (XOR):</strong> 基于位运算 (A = B ^ C) 的无损加密。计算速度快，同样支持完美还原。'
+        },
+        style: {
+            'mosaic': '<strong>马赛克 (Mosaic):</strong> 将图像划分为方块，取平均色，产生像素化效果。适合模糊细节。',
+            'blur': '<strong>高斯模糊 (Gaussian Blur):</strong> 对图像进行平滑处理，去除细节和噪点，产生朦胧感。',
+            'dot': '<strong>半调点阵 (Halftone Dot):</strong> 模拟印刷效果，用点的大小或密度表现灰度。具有艺术感。',
+            'stripe': '<strong>线性条纹 (Linear Stripe):</strong> 添加水平扫描线，类似旧电视效果。',
+            'cross': '<strong>网格纹理 (Crosshatching):</strong> 叠加交叉线条，产生素描般的阴影效果。',
+            'edge': '<strong>边缘检测 (Sobel Edge):</strong> 仅保留图像的边缘轮廓，隐藏色彩和填充细节。',
+            'invert': '<strong>反色 (Invert):</strong> 反转图像颜色，产生底片效果。'
+        }
+    };
+
+    function updateDesc() {
+        const algo = document.getElementById('vs-algo').value;
+        const style = document.getElementById('vs-style').value;
+        document.getElementById('vs-desc').innerHTML = descriptions.algo[algo] + '<br><br>' + descriptions.style[style];
+    }
+    updateDesc();
+
+    ['vs-algo', 'vs-style', 'vs-param-1', 'vs-param-2'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+            if(id === 'vs-algo' || id === 'vs-style') updateDesc();
+            runEncrypt();
+        });
+    });
+
+    new DragDropHandler({
+        dropZone: document.getElementById('vs-dropzone-a'),
+        input: document.getElementById('vs-input-a'),
+        accept: ['image/*'],
+        onFile: async (file) => {
+            sourceImg = await CanvasUtils.loadImage(file);
+            runEncrypt();
+        }
+    });
+
+    async function runEncrypt() {
+        if(!sourceImg) return;
+        
+        const algo = document.getElementById('vs-algo').value;
+        const style = document.getElementById('vs-style').value;
+        const size = parseInt(p1.value);
+        const noise = parseInt(p2.value);
+
+        // Progress UI
+        const progDiv = document.getElementById('vs-progress-enc');
+        const progBar = document.getElementById('vs-bar-enc');
+        progDiv.style.display = 'block';
+        progBar.value = 0;
+
+        try {
+            const imgData = CanvasUtils.getImageData(sourceImg);
+            
+            const result = await worker.run('visual-encrypt', {
+                pixels: imgData.data,
+                width: imgData.width,
+                height: imgData.height,
+                style, size, algo, noise
+            }, [imgData.data.buffer], (progress) => {
+                progBar.value = progress;
+            });
+
+            const urlB = CanvasUtils.pixelsToDataURL(result.pixelsA, imgData.width, imgData.height);
+            const bImg = document.getElementById('vs-img-b');
+            bImg.src = urlB;
+            bImg.style.display = 'block';
+            const dlB = document.getElementById('vs-dl-b');
+            dlB.href = urlB;
+            dlB.download = 'visual_B.png';
+            dlB.style.display = 'inline-flex';
+
+            const urlC = CanvasUtils.pixelsToDataURL(result.pixelsB, imgData.width, imgData.height);
+            const cImg = document.getElementById('vs-img-c');
+            cImg.src = urlC;
+            cImg.style.display = 'block';
+            const dlC = document.getElementById('vs-dl-c');
+            dlC.href = urlC;
+            dlC.download = 'key_C.png';
+            dlC.style.display = 'inline-flex';
+
+            if(window.parent && window.parent.app && window.parent.app.showToast) {
+                window.parent.app.showToast('加密完成！');
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert('Processing failed: ' + e.message);
+        } finally {
+            setTimeout(() => progDiv.style.display = 'none', 1000);
+        }
+    }
+
+    // Decrypt handlers
+    const checkDecReady = () => {
+        const btn = document.getElementById('vs-btn-dec');
+        const err = document.getElementById('vs-err');
+        if(decB && decC) {
+            if(decB.naturalWidth !== decC.naturalWidth || decB.naturalHeight !== decC.naturalHeight) {
+                err.style.display = 'block';
+                btn.disabled = true;
+            } else {
+                err.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+    };
+
+    new DragDropHandler({
+        dropZone: document.getElementById('vs-dropzone-b'),
+        input: document.getElementById('vs-input-b'),
+        accept: ['image/*'],
+        onFile: async (file) => {
+            decB = await CanvasUtils.loadImage(file);
+            document.getElementById('vs-dropzone-b').querySelector('p').innerText = "✅ B Ready";
+            checkDecReady();
+        }
+    });
+
+    new DragDropHandler({
+        dropZone: document.getElementById('vs-dropzone-c'),
+        input: document.getElementById('vs-input-c'),
+        accept: ['image/*'],
+        onFile: async (file) => {
+            decC = await CanvasUtils.loadImage(file);
+            document.getElementById('vs-dropzone-c').querySelector('p').innerText = "✅ C Ready";
+            checkDecReady();
+        }
+    });
+
+    document.getElementById('vs-btn-dec').onclick = async () => {
+        if (!decB || !decC) return;
+        
+        const progDiv = document.getElementById('vs-progress-dec');
+        const progBar = document.getElementById('vs-bar-dec');
+        progDiv.style.display = 'block';
+        progBar.value = 0;
+
+        try {
+            const dataB = CanvasUtils.getImageData(decB);
+            const dataC = CanvasUtils.getImageData(decC);
+            const algo = document.getElementById('vs-algo-dec').value;
+            const noise = parseInt(p2.value); // Use same noise slider
+
+            const result = await worker.run('visual-decrypt', {
+                pixelsB: dataB.data,
+                pixelsC: dataC.data,
+                width: dataB.width,
+                height: dataB.height,
+                algo, noise
+            }, [dataB.data.buffer, dataC.data.buffer], (progress) => {
+                progBar.value = progress;
+            });
+
+            const url = CanvasUtils.pixelsToDataURL(result.pixels, dataB.width, dataB.height);
+            const resImg = document.getElementById('vs-img-result');
+            resImg.src = url;
+            resImg.style.display = 'block';
+            const dlRes = document.getElementById('vs-dl-result');
+            dlRes.href = url;
+            dlRes.download = 'restored.png';
+            dlRes.style.display = 'inline-flex';
+
+            if(window.parent && window.parent.app && window.parent.app.showToast) {
+                window.parent.app.showToast('解密完成！');
+            }
+        } catch(e) {
+            alert('Decrypt failed: ' + e.message);
+        } finally {
+            setTimeout(() => progDiv.style.display = 'none', 1000);
+        }
+    };
+})();
+
+// ==========================================
+// TOOL 3: Difference Separation
+// ==========================================
+(function(){
+    // --- State & UI Elements ---
+    let targetImg = null, refImg = null;
+    let brushSize = 30, brushColor = '#000000', isDrawing = false;
+    
+    // Encrypt UI
+    const cvsEnc = document.getElementById('diff-preview-enc');
+    const ctxEnc = cvsEnc.getContext('2d');
+    const cvsRef = document.getElementById('diff-preview-ref');
+    const ctxRef = cvsRef.getContext('2d');
+    const overlayCvs = document.getElementById('diff-overlay');
+    const overlayCtx = overlayCvs.getContext('2d');
+    
+    // Decrypt UI
+    let decImgA = null, decImgB = null;
+    const cvsDecA = document.getElementById('diff-preview-dec-a');
+    const cvsDecB = document.getElementById('diff-preview-dec-b');
+
+    // --- Encrypt Handlers ---
+    document.getElementById('diff-file-enc').onchange = async (e) => {
+        if(!e.target.files[0]) return;
+        targetImg = await CanvasUtils.loadImage(e.target.files[0]);
+        // Resize canvas
+        cvsEnc.width = targetImg.width; cvsEnc.height = targetImg.height;
+        overlayCvs.width = targetImg.width; overlayCvs.height = targetImg.height;
+        overlayCvs.style.display = 'block';
+        ctxEnc.drawImage(targetImg, 0, 0);
+        overlayCtx.clearRect(0, 0, targetImg.width, targetImg.height);
+    };
+
+    document.getElementById('diff-file-ref').onchange = async (e) => {
+        if(!e.target.files[0]) return;
+        refImg = await CanvasUtils.loadImage(e.target.files[0]);
+        cvsRef.width = refImg.width; cvsRef.height = refImg.height;
+        ctxRef.drawImage(refImg, 0, 0);
+    };
+
+    // Painting Logic
+    overlayCvs.onmousedown = (e) => { isDrawing = true; paint(e); };
+    overlayCvs.onmousemove = (e) => { if(isDrawing) paint(e); };
+    overlayCvs.onmouseup = () => { isDrawing = false; pushHistory(); };
+    overlayCvs.onmouseout = () => { isDrawing = false; };
+
+    function paint(e) {
+        const rect = overlayCvs.getBoundingClientRect();
+        const scaleX = overlayCvs.width / rect.width;
+        const scaleY = overlayCvs.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        
+        overlayCtx.fillStyle = "rgba(255, 0, 0, 0.5)"; 
+        overlayCtx.beginPath();
+        overlayCtx.arc(x, y, document.getElementById('diff-brush-size').value, 0, Math.PI * 2);
+        overlayCtx.fill();
+    }
+
+    let history = [];
+    function pushHistory() {
+        if (history.length > 5) history.shift();
+        history.push(overlayCtx.getImageData(0,0, overlayCvs.width, overlayCvs.height));
+    }
+    document.getElementById('diff-undo-btn').onclick = () => {
+        if(history.length > 0) {
+            history.pop();
+            const prev = history[history.length-1];
+            overlayCtx.clearRect(0,0, overlayCvs.width, overlayCvs.height);
+            if(prev) overlayCtx.putImageData(prev, 0, 0);
+        }
+    };
+    document.getElementById('diff-clear-btn').onclick = () => {
+        overlayCtx.clearRect(0,0, overlayCvs.width, overlayCvs.height);
+        history = [];
+    };
+
+    // Process Encrypt
+    document.getElementById('diff-start-enc').onclick = async () => {
+        if(!targetImg) return alert('请先选择目标图片');
+        
+        const w = targetImg.width, h = targetImg.height;
+        const format = document.getElementById('diff-format-enc').value;
+        const useGuided = document.getElementById('diff-use-guided').checked;
+        const mergeSide = document.getElementById('diff-merge-side').checked;
+
+        const targetData = ctxEnc.getImageData(0,0,w,h).data;
+        const overlayData = overlayCtx.getImageData(0,0,w,h).data;
+        
+        let refData = null;
+        if(useGuided && refImg) {
+            // Need to resize ref image to match target? 
+            // Simplified: Draw to temp canvas of target size
+            const tmp = document.createElement('canvas');
+            tmp.width = w; tmp.height = h;
+            tmp.getContext('2d').drawImage(refImg, 0, 0, w, h);
+            refData = tmp.getContext('2d').getImageData(0,0,w,h).data;
+        }
+
+        try {
+            const result = await worker.run('diff-encrypt', {
+                targetPixels: targetData,
+                refPixels: refData,
+                overlayPixels: overlayData,
+                useGuided: useGuided,
+                width: w, height: h
+            }, [targetData.buffer]); // overlayData and refData buffer transfer logic skipped for simplicity, but can be added
+
+            // Show Result Card
+            const resCard = document.getElementById('diff-result-card');
+            const resSplit = document.getElementById('diff-result-split');
+            const resMerged = document.getElementById('diff-result-merged');
+            
+            resCard.style.display = 'block';
+
+            if (mergeSide) {
+                resSplit.style.display = 'none';
+                resMerged.style.display = 'flex'; // preview-container uses flex
+
+                const outCvs = document.createElement('canvas');
+                outCvs.width = w * 2; outCvs.height = h;
+                const outCtx = outCvs.getContext('2d');
+                const imgDataA = new ImageData(result.pixelsA, w, h);
+                const imgDataB = new ImageData(result.pixelsB, w, h);
+                outCtx.putImageData(imgDataA, 0, 0);
+                outCtx.putImageData(imgDataB, w, 0);
+                
+                const url = outCvs.toDataURL("image/" + format);
+                const img = document.getElementById('diff-img-res-merged');
+                const btn = document.getElementById('diff-dl-merged');
+                
+                img.src = url;
+                img.style.display = 'block';
+                
+                btn.href = url;
+                btn.download = `diff_enc_merged_${Date.now()}.${format}`;
+                btn.style.display = 'inline-flex';
+            } else {
+                resSplit.style.display = 'grid';
+                resMerged.style.display = 'none';
+
+                const urlA = CanvasUtils.pixelsToDataURL(result.pixelsA, w, h, "image/"+format);
+                const urlB = CanvasUtils.pixelsToDataURL(result.pixelsB, w, h, "image/"+format);
+                
+                const imgA = document.getElementById('diff-img-res-a');
+                const btnA = document.getElementById('diff-dl-a');
+                imgA.src = urlA;
+                imgA.style.display = 'block';
+                btnA.href = urlA;
+                btnA.download = `diff_enc_A_${Date.now()}.${format}`;
+                btnA.style.display = 'inline-flex';
+
+                const imgB = document.getElementById('diff-img-res-b');
+                const btnB = document.getElementById('diff-dl-b');
+                imgB.src = urlB;
+                imgB.style.display = 'block';
+                btnB.href = urlB;
+                btnB.download = `diff_enc_B_${Date.now()}.${format}`;
+                btnB.style.display = 'inline-flex';
+            }
+            
+            // Scroll to results
+            resCard.scrollIntoView({ behavior: 'smooth' });
+
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    };
+
+    // --- Decrypt Handlers ---
+    document.getElementById('diff-file-dec-a').onchange = async (e) => handleDecFile(e, 'A');
+    document.getElementById('diff-file-dec-b').onchange = async (e) => handleDecFile(e, 'B');
+
+    async function handleDecFile(e, type) {
+        if(!e.target.files[0]) return;
+        const img = await CanvasUtils.loadImage(e.target.files[0]);
+        const cvs = type === 'A' ? cvsDecA : cvsDecB;
+        cvs.width = img.width; cvs.height = img.height;
+        cvs.getContext('2d').drawImage(img, 0, 0);
+        if(type === 'A') decImgA = img; else decImgB = img;
+    }
+
+    document.getElementById('diff-start-dec').onclick = async () => {
+        if(!decImgA) return alert('请至少上传一张图片');
+        
+        let w, h, dataA, dataB;
+        
+        if (decImgA && !decImgB) {
+            // Assume side-by-side
+            w = decImgA.width / 2;
+            h = decImgA.height;
+            const tmp = document.createElement('canvas');
+            tmp.width = decImgA.width; tmp.height = decImgA.height;
+            const tctx = tmp.getContext('2d');
+            tctx.drawImage(decImgA, 0, 0);
+            dataA = tctx.getImageData(0, 0, w, h).data;
+            dataB = tctx.getImageData(w, 0, w, h).data;
+        } else if (decImgA && decImgB) {
+             if(decImgA.width !== decImgB.width || decImgA.height !== decImgB.height)
+                return alert('两张图片尺寸必须一致');
+             w = decImgA.width; h = decImgA.height;
+             const t1 = document.createElement('canvas'); t1.width=w; t1.height=h;
+             t1.getContext('2d').drawImage(decImgA, 0, 0);
+             dataA = t1.getContext('2d').getImageData(0,0,w,h).data;
+             
+             const t2 = document.createElement('canvas'); t2.width=w; t2.height=h;
+             t2.getContext('2d').drawImage(decImgB, 0, 0);
+             dataB = t2.getContext('2d').getImageData(0,0,w,h).data;
+        } else {
+            return;
+        }
+
+        const format = document.getElementById('diff-format-dec').value;
+
+        try {
+            const result = await worker.run('diff-decrypt', {
+                pixelsA: dataA,
+                pixelsB: dataB,
+                width: w, height: h
+            }, [dataA.buffer, dataB.buffer]);
+
+            CanvasUtils.download(CanvasUtils.pixelsToDataURL(result.pixels, w, h, "image/"+format), `diff_restored_${Date.now()}.${format}`);
+        } catch (e) {
+            alert('Decrypt Error: ' + e.message);
+        }
+    };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成器</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js'"></script>
+</head>
+<body>
+    <div class="workspace">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">强密码生成器</div>
+            </div>
+            <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div class="input-row">
+                    <label>长度: <span id="pwd-len-val" style="color:var(--primary); font-weight:bold;">16</span></label>
+                    <input type="range" id="pwd-len" min="4" max="64" value="16" oninput="document.getElementById('pwd-len-val').innerText = this.value">
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="pwd-upper" checked> A-Z</label>
+                    <label><input type="checkbox" id="pwd-lower" checked> a-z</label>
+                    <label><input type="checkbox" id="pwd-num" checked> 0-9</label>
+                    <label><input type="checkbox" id="pwd-sym" checked> !@#</label>
+                </div>
+                <button class="btn btn-primary" style="justify-content:center" onclick="genTool.password()">生成密码</button>
+                <div class="result-box">
+                    <input type="text" id="pwd-result" readonly placeholder="生成的密码...">
+                    <button class="btn btn-icon" onclick="app.copy('pwd-result')">复制</button>
+                </div>
+                <textarea id="pwd-batch" readonly placeholder="批量生成结果 (10个)..." style="height: 150px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top:10px;"></textarea>
+                <button class="btn btn-secondary" style="justify-content:center" onclick="genTool.passwordBatch()">批量生成 (10个)</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">UUID 生成器</div>
+            </div>
+            <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div class="input-row">
+                    <label>版本:</label>
+                    <select id="uuid-version" onchange="genTool.updateUuidUI()">
+                        <option value="v4">v4 (随机)</option>
+                        <option value="v1">v1 (时间戳)</option>
+                        <option value="v3">v3 (MD5 命名空间)</option>
+                        <option value="v5">v5 (SHA-1 命名空间)</option>
+                    </select>
+                </div>
+                
+                <div id="uuid-ns-group" style="display:none">
+                    <div class="input-row">
+                        <label>空间:</label>
+                        <select id="uuid-ns-type" onchange="genTool.updateNsUI()">
+                            <option value="url">URL</option>
+                            <option value="dns">DNS</option>
+                            <option value="oid">OID</option>
+                            <option value="x500">X500</option>
+                            <option value="custom">自定义UUID</option>
+                        </select>
+                    </div>
+                     <div class="input-row" id="uuid-ns-custom-row" style="display:none">
+                        <label>NS UUID:</label>
+                        <input type="text" id="uuid-ns-custom" placeholder="输入合法的 UUID...">
+                    </div>
+                    <div class="input-row">
+                        <label>名字:</label>
+                        <input type="text" id="uuid-name" placeholder="输入用于哈希的名字...">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="justify-content:center" onclick="genTool.uuid()">生成 UUID</button>
+                <div class="result-box">
+                    <input type="text" id="uuid-result" readonly placeholder="生成的 UUID...">
+                    <button class="btn btn-icon" onclick="app.copy('uuid-result')">复制</button>
+                </div>
+                <textarea id="uuid-batch" readonly placeholder="批量生成结果 (10个)..." style="height: 150px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top:10px;"></textarea>
+                <button class="btn btn-secondary" style="justify-content:center" onclick="genTool.uuidBatch()">批量生成 (10个)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        const genTool = {
+            password: function() {
+                const len = parseInt(document.getElementById('pwd-len').value);
+                const useUpper = document.getElementById('pwd-upper').checked;
+                const useLower = document.getElementById('pwd-lower').checked;
+                const useNum = document.getElementById('pwd-num').checked;
+                const useSym = document.getElementById('pwd-sym').checked;
+                
+                let chars = '';
+                if(useUpper) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                if(useLower) chars += 'abcdefghijklmnopqrstuvwxyz';
+                if(useNum) chars += '0123456789';
+                if(useSym) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+                
+                if(!chars) {
+                    app.showToast('请至少选择一种字符类型', 'error');
+                    return;
+                }
+                
+                let pwd = '';
+                const array = new Uint32Array(len);
+                window.crypto.getRandomValues(array);
+                for(let i = 0; i < len; i++) {
+                    pwd += chars[array[i] % chars.length];
+                }
+                document.getElementById('pwd-result').value = pwd;
+                return pwd;
+            },
+            
+            passwordBatch: function() {
+                let res = [];
+                for(let i=0; i<10; i++) {
+                    res.push(this.password());
+                }
+                document.getElementById('pwd-batch').value = res.join('\n');
+            },
+            
+            updateUuidUI: function() {
+                const ver = document.getElementById('uuid-version').value;
+                const nsGroup = document.getElementById('uuid-ns-group');
+                if(ver === 'v3' || ver === 'v5') {
+                    nsGroup.style.display = 'block';
+                } else {
+                    nsGroup.style.display = 'none';
+                }
+            },
+
+            updateNsUI: function() {
+                const type = document.getElementById('uuid-ns-type').value;
+                const customRow = document.getElementById('uuid-ns-custom-row');
+                const nsInput = document.getElementById('uuid-ns-custom');
+                const nameInput = document.getElementById('uuid-name');
+                
+                if(type === 'custom') {
+                    customRow.style.display = 'flex';
+                    nsInput.placeholder = "输入合法的 UUID (例如: 6ba7b810-9dad-11d1-80b4-00c04fd430c8)";
+                } else {
+                    customRow.style.display = 'none';
+                }
+
+                if(type === 'url') nameInput.placeholder = "输入 URL (例如: https://example.com)";
+                else if(type === 'dns') nameInput.placeholder = "输入 域名 (例如: example.com)";
+                else if(type === 'oid') nameInput.placeholder = "输入 OID (例如: 1.3.6.1.4.1...)";
+                else if(type === 'x500') nameInput.placeholder = "输入 X500 DN (例如: CN=John Doe, C=US)";
+                else nameInput.placeholder = "输入用于哈希的名字...";
+            },
+
+            uuid: function() {
+                const ver = document.getElementById('uuid-version').value;
+                let res = '';
+                
+                try {
+                    if(typeof uuid === 'undefined') {
+                        // Fallback to randomUUID if lib not loaded (only for v4)
+                        if(ver === 'v4') res = crypto.randomUUID();
+                        else throw new Error("UUID 库未加载，仅支持 v4");
+                    } else {
+                        if(ver === 'v4') {
+                            res = uuid.v4();
+                        } else if(ver === 'v1') {
+                            res = uuid.v1();
+                        } else if(ver === 'v3' || ver === 'v5') {
+                            const name = document.getElementById('uuid-name').value;
+                            if(!name) throw new Error("请输入名字");
+                            
+                            let ns = uuid.URL; // default
+                            const type = document.getElementById('uuid-ns-type').value;
+                            if(type === 'dns') ns = uuid.DNS;
+                            else if(type === 'oid') ns = uuid.OID;
+                            else if(type === 'x500') ns = '6ba7b814-9dad-11d1-80b4-00c04fd430c8'; // X500 not in lib constants sometimes
+                            else if(type === 'custom') {
+                                ns = document.getElementById('uuid-ns-custom').value;
+                                if(!uuid.validate(ns)) throw new Error("无效的命名空间 UUID");
+                            }
+                            
+                            res = uuid[ver](name, ns);
+                        }
+                    }
+                } catch(e) {
+                    app.showToast(e.message, 'error');
+                    return;
+                }
+                
+                document.getElementById('uuid-result').value = res;
+            },
+
+            uuidBatch: function() {
+                let res = [];
+                // Simple batch for v4 only for now, or use current settings?
+                // Let's use current settings
+                for(let i = 0; i < 10; i++) {
+                    this.uuid();
+                    res.push(document.getElementById('uuid-result').value);
+                }
+                document.getElementById('uuid-batch').value = res.join('\n');
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>哈希计算</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Removed synchronous crypto-js loading, using Worker -->
+</head>
+<body>
+    <div class="workspace">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">哈希计算 (Hash Calculation)</div>
+                <div class="panel-actions">
+                    <div class="file-upload btn btn-icon" style="overflow:hidden">
+                        <span>📂 选择文件</span>
+                        <input type="file" onchange="hashTool.handleFile(this)">
+                    </div>
+                     <button class="btn btn-icon" onclick="app.clear('hash')">清空</button>
+                </div>
+            </div>
+            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem; height: 100%; overflow: hidden;">
+                <textarea id="hash-input" placeholder="在此输入文本，或点击上方按钮上传文件..." style="height: 120px; flex:none; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2);"></textarea>
+                
+                <div class="checkbox-group" style="overflow-y:auto; flex-shrink:0; max-height:100px;">
+                     <label><input type="checkbox" class="hash-algo" value="MD5" checked> MD5</label>
+                     <label><input type="checkbox" class="hash-algo" value="SHA1" checked> SHA1</label>
+                     <label><input type="checkbox" class="hash-algo" value="SHA256" checked> SHA256</label>
+                     <label><input type="checkbox" class="hash-algo" value="SHA512"> SHA512</label>
+                     <label><input type="checkbox" class="hash-algo" value="RIPEMD160"> RIPEMD160</label>
+                     <label><input type="checkbox" class="hash-algo" value="HmacMD5"> HmacMD5</label>
+                     <label><input type="checkbox" class="hash-algo" value="HmacSHA256"> HmacSHA256</label>
+                </div>
+                
+                <div id="hash-key-row" class="input-row" style="display:none;">
+                     <label>HMAC 密钥:</label>
+                     <input type="text" id="hash-hmac-key" placeholder="HMAC 算法需要密钥">
+                </div>
+
+                <button class="btn btn-primary" onclick="hashTool.calc()">计算哈希</button>
+                
+                <div id="hash-results" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        const hashTool = {
+            fileData: null,
+            worker: null,
+            
+            initWorker: function() {
+                if (!window.Worker) {
+                    app.showToast('您的浏览器不支持 Web Worker', 'error');
+                    return;
+                }
+                this.worker = new Worker('../js/workers/hash.worker.js');
+                this.worker.onmessage = (e) => {
+                    const { type, results, error } = e.data;
+                    if (type === 'result') {
+                        this.displayResults(results);
+                        app.showToast('计算完成');
+                        this.setLoading(false);
+                    } else if (type === 'error') {
+                        app.showToast('计算出错: ' + error, 'error');
+                        this.setLoading(false);
+                    }
+                };
+                this.worker.onerror = (e) => {
+                    app.showToast('Worker 错误: ' + e.message, 'error');
+                    this.setLoading(false);
+                };
+            },
+
+            handleFile: function(input) {
+                const file = input.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.fileData = e.target.result; // ArrayBuffer
+                    document.getElementById('hash-input').value = `[文件] ${file.name} (${file.size} bytes)`;
+                    app.showToast('文件已加载，点击计算');
+                };
+                reader.readAsArrayBuffer(file);
+            },
+
+            setLoading: function(loading) {
+                const btn = document.querySelector('.btn-primary');
+                if(loading) {
+                    btn.disabled = true;
+                    btn.innerText = '计算中...';
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = '计算哈希';
+                }
+            },
+
+            calc: function() {
+                if (!this.worker) this.initWorker();
+
+                const textInput = document.getElementById('hash-input').value;
+                const isFile = textInput.startsWith('[文件]') && this.fileData;
+                const hmacKey = document.getElementById('hash-hmac-key').value;
+                
+                const algos = Array.from(document.querySelectorAll('.hash-algo:checked')).map(cb => cb.value);
+                const resultsDiv = document.getElementById('hash-results');
+                resultsDiv.innerHTML = '';
+                
+                if (algos.length === 0) {
+                    app.showToast('请至少选择一种算法', 'error');
+                    return;
+                }
+
+                this.setLoading(true);
+
+                // Prepare payload
+                const payload = {
+                    isFile: !!isFile,
+                    data: isFile ? this.fileData : textInput,
+                    algos: algos,
+                    hmacKey: hmacKey
+                };
+
+                // Use transfer list for ArrayBuffer to avoid copy
+                if (isFile) {
+                    // Note: fileData cannot be used again after transfer. 
+                    // If we want to re-use, we should slice it.
+                    // For now, let's slice it to keep original valid or just copy.
+                    // Copy is safer for repeated calcs.
+                    const dataCopy = this.fileData.slice(0);
+                    this.worker.postMessage({ type: 'calc', payload: { ...payload, data: dataCopy } }, [dataCopy]);
+                } else {
+                    this.worker.postMessage({ type: 'calc', payload: payload });
+                }
+            },
+
+            displayResults: function(results) {
+                const resultsDiv = document.getElementById('hash-results');
+                for (const [algo, hex] of Object.entries(results)) {
+                    const row = document.createElement('div');
+                    row.className = 'input-row';
+                    row.style.marginBottom = '0.5rem';
+                    row.innerHTML = `
+                        <label style="min-width:80px; color:var(--secondary)">${algo}:</label>
+                        <div class="result-box" style="flex:1; display:flex; gap:10px;">
+                            <input type="text" id="hash-res-${algo}" readonly value="${hex}" style="flex:1; font-size:0.8rem">
+                            <button class="btn btn-icon" onclick="app.copy('hash-res-${algo}')">复制</button>
+                        </div>
+                    `;
+                    resultsDiv.appendChild(row);
+                }
+            }
+        };
+
+        // Initialize worker
+        hashTool.initWorker();
+
+        // Add HMAC key toggle listener
+
+        document.addEventListener('change', (e) => {
+            if(e.target.classList.contains('hash-algo')) {
+                const hmacSelected = Array.from(document.querySelectorAll('.hash-algo:checked'))
+                                          .some(cb => cb.value.startsWith('Hmac'));
+                document.getElementById('hash-key-row').style.display = hmacSelected ? 'flex' : 'none';
+            }
+        });
+    </script>
+</body>
+</html>

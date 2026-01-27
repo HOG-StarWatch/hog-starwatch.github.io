@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件处理</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js'"></script>
+</head>
+<body>
+    <div class="workspace" style="flex-direction: column;">
+        <div class="sub-tab-group">
+            <div class="sub-tab active" onclick="fileTool.switchSubTab('zip', this)">ZIP 打包</div>
+            <div class="sub-tab" onclick="fileTool.switchSubTab('b64enc', this)">文件转 Base64/JSON</div>
+            <div class="sub-tab" onclick="fileTool.switchSubTab('b64dec', this)">Base64 还原下载</div>
+            <div class="sub-tab" onclick="fileTool.switchSubTab('corrupt', this)">文件破坏</div>
+        </div>
+
+        <div class="workspace">
+            <div class="panel">
+                <!-- ZIP Pack SubTab -->
+                <div id="file-zip-view">
+                    <div class="panel-header">
+                        <div class="panel-title">文件打包 (ZIP Archiver)</div>
+                    </div>
+                    <div style="padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; height: 100%;">
+                        
+                        <div style="width: 100%; max-width: 500px; border: 2px dashed var(--border); border-radius: 16px; padding: 3rem; text-align: center; position: relative; transition: all 0.3s; background: rgba(255,255,255,0.02);" id="drop-zone">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+                            <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">点击或拖拽文件/文件夹到此处</div>
+                            <div style="color: var(--text-dim); font-size: 0.9rem;">支持多文件选择，将自动打包为 ZIP</div>
+                            <input type="file" id="file-picker" multiple style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="fileTool.handleFiles(this.files)">
+                        </div>
+
+                        <div id="file-list" style="width: 100%; max-width: 500px; max-height: 200px; overflow-y: auto; display: none; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem;">
+                            <!-- File items will be added here -->
+                        </div>
+
+                        <div id="file-options" style="width: 100%; max-width: 500px; display: none; flex-direction: column; gap: 1rem;">
+                            <div class="input-row">
+                                <label>压缩级别:</label>
+                                <select id="zip-level">
+                                    <option value="STORE">仅存储 (不压缩, 最快)</option>
+                                    <option value="DEFLATE_1">快速压缩 (Level 1)</option>
+                                    <option value="DEFLATE_5" selected>标准压缩 (Level 5)</option>
+                                    <option value="DEFLATE_9">最大压缩 (Level 9, 最慢)</option>
+                                </select>
+                            </div>
+                            <div class="input-row">
+                                <label>文件名:</label>
+                                <input type="text" id="zip-name" value="archive.zip" placeholder="archive.zip">
+                            </div>
+                            <button class="btn btn-primary" style="justify-content: center; padding: 1rem;" onclick="fileTool.createZip()">
+                                <span id="zip-btn-text">开始打包下载</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Base64 Encode SubTab -->
+                <div id="file-b64enc-view" style="display:none; height:100%; flex-direction:column;">
+                     <div class="panel-header">
+                        <div class="panel-title">文件转 Base64/JSON</div>
+                        <div class="panel-actions">
+                            <button class="btn btn-icon" onclick="document.getElementById('b64-out').value=''">清空</button>
+                        </div>
+                    </div>
+                    <div style="padding:1rem; flex:1; display:flex; flex-direction:column; gap:1rem; overflow:hidden;">
+                        <div class="input-row">
+                             <div class="file-upload btn btn-secondary">
+                                <span>📄 选择文件 (多选)</span>
+                                <input type="file" multiple onchange="fileTool.handleB64Files(this.files)">
+                            </div>
+                            <select id="b64-compress">
+                                <option value="none">无压缩 (None)</option>
+                                <option value="gzip">Gzip</option>
+                                <option value="deflate">Deflate</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="fileTool.encodeB64()">生成 JSON</button>
+                        </div>
+                        <div style="font-size:0.8rem; color:var(--text-dim);">
+                            * 生成包含文件名、类型、Base64数据的 JSON。支持浏览器原生压缩流。
+                        </div>
+                        <textarea id="b64-out" placeholder="生成的 JSON 结果..." style="flex:1; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2);"></textarea>
+                        <div class="toolbar" style="width:100%; flex-direction:row; height:auto; overflow:visible;">
+                             <button class="btn" onclick="app.copy('b64-out')">复制结果</button>
+                             <button class="btn" onclick="fileTool.downloadB64Json()">下载 JSON 文件</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Base64 Decode SubTab -->
+                <div id="file-b64dec-view" style="display:none; height:100%; flex-direction:column;">
+                    <div class="panel-header">
+                        <div class="panel-title">Base64 / JSON 还原文件</div>
+                        <div class="panel-actions">
+                             <button class="btn btn-icon" onclick="document.getElementById('b64-in').value=''; document.getElementById('b64-restore-list').innerHTML='';">清空</button>
+                        </div>
+                    </div>
+                    <div style="padding:1rem; flex:1; display:flex; flex-direction:column; gap:1rem; overflow:hidden;">
+                        <div class="input-row">
+                             <div class="file-upload btn btn-secondary">
+                                <span>📂 加载 JSON 文件</span>
+                                <input type="file" accept=".json,.txt" onchange="fileTool.loadJsonFile(this)">
+                            </div>
+                            <button class="btn btn-primary" onclick="fileTool.restoreB64()">解析并还原</button>
+                        </div>
+                         <textarea id="b64-in" placeholder="在此粘贴 Base64 字符串 或 之前生成的 JSON..." style="height:150px; flex:none; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2);"></textarea>
+                         
+                         <!-- Manual Base64 Restore Options -->
+                         <div id="manual-b64-opts" style="display:flex; gap:10px; align-items:center; border-top:1px solid var(--border); padding-top:10px;">
+                            <span style="font-size:0.8rem; color:var(--secondary);">单文件手动还原:</span>
+                            <input type="text" id="manual-name" placeholder="文件名 (e.g. test.png)" style="width:150px;">
+                            <select id="manual-mime" style="width:120px;">
+                                <option value="application/octet-stream">Auto/Bin</option>
+                                <option value="image/png">PNG</option>
+                                <option value="image/jpeg">JPG</option>
+                                <option value="application/pdf">PDF</option>
+                                <option value="text/plain">TXT</option>
+                            </select>
+                            <button class="btn btn-sm" onclick="fileTool.downloadManual()">下载</button>
+                         </div>
+
+                         <div style="flex:1; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:10px;">
+                             <div id="b64-restore-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                         </div>
+                    </div>
+                </div>
+
+                <!-- File Corrupt SubTab -->
+                <div id="file-corrupt-view" style="display:none; height:100%; flex-direction:column;">
+                    <div class="panel-header">
+                        <div class="panel-title">文件破坏 (File Corruptor)</div>
+                        <div class="panel-actions">
+                             <button class="btn btn-icon" onclick="fileTool.clearCorrupt()">清空</button>
+                        </div>
+                    </div>
+                    <div style="padding:1rem; flex:1; display:flex; flex-direction:column; gap:1rem; overflow:hidden;">
+                        <div style="width: 100%; padding: 3rem; border: 2px dashed var(--border); border-radius: 8px; text-align: center; position: relative; cursor: pointer; background: rgba(255,255,255,0.02);" id="corrupt-drop-zone">
+                             <div style="margin-bottom:1rem; font-size:3rem;">🗑️</div>
+                             <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">拖拽文件到此处 或 点击选择</div>
+                             <div style="color: var(--text-dim); font-size: 0.9rem;">警告：此操作不可逆（虽然这里只是生成副本），请谨慎使用</div>
+                             <input type="file" id="corrupt-file-input" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;" onchange="fileTool.handleCorruptFile(this.files[0])">
+                        </div>
+                        
+                        <div id="corrupt-settings" style="display:none; flex-direction:column; gap:1.5rem; max-width: 600px; margin: 0 auto; width: 100%;">
+                             <div class="info-row" style="display:flex; justify-content:space-between; align-items:center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                                <span id="corrupt-file-name" style="font-weight:bold;">Filename.ext</span>
+                                <span id="corrupt-file-size" style="color:var(--text-dim);">0 KB</span>
+                             </div>
+                             
+                             <div class="input-row">
+                                <label>破坏模式:</label>
+                                <select id="corrupt-mode">
+                                    <option value="random">随机字节替换 (Random Noise)</option>
+                                    <option value="zero">清零 (Zero Fill)</option>
+                                    <option value="header">仅头部破坏 (Header Only)</option>
+                                    <option value="scramble">局部乱序 (Shuffle)</option>
+                                </select>
+                             </div>
+                             
+                             <div class="input-row" style="flex-direction: column; align-items: flex-start; gap: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; width: 100%;">
+                                    <label>破坏程度 (Intensity):</label>
+                                    <span id="corrupt-val" style="font-weight: bold; color: var(--primary);">5%</span>
+                                </div>
+                                <input type="range" id="corrupt-amount" min="1" max="100" value="5" style="width: 100%;" oninput="document.getElementById('corrupt-val').innerText = this.value + '%'">
+                             </div>
+                             
+                             <button class="btn btn-primary" style="justify-content: center; padding: 1rem;" onclick="fileTool.execCorrupt()">☠️ 开始破坏并下载</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        const fileTool = {
+            files: [],
+            b64Files: [], // For Base64 Encoder
+            corruptFileObj: null,
+            
+            switchSubTab: function(id, el) {
+                document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+                el.classList.add('active');
+                
+                document.getElementById('file-zip-view').style.display = 'none';
+                document.getElementById('file-b64enc-view').style.display = 'none';
+                document.getElementById('file-b64dec-view').style.display = 'none';
+                document.getElementById('file-corrupt-view').style.display = 'none';
+                
+                const view = document.getElementById(`file-${id}-view`);
+                if(id === 'b64enc' || id === 'b64dec' || id === 'corrupt') {
+                    view.style.display = 'flex';
+                } else {
+                    view.style.display = 'block';
+                }
+            },
+
+            handleFiles: function(fileList) {
+                this.files = Array.from(fileList);
+                this.updateUI();
+            },
+
+            updateUI: function() {
+                const listEl = document.getElementById('file-list');
+                const optsEl = document.getElementById('file-options');
+                const dropEl = document.getElementById('drop-zone');
+                
+                if (this.files.length > 0) {
+                    listEl.style.display = 'block';
+                    optsEl.style.display = 'flex';
+                    dropEl.style.display = 'none'; 
+                    
+                    listEl.innerHTML = '';
+                    this.files.forEach((f, index) => {
+                        const item = document.createElement('div');
+                        item.style.cssText = 'display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.9rem;';
+                        item.innerHTML = `
+                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f.name}</span>
+                            <span style="color:var(--text-dim); margin-left:10px;">${(f.size/1024).toFixed(1)} KB</span>
+                        `;
+                        listEl.appendChild(item);
+                    });
+                } else {
+                    listEl.style.display = 'none';
+                    optsEl.style.display = 'none';
+                    dropEl.style.display = 'block';
+                }
+            },
+
+            createZip: async function() {
+                if (this.files.length === 0) return;
+                
+                if (typeof JSZip === 'undefined') {
+                    app.showToast('JSZip 库未加载', 'error');
+                    return;
+                }
+
+                const btnText = document.getElementById('zip-btn-text');
+                const originalText = btnText.innerText;
+                btnText.innerText = "正在打包...";
+                
+                try {
+                    const zip = new JSZip();
+                    const levelMap = {
+                        'STORE': { level: 0 },
+                        'DEFLATE_1': { level: 1 },
+                        'DEFLATE_5': { level: 5 },
+                        'DEFLATE_9': { level: 9 }
+                    };
+                    
+                    const levelKey = document.getElementById('zip-level').value;
+                    const compression = levelKey === 'STORE' ? 'STORE' : 'DEFLATE';
+                    const compressionOptions = levelKey === 'STORE' ? null : levelMap[levelKey];
+
+                    // Add files
+                    this.files.forEach(file => {
+                        const path = file.webkitRelativePath || file.name;
+                        zip.file(path, file);
+                    });
+
+                    const blob = await zip.generateAsync({
+                        type: "blob",
+                        compression: compression,
+                        compressionOptions: compressionOptions
+                    }, (metadata) => {
+                        btnText.innerText = `打包中 ${metadata.percent.toFixed(0)}%`;
+                    });
+
+                    const filename = document.getElementById('zip-name').value || "archive.zip";
+                    saveAs(blob, filename);
+                    
+                    app.showToast('打包完成，已开始下载');
+                } catch (e) {
+                    app.showToast('打包失败: ' + e.message, 'error');
+                    console.error(e);
+                } finally {
+                    btnText.innerText = originalText;
+                }
+            },
+            
+            // --- Base64 / JSON Features ---
+            
+            handleB64Files: function(files) {
+                this.b64Files = Array.from(files);
+                app.showToast(`已选择 ${this.b64Files.length} 个文件`);
+            },
+            
+            encodeB64: async function() {
+                if (this.b64Files.length === 0) {
+                    app.showToast('请先选择文件', 'error');
+                    return;
+                }
+                
+                const compressFmt = document.getElementById('b64-compress').value;
+                const list = [];
+                
+                // Helper: Stream compression
+                const compressBytes = async (bytes, fmt) => {
+                    if (typeof CompressionStream === 'undefined') throw new Error("浏览器不支持 CompressionStream");
+                    const blob = new Blob([bytes]);
+                    const cs = new CompressionStream(fmt);
+                    const stream = blob.stream().pipeThrough(cs);
+                    const response = new Response(stream);
+                    return new Uint8Array(await response.arrayBuffer());
+                };
+                
+                const bytesToBase64 = (bytes) => {
+                    let binary = '';
+                    const len = bytes.byteLength;
+                    for (let i = 0; i < len; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    return btoa(binary);
+                };
+
+                // Process files
+                app.showToast('正在处理...', 'info');
+                try {
+                    for (const file of this.b64Files) {
+                        const buf = await file.arrayBuffer();
+                        let raw = new Uint8Array(buf);
+                        let usedFmt = 'none';
+                        let payloadBytes = raw;
+                        
+                        if (compressFmt !== 'none') {
+                            try {
+                                payloadBytes = await compressBytes(raw, compressFmt);
+                                usedFmt = compressFmt;
+                            } catch(e) {
+                                console.warn("Compression failed, falling back to none", e);
+                            }
+                        }
+                        
+                        // Large file handling for btoa (avoid stack overflow)
+                        const b64Data = bytesToBase64(payloadBytes);
+
+                        list.push({
+                            name: file.name,
+                            type: file.type || '',
+                            size: file.size,
+                            compression: usedFmt,
+                            data: b64Data
+                        });
+                    }
+                    
+                    const payload = {
+                        version: '1.0',
+                        createdAt: new Date().toISOString(),
+                        files: list
+                    };
+                    
+                    document.getElementById('b64-out').value = JSON.stringify(payload, null, 2);
+                    app.showToast('生成成功');
+                } catch (e) {
+                    app.showToast('生成失败: ' + e.message, 'error');
+                }
+            },
+            
+            downloadB64Json: function() {
+                const content = document.getElementById('b64-out').value;
+                if(!content) return;
+                const blob = new Blob([content], {type: 'application/json'});
+                saveAs(blob, `filebundle_${new Date().getTime()}.json`);
+            },
+            
+            loadJsonFile: function(input) {
+                const file = input.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('b64-in').value = e.target.result;
+                    app.showToast('JSON 加载成功');
+                };
+                reader.readAsText(file);
+            },
+            
+            restoreB64: async function() {
+                const inputVal = document.getElementById('b64-in').value.trim();
+                if(!inputVal) return;
+                
+                const listEl = document.getElementById('b64-restore-list');
+                listEl.innerHTML = '';
+                
+                let dataObj;
+                
+                // Try parse JSON
+                try {
+                    dataObj = JSON.parse(inputVal);
+                } catch(e) {
+                    // Not JSON, treat as raw Base64 string for manual download
+                    // We don't populate list, user should use manual download
+                    app.showToast('输入不是有效 JSON，请尝试手动还原', 'info');
+                    return;
+                }
+                
+                if(!dataObj.files) {
+                    app.showToast('JSON 格式不正确 (缺少 files 字段)', 'error');
+                    return;
+                }
+                
+                const decompressBytes = async (bytes, fmt) => {
+                     if (typeof DecompressionStream === 'undefined') throw new Error("浏览器不支持 DecompressionStream");
+                     const blob = new Blob([bytes]);
+                     const ds = new DecompressionStream(fmt);
+                     const stream = blob.stream().pipeThrough(ds);
+                     const response = new Response(stream);
+                     return new Uint8Array(await response.arrayBuffer());
+                };
+
+                for (const f of dataObj.files) {
+                    try {
+                        const binString = atob(f.data);
+                        const len = binString.length;
+                        const bytes = new Uint8Array(len);
+                        for (let i = 0; i < len; i++) {
+                            bytes[i] = binString.charCodeAt(i);
+                        }
+                        
+                        let outBytes = bytes;
+                        if (f.compression && f.compression !== 'none') {
+                            outBytes = await decompressBytes(bytes, f.compression);
+                        }
+                        
+                        const blob = new Blob([outBytes], {type: f.type});
+                        const item = document.createElement('div');
+                        item.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px; border-radius:4px;";
+                        item.innerHTML = `
+                            <div style="overflow:hidden; text-overflow:ellipsis;">
+                                <div style="font-weight:bold">${f.name}</div>
+                                <div style="font-size:0.8rem; color:var(--text-dim)">${(outBytes.length/1024).toFixed(1)} KB | ${f.type || 'Unknown'}</div>
+                            </div>
+                        `;
+                        
+                        const btn = document.createElement('button');
+                        btn.className = 'btn btn-sm btn-secondary';
+                        btn.innerText = '下载';
+                        btn.onclick = () => saveAs(blob, f.name);
+                        
+                        item.appendChild(btn);
+                        listEl.appendChild(item);
+                        
+                    } catch(e) {
+                        console.error(e);
+                        const errItem = document.createElement('div');
+                        errItem.style.color = 'var(--accent)';
+                        errItem.innerText = `解析失败: ${f.name}`;
+                        listEl.appendChild(errItem);
+                    }
+                }
+            },
+            
+            downloadManual: function() {
+                const b64 = document.getElementById('b64-in').value.trim();
+                if(!b64) {
+                    app.showToast('请先输入 Base64 数据', 'error');
+                    return;
+                }
+                
+                // Strip data: prefix if present
+                const cleanB64 = b64.replace(/^data:.*?;base64,/, '');
+                
+                try {
+                    const binString = atob(cleanB64);
+                    const len = binString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binString.charCodeAt(i);
+                    }
+                    
+                    const mime = document.getElementById('manual-mime').value;
+                    const name = document.getElementById('manual-name').value || 'download.bin';
+                    
+                    const blob = new Blob([bytes], {type: mime});
+                    saveAs(blob, name);
+                } catch(e) {
+                    app.showToast('Base64 解码失败', 'error');
+                }
+            },
+
+            // --- File Corruptor Logic ---
+            handleCorruptFile: function(file) {
+                if(!file) return;
+                this.corruptFileObj = file;
+                document.getElementById('corrupt-drop-zone').style.display = 'none';
+                document.getElementById('corrupt-settings').style.display = 'flex';
+                document.getElementById('corrupt-file-name').innerText = file.name;
+                document.getElementById('corrupt-file-size').innerText = (file.size / 1024).toFixed(2) + ' KB';
+            },
+
+            clearCorrupt: function() {
+                this.corruptFileObj = null;
+                document.getElementById('corrupt-drop-zone').style.display = 'block';
+                document.getElementById('corrupt-settings').style.display = 'none';
+                document.getElementById('corrupt-file-input').value = '';
+            },
+
+            execCorrupt: async function() {
+                if(!this.corruptFileObj) return;
+                
+                const file = this.corruptFileObj;
+                const mode = document.getElementById('corrupt-mode').value;
+                const amount = parseInt(document.getElementById('corrupt-amount').value) / 100; // 0.01 - 1.0
+                
+                app.showToast('正在破坏文件...', 'info');
+
+                try {
+                    const buf = await file.arrayBuffer();
+                    // Copy buffer to avoid modifying original (though arrayBuffer is new copy usually)
+                    const bytes = new Uint8Array(buf); 
+                    const len = bytes.length;
+                    
+                    if(mode === 'header') {
+                        // Corrupt first 1KB or 10%
+                        const limit = Math.min(len, 1024);
+                        // Header corruption needs to be dense to be effective
+                        for(let i=0; i<limit; i++) {
+                            if(Math.random() < Math.max(0.1, amount)) { 
+                                bytes[i] = Math.floor(Math.random() * 256);
+                            }
+                        }
+                    } else if (mode === 'scramble') {
+                        // Swap bytes randomly
+                        const totalSwaps = Math.floor(len * amount);
+                        for(let i=0; i<totalSwaps; i++) {
+                            const idx1 = Math.floor(Math.random() * len);
+                            const idx2 = Math.floor(Math.random() * len);
+                            const temp = bytes[idx1];
+                            bytes[idx1] = bytes[idx2];
+                            bytes[idx2] = temp;
+                        }
+                    } else {
+                        // Random or Zero
+                        const totalDamage = Math.floor(len * amount);
+                        for(let i=0; i<totalDamage; i++) {
+                            const idx = Math.floor(Math.random() * len);
+                            if(mode === 'zero') {
+                                bytes[idx] = 0;
+                            } else {
+                                bytes[idx] = Math.floor(Math.random() * 256);
+                            }
+                        }
+                    }
+                    
+                    const blob = new Blob([bytes], {type: file.type});
+                    saveAs(blob, "corrupted_" + file.name);
+                    app.showToast('文件已破坏并下载');
+                } catch(e) {
+                    app.showToast('处理失败: ' + e.message, 'error');
+                    console.error(e);
+                }
+            }
+        };
+    </script>
+</body>
+</html>

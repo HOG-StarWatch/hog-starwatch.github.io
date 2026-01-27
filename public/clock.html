@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>粒子时钟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .clock-container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 30px;
+            background: rgba(15, 15, 30, 0.7);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .date {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #a0a0ff;
+            font-weight: 300;
+        }
+        
+        .time {
+            font-size: 5rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(100, 100, 255, 0.5);
+        }
+        
+        .title {
+            position: relative;
+            z-index: 2;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(100, 100, 255, 0.7);
+            background: linear-gradient(90deg, #ff7eb3, #65f3ff, #7d7dff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .info {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 600px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(15, 15, 30, 0.5);
+            border-radius: 10px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        /* 设置按钮样式 */
+        .settings-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(30, 30, 60, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .settings-button:hover {
+            background: rgba(60, 60, 120, 0.8);
+            transform: rotate(90deg);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .settings-button svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+        
+        /* 设置面板样式 */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background: rgba(15, 15, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transition: right 0.4s ease;
+            z-index: 99;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .settings-panel.active {
+            right: 0;
+        }
+        
+        .settings-panel h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #a0a0ff;
+            font-weight: 300;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .settings-group {
+            margin-bottom: 25px;
+            background: rgba(30, 30, 60, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .settings-group h3 {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: #a0a0ff;
+        }
+        
+        .setting-item {
+            margin-bottom: 15px;
+        }
+        
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #a0a0ff;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #a0a0ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            min-width: 40px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        
+        .color-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .color-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .color-control label {
+            min-width: 80px;
+            font-size: 0.9rem;
+        }
+        
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .color-input {
+            flex: 1;
+            padding: 6px 10px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(30, 30, 60, 0.7);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .theme-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .theme-color {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .theme-color:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+        
+        .theme-color.custom {
+            border: 2px dashed white;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .button-group button {
+            flex: 1;
+            background: rgba(30, 30, 60, 0.7);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .button-group button:hover {
+            background: rgba(60, 60, 120, 0.8);
+        }
+        
+        .reset-button {
+            background: rgba(200, 60, 60, 0.7) !important;
+        }
+        
+        .reset-button:hover {
+            background: rgba(220, 80, 80, 0.8) !important;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-panel {
+                width: 300px;
+            }
+            
+            .time {
+                font-size: 3rem;
+            }
+            
+            .date {
+                font-size: 1.2rem;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .settings-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="particleCanvas"></canvas>
+        
+        <h1 class="title">粒子时钟</h1>
+        
+        <div class="clock-container">
+            <div class="date" id="dateDisplay">2077年6月31日 星期八</div>
+            <div class="time" id="timeDisplay">00:00:00</div>
+        </div>
+        
+        <div class="info">
+            移动鼠标与粒子互动 | 点击右上角齿轮图标调整设置
+        </div>
+        
+        <!-- 设置按钮 -->
+        <div class="settings-button" id="settingsButton">
+            <svg viewBox="0 0 24 24">
+                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.82,11.69,4.82,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+            </svg>
+        </div>
+        
+        <!-- 设置面板 -->
+        <div class="settings-panel" id="settingsPanel">
+            <h2>粒子时钟设置</h2>
+            
+            <!-- 颜色主题设置 -->
+            <div class="settings-group">
+                <h3>颜色主题</h3>
+                <div class="theme-selector" id="themeSelector">
+                    <!-- 颜色主题将通过JavaScript动态生成 -->
+                </div>
+                <div class="color-controls">
+                    <div class="color-control">
+                        <label>粒子颜色:</label>
+                        <div class="color-preview" id="particleColorPreview" style="background-color: #4a4af0;"></div>
+                        <input type="text" id="particleColor" class="color-input" value="#4a4af0" placeholder="#RRGGBB">
+                    </div>
+                    <div class="color-control">
+                        <label>高亮颜色:</label>
+                        <div class="color-preview" id="highlightColorPreview" style="background-color: #ff7eb3;"></div>
+                        <input type="text" id="highlightColor" class="color-input" value="#ff7eb3" placeholder="#RRGGBB">
+                    </div>
+                    <div class="color-control">
+                        <label>文本颜色:</label>
+                        <div class="color-preview" id="textColorPreview" style="background-color: #65f3ff;"></div>
+                        <input type="text" id="textColor" class="color-input" value="#65f3ff" placeholder="#RRGGBB">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="applyCustomColor">应用自定义颜色</button>
+                    <button id="resetColors" class="reset-button">重置颜色</button>
+                </div>
+            </div>
+            
+            <!-- 粒子设置 -->
+            <div class="settings-group">
+                <h3>粒子设置</h3>
+                <div class="setting-item">
+                    <label>粒子数量: <span id="particleCountValue">150</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="particleCount" min="20" max="300" value="150">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label>粒子大小: <span id="particleSizeValue">2</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="particleSize" min="1" max="8" value="2" step="0.5">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label>粒子速度: <span id="particleSpeedValue">1.5</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="particleSpeed" min="0.5" max="5" value="1.5" step="0.1">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label>连线距离: <span id="lineDistanceValue">100</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="lineDistance" min="50" max="200" value="100">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 交互设置 -->
+            <div class="settings-group">
+                <h3>交互设置</h3>
+                <div class="setting-item">
+                    <label>斥力强度: <span id="repelStrengthValue">0.05</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="repelStrength" min="0.01" max="0.2" value="0.05" step="0.01">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label>鼠标影响半径: <span id="mouseRadiusValue">100</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="mouseRadius" min="50" max="300" value="100">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label>鼠标影响强度: <span id="mouseStrengthValue">0.01</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="mouseStrength" min="0.005" max="0.05" value="0.01" step="0.005">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 界面显示设置 -->
+            <div class="settings-group">
+                <h3>界面显示</h3>
+                <div class="setting-item checkbox-item">
+                    <label for="showTitle">显示标题</label>
+                    <input type="checkbox" id="showTitle" checked>
+                </div>
+                <div class="setting-item checkbox-item">
+                    <label for="showInfo">显示提示信息</label>
+                    <input type="checkbox" id="showInfo" checked>
+                </div>
+                <div class="setting-item checkbox-item">
+                    <label for="showSettingsBtn">显示设置按钮</label>
+                    <input type="checkbox" id="showSettingsBtn" checked>
+                </div>
+            </div>
+
+            <!-- 其他设置 -->
+            <div class="settings-group">
+                <h3>其他设置</h3>
+                <div class="setting-item">
+                    <label>背景透明度: <span id="bgAlphaValue">0.1</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="bgAlpha" min="0.01" max="0.3" value="0.1" step="0.01">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label>时间格式:</label>
+                    <div class="button-group">
+                        <button id="timeFormat12" class="time-format">12小时制</button>
+                        <button id="timeFormat24" class="time-format active">24小时制</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="resetAll" class="reset-button">重置所有设置</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取Canvas元素和上下文
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 设置Canvas尺寸为窗口大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 粒子系统
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * particleSizeValue + 1;
+                this.speedX = (Math.random() * 2 - 1) * particleSpeedValue;
+                this.speedY = (Math.random() * 2 - 1) * particleSpeedValue;
+                this.color = colorThemes[currentColorTheme].particle;
+                this.originalColor = this.color;
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                // 边界检查
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+                
+                // 鼠标交互
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < mouseRadiusValue) {
+                    this.speedX += dx * mouseStrengthValue;
+                    this.speedY += dy * mouseStrengthValue;
+                    
+                    // 鼠标附近的粒子变色
+                    this.color = colorThemes[currentColorTheme].highlight;
+                } else {
+                    // 逐渐恢复原色
+                    const r = parseInt(this.color.slice(1, 3), 16);
+                    const g = parseInt(this.color.slice(3, 5), 16);
+                    const b = parseInt(this.color.slice(5, 7), 16);
+                    
+                    const or = parseInt(this.originalColor.slice(1, 3), 16);
+                    const og = parseInt(this.originalColor.slice(3, 5), 16);
+                    const ob = parseInt(this.originalColor.slice(5, 7), 16);
+                    
+                    const newR = Math.round(r + (or - r) * 0.05);
+                    const newG = Math.round(g + (og - g) * 0.05);
+                    const newB = Math.round(b + (ob - b) * 0.05);
+                    
+                    this.color = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+                }
+                
+                // 限制速度
+                const speed = Math.sqrt(this.speedX * this.speedX + this.speedY * this.speedY);
+                const maxSpeed = particleSpeedValue * 2;
+                if (speed > maxSpeed) {
+                    this.speedX = (this.speedX / speed) * maxSpeed;
+                    this.speedY = (this.speedY / speed) * maxSpeed;
+                }
+                
+                // 粒子间斥力
+                particles.forEach(particle => {
+                    if (particle === this) return; // 跳过自身
+                    
+                    const dx = this.x - particle.x;
+                    const dy = this.y - particle.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // 当粒子距离过近时施加斥力
+                    if (distance < 30 && distance > 0) {
+                        // 计算斥力方向
+                        const angle = Math.atan2(dy, dx);
+                        // 斥力强度与距离成反比
+                        const force = repelStrengthValue * (1 - distance / 30);
+                        
+                        // 应用斥力
+                        this.speedX += Math.cos(angle) * force;
+                        this.speedY += Math.sin(angle) * force;
+                        particle.speedX -= Math.cos(angle) * force;
+                        particle.speedY -= Math.sin(angle) * force;
+                    }
+                });
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 绘制粒子间的连线
+                particles.forEach(particle => {
+                    const dx = this.x - particle.x;
+                    const dy = this.y - particle.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < lineDistanceValue) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(${parseInt(this.color.slice(1, 3), 16)}, ${parseInt(this.color.slice(3, 5), 16)}, ${parseInt(this.color.slice(5, 7), 16)}, ${0.2 * (1 - distance/lineDistanceValue)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(this.x, this.y);
+                        ctx.lineTo(particle.x, particle.y);
+                        ctx.stroke();
+                    }
+                });
+            }
+        }
+
+        // 鼠标位置跟踪
+        const mouse = {
+            x: canvas.width / 2,
+            y: canvas.height / 2
+        };
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        // 颜色主题
+        const colorThemes = [
+            {
+                name: "蓝粉渐变",
+                particle: '#4a4af0',
+                highlight: '#ff7eb3',
+                text: '#65f3ff'
+            },
+            {
+                name: "粉蓝渐变",
+                particle: '#ff7eb3',
+                highlight: '#65f3ff',
+                text: '#7d7dff'
+            },
+            {
+                name: "青紫渐变",
+                particle: '#65f3ff',
+                highlight: '#7d7dff',
+                text: '#ff7eb3'
+            },
+            {
+                name: "紫青渐变",
+                particle: '#7d7dff',
+                highlight: '#4a4af0',
+                text: '#65f3ff'
+            },
+            {
+                name: "赤色主题",
+                particle: '#ff3333',
+                highlight: '#ff9966',
+                text: '#ffcccc'
+            },
+            {
+                name: "橙色主题",
+                particle: '#ff7f00',
+                highlight: '#ffb366',
+                text: '#ffe0cc'
+            },
+            {
+                name: "黄色主题",
+                particle: '#ffff00',
+                highlight: '#ffff99',
+                text: '#ffffcc'
+            },
+            {
+                name: "绿色主题",
+                particle: '#33ff33',
+                highlight: '#99ff99',
+                text: '#ccffcc'
+            },
+            {
+                name: "青色主题",
+                particle: '#33ffff',
+                highlight: '#99ffff',
+                text: '#ccffff'
+            },
+            {
+                name: "蓝色主题",
+                particle: '#3333ff',
+                highlight: '#6666ff',
+                text: '#ccccff'
+            },
+            {
+                name: "紫色主题",
+                particle: '#7f00ff',
+                highlight: '#b366ff',
+                text: '#e0ccff'
+            },
+            {
+                name: "霓虹主题",
+                particle: '#ff00ff',
+                highlight: '#00ffff',
+                text: '#ffff00'
+            },
+            {
+                name: "森林主题",
+                particle: '#228B22',
+                highlight: '#32CD32',
+                text: '#90EE90'
+            },
+            {
+                name: "海洋主题",
+                particle: '#1E90FF',
+                highlight: '#00BFFF',
+                text: '#87CEFA'
+            },
+            {
+                name: "日落主题",
+                particle: '#FF4500',
+                highlight: '#FF8C00',
+                text: '#FFD700'
+            },
+            {
+                name: "极光主题",
+                particle: '#00FF7F',
+                highlight: '#00CED1',
+                text: '#9370DB'
+            },
+            // 自定义主题占位
+            {
+                name: "自定义主题",
+                particle: '#4a4af0',
+                highlight: '#ff7eb3',
+                text: '#65f3ff'
+            }
+        ];
+        
+        // 默认参数值
+        let currentColorTheme = 0;
+        let particleCountValue = 150;
+        let particleSizeValue = 2;
+        let particleSpeedValue = 1.5;
+        let lineDistanceValue = 100;
+        let repelStrengthValue = 0.05;
+        let mouseRadiusValue = 100;
+        let mouseStrengthValue = 0.01;
+        let bgAlphaValue = 0.1;
+        let timeFormat24 = true;
+        let showTitleValue = true;
+        let showInfoValue = true;
+        let showSettingsBtnValue = true;
+
+        // 创建粒子
+        let particles = [];
+        
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCountValue; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        initParticles();
+
+        // 动画循环
+        function animate() {
+            ctx.fillStyle = `rgba(15, 15, 30, ${bgAlphaValue})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // 时钟功能
+        function updateClock() {
+            const now = new Date();
+            
+            // 格式化日期
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            const day = now.getDay();
+            const days = ['日', '一', '二', '三', '四', '五', '六'];
+            
+            document.getElementById('dateDisplay').textContent = 
+                `${year}年${month}月${date}日 星期${days[day]}`;
+            
+            // 格式化时间
+            let hours = now.getHours();
+            let ampm = '';
+            
+            if (!timeFormat24) {
+                ampm = hours >= 12 ? ' PM' : ' AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // 0点显示为12
+            }
+            
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('timeDisplay').textContent = 
+                `${String(hours).padStart(2, '0')}:${minutes}:${seconds}${ampm}`;
+            
+            // 更新时间文本颜色
+            document.getElementById('timeDisplay').style.color = colorThemes[currentColorTheme].text;
+            document.getElementById('dateDisplay').style.color = colorThemes[currentColorTheme].text;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 设置面板功能
+        const settingsButton = document.getElementById('settingsButton');
+        const settingsPanel = document.getElementById('settingsPanel');
+        
+        settingsButton.addEventListener('click', () => {
+            settingsPanel.classList.toggle('active');
+        });
+        
+        // 点击面板外部关闭设置
+        document.addEventListener('click', (e) => {
+            if (!settingsPanel.contains(e.target) && !settingsButton.contains(e.target)) {
+                settingsPanel.classList.remove('active');
+            }
+        });
+
+        // 创建颜色主题选择器
+        function createThemeSelector() {
+            const themeSelector = document.getElementById('themeSelector');
+            themeSelector.innerHTML = '';
+            
+            colorThemes.forEach((theme, index) => {
+                const colorDot = document.createElement('div');
+                colorDot.className = 'theme-color';
+                if (index === colorThemes.length - 1) {
+                    colorDot.classList.add('custom');
+                }
+                colorDot.style.backgroundColor = theme.particle;
+                colorDot.title = theme.name;
+                
+                colorDot.addEventListener('click', () => {
+                    currentColorTheme = index;
+                    updateTheme();
+                    updateClock();
+                });
+                
+                themeSelector.appendChild(colorDot);
+            });
+        }
+
+        // 更新主题
+        function updateTheme() {
+            particles.forEach(particle => {
+                particle.originalColor = colorThemes[currentColorTheme].particle;
+            });
+            
+            // 更新标题渐变
+            const title = document.querySelector('.title');
+            title.style.background = `linear-gradient(90deg, ${colorThemes[currentColorTheme].particle}, ${colorThemes[currentColorTheme].highlight}, ${colorThemes[currentColorTheme].text})`;
+        }
+
+        // 初始化主题选择器
+        createThemeSelector();
+
+        // 自定义颜色功能
+        const applyCustomColorBtn = document.getElementById('applyCustomColor');
+        const resetColorsBtn = document.getElementById('resetColors');
+        
+        // 颜色输入元素
+        const particleColorInput = document.getElementById('particleColor');
+        const highlightColorInput = document.getElementById('highlightColor');
+        const textColorInput = document.getElementById('textColor');
+        
+        // 颜色预览元素
+        const particleColorPreview = document.getElementById('particleColorPreview');
+        const highlightColorPreview = document.getElementById('highlightColorPreview');
+        const textColorPreview = document.getElementById('textColorPreview');
+        
+        // 应用自定义颜色
+        applyCustomColorBtn.addEventListener('click', () => {
+            // 验证颜色格式
+            const particleColor = validateColor(particleColorInput.value);
+            const highlightColor = validateColor(highlightColorInput.value);
+            const textColor = validateColor(textColorInput.value);
+            
+            if (particleColor && highlightColor && textColor) {
+                // 更新自定义主题
+                colorThemes[colorThemes.length - 1] = {
+                    name: "自定义主题",
+                    particle: particleColor,
+                    highlight: highlightColor,
+                    text: textColor
+                };
+                
+                // 切换到自定义主题
+                currentColorTheme = colorThemes.length - 1;
+                updateTheme();
+                updateClock();
+                createThemeSelector(); // 更新主题选择器
+            } else {
+                alert('请输入有效的颜色值（格式：#RRGGBB 或 RRGGBB）');
+            }
+        });
+        
+        // 重置颜色
+        resetColorsBtn.addEventListener('click', () => {
+            // 重置为第一个主题
+            currentColorTheme = 0;
+            updateTheme();
+            updateClock();
+            createThemeSelector();
+        });
+        
+        // 更新颜色预览
+        function updateColorPreviews() {
+            particleColorPreview.style.backgroundColor = particleColorInput.value;
+            highlightColorPreview.style.backgroundColor = highlightColorInput.value;
+            textColorPreview.style.backgroundColor = textColorInput.value;
+        }
+        
+        // 颜色输入变化时更新预览
+        particleColorInput.addEventListener('input', updateColorPreviews);
+        highlightColorInput.addEventListener('input', updateColorPreviews);
+        textColorInput.addEventListener('input', updateColorPreviews);
+        
+        // 验证颜色格式
+        function validateColor(color) {
+            // 移除可能的前导#号
+            color = color.replace('#', '');
+            
+            // 检查是否为有效的十六进制颜色
+            if (/^[0-9A-F]{6}$/i.test(color)) {
+                return '#' + color;
+            }
+            return null;
+        }
+
+        // 粒子数量控制
+        const particleCountSlider = document.getElementById('particleCount');
+        const particleCountValueSpan = document.getElementById('particleCountValue');
+        
+        particleCountSlider.addEventListener('input', () => {
+            particleCountValue = parseInt(particleCountSlider.value);
+            particleCountValueSpan.textContent = particleCountValue;
+            initParticles();
+        });
+        
+        // 粒子大小控制
+        const particleSizeSlider = document.getElementById('particleSize');
+        const particleSizeValueSpan = document.getElementById('particleSizeValue');
+        
+        particleSizeSlider.addEventListener('input', () => {
+            particleSizeValue = parseFloat(particleSizeSlider.value);
+            particleSizeValueSpan.textContent = particleSizeValue;
+            
+            particles.forEach(particle => {
+                particle.size = Math.random() * particleSizeValue + 1;
+            });
+        });
+        
+        // 粒子速度控制
+        const particleSpeedSlider = document.getElementById('particleSpeed');
+        const particleSpeedValueSpan = document.getElementById('particleSpeedValue');
+        
+        particleSpeedSlider.addEventListener('input', () => {
+            particleSpeedValue = parseFloat(particleSpeedSlider.value);
+            particleSpeedValueSpan.textContent = particleSpeedValue;
+            
+            particles.forEach(particle => {
+                particle.speedX = (Math.random() * 2 - 1) * particleSpeedValue;
+                particle.speedY = (Math.random() * 2 - 1) * particleSpeedValue;
+            });
+        });
+        
+        // 连线距离控制
+        const lineDistanceSlider = document.getElementById('lineDistance');
+        const lineDistanceValueSpan = document.getElementById('lineDistanceValue');
+        
+        lineDistanceSlider.addEventListener('input', () => {
+            lineDistanceValue = parseInt(lineDistanceSlider.value);
+            lineDistanceValueSpan.textContent = lineDistanceValue;
+        });
+        
+        // 斥力强度控制
+        const repelStrengthSlider = document.getElementById('repelStrength');
+        const repelStrengthValueSpan = document.getElementById('repelStrengthValue');
+        
+        repelStrengthSlider.addEventListener('input', () => {
+            repelStrengthValue = parseFloat(repelStrengthSlider.value);
+            repelStrengthValueSpan.textContent = repelStrengthValue.toFixed(2);
+        });
+        
+        // 鼠标半径控制
+        const mouseRadiusSlider = document.getElementById('mouseRadius');
+        const mouseRadiusValueSpan = document.getElementById('mouseRadiusValue');
+        
+        mouseRadiusSlider.addEventListener('input', () => {
+            mouseRadiusValue = parseInt(mouseRadiusSlider.value);
+            mouseRadiusValueSpan.textContent = mouseRadiusValue;
+        });
+        
+        // 鼠标强度控制
+        const mouseStrengthSlider = document.getElementById('mouseStrength');
+        const mouseStrengthValueSpan = document.getElementById('mouseStrengthValue');
+        
+        mouseStrengthSlider.addEventListener('input', () => {
+            mouseStrengthValue = parseFloat(mouseStrengthSlider.value);
+            mouseStrengthValueSpan.textContent = mouseStrengthValue.toFixed(3);
+        });
+        
+        // 背景透明度控制
+        const bgAlphaSlider = document.getElementById('bgAlpha');
+        const bgAlphaValueSpan = document.getElementById('bgAlphaValue');
+        
+        bgAlphaSlider.addEventListener('input', () => {
+            bgAlphaValue = parseFloat(bgAlphaSlider.value);
+            bgAlphaValueSpan.textContent = bgAlphaValue.toFixed(2);
+        });
+        
+        // 时间格式控制
+        const timeFormat12Btn = document.getElementById('timeFormat12');
+        const timeFormat24Btn = document.getElementById('timeFormat24');
+        
+        timeFormat12Btn.addEventListener('click', () => {
+            timeFormat24 = false;
+            timeFormat12Btn.classList.add('active');
+            timeFormat24Btn.classList.remove('active');
+            updateClock();
+        });
+        
+        timeFormat24Btn.addEventListener('click', () => {
+            timeFormat24 = true;
+            timeFormat24Btn.classList.add('active');
+            timeFormat12Btn.classList.remove('active');
+            updateClock();
+        });
+        
+        // 界面显示控制
+        const showTitleCheckbox = document.getElementById('showTitle');
+        const showInfoCheckbox = document.getElementById('showInfo');
+        const showSettingsBtnCheckbox = document.getElementById('showSettingsBtn');
+        
+        const titleElement = document.querySelector('.title');
+        const infoElement = document.querySelector('.info');
+        // settingsButton 已经在上面定义了
+        
+        showTitleCheckbox.addEventListener('change', () => {
+            showTitleValue = showTitleCheckbox.checked;
+            titleElement.style.display = showTitleValue ? 'block' : 'none';
+        });
+        
+        showInfoCheckbox.addEventListener('change', () => {
+            showInfoValue = showInfoCheckbox.checked;
+            infoElement.style.display = showInfoValue ? 'block' : 'none';
+        });
+        
+        showSettingsBtnCheckbox.addEventListener('change', () => {
+            showSettingsBtnValue = showSettingsBtnCheckbox.checked;
+            settingsButton.style.display = showSettingsBtnValue ? 'flex' : 'none';
+            
+            // 如果隐藏了设置按钮，添加提示如何重新打开
+            if (!showSettingsBtnValue) {
+                // 只有当设置面板关闭时才真正"隐藏"按钮的交互入口
+                // 这里我们给个临时提示，或者不做处理，因为用户可能想要彻底隐藏
+            }
+        });
+
+        // 重置所有设置
+        const resetAllBtn = document.getElementById('resetAll');
+        
+        resetAllBtn.addEventListener('click', () => {
+            // 重置所有参数为默认值
+            particleCountValue = 150;
+            particleSizeValue = 2;
+            particleSpeedValue = 1.5;
+            lineDistanceValue = 100;
+            repelStrengthValue = 0.05;
+            mouseRadiusValue = 100;
+            mouseStrengthValue = 0.01;
+            bgAlphaValue = 0.1;
+            timeFormat24 = true;
+            currentColorTheme = 0;
+            showTitleValue = true;
+            showInfoValue = true;
+            showSettingsBtnValue = true;
+            
+            // 更新滑块和显示值
+            particleCountSlider.value = particleCountValue;
+            particleCountValueSpan.textContent = particleCountValue;
+            
+            particleSizeSlider.value = particleSizeValue;
+            particleSizeValueSpan.textContent = particleSizeValue;
+            
+            particleSpeedSlider.value = particleSpeedValue;
+            particleSpeedValueSpan.textContent = particleSpeedValue;
+            
+            lineDistanceSlider.value = lineDistanceValue;
+            lineDistanceValueSpan.textContent = lineDistanceValue;
+            
+            repelStrengthSlider.value = repelStrengthValue;
+            repelStrengthValueSpan.textContent = repelStrengthValue.toFixed(2);
+            
+            mouseRadiusSlider.value = mouseRadiusValue;
+            mouseRadiusValueSpan.textContent = mouseRadiusValue;
+            
+            mouseStrengthSlider.value = mouseStrengthValue;
+            mouseStrengthValueSpan.textContent = mouseStrengthValue.toFixed(3);
+            
+            bgAlphaSlider.value = bgAlphaValue;
+            bgAlphaValueSpan.textContent = bgAlphaValue.toFixed(2);
+            
+            timeFormat24Btn.classList.add('active');
+            timeFormat12Btn.classList.remove('active');
+            
+            // 重置界面显示
+            showTitleCheckbox.checked = true;
+            showInfoCheckbox.checked = true;
+            showSettingsBtnCheckbox.checked = true;
+            
+            titleElement.style.display = 'block';
+            infoElement.style.display = 'block';
+            settingsButton.style.display = 'flex';
+            
+            // 重新初始化粒子
+            initParticles();
+            
+            // 更新主题
+            updateTheme();
+            updateClock();
+            createThemeSelector();
+        });
+    </script>
+</body>
+</html>
