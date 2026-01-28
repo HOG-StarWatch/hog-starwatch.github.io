@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文本转码</title>
     <link rel="stylesheet" href="../css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/punycode@1.4.1/punycode.min.js'"></script>
+    <script src="../js/loader.js"></script>
 </head>
 <body>
-    <div class="workspace" style="flex-direction: column;">
+    <div class="workspace layout-vertical">
         <div class="sub-tab-group">
             <div class="sub-tab active" onclick="transcoder.setMode('url', this)">URL</div>
             <div class="sub-tab" onclick="transcoder.setMode('base64', this)">Base64 (UTF-8)</div>
@@ -111,14 +111,20 @@
                             res = input.replace(/\s+/g, '').match(/.{1,8}/g).map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
                         }
                     } else if (this.mode === 'punycode') {
-                        if (typeof punycode === 'undefined') {
-                            throw new Error("Punycode 库未加载");
-                        }
-                        if (action === 'encode') {
-                             res = punycode.toASCII(input);
-                        } else {
-                            res = punycode.toUnicode(input);
-                        }
+                        app.showToast('正在加载组件...', 'info');
+                        ResourceLoader.load('punycode').then(() => {
+                            try {
+                                if (action === 'encode') {
+                                     res = punycode.toASCII(input);
+                                } else {
+                                    res = punycode.toUnicode(input);
+                                }
+                                document.getElementById('code-output').value = res;
+                            } catch (e) {
+                                document.getElementById('code-output').value = "错误: " + e.message;
+                            }
+                        });
+                        return;
                     }
                 } catch (e) {
                     res = "错误: " + e.message;

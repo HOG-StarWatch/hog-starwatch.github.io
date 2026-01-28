@@ -9,43 +9,10 @@
         body {
             padding: 0;
             margin: 0;
-            overflow: hidden;
-            height: 100vh;
+            overflow: auto;
+            height: 100vh; /* Keep 100vh for layout calculation but allow scroll if needed */
             display: flex;
             flex-direction: column;
-        }
-        
-        .nav-pills {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            padding: 15px;
-            background: rgba(0,0,0,0.2);
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
-        }
-        
-        .nav-pill {
-            padding: 8px 20px;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            color: var(--text-dim);
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.95rem;
-        }
-        
-        .nav-pill.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(192, 132, 252, 0.4);
-        }
-        
-        .nav-pill:hover:not(.active) {
-            border-color: var(--primary);
-            color: var(--text-main);
         }
         
         .content-frame {
@@ -53,6 +20,21 @@
             width: 100%;
             border: none;
             background: transparent;
+            min-height: 800px; /* Ensure enough space for PC scrolling */
+        }
+
+        /* Mobile Scroll Fix */
+        @media (max-width: 768px) {
+            body {
+                height: auto !important;
+                overflow-y: auto !important;
+                display: block !important;
+            }
+            .content-frame {
+                height: 1200px !important; /* Force large height to prevent internal scroll */
+                min-height: 800px;
+                display: block;
+            }
         }
     </style>
 </head>
@@ -65,6 +47,55 @@
     <iframe id="fun-frame" class="content-frame" src="image-phantom.html"></iframe>
     
     <script>
+        // --- Iframe Auto-Resize Logic ---
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'resize' && e.data.height) {
+                const frame = document.getElementById('fun-frame');
+                if (frame) {
+                    // Add some buffer or set directly
+                    const newHeight = Math.max(800, e.data.height + 50); 
+                    frame.style.height = newHeight + 'px';
+                    // Also ensure parent body can scroll if needed (though already set to overflow: auto)
+                }
+            }
+        });
+
+        // Theme Propagation Helper
+        function propagateThemeToChild() {
+            const frame = document.getElementById('fun-frame');
+            if(!frame || !frame.contentWindow) return;
+            
+            const root = document.documentElement;
+            const vars = [
+                '--bg-deep', '--bg-panel', '--bg-header', '--primary', '--secondary', '--accent', 
+                '--text-main', '--text-dim', '--border', '--shadow', '--primary-contrast',
+                '--radius-lg', '--radius-md', '--radius-sm', '--font-main', '--font-mono',
+                '--input-bg', '--btn-bg', '--btn-hover-bg'
+            ];
+            
+            try {
+                const childRoot = frame.contentWindow.document.documentElement;
+                vars.forEach(v => {
+                    const val = getComputedStyle(root).getPropertyValue(v);
+                    if(val) childRoot.style.setProperty(v, val);
+                });
+            } catch(e) {
+                console.log('Cannot propagate theme to cross-origin frame');
+            }
+        }
+
+        const funFrame = document.getElementById('fun-frame');
+        funFrame.addEventListener('load', propagateThemeToChild);
+        
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    propagateThemeToChild();
+                }
+            });
+        });
+        observer.observe(document.documentElement, { attributes: true });
+
         function switchFunTool(tool, el) {
             document.querySelectorAll('.nav-pill').forEach(t => t.classList.remove('active'));
             el.classList.add('active');

@@ -23,152 +23,220 @@
 </head>
 <body>
     <header>
-        <div style="display:flex; align-items:center;">
-            <div class="logo" style="cursor: pointer;" onclick="switchToHome()">AURORA <span style="font-weight:300; opacity:0.7">TOOLBOX</span></div>
-            <button id="theme-btn" title="切换主题" style="margin-left: 15px; background:rgba(255,255,255,0.1); border:none; color:var(--text-main); cursor:pointer; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:0.2s;" onclick="toggleThemeModal()">
-                ❤
-            </button>
+        <div style="display:flex; align-items:center; width: 100%; justify-content: space-between; height: 100%;">
+            <div style="display:flex; align-items:center; height: 100%;">
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" onclick="toggleMobileMenu()" style="display:none; background:none; border:none; color:var(--text-main); font-size:1.5rem; margin-right:15px; cursor:pointer;">
+                    ☰
+                </button>
+                <div class="logo" style="cursor: pointer;" onclick="switchToHome()">AURORA <span style="font-weight:300; opacity:0.7">TOOLBOX</span></div>
+            </div>
+            
+            <div style="display:flex; align-items:center; height: 100%;">
+                <nav class="nav-tabs" id="main-nav">
+                    <button class="btn" onclick="window.location.href = window.location.origin">
+                    <span>↩❤↩</span>
+                    </button>
+                    <button class="tab-btn active" data-src="tools/home.html">工具箱主页</button>
+        
+                    <!-- Text Dropdown -->
+                    <div class="dropdown">
+                        <button class="tab-btn dropdown-toggle">文本工具</button>
+                        <div class="dropdown-content">
+                            <button class="tab-btn" data-src="tools/text.html">文本处理</button>
+                            <button class="tab-btn" data-src="tools/format.html">文本格式化</button>
+                            <button class="tab-btn" data-src="tools/diff.html">文本对比</button>
+                            <button class="tab-btn" data-src="tools/transcode.html">文本转码</button>
+                            <button class="tab-btn" data-src="tools/encrypt.html">加密解密</button>
+                            <button class="tab-btn" data-src="tools/obfuscator.html">HTML混淆</button>
+                            <button class="tab-btn" data-src="tools/markdown.html">MD/WD/HTML</button>
+                        </div>
+                    </div>
+        
+                    <!-- File Dropdown -->
+                    <div class="dropdown">
+                        <button class="tab-btn dropdown-toggle">文件工具</button>
+                        <div class="dropdown-content">
+                            <button class="tab-btn" data-src="tools/file.html">文件处理</button>
+                            <button class="tab-btn" data-src="tools/file-encoding.html">文件编码</button>
+                        </div>
+                    </div>
+        
+                    <!-- Image Dropdown -->
+                    <div class="dropdown">
+                        <button class="tab-btn dropdown-toggle">图片工具</button>
+                        <div class="dropdown-content">
+                            <button class="tab-btn" data-src="tools/image-visual.html">视觉变换</button>
+                            <button class="tab-btn" data-src="tools/image-convert.html">编码转换</button>
+                        </div>
+                    </div>
+        
+                    <!-- Other Dropdown -->
+                    <div class="dropdown">
+                        <button class="tab-btn dropdown-toggle">其他工具</button>
+                        <div class="dropdown-content">
+                            <button class="tab-btn" data-src="tools/hash.html">哈希计算</button>
+                            <button class="tab-btn" data-src="tools/generator.html">生成器</button>
+                            <button class="tab-btn" data-src="tools/qrcode.html">二维码</button>
+                        </div>
+                    </div>
+                </nav>
+
+                <button id="theme-btn" title="切换主题" style="margin-left: 15px; background:rgba(255,255,255,0.1); border:none; color:var(--text-main); cursor:pointer; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:0.2s;" onclick="toggleThemeModal()">
+                    ❤
+                </button>
+            </div>
         </div>
-        <nav class="nav-tabs">
-            <button class="btn" onclick="window.location.href = window.location.origin">
-            <span>↩❤↩</span>
-            </button>
-            <button class="tab-btn active" data-src="tools/home.html">工具箱主页</button>
-
-            <!-- Text Dropdown -->
-            <div class="dropdown">
-                <button class="tab-btn dropdown-toggle">文本工具</button>
-                <div class="dropdown-content">
-                    <button class="tab-btn" data-src="tools/text.html">文本处理</button>
-                    <button class="tab-btn" data-src="tools/format.html">文本格式化</button>
-                    <button class="tab-btn" data-src="tools/diff.html">文本对比</button>
-                    <button class="tab-btn" data-src="tools/transcode.html">文本转码</button>
-                    <button class="tab-btn" data-src="tools/encrypt.html">加密解密</button>
-                    <button class="tab-btn" data-src="tools/obfuscator.html">HTML混淆</button>
-                    <button class="tab-btn" data-src="tools/markdown.html">MD/WD/HTML</button>
-                </div>
-            </div>
-
-            <!-- File Dropdown -->
-            <div class="dropdown">
-                <button class="tab-btn dropdown-toggle">文件工具</button>
-                <div class="dropdown-content">
-                    <button class="tab-btn" data-src="tools/file.html">文件处理</button>
-                </div>
-            </div>
-
-            <!-- Image Dropdown -->
-            <div class="dropdown">
-                <button class="tab-btn dropdown-toggle">图片工具</button>
-                <div class="dropdown-content">
-                    <button class="tab-btn" data-src="tools/image-visual.html">视觉变换</button>
-                    <button class="tab-btn" data-src="tools/image-convert.html">编码转换</button>
-                </div>
-            </div>
-
-            <!-- Other Dropdown -->
-            <div class="dropdown">
-                <button class="tab-btn dropdown-toggle">其他工具</button>
-                <div class="dropdown-content">
-                    <button class="tab-btn" data-src="tools/hash.html">哈希计算</button>
-                    <button class="tab-btn" data-src="tools/generator.html">生成器</button>
-                    <button class="tab-btn" data-src="tools/qrcode.html">二维码</button>
-                </div>
-            </div>
-        </nav>
     </header>
+
+    <!-- Mobile Drawer -->
+    <div id="mobile-drawer" style="position:fixed; top:60px; left:-100%; width:260px; height:calc(100% - 60px); background:var(--bg-deep); border-right:1px solid var(--border); transition:left 0.3s ease; z-index:100; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.5rem; box-shadow: 2px 0 10px rgba(0,0,0,0.5);">
+        <!-- Content will be injected by JS or cloned -->
+    </div>
+    <div id="mobile-overlay" onclick="toggleMobileMenu()" style="display:none; position:fixed; top:60px; left:0; width:100%; height:calc(100% - 60px); background:rgba(0,0,0,0.5); z-index:90; backdrop-filter:blur(3px);"></div>
     
-    <main>
+    <main style="position:relative;">
+        <div id="loading-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg-deep); z-index:50; justify-content:center; align-items:center; flex-direction:column;">
+            <div class="spinner" style="width:40px; height:40px; border:4px solid rgba(255,255,255,0.1); border-top:4px solid var(--primary); border-radius:50%; animation:spin 1s linear infinite;"></div>
+            <div style="margin-top:10px; color:var(--text-dim); font-size:0.9rem;">Loading...</div>
+        </div>
+        <style>
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
         <iframe id="app-frame" src="tools/home.html"></iframe>
     </main>
 
     <!-- Theme Modal -->
-    <div id="theme-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:2000; align-items:center; justify-content:center;">
-        <div style="background:var(--bg-deep); width:400px; padding:20px; border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow);">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h3 style="margin:0; color:var(--text-main);">主题设置 (Theme)</h3>
-                <button onclick="toggleThemeModal()" style="background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer;">×</button>
+    <div id="theme-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:2000; align-items:center; justify-content:center; opacity:0; transition: opacity 0.3s;">
+        <div style="background:var(--bg-deep); width:600px; max-height:85vh; overflow-y:auto; padding:24px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow); transform: scale(0.95); transition: transform 0.3s;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; position:sticky; top:0; background:var(--bg-deep); padding-bottom:10px; border-bottom:1px solid var(--border); z-index:10;">
+                <div>
+                    <h3 style="margin:0; color:var(--text-main); font-size:1.2rem;">主题设置</h3>
+                    <div style="font-size:0.8rem; color:var(--text-dim); margin-top:4px;">选择您喜欢的界面风格</div>
+                </div>
+                <button onclick="toggleThemeModal()" style="background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer; padding:5px; border-radius:50%; display:flex; align-items:center; justify-content:center; width:32px; height:32px;">×</button>
             </div>
             
-            <div style="margin-bottom:20px;">
-                <h4 style="color:var(--text-dim); margin-bottom:10px;">标准 (Standard)</h4>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <button onclick="setTheme('aurora')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #0b0f19, #201a30); color:#c084fc; cursor:pointer;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#c084fc; border-radius:50%; margin-right:5px;"></span> 极光 (Aurora)
-                    </button>
-                    <button onclick="setTheme('cyberpunk')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #050505, #1a0b1a); color:#f0f; cursor:pointer;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#f0f; border-radius:50%; margin-right:5px;"></span> 赛博 (Cyber)
-                    </button>
-                    <button onclick="setTheme('ocean')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #001e2b, #00334e); color:#00a8ff; cursor:pointer;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#00a8ff; border-radius:50%; margin-right:5px;"></span> 深海 (Ocean)
-                    </button>
-                    <button onclick="setTheme('forest')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #0a1a0a, #142814); color:#4ade80; cursor:pointer;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#4ade80; border-radius:50%; margin-right:5px;"></span> 森林 (Forest)
-                    </button>
-                    <button onclick="setTheme('sunset')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #1a0a0a, #2d1b0e); color:#fb923c; cursor:pointer;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#fb923c; border-radius:50%; margin-right:5px;"></span> 日落 (Sunset)
-                    </button>
-                    <button onclick="setTheme('monster')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #2a0a1a, #4a1a2a); color:#f472b6; cursor:pointer;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#f472b6; border-radius:50%; margin-right:5px;"></span> 魔物 (Monster)
-                    </button>
-                    <button onclick="setTheme('coffee')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #2c211b, #43332d); color:#d4a373; cursor:pointer;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#d4a373; border-radius:50%; margin-right:5px;"></span> 咖啡 (Coffee)
-                    </button>
-                    <button onclick="setTheme('monochrome')" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(135deg, #000000, #1a1a1a); color:#ffffff; cursor:pointer;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#ffffff; border-radius:50%; margin-right:5px;"></span> 黑白 (Mono)
-                    </button>
+            <div style="margin-bottom:30px;">
+                <h4 style="color:var(--text-dim); margin-bottom:15px; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; font-weight:600;">风格预设 (Presets)</h4>
+                <div id="preset-themes-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:15px;">
+                    <!-- Themes will be generated by JS -->
                 </div>
             </div>
 
-            <div style="margin-bottom:20px;">
-                <h4 style="color:var(--text-dim); margin-bottom:10px;">高对比度 (High Contrast)</h4>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <button onclick="setTheme('hc-dark')" style="padding:10px; border:2px solid #fff; border-radius:8px; background:#000; color:#ff0; cursor:pointer; font-weight:bold;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#ff0; border-radius:50%; margin-right:5px;"></span> 辣个配色 <br> (That Color)
-                    </button>
-                    <button onclick="setTheme('hc-light')" style="padding:10px; border:2px solid #000; border-radius:8px; background:#fff; color:#000; cursor:pointer; font-weight:bold;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#000; border-radius:50%; margin-right:5px;"></span> 唯一开灯 <br> (Only Light)
-                    </button>
-                    <button onclick="setTheme('neon')" style="padding:10px; border:2px solid #0f0; border-radius:8px; background:#000; color:#0f0; cursor:pointer; font-weight:bold; text-shadow:0 0 5px #0f0;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#0f0; border-radius:50%; margin-right:5px;"></span> 古早印象 <br> (Old School)
-                    </button>
-                    <button onclick="setTheme('blue-safe')" style="padding:10px; border:2px solid #fff; border-radius:8px; background:#000033; color:#ffffff; cursor:pointer; font-weight:bold;">
-                        <span style="display:inline-block; width:10px; height:10px; background:#fff; border-radius:50%; margin-right:5px;"></span> 矫揉造作 <br> (Pretentious)
-                    </button>
+            <div style="margin-bottom:30px;">
+                <h4 style="color:var(--text-dim); margin-bottom:15px; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; font-weight:600;">仿知名网站配色 (Famous Sites)</h4>
+                <div id="famous-themes-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:15px;">
+                    <!-- Themes will be generated by JS -->
                 </div>
             </div>
 
             <div>
-                <h4 style="color:var(--text-dim); margin-bottom:10px;">自定义 (Custom)</h4>
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--text-main);">Primary Color (主色)</span>
-                        <input type="color" id="custom-primary" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h4 style="color:var(--text-dim); margin:0; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; font-weight:600;">自定义 (Custom)</h4>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-sm btn-secondary" onclick="randomizeCustomTheme()" style="font-size:0.75rem; padding:2px 8px;">🎲 随机</button>
+                        <button id="chaos-btn" class="btn btn-sm btn-secondary" onclick="toggleChaosMode()" style="font-size:0.75rem; padding:2px 8px;">🔥 全随机</button>
+                        <button id="meltdown-btn" class="btn btn-sm btn-secondary" onclick="toggleMeltdownMode()" style="font-size:0.75rem; padding:2px 8px;">🌀 崩坏</button>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--text-main);">Secondary Color (辅色)</span>
-                        <input type="color" id="custom-secondary" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
+                </div>
+                <div style="background:var(--bg-panel); padding:20px; border-radius:var(--radius-md); border:1px solid var(--border);">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <label style="font-size:0.8rem; color:var(--text-dim);">主色 (Primary)</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="custom-primary" oninput="updateCustomTheme()">
+                                <span id="val-primary">#000000</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <label style="font-size:0.8rem; color:var(--text-dim);">辅色 (Secondary)</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="custom-secondary" oninput="updateCustomTheme()">
+                                <span id="val-secondary">#000000</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <label style="font-size:0.8rem; color:var(--text-dim);">背景 (Background)</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="custom-bg" oninput="updateCustomTheme()">
+                                <span id="val-bg">#000000</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <label style="font-size:0.8rem; color:var(--text-dim);">文本 (Text)</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="custom-text-main" oninput="updateCustomTheme()">
+                                <span id="val-text">#000000</span>
+                            </div>
+                        </div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--text-main);">Accent Color (强调色)</span>
-                        <input type="color" id="custom-accent" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--text-main);">Background (背景)</span>
-                        <input type="color" id="custom-bg" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--text-main);">Text Main (主文本)</span>
-                        <input type="color" id="custom-text-main" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--text-main);">Text Dim (次文本)</span>
-                        <input type="color" id="custom-text-dim" onchange="updateCustomTheme()" style="background:none; border:none; width:40px; height:25px;">
-                    </div>
+                    <!-- Hidden inputs -->
+                    <input type="hidden" id="custom-accent">
+                    <input type="hidden" id="custom-text-dim">
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        .color-input-wrapper {
+            display:flex; 
+            align-items:center; 
+            background:rgba(0,0,0,0.1); 
+            padding:5px 10px; 
+            border-radius:var(--radius-sm); 
+            border:1px solid var(--border);
+            transition: border-color 0.3s;
+        }
+        .color-input-wrapper:focus-within {
+            border-color: var(--primary);
+        }
+        .color-input-wrapper input[type="color"] {
+            background:none; 
+            border:none; 
+            width:24px; 
+            height:24px; 
+            padding:0; 
+            cursor:pointer;
+        }
+        .color-input-wrapper span {
+            font-size:0.8rem; 
+            margin-left:10px; 
+            font-family:var(--font-mono); 
+            color:var(--text-main);
+            opacity: 0.8;
+        }
+        .theme-card {
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .theme-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-color: var(--primary);
+        }
+        .theme-card.active {
+            border-color: var(--secondary);
+            background: rgba(var(--primary-rgb), 0.1);
+            box-shadow: 0 0 0 2px var(--secondary);
+        }
+        .theme-preview {
+            height: 60px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 5px;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
 
     <script>
         // Register Service Worker
@@ -185,8 +253,32 @@
         }
 
         const frame = document.getElementById('app-frame');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        
         // Only select tab buttons that have a data-src attribute (exclude dropdown toggles)
         const buttons = document.querySelectorAll('.tab-btn[data-src]');
+
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        frame.addEventListener('load', () => {
+             hideLoading();
+             if (isChaosMode) {
+                 randomizeCustomTheme();
+             } else if(currentThemeData) {
+                 applyThemeVariables(currentThemeData);
+             }
+             
+             // Re-apply meltdown if active (since iframe reloaded)
+             if (isMeltdownMode) {
+                 setTimeout(applyMeltdownEffect, 100);
+             }
+        });
 
         function switchToHome() {
             const homeBtn = document.querySelector('.tab-btn[data-src="tools/home.html"]');
@@ -229,202 +321,1110 @@
 
                 // Avoid reloading if clicking same tab
                 if (frame.contentWindow.location.pathname.endsWith(target)) return;
+                
+                showLoading();
                 frame.src = target;
             });
         });
 
         // Theme Logic
-        let currentThemeData = null; // Store current theme in memory
+        let currentThemeData = null; 
 
-        const themes = {
+        const presetThemes = {
             aurora: {
-                '--bg-deep': '#0b0f19',
-                '--bg-panel': 'rgba(20, 25, 40, 0.65)',
-                '--primary': '#c084fc',
-                '--secondary': '#2dd4bf',
-                '--accent': '#f472b6',
-                '--text-main': '#f1f5f9',
-                '--text-dim': '#94a3b8'
+                name: '极光 (Aurora)',
+                desc: '默认暗色风格，霓虹点缀',
+                vars: {
+                    '--bg-deep': '#0b0f19',
+                    '--bg-panel': 'rgba(20, 25, 40, 0.65)',
+                    '--bg-header': 'rgba(11, 15, 25, 0.8)',
+                    '--primary': '#c084fc',
+                    '--secondary': '#2dd4bf',
+                    '--accent': '#f472b6',
+                    '--text-main': '#f1f5f9',
+                    '--text-dim': '#94a3b8',
+                    '--bg-image': 'radial-gradient(circle at 10% 20%, rgba(192, 132, 252, 0.12) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(45, 212, 191, 0.12) 0%, transparent 40%)',
+                    '--font-main': "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    '--font-mono': "'JetBrains Mono', Consolas, monospace",
+                    '--radius-lg': '16px',
+                    '--radius-md': '8px',
+                    '--radius-sm': '4px',
+                    '--shadow': '0 8px 32px rgba(0, 0, 0, 0.4)',
+                    '--border': 'rgba(255, 255, 255, 0.1)',
+                    '--input-bg': 'rgba(0, 0, 0, 0.3)',
+                    '--btn-bg': 'rgba(255, 255, 255, 0.05)',
+                    '--btn-hover-bg': 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            business: {
+                name: '商务 (Business)',
+                desc: '清爽蓝白，专业稳重',
+                vars: {
+                    '--bg-deep': '#f0f2f5',
+                    '--bg-panel': '#ffffff',
+                    '--bg-header': 'rgba(255, 255, 255, 0.9)',
+                    '--primary': '#0052cc',
+                    '--secondary': '#172b4d',
+                    '--accent': '#0065ff',
+                    '--text-main': '#172b4d',
+                    '--text-dim': '#5e6c84',
+                    '--bg-image': 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+                    '--font-mono': "SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace",
+                    '--radius-lg': '6px',
+                    '--radius-md': '4px',
+                    '--radius-sm': '2px',
+                    '--shadow': '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    '--border': 'rgba(0, 0, 0, 0.1)',
+                    '--input-bg': 'rgba(0, 0, 0, 0.05)',
+                    '--btn-bg': 'rgba(0, 0, 0, 0.05)',
+                    '--btn-hover-bg': 'rgba(0, 0, 0, 0.1)'
+                }
+            },
+            creative: {
+                name: '创意 (Creative)',
+                desc: '活泼配色，圆润亲和',
+                vars: {
+                    '--bg-deep': '#fff0f5',
+                    '--bg-panel': 'rgba(255, 255, 255, 0.9)',
+                    '--bg-header': 'rgba(255, 255, 255, 0.8)',
+                    '--primary': '#ff6b6b',
+                    '--secondary': '#4ecdc4',
+                    '--accent': '#ffe66d',
+                    '--text-main': '#2f3542',
+                    '--text-dim': '#57606f',
+                    '--bg-image': 'linear-gradient(120deg, #f6d365 0%, #fda085 100%)',
+                    '--font-main': "'Quicksand', 'Comic Sans MS', sans-serif",
+                    '--font-mono': "'Fira Code', monospace",
+                    '--radius-lg': '24px',
+                    '--radius-md': '16px',
+                    '--radius-sm': '8px',
+                    '--shadow': '0 10px 25px rgba(255, 107, 107, 0.2)',
+                    '--border': 'rgba(0, 0, 0, 0.1)',
+                    '--input-bg': 'rgba(255, 255, 255, 0.5)',
+                    '--btn-bg': 'rgba(255, 107, 107, 0.1)',
+                    '--btn-hover-bg': 'rgba(255, 107, 107, 0.2)'
+                }
             },
             cyberpunk: {
-                '--bg-deep': '#050505',
-                '--bg-panel': 'rgba(20, 10, 30, 0.75)',
-                '--primary': '#ff00ff',
-                '--secondary': '#00ffff',
-                '--accent': '#ffff00',
-                '--text-main': '#e0e0e0',
-                '--text-dim': '#808080'
+                name: '赛博 (Cyberpunk)',
+                desc: '高对比度，硬朗线条',
+                vars: {
+                    '--bg-deep': '#050505',
+                    '--bg-panel': 'rgba(20, 10, 30, 0.9)',
+                    '--bg-header': 'rgba(5, 5, 5, 0.9)',
+                    '--primary': '#ff00ff',
+                    '--secondary': '#00ffff',
+                    '--accent': '#ffff00',
+                    '--text-main': '#e0e0e0',
+                    '--text-dim': '#808080',
+                    '--bg-image': 'repeating-linear-gradient(0deg, transparent, transparent 1px, #200 1px, #200 2px), linear-gradient(to bottom, #100, #000)',
+                    '--font-main': "'Orbitron', 'Segoe UI', sans-serif",
+                    '--font-mono': "'Share Tech Mono', monospace",
+                    '--radius-lg': '0px',
+                    '--radius-md': '0px',
+                    '--radius-sm': '0px',
+                    '--shadow': '0 0 15px rgba(255, 0, 255, 0.3)',
+                    '--border': '#ff00ff',
+                    '--input-bg': 'rgba(0, 0, 0, 0.8)',
+                    '--btn-bg': 'rgba(255, 0, 255, 0.2)',
+                    '--btn-hover-bg': 'rgba(255, 0, 255, 0.4)'
+                }
             },
             ocean: {
-                '--bg-deep': '#001e2b',
-                '--bg-panel': 'rgba(0, 40, 60, 0.65)',
-                '--primary': '#00a8ff',
-                '--secondary': '#00ffcc',
-                '--accent': '#ffaa00',
-                '--text-main': '#e6f7ff',
-                '--text-dim': '#8ab6d6'
+                name: '深海 (Ocean)',
+                desc: '静谧深蓝，沉浸体验',
+                vars: {
+                    '--bg-deep': '#001e2b',
+                    '--bg-panel': 'rgba(0, 40, 60, 0.7)',
+                    '--bg-header': 'rgba(0, 30, 43, 0.8)',
+                    '--primary': '#00a8ff',
+                    '--secondary': '#00ffcc',
+                    '--accent': '#ffaa00',
+                    '--text-main': '#e6f7ff',
+                    '--text-dim': '#8ab6d6',
+                    '--bg-image': 'linear-gradient(to top, #001e2b 0%, #00334e 100%)',
+                    '--font-main': "'Inter', sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '12px',
+                    '--radius-md': '6px',
+                    '--radius-sm': '3px',
+                    '--shadow': '0 8px 32px rgba(0, 20, 40, 0.5)',
+                    '--border': 'rgba(0, 168, 255, 0.2)',
+                    '--input-bg': 'rgba(0, 0, 0, 0.3)',
+                    '--btn-bg': 'rgba(0, 168, 255, 0.1)',
+                    '--btn-hover-bg': 'rgba(0, 168, 255, 0.2)'
+                }
             },
             forest: {
-                '--bg-deep': '#0a1a0a',
-                '--bg-panel': 'rgba(20, 40, 20, 0.65)',
-                '--primary': '#4ade80',
-                '--secondary': '#facc15',
-                '--accent': '#f87171',
-                '--text-main': '#f0fdf4',
-                '--text-dim': '#86efac'
-            },
-            sunset: {
-                '--bg-deep': '#1a0a0a',
-                '--bg-panel': 'rgba(40, 20, 10, 0.65)',
-                '--primary': '#fb923c',
-                '--secondary': '#c084fc',
-                '--accent': '#f43f5e',
-                '--text-main': '#fff7ed',
-                '--text-dim': '#fdba74'
-            },
-            monster: {
-                '--bg-deep': '#1a0510',
-                '--bg-panel': 'rgba(40, 10, 30, 0.75)',
-                '--primary': '#f472b6',
-                '--secondary': '#c084fc',
-                '--accent': '#fb7185',
-                '--text-main': '#fce7f3',
-                '--text-dim': '#fda4af'
-            },
-            coffee: {
-                '--bg-deep': '#2c211b',
-                '--bg-panel': 'rgba(67, 51, 45, 0.7)',
-                '--primary': '#d4a373',
-                '--secondary': '#e9edc9',
-                '--accent': '#faedcd',
-                '--text-main': '#fefae0',
-                '--text-dim': '#ccd5ae'
+                name: '森林 (Forest)',
+                desc: '自然暗绿，舒适护眼',
+                vars: {
+                    '--bg-deep': '#0a1a0a',
+                    '--bg-panel': 'rgba(20, 40, 20, 0.7)',
+                    '--bg-header': 'rgba(10, 26, 10, 0.8)',
+                    '--primary': '#4ade80',
+                    '--secondary': '#facc15',
+                    '--accent': '#f87171',
+                    '--text-main': '#f0fdf4',
+                    '--text-dim': '#86efac',
+                    '--bg-image': 'radial-gradient(circle at 50% 50%, #1a2e1a 0%, #0a1a0a 100%)',
+                    '--font-main': "'Inter', sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '16px',
+                    '--radius-md': '8px',
+                    '--radius-sm': '4px',
+                    '--shadow': '0 8px 24px rgba(0, 20, 0, 0.5)',
+                    '--border': 'rgba(74, 222, 128, 0.2)',
+                    '--input-bg': 'rgba(0, 0, 0, 0.3)',
+                    '--btn-bg': 'rgba(74, 222, 128, 0.1)',
+                    '--btn-hover-bg': 'rgba(74, 222, 128, 0.2)'
+                }
             },
             monochrome: {
-                '--bg-deep': '#000000',
-                '--bg-panel': 'rgba(25, 25, 25, 0.8)',
-                '--primary': '#ffffff',
-                '--secondary': '#888888',
-                '--accent': '#aaaaaa',
-                '--text-main': '#ffffff',
-                '--text-dim': '#666666'
+                name: '黑白 (Mono)',
+                desc: '极致简约，无色干扰',
+                vars: {
+                    '--bg-deep': '#000000',
+                    '--bg-panel': 'rgba(25, 25, 25, 0.9)',
+                    '--bg-header': 'rgba(0, 0, 0, 0.9)',
+                    '--primary': '#ffffff',
+                    '--secondary': '#888888',
+                    '--accent': '#aaaaaa',
+                    '--text-main': '#ffffff',
+                    '--text-dim': '#666666',
+                    '--bg-image': 'linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111), linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111)',
+                    '--font-main': "'Courier New', monospace",
+                    '--font-mono': "'Courier New', monospace",
+                    '--radius-lg': '0px',
+                    '--radius-md': '0px',
+                    '--radius-sm': '0px',
+                    '--shadow': 'none',
+                    '--border': '#333333',
+                    '--input-bg': '#111111',
+                    '--btn-bg': '#222222',
+                    '--btn-hover-bg': '#333333'
+                }
             },
-            'hc-dark': {
-                '--bg-deep': '#000000',
-                '--bg-panel': '#000000',
-                '--primary': '#ffff00',
-                '--secondary': '#00ffff',
-                '--accent': '#ff0000',
-                '--text-main': '#ffffff',
-                '--text-dim': '#dddddd'
+            sunset: {
+                name: '日落 (Sunset)',
+                desc: '温暖渐变，柔和舒适',
+                vars: {
+                    '--bg-deep': '#2d1b2e',
+                    '--bg-panel': 'rgba(69, 39, 60, 0.7)',
+                    '--bg-header': 'rgba(45, 27, 46, 0.9)',
+                    '--primary': '#ff9a9e',
+                    '--secondary': '#fad0c4',
+                    '--accent': '#ffecd2',
+                    '--text-main': '#fff1eb',
+                    '--text-dim': '#d4a5a5',
+                    '--bg-image': 'linear-gradient(to top, #30cfd0 0%, #330867 100%)',
+                    '--font-main': "'Inter', sans-serif",
+                    '--font-mono': "'Fira Code', monospace",
+                    '--radius-lg': '12px',
+                    '--radius-md': '8px',
+                    '--radius-sm': '4px',
+                    '--shadow': '0 8px 32px rgba(0, 0, 0, 0.3)',
+                    '--border': 'rgba(255, 154, 158, 0.2)',
+                    '--input-bg': 'rgba(0, 0, 0, 0.2)',
+                    '--btn-bg': 'rgba(255, 154, 158, 0.1)',
+                    '--btn-hover-bg': 'rgba(255, 154, 158, 0.2)'
+                }
             },
-            'hc-light': {
-                '--bg-deep': '#ffffff',
-                '--bg-panel': '#ffffff',
-                '--primary': '#0000ff',
-                '--secondary': '#008800',
-                '--accent': '#aa0000',
-                '--text-main': '#000000',
-                '--text-dim': '#333333'
-            },
-            'neon': {
-                '--bg-deep': '#000000',
-                '--bg-panel': 'rgba(10, 10, 10, 0.9)',
-                '--primary': '#00ff00',
-                '--secondary': '#ff00ff',
-                '--accent': '#ffff00',
-                '--text-main': '#00ff00',
-                '--text-dim': '#00cc00'
-            },
-            'blue-safe': {
-                '--bg-deep': '#000033',
-                '--bg-panel': '#000044',
-                '--primary': '#ffffff',
-                '--secondary': '#88ccff',
-                '--accent': '#ffaa00',
-                '--text-main': '#ffffff',
-                '--text-dim': '#cccccc'
+            mint: {
+                name: '薄荷 (Mint)',
+                desc: '清新淡雅，清爽体验',
+                vars: {
+                    '--bg-deep': '#e0f2f1',
+                    '--bg-panel': 'rgba(255, 255, 255, 0.85)',
+                    '--bg-header': 'rgba(224, 242, 241, 0.9)',
+                    '--primary': '#009688',
+                    '--secondary': '#4db6ac',
+                    '--accent': '#80cbc4',
+                    '--text-main': '#004d40',
+                    '--text-dim': '#00796b',
+                    '--bg-image': 'radial-gradient(circle at 10% 20%, rgba(128, 203, 196, 0.2) 0%, transparent 50%), radial-gradient(circle at 90% 80%, rgba(38, 166, 154, 0.2) 0%, transparent 50%)',
+                    '--font-main': "'Inter', sans-serif",
+                    '--font-mono': "'JetBrains Mono', monospace",
+                    '--radius-lg': '16px',
+                    '--radius-md': '8px',
+                    '--radius-sm': '4px',
+                    '--shadow': '0 4px 12px rgba(0, 150, 136, 0.15)',
+                    '--border': 'rgba(0, 150, 136, 0.2)',
+                    '--input-bg': 'rgba(255, 255, 255, 0.6)',
+                    '--btn-bg': 'rgba(0, 150, 136, 0.1)',
+                    '--btn-hover-bg': 'rgba(0, 150, 136, 0.2)'
+                }
             }
         };
 
-        function toggleThemeModal() {
-            const modal = document.getElementById('theme-modal');
-            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        const famousThemes = {
+            github: {
+                name: 'GitHub Dark',
+                desc: '沉浸式代码体验',
+                vars: {
+                    '--bg-deep': '#0d1117',
+                    '--bg-panel': '#161b22',
+                    '--bg-header': 'rgba(22, 27, 34, 0.95)',
+                    '--primary': '#58a6ff',
+                    '--secondary': '#238636',
+                    '--accent': '#f85149',
+                    '--text-main': '#c9d1d9',
+                    '--text-dim': '#8b949e',
+                    '--bg-image': 'none',
+                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+                    '--font-mono': "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace",
+                    '--radius-lg': '6px',
+                    '--radius-md': '6px',
+                    '--radius-sm': '6px',
+                    '--shadow': '0 0 15px rgba(0,0,0,0.5)',
+                    '--border': '#30363d',
+                    '--input-bg': '#0d1117',
+                    '--btn-bg': '#21262d',
+                    '--btn-hover-bg': '#30363d'
+                }
+            },
+            discord: {
+                name: 'Discord',
+                desc: '游戏玩家首选',
+                vars: {
+                    '--bg-deep': '#36393f',
+                    '--bg-panel': '#2f3136',
+                    '--bg-header': '#202225',
+                    '--primary': '#5865f2',
+                    '--secondary': '#3ba55c',
+                    '--accent': '#ed4245',
+                    '--text-main': '#dcddde',
+                    '--text-dim': '#72767d',
+                    '--bg-image': 'none',
+                    '--font-main': "'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    '--font-mono': "Consolas, monospace",
+                    '--radius-lg': '8px',
+                    '--radius-md': '4px',
+                    '--radius-sm': '3px',
+                    '--shadow': '0 2px 10px rgba(0,0,0,0.2)',
+                    '--border': '#202225',
+                    '--input-bg': '#40444b',
+                    '--btn-bg': '#4f545c',
+                    '--btn-hover-bg': '#686d73'
+                }
+            },
+            youtube: {
+                name: 'YouTube Dark',
+                desc: '专注视频内容',
+                vars: {
+                    '--bg-deep': '#0f0f0f',
+                    '--bg-panel': '#272727',
+                    '--bg-header': 'rgba(15, 15, 15, 0.98)',
+                    '--primary': '#ff0000',
+                    '--secondary': '#3ea6ff',
+                    '--accent': '#ff0000',
+                    '--text-main': '#f1f1f1',
+                    '--text-dim': '#aaaaaa',
+                    '--bg-image': 'none',
+                    '--font-main': "Roboto, Arial, sans-serif",
+                    '--font-mono': "Roboto Mono, monospace",
+                    '--radius-lg': '12px',
+                    '--radius-md': '8px',
+                    '--radius-sm': '4px',
+                    '--shadow': '0 4px 10px rgba(0,0,0,0.3)',
+                    '--border': 'rgba(255,255,255,0.1)',
+                    '--input-bg': '#121212',
+                    '--btn-bg': 'rgba(255,255,255,0.1)',
+                    '--btn-hover-bg': 'rgba(255,255,255,0.2)'
+                }
+            },
+            vscode: {
+                name: 'VS Code Dark',
+                desc: '开发者最爱',
+                vars: {
+                    '--bg-deep': '#1e1e1e',
+                    '--bg-panel': '#252526',
+                    '--bg-header': '#333333',
+                    '--primary': '#007acc',
+                    '--secondary': '#0e639c',
+                    '--accent': '#f14c4c',
+                    '--text-main': '#cccccc',
+                    '--text-dim': '#858585',
+                    '--bg-image': 'none',
+                    '--font-main': "'Segoe WPC', 'Segoe UI', sans-serif",
+                    '--font-mono': "Consolas, 'Courier New', monospace",
+                    '--radius-lg': '0px',
+                    '--radius-md': '0px',
+                    '--radius-sm': '0px',
+                    '--shadow': '0 2px 8px rgba(0,0,0,0.3)',
+                    '--border': '#3e3e42',
+                    '--input-bg': '#3c3c3c',
+                    '--btn-bg': '#3c3c3c',
+                    '--btn-hover-bg': '#4a4a4a'
+                }
+            },
+            bilibili: {
+                name: 'Bilibili Pink',
+                desc: '干杯 ( •̀ ω •́ )y',
+                vars: {
+                    '--bg-deep': '#f6f7f8',
+                    '--bg-panel': '#ffffff',
+                    '--bg-header': '#ffffff',
+                    '--primary': '#fb7299',
+                    '--secondary': '#00a1d6',
+                    '--accent': '#fb7299',
+                    '--text-main': '#18191c',
+                    '--text-dim': '#9499a0',
+                    '--bg-image': 'none',
+                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '8px',
+                    '--radius-md': '6px',
+                    '--radius-sm': '4px',
+                    '--shadow': '0 2px 10px rgba(0,0,0,0.05)',
+                    '--border': '#e3e5e7',
+                    '--input-bg': '#f1f2f3',
+                    '--btn-bg': '#f6f7f8',
+                    '--btn-hover-bg': '#e3e5e7'
+                }
+            },
+            pornhub: {
+                name: 'PH Dark',
+                desc: '黑橙经典，夜间首选',
+                vars: {
+                    '--bg-deep': '#000000',
+                    '--bg-panel': '#1b1b1b',
+                    '--bg-header': '#000000',
+                    '--primary': '#ff9900',
+                    '--secondary': '#ffffff',
+                    '--accent': '#ff9900',
+                    '--text-main': '#ffffff',
+                    '--text-dim': '#999999',
+                    '--bg-image': 'none',
+                    '--font-main': "Arial, Helvetica, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '4px',
+                    '--radius-md': '3px',
+                    '--radius-sm': '2px',
+                    '--shadow': '0 2px 5px rgba(0,0,0,0.5)',
+                    '--border': '#333333',
+                    '--input-bg': '#333333',
+                    '--btn-bg': '#333333',
+                    '--btn-hover-bg': '#444444'
+                }
+            },
+            xvideos: {
+                name: 'XV Red',
+                desc: '黑红配色，热情奔放',
+                vars: {
+                    '--bg-deep': '#141414',
+                    '--bg-panel': '#232323',
+                    '--bg-header': '#141414',
+                    '--primary': '#de2b1e',
+                    '--secondary': '#000000',
+                    '--accent': '#de2b1e',
+                    '--text-main': '#f2f2f2',
+                    '--text-dim': '#888888',
+                    '--bg-image': 'none',
+                    '--font-main': "Arial, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '4px',
+                    '--radius-md': '2px',
+                    '--radius-sm': '0px',
+                    '--shadow': '0 1px 3px rgba(0,0,0,0.5)',
+                    '--border': '#2f2f2f',
+                    '--input-bg': '#000000',
+                    '--btn-bg': '#2f2f2f',
+                    '--btn-hover-bg': '#3f3f3f'
+                }
+            },
+            pixiv: {
+                name: 'Pixiv Blue',
+                desc: '二次元插画风格',
+                vars: {
+                    '--bg-deep': '#f5f5f5',
+                    '--bg-panel': '#ffffff',
+                    '--bg-header': '#ffffff',
+                    '--primary': '#0096fa',
+                    '--secondary': '#333333',
+                    '--accent': '#ff5e5e',
+                    '--text-main': '#333333',
+                    '--text-dim': '#adadad',
+                    '--bg-image': 'none',
+                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '16px',
+                    '--radius-md': '8px',
+                    '--radius-sm': '4px',
+                    '--shadow': '0 2px 10px rgba(0,0,0,0.05)',
+                    '--border': '#e0e0e0',
+                    '--input-bg': '#f5f5f5',
+                    '--btn-bg': '#f5f5f5',
+                    '--btn-hover-bg': '#e0e0e0'
+                }
+            },
+            ehentai: {
+                name: 'EH Panda',
+                desc: 'Sad Panda 经典灰',
+                vars: {
+                    '--bg-deep': '#34353b',
+                    '--bg-panel': '#4f535b',
+                    '--bg-header': '#34353b',
+                    '--primary': '#dddddd',
+                    '--secondary': '#5c0d12',
+                    '--accent': '#ff0000',
+                    '--text-main': '#dddddd',
+                    '--text-dim': '#b3b3b3',
+                    '--bg-image': 'none',
+                    '--font-main': "Arial, Helvetica, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '0px',
+                    '--radius-md': '0px',
+                    '--radius-sm': '0px',
+                    '--shadow': '0 1px 2px rgba(0,0,0,0.5)',
+                    '--border': '#5c0d12',
+                    '--input-bg': '#34353b',
+                    '--btn-bg': '#34353b',
+                    '--btn-hover-bg': '#43464e'
+                }
+            },
+            twitter: {
+                name: 'X (Twitter)',
+                desc: '极简黑，信息流',
+                vars: {
+                    '--bg-deep': '#000000',
+                    '--bg-panel': '#16181c',
+                    '--bg-header': 'rgba(0, 0, 0, 0.85)',
+                    '--primary': '#1d9bf0',
+                    '--secondary': '#eff3f4',
+                    '--accent': '#1d9bf0',
+                    '--text-main': '#e7e9ea',
+                    '--text-dim': '#71767b',
+                    '--bg-image': 'none',
+                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '16px',
+                    '--radius-md': '16px',
+                    '--radius-sm': '8px',
+                    '--shadow': '0 0 10px rgba(255,255,255,0.05)',
+                    '--border': '#2f3336',
+                    '--input-bg': '#202327',
+                    '--btn-bg': '#eff3f41a',
+                    '--btn-hover-bg': '#eff3f42a'
+                }
+            },
+            reddit: {
+                name: 'Reddit Dark',
+                desc: '社区讨论，橙色活力',
+                vars: {
+                    '--bg-deep': '#0b1416',
+                    '--bg-panel': '#1a282d',
+                    '--bg-header': '#1a282d',
+                    '--primary': '#ff4500',
+                    '--secondary': '#0079d3',
+                    '--accent': '#ff4500',
+                    '--text-main': '#d7dadc',
+                    '--text-dim': '#818384',
+                    '--bg-image': 'none',
+                    '--font-main': "'IBM Plex Sans', sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '4px',
+                    '--radius-md': '4px',
+                    '--radius-sm': '2px',
+                    '--shadow': '0 2px 4px rgba(0,0,0,0.2)',
+                    '--border': '#343536',
+                    '--input-bg': '#272729',
+                    '--btn-bg': '#272729',
+                    '--btn-hover-bg': '#343536'
+                }
+            },
+            spotify: {
+                name: 'Spotify',
+                desc: '音乐律动，经典黑绿',
+                vars: {
+                    '--bg-deep': '#121212',
+                    '--bg-panel': '#181818',
+                    '--bg-header': '#000000',
+                    '--primary': '#1db954',
+                    '--secondary': '#ffffff',
+                    '--accent': '#1ed760',
+                    '--text-main': '#ffffff',
+                    '--text-dim': '#b3b3b3',
+                    '--bg-image': 'linear-gradient(to bottom, #121212, #121212)',
+                    '--font-main': "'Circular', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '8px',
+                    '--radius-md': '4px',
+                    '--radius-sm': '2px',
+                    '--shadow': '0 4px 60px rgba(0,0,0,0.5)',
+                    '--border': '#282828',
+                    '--input-bg': '#2a2a2a',
+                    '--btn-bg': '#2a2a2a',
+                    '--btn-hover-bg': '#3e3e3e'
+                }
+            },
+            netflix: {
+                name: 'Netflix',
+                desc: '家庭影院，红黑视觉',
+                vars: {
+                    '--bg-deep': '#141414',
+                    '--bg-panel': '#181818',
+                    '--bg-header': 'rgba(20, 20, 20, 0.9)',
+                    '--primary': '#e50914',
+                    '--secondary': '#ffffff',
+                    '--accent': '#b20710',
+                    '--text-main': '#ffffff',
+                    '--text-dim': '#808080',
+                    '--bg-image': 'none',
+                    '--font-main': "'Netflix Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '4px',
+                    '--radius-md': '2px',
+                    '--radius-sm': '0px',
+                    '--shadow': '0 2px 10px rgba(0,0,0,0.7)',
+                    '--border': '#333333',
+                    '--input-bg': '#333333',
+                    '--btn-bg': 'rgba(255,255,255,0.1)',
+                    '--btn-hover-bg': 'rgba(255,255,255,0.2)'
+                }
+            },
+            twitch: {
+                name: 'Twitch',
+                desc: '直播互动，基佬紫',
+                vars: {
+                    '--bg-deep': '#0e0e10',
+                    '--bg-panel': '#18181b',
+                    '--bg-header': '#18181b',
+                    '--primary': '#9146ff',
+                    '--secondary': '#bf94ff',
+                    '--accent': '#9146ff',
+                    '--text-main': '#efeff1',
+                    '--text-dim': '#adadb8',
+                    '--bg-image': 'none',
+                    '--font-main': "'Inter', 'Roobert', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '6px',
+                    '--radius-md': '4px',
+                    '--radius-sm': '2px',
+                    '--shadow': '0 1px 2px rgba(0,0,0,0.15)',
+                    '--border': '#303032',
+                    '--input-bg': '#303032',
+                    '--btn-bg': '#303032',
+                    '--btn-hover-bg': '#464649'
+                }
+            },
+            steam: {
+                name: 'Steam',
+                desc: '硬核游戏，深蓝工业',
+                vars: {
+                    '--bg-deep': '#1b2838',
+                    '--bg-panel': 'rgba(23, 26, 33, 0.8)',
+                    '--bg-header': '#171a21',
+                    '--primary': '#66c0f4',
+                    '--secondary': '#c7d5e0',
+                    '--accent': '#a4d007',
+                    '--text-main': '#c7d5e0',
+                    '--text-dim': '#626366',
+                    '--bg-image': 'linear-gradient(to bottom, #171a21 0%, #1b2838 100%)',
+                    '--font-main': "'Motiva Sans', Sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '2px',
+                    '--radius-md': '2px',
+                    '--radius-sm': '0px',
+                    '--shadow': '0 0 12px rgba(0,0,0,0.5)',
+                    '--border': '#2a475e',
+                    '--input-bg': '#0f1216',
+                    '--btn-bg': 'linear-gradient( to bottom, #47bfff 5%, #1a44c2 60%)',
+                    '--btn-hover-bg': 'linear-gradient( to bottom, #5bc6ff 5%, #1d4ecf 60%)'
+                }
+            },
+            stackoverflow: {
+                name: 'Stack Overflow',
+                desc: '知识问答，清爽白橙',
+                vars: {
+                    '--bg-deep': '#f1f2f3',
+                    '--bg-panel': '#ffffff',
+                    '--bg-header': '#f8f9f9',
+                    '--primary': '#f48024',
+                    '--secondary': '#0074cc',
+                    '--accent': '#f48024',
+                    '--text-main': '#232629',
+                    '--text-dim': '#6a737c',
+                    '--bg-image': 'none',
+                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Segoe UI Adjusted', 'Segoe UI', 'Liberation Sans', sans-serif",
+                    '--font-mono': "ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', 'Liberation Mono', Menlo, Monaco, Consolas, monospace",
+                    '--radius-lg': '3px',
+                    '--radius-md': '3px',
+                    '--radius-sm': '2px',
+                    '--shadow': '0 1px 4px rgba(0,0,0,0.05)',
+                    '--border': '#babfc4',
+                    '--input-bg': '#ffffff',
+                    '--btn-bg': '#e1ecf4',
+                    '--btn-hover-bg': '#b3d3ea'
+                }
+            },
+            telegram: {
+                name: 'Telegram',
+                desc: '安全通讯，经典蓝',
+                vars: {
+                    '--bg-deep': '#17212b',
+                    '--bg-panel': '#242f3d',
+                    '--bg-header': '#17212b',
+                    '--primary': '#5288c1',
+                    '--secondary': '#6499cc',
+                    '--accent': '#2f6ea5',
+                    '--text-main': '#f5f5f5',
+                    '--text-dim': '#7f91a4',
+                    '--bg-image': 'none',
+                    '--font-main': "Roboto, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '10px',
+                    '--radius-md': '6px',
+                    '--radius-sm': '4px',
+                    '--shadow': '0 1px 2px rgba(0,0,0,0.15)',
+                    '--border': '#13181d',
+                    '--input-bg': '#17212b',
+                    '--btn-bg': '#2b5278',
+                    '--btn-hover-bg': '#336290'
+                }
+            },
+            chatgpt: {
+                name: 'ChatGPT',
+                desc: 'AI 助手，灰绿极简',
+                vars: {
+                    '--bg-deep': '#343541',
+                    '--bg-panel': '#444654',
+                    '--bg-header': '#343541',
+                    '--primary': '#10a37f',
+                    '--secondary': '#c5c5d2',
+                    '--accent': '#1a7f64',
+                    '--text-main': '#ececf1',
+                    '--text-dim': '#c5c5d2',
+                    '--bg-image': 'none',
+                    '--font-main': "'Söhne', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+                    '--font-mono': "monospace",
+                    '--radius-lg': '6px',
+                    '--radius-md': '4px',
+                    '--radius-sm': '2px',
+                    '--shadow': '0 0 15px rgba(0,0,0,0.1)',
+                    '--border': 'rgba(255,255,255,0.1)',
+                    '--input-bg': '#40414f',
+                    '--btn-bg': '#40414f',
+                    '--btn-hover-bg': '#505263'
+                }
+            }
+        };
+
+        const allThemes = { ...presetThemes, ...famousThemes };
+
+        function renderThemeList() {
+            const renderGrid = (containerId, themesObj) => {
+                const grid = document.getElementById(containerId);
+                if(!grid) return;
+                grid.innerHTML = '';
+
+                Object.entries(themesObj).forEach(([key, theme]) => {
+                    const btn = document.createElement('div');
+                    btn.className = 'theme-card';
+                    btn.onclick = () => setTheme(key);
+                    
+                    // Create preview
+                    const preview = document.createElement('div');
+                    preview.className = 'theme-preview';
+                    preview.style.background = theme.vars['--bg-deep'];
+                    preview.style.backgroundImage = theme.vars['--bg-image'];
+                    
+                    // Add a small "window" inside preview to show panel color
+                    const panel = document.createElement('div');
+                    panel.style.position = 'absolute';
+                    panel.style.bottom = '10px';
+                    panel.style.right = '10px';
+                    panel.style.width = '60%';
+                    panel.style.height = '60%';
+                    panel.style.background = theme.vars['--bg-panel'];
+                    panel.style.borderRadius = theme.vars['--radius-sm'];
+                    panel.style.border = `1px solid ${theme.vars['--border'] || 'rgba(255,255,255,0.1)'}`;
+                    preview.appendChild(panel);
+
+                    // Add primary color dot
+                    const dot = document.createElement('div');
+                    dot.style.position = 'absolute';
+                    dot.style.top = '10px';
+                    dot.style.left = '10px';
+                    dot.style.width = '12px';
+                    dot.style.height = '12px';
+                    dot.style.borderRadius = '50%';
+                    dot.style.background = theme.vars['--primary'];
+                    preview.appendChild(dot);
+
+                    const info = document.createElement('div');
+                    info.innerHTML = `
+                        <div style="font-weight:bold; font-size:0.9rem; color:var(--text-main)">${theme.name.split(' ')[0]}</div>
+                        <div style="font-size:0.7rem; color:var(--text-dim); margin-top:2px;">${theme.desc}</div>
+                    `;
+
+                    btn.appendChild(preview);
+                    btn.appendChild(info);
+                    grid.appendChild(btn);
+                });
+            };
+
+            renderGrid('preset-themes-grid', presetThemes);
+            renderGrid('famous-themes-grid', famousThemes);
         }
 
-        // Close modal when clicking outside (on the backdrop)
-        document.getElementById('theme-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.style.display = 'none';
+        function toggleThemeModal() {
+            const modal = document.getElementById('theme-modal');
+            if (modal.style.display === 'flex') {
+                modal.style.opacity = '0';
+                modal.querySelector('div').style.transform = 'scale(0.95)';
+                setTimeout(() => modal.style.display = 'none', 300);
+            } else {
+                renderThemeList(); // Re-render to ensure current theme highlight if I add that logic
+                modal.style.display = 'flex';
+                // Trigger reflow
+                modal.offsetHeight; 
+                modal.style.opacity = '1';
+                modal.querySelector('div').style.transform = 'scale(1)';
             }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('theme-modal').addEventListener('click', function(e) {
+            if (e.target === this) toggleThemeModal();
         });
 
         function setTheme(name) {
-            const theme = themes[name];
+            const theme = allThemes[name];
             if(!theme) return;
             
-            applyThemeVariables(theme);
-            syncCustomInputs(theme);
-            currentThemeData = theme;
+            applyThemeVariables(theme.vars);
+            syncCustomInputs(theme.vars);
+            currentThemeData = theme.vars;
+            
+            // Highlight selected
+            document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+            // This is tricky because we regenerate list. But simple enough:
+            // renderThemeList can check currentThemeData
         }
 
-        function syncCustomInputs(theme) {
-            // Helper to safe-set input values (handles potential rgba issues by just ignoring or trying)
-            // Note: HTML color input only takes HEX. Our themes have hex for most colors except bg-panel.
-            // We only expose hex-compatible variables in custom inputs.
+        function syncCustomInputs(vars) {
             const setVal = (id, val) => {
                 const el = document.getElementById(id);
-                if(el && val && val.startsWith('#')) el.value = val;
+                const disp = document.getElementById('val-' + id.split('-')[1]);
+                if(el && val && val.startsWith('#')) {
+                    el.value = val;
+                    if(disp) disp.innerText = val;
+                }
             };
 
-            setVal('custom-primary', theme['--primary']);
-            setVal('custom-secondary', theme['--secondary']);
-            setVal('custom-accent', theme['--accent']);
-            setVal('custom-bg', theme['--bg-deep']);
-            setVal('custom-text-main', theme['--text-main']);
-            setVal('custom-text-dim', theme['--text-dim']);
+            setVal('custom-primary', vars['--primary']);
+            setVal('custom-secondary', vars['--secondary']);
+            setVal('custom-bg', vars['--bg-deep']);
+            setVal('custom-text-main', vars['--text-main']);
         }
 
         function updateCustomTheme() {
-            const theme = {
-                '--primary': document.getElementById('custom-primary').value,
-                '--secondary': document.getElementById('custom-secondary').value,
-                '--accent': document.getElementById('custom-accent').value,
-                '--bg-deep': document.getElementById('custom-bg').value,
-                '--text-main': document.getElementById('custom-text-main').value,
-                '--text-dim': document.getElementById('custom-text-dim').value,
-                // Derive panel from bg-deep roughly or keep default
-                '--bg-panel': 'rgba(255, 255, 255, 0.05)'
+            const getVal = (id) => {
+                const val = document.getElementById(id).value;
+                document.getElementById('val-' + id.split('-')[1]).innerText = val;
+                return val;
             };
+            
+            const bgDeep = getVal('custom-bg');
+            const primary = getVal('custom-primary');
+            const textMain = getVal('custom-text-main');
+            const isLightBg = getContrastColor(bgDeep) === '#000000';
+
+            const theme = {
+                '--primary': primary,
+                '--secondary': getVal('custom-secondary'),
+                '--accent': primary, // Link accent to primary for simple custom
+                '--bg-deep': bgDeep,
+                '--text-main': textMain,
+                '--text-dim': adjustColorOpacity(textMain, 0.6),
+                
+                // Defaults for custom
+                '--bg-panel': isLightBg ? '#ffffff' : 'rgba(20, 25, 40, 0.65)',
+                '--bg-header': isLightBg ? 'rgba(255, 255, 255, 0.9)' : 'rgba(11, 15, 25, 0.8)',
+                '--bg-image': 'none',
+                '--font-main': "'Inter', sans-serif",
+                '--font-mono': "'JetBrains Mono', monospace",
+                '--radius-lg': '8px',
+                '--radius-md': '4px',
+                '--radius-sm': '2px',
+                '--shadow': isLightBg ? '0 4px 12px rgba(0,0,0,0.1)' : '0 8px 32px rgba(0, 0, 0, 0.4)',
+                '--border': isLightBg ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+                '--input-bg': isLightBg ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.3)',
+                '--btn-bg': isLightBg ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)',
+                '--btn-hover-bg': isLightBg ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'
+            };
+            
             applyThemeVariables(theme);
             currentThemeData = theme;
+        }
+
+        // Helper to adjust color (simplified)
+        function adjustColorOpacity(hex, opacity, invert = false) {
+            // Very basic implementation, just returns hex if complex
+            return hex; 
+        }
+
+        // --- Random / Chaos Mode ---
+        let isChaosMode = false;
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function randomizeCustomTheme() {
+            const primary = getRandomColor();
+            const secondary = getRandomColor();
+            const bg = getRandomColor();
+            // Ensure text contrasts with bg
+            const isDark = getContrastColor(bg) === '#ffffff';
+            const text = isDark ? '#f1f5f9' : '#1a1f2e'; // Simple default text based on bg
+
+            document.getElementById('custom-primary').value = primary;
+            document.getElementById('custom-secondary').value = secondary;
+            document.getElementById('custom-bg').value = bg;
+            document.getElementById('custom-text-main').value = text;
+            
+            // Trigger update
+            updateCustomTheme();
+        }
+
+        function toggleChaosMode() {
+            isChaosMode = !isChaosMode;
+            const btn = document.getElementById('chaos-btn');
+            if (isChaosMode) {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary'); // Or some active style
+                btn.innerText = '🔥 全随机 (ON)';
+                // Immediately randomize
+                randomizeCustomTheme();
+            } else {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+                btn.innerText = '🔥 全随机';
+            }
+        }
+
+        // --- Meltdown Mode (Component-level Randomization) ---
+        let isMeltdownMode = false;
+
+        function toggleMeltdownMode() {
+            isMeltdownMode = !isMeltdownMode;
+            const btn = document.getElementById('meltdown-btn');
+            
+            if (isMeltdownMode) {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-danger'); // Use red for danger/meltdown
+                btn.innerText = '🌀 崩坏 (ON)';
+                app.showToast('崩坏模式已开启：警告！高能反应！', 'warning');
+                applyMeltdownEffect();
+            } else {
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                btn.innerText = '🌀 崩坏';
+                removeMeltdownEffect();
+            }
+        }
+
+        function applyMeltdownEffect() {
+            if (!frame || !frame.contentWindow) return;
+            
+            const doc = frame.contentWindow.document;
+            let styleEl = doc.getElementById('meltdown-style');
+            
+            if (!styleEl) {
+                styleEl = doc.createElement('style');
+                styleEl.id = 'meltdown-style';
+                doc.head.appendChild(styleEl);
+            }
+
+            // Generate crazy CSS
+            let css = '';
+            const selectors = ['div', 'span', 'button', 'input', '.panel', '.btn', '.card', 'label', 'h1', 'h2', 'h3', 'h4'];
+            const props = ['color', 'background-color', 'border-color'];
+            
+            // We use :nth-child to target elements pseudo-randomly without JS iteration
+            // Generate 50 rules
+            for (let i = 1; i <= 50; i++) {
+                const color = getRandomColor();
+                const bg = getRandomColor();
+                const border = getRandomColor();
+                
+                // Randomly target children
+                // e.g. *:nth-child(50n + 1)
+                css += `*:nth-child(50n + ${i}) { 
+                    --primary: ${color} !important; 
+                    --secondary: ${bg} !important;
+                    --bg-panel: ${bg}80 !important;
+                    --text-main: ${getContrastColor(bg)} !important;
+                    border-color: ${border} !important;
+                }\n`;
+                
+                // Specific component overrides for maximum chaos
+                css += `.btn:nth-child(20n + ${i}) { background-color: ${bg} !important; color: ${getContrastColor(bg)} !important; }\n`;
+                css += `.panel:nth-child(10n + ${i}) { background-color: ${color}20 !important; }\n`;
+            }
+
+            styleEl.textContent = css;
+        }
+
+        function removeMeltdownEffect() {
+            if (!frame || !frame.contentWindow) return;
+            const styleEl = frame.contentWindow.document.getElementById('meltdown-style');
+            if (styleEl) styleEl.remove();
+        }
+
+        function getContrastColor(hex) {
+            if (!hex || !hex.startsWith('#')) return '#ffffff';
+            const r = parseInt(hex.substr(1, 2), 16);
+            const g = parseInt(hex.substr(3, 2), 16);
+            const b = parseInt(hex.substr(5, 2), 16);
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (yiq >= 128) ? '#000000' : '#ffffff';
         }
 
         function applyThemeVariables(theme) {
             const root = document.documentElement;
-            for (const [key, value] of Object.entries(theme)) {
-                root.style.setProperty(key, value);
-            }
             
-            // Sync with iframe
-            if(frame && frame.contentWindow) {
-                const frameRoot = frame.contentWindow.document.documentElement;
-                for (const [key, value] of Object.entries(theme)) {
-                    frameRoot.style.setProperty(key, value);
-                }
+            // Calculate contrast colors
+            if(theme['--primary']) {
+                theme['--primary-contrast'] = getContrastColor(theme['--primary']);
             }
+            // Auto-calculate text visibility for light/dark backgrounds if not explicitly set
+            // (Optional, but good for custom themes)
+            
+            // Optimization: Request Animation Frame to batch reflows
+            requestAnimationFrame(() => {
+                for (const [key, value] of Object.entries(theme)) {
+                    root.style.setProperty(key, value);
+                }
+                if(frame && frame.contentWindow) {
+                    const frameRoot = frame.contentWindow.document.documentElement;
+                    try {
+                        for (const [key, value] of Object.entries(theme)) {
+                            frameRoot.style.setProperty(key, value);
+                        }
+                        
+                        // Propagate to nested iframes (Level 2)
+                        // Try to find iframes inside the current frame
+                        const nestedFrames = frame.contentWindow.document.querySelectorAll('iframe');
+                        nestedFrames.forEach(nestedFrame => {
+                            try {
+                                const nestedRoot = nestedFrame.contentWindow.document.documentElement;
+                                for (const [key, value] of Object.entries(theme)) {
+                                    nestedRoot.style.setProperty(key, value);
+                                }
+                                
+                                // Propagate to Level 3 (e.g. image-fun -> image-phantom)
+                                const deepFrames = nestedFrame.contentWindow.document.querySelectorAll('iframe');
+                                deepFrames.forEach(deepFrame => {
+                                    try {
+                                        const deepRoot = deepFrame.contentWindow.document.documentElement;
+                                        for (const [key, value] of Object.entries(theme)) {
+                                            deepRoot.style.setProperty(key, value);
+                                        }
+                                    } catch(e) {}
+                                });
+                            } catch(e) {}
+                        });
+                        
+                    } catch(e) {}
+                }
+            });
         }
 
         // Initialize with Aurora but don't persist
         // Pre-fill inputs with default aurora values
-        syncCustomInputs(themes['aurora']);
+        syncCustomInputs(presetThemes['aurora']);
         
         // Also listen for iframe load to re-apply theme
-        frame.addEventListener('load', () => {
-             if(currentThemeData) {
-                 applyThemeVariables(currentThemeData);
-             }
-        });
+        // (Handled above in frame.load)
+        // frame.addEventListener('load', () => {
+        //      if(currentThemeData) {
+        //          applyThemeVariables(currentThemeData);
+        //      }
+        // });
+
+        // Mobile Menu Logic
+        const mobileDrawer = document.getElementById('mobile-drawer');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        let isMobileMenuOpen = false;
+
+        function toggleMobileMenu() {
+            isMobileMenuOpen = !isMobileMenuOpen;
+            if (isMobileMenuOpen) {
+                mobileDrawer.style.left = '0';
+                mobileOverlay.style.display = 'block';
+                // Lazy init
+                if (mobileDrawer.children.length === 0 || mobileDrawer.innerHTML.trim() === '<!-- Content will be injected by JS or cloned -->') {
+                    initMobileMenu();
+                }
+            } else {
+                mobileDrawer.style.left = '-100%';
+                mobileOverlay.style.display = 'none';
+            }
+        }
+
+        function initMobileMenu() {
+            mobileDrawer.innerHTML = ''; // Clear placeholder
+            
+            // Clone Back/Home Button (The one with ↩❤↩)
+            const backBtn = document.querySelector('#main-nav > .btn');
+            if(backBtn) {
+                const backClone = backBtn.cloneNode(true);
+                // Ensure it looks good in drawer (full width)
+                backClone.style.width = '100%';
+                backClone.style.marginBottom = '10px';
+                mobileDrawer.appendChild(backClone);
+            }
+            
+            // Clone Home Button
+            const homeBtn = document.querySelector('.tab-btn[data-src="tools/home.html"]').cloneNode(true);
+            attachMobileClick(homeBtn);
+            mobileDrawer.appendChild(homeBtn);
+
+            // Clone Dropdowns as Groups
+            document.querySelectorAll('.dropdown').forEach(dd => {
+                const title = dd.querySelector('.dropdown-toggle').innerText;
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'group-title';
+                groupTitle.innerText = title;
+                mobileDrawer.appendChild(groupTitle);
+
+                dd.querySelectorAll('.dropdown-content .tab-btn').forEach(btn => {
+                    const clone = btn.cloneNode(true);
+                    attachMobileClick(clone);
+                    mobileDrawer.appendChild(clone);
+                });
+            });
+        }
+
+        function attachMobileClick(btn) {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.src;
+                if(target) {
+                    frame.src = target;
+                    // Update active state in both navs
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    // Find original and add active
+                    const orig = document.querySelector(`.tab-btn[data-src="${target}"]`);
+                    if(orig) orig.classList.add('active');
+                    // Add active to this mobile btn (and siblings in drawer)
+                    // Actually, re-rendering drawer might be overkill, just setting active class is fine
+                    // Since we clone, the mobile btn is new. 
+                    // Let's just manually set active on all matching data-src
+                    document.querySelectorAll(`.tab-btn[data-src="${target}"]`).forEach(b => b.classList.add('active'));
+                    
+                    toggleMobileMenu(); // Close menu
+                }
+            });
+        }
 
     </script>
 </body>

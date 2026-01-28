@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件编码</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* Custom Styles for File Encoding Tool */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-dim);
+            margin-left: 8px;
+            transition: all 0.3s ease;
+        }
+        .status-badge.loading {
+            background: var(--secondary);
+            color: var(--bg-deep);
+            animation: pulse 1.5s infinite;
+        }
+        .status-badge.ready {
+            background: #10b981;
+            color: #fff;
+        }
+        .status-badge.error {
+            background: var(--accent);
+            color: #fff;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        .drop-zone:hover {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .file-list-widget {
+            margin-top: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none; /* Hidden by default */
+        }
+        
+        .file-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .file-list-item:last-child {
+            border-bottom: none;
+        }
+        .file-list-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .file-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+        .file-meta {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        .remove-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+            margin-left: 10px;
+            border-radius: 4px;
+        }
+        .remove-btn:hover {
+            color: var(--accent);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: center;
+        }
+        
+        @media (max-width: 600px) {
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        #file-b64enc-view, #file-b64dec-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        /* Ensure the active one is displayed correctly if JS misses it (though JS sets display:flex) */
+        #file-b64enc-view {
+            display: flex; /* Default active */
+        }
+    </style>
+</head>
+<body>
+    <div class="workspace" style="flex-direction: column;">
+        <div class="sub-tab-group">
+            <div class="sub-tab active" onclick="fileEncTool.switchSubTab('b64enc', this)">文件转 Base64/JSON</div>
+            <div class="sub-tab" onclick="fileEncTool.switchSubTab('b64dec', this)">Base64 还原下载</div>
+            <div class="sub-tab" onclick="fileEncTool.switchSubTab('seeder', this)">图种生成</div>
+            <div class="sub-tab" onclick="fileEncTool.switchSubTab('qrcode', this)">文件转二维码</div>
+        </div>
+
+        <!-- External Tool Container (Iframe) -->
+        <div id="external-tool-container" style="display:none; flex:1; width:100%; height:100%; overflow:hidden; border-radius: var(--radius-lg); background: var(--bg-panel); border: 1px solid var(--border);">
+            <iframe id="tool-frame" style="width:100%; height:100%; border:none; background: transparent;"></iframe>
+        </div>
+
+        <div class="workspace" id="inline-workspace">
+            <div class="panel">
+                
+                <!-- Base64 Encode SubTab -->
+                <div id="file-b64enc-view">
+                     <div class="panel-header">
+                        <div class="panel-title">
+                            文件转 Base64/JSON
+                            <div id="module-badges" style="display:inline-flex; margin-left: 10px;">
+                                <span id="badge-brotli" class="status-badge" title="Wasm Brotli Compression Module">Brotli: Idle</span>
+                                <span id="badge-zstd" class="status-badge" title="Wasm Zstd Compression Module">Zstd: Idle</span>
+                            </div>
+                        </div>
+                        <div class="panel-actions">
+                            <button class="btn btn-icon" onclick="fileEncTool.clearAllFiles()" title="清空文件列表">清空</button>
+                        </div>
+                    </div>
+                    
+                    <div style="padding:1.5rem; flex:1; display:flex; flex-direction:column; gap:1.5rem; overflow-y:auto;">
+                        
+                        <!-- Drop Zone -->
+                        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input-hidden').click()">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📄</div>
+                            <div style="font-weight: 600; font-size: 1.1rem;">点击选择或拖拽文件到此处</div>
+                            <div style="color: var(--text-dim); font-size: 0.9rem;">支持多文件批量处理</div>
+                            <input type="file" id="file-input-hidden" multiple style="display:none;" onchange="fileEncTool.handleB64Files(this.files)">
+                        </div>
+
+                        <!-- File List Widget -->
+                        <div id="file-list-widget" class="file-list-widget">
+                            <!-- Items injected by JS -->
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="control-grid">
+                            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                <label style="font-size:0.9rem; color:var(--text-dim);">压缩算法 (Compression):</label>
+                                <select id="b64-compress" style="width:100%; padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text-main);">
+                                    <option value="none">无压缩 (None)</option>
+                                    <option value="gzip">Gzip (Native Stream)</option>
+                                    <option value="deflate">Deflate (Native Stream)</option>
+                                    <option value="brotli">Brotli (Wasm)</option>
+                                    <option value="zstd">Zstd (Wasm)</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="fileEncTool.encodeB64()" style="height: 100%; padding: 0 2rem; font-weight: 800; text-shadow: none;">
+                                <span style="font-size:1.1rem;">🚀 生成 JSON</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Output Area -->
+                        <div style="display:flex; flex-direction:column; gap:0.5rem; flex:1; min-height: 200px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                                <label style="font-size:0.9rem;">输出结果 (Output):</label>
+                                <div class="toolbar" style="width:auto; height:auto; padding:0; background:none; border:none; gap:10px;">
+                                     <button class="btn btn-sm btn-secondary" onclick="app.copy('b64-out')" style="min-width:80px;">📋 复制</button>
+                                     <button class="btn btn-sm btn-secondary" onclick="fileEncTool.downloadB64Json()" style="min-width:100px; color:var(--primary); border-color:var(--primary);">💾 下载 .json</button>
+                                </div>
+                            </div>
+                            <textarea id="b64-out" placeholder="生成的 JSON 结果将显示在这里..." style="flex:1; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); padding: 1rem; font-family: monospace; font-size: 0.85rem;"></textarea>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Base64 Decode SubTab -->
+                <div id="file-b64dec-view" style="display:none; height:100%; flex-direction:column;">
+                    <div class="panel-header">
+                        <div class="panel-title">Base64 / JSON 还原文件</div>
+                        <div class="panel-actions">
+                             <button class="btn btn-icon" onclick="document.getElementById('b64-in').value=''; document.getElementById('b64-restore-list').innerHTML='';">清空</button>
+                        </div>
+                    </div>
+                    <div style="padding:1.5rem; flex:1; display:flex; flex-direction:column; gap:1.5rem; overflow:hidden;">
+                        <!-- Drop Zone for JSON Restore -->
+                        <div class="upload-area" id="restore-drop-zone" onclick="document.getElementById('file-restore-input').click()">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📂</div>
+                            <div style="font-weight: 600; font-size: 1.1rem;">点击或拖拽 JSON 文件到此处</div>
+                            <div style="color: var(--text-dim); font-size: 0.9rem;">支持 .json, .txt 文件</div>
+                            <input type="file" id="file-restore-input" accept=".json,.txt" style="display:none;" onchange="fileEncTool.loadJsonFile(this)">
+                        </div>
+                        
+                         <textarea id="b64-in" placeholder="在此粘贴 Base64 字符串 或 之前生成的 JSON..." style="height:150px; flex:none; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); padding:1rem;"></textarea>
+                         
+                         <!-- Manual Base64 Restore Options -->
+                         <div id="manual-b64-opts" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; border-top:1px solid var(--border); padding-top:1rem;">
+                            <span style="font-size:0.8rem; color:var(--secondary); font-weight:600;">单文件手动还原:</span>
+                            <input type="text" id="manual-name" placeholder="文件名 (e.g. test.png)" style="padding:6px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:var(--text-main);">
+                            <select id="manual-mime" style="padding:6px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:var(--text-main);">
+                                <option value="application/octet-stream">Auto/Bin</option>
+                                <option value="image/png">PNG</option>
+                                <option value="image/jpeg">JPG</option>
+                                <option value="application/pdf">PDF</option>
+                                <option value="text/plain">TXT</option>
+                            </select>
+                            <button class="btn btn-sm" onclick="fileEncTool.downloadManual()">下载</button>
+                            <div style="flex:1; text-align:right;">
+                                <button class="btn btn-primary btn-sm" onclick="fileEncTool.restoreB64()">🚀 解析并还原</button>
+                            </div>
+                         </div>
+
+                         <div style="flex:1; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:10px; background:rgba(0,0,0,0.1);">
+                             <div id="b64-restore-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                         </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script src="../js/loader.js"></script>
+    <script>
+        // Initialize dependencies
+        ResourceLoader.load('file-saver').catch(e => console.error("Failed to load FileSaver", e));
+
+        const fileEncTool = {
+            b64Files: [], // Array of File objects
+            worker: null,
+            currentJsonBlob: null,
+            
+            initWorker: function() {
+                if(this.worker) return;
+                this.worker = new Worker('../js/workers/file-enc.worker.js');
+                this.worker.onmessage = (e) => {
+                    const { id, status, result, error, type, msg, data } = e.data;
+                    
+                    // Handle status updates
+                    if (type === 'status') {
+                        app.showToast(msg, 'info');
+                        return;
+                    }
+                    if (type === 'warning') {
+                        app.showToast(msg, 'warning');
+                        return;
+                    }
+
+                    // Handle chunks
+                    if (type === 'chunk') {
+                        if (this.pendingTasks[id] && this.pendingTasks[id].onChunk) {
+                            this.pendingTasks[id].onChunk(data);
+                        }
+                        return;
+                    }
+
+                    // Handle task completion
+                    if (this.pendingTasks[id]) {
+                        if (status === 'success') {
+                            this.pendingTasks[id].resolve(result);
+                        } else {
+                            this.pendingTasks[id].reject(new Error(error));
+                        }
+                        delete this.pendingTasks[id];
+                    }
+                };
+                this.pendingTasks = {};
+            },
+
+            runWorkerTask: function(action, payload, onChunk) {
+                this.initWorker();
+                return new Promise((resolve, reject) => {
+                    const id = Date.now() + '_' + Math.random();
+                    this.pendingTasks[id] = { resolve, reject, onChunk };
+                    this.worker.postMessage({ id, action, payload });
+                });
+            },
+
+            switchSubTab: function(id, el) {
+                document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+                el.classList.add('active');
+                
+                const inlineWs = document.getElementById('inline-workspace');
+                const extWs = document.getElementById('external-tool-container');
+                const frame = document.getElementById('tool-frame');
+
+                if (id === 'seeder' || id === 'qrcode') {
+                    inlineWs.style.display = 'none';
+                    extWs.style.display = 'block';
+                    
+                    if (id === 'seeder') frame.src = 'image-seeder.html';
+                    if (id === 'qrcode') frame.src = 'file-qrcode.html';
+                } else {
+                    inlineWs.style.display = 'flex';
+                    extWs.style.display = 'none';
+
+                    document.getElementById('file-b64enc-view').style.display = 'none';
+                    document.getElementById('file-b64dec-view').style.display = 'none';
+                    
+                    const view = document.getElementById(`file-${id}-view`);
+                    if (view) {
+                        view.style.display = 'flex';
+                    }
+                }
+            },
+            
+            // --- Base64 / JSON Features ---
+            
+            handleB64Files: function(files) {
+                // Append new files to existing list
+                const newFiles = Array.from(files);
+                this.b64Files = [...this.b64Files, ...newFiles];
+                
+                this.updateFileListUI();
+                app.showToast(`添加了 ${newFiles.length} 个文件`);
+            },
+            
+            removeFile: function(index) {
+                this.b64Files.splice(index, 1);
+                this.updateFileListUI();
+            },
+            
+            clearAllFiles: function() {
+                this.b64Files = [];
+                this.updateFileListUI();
+                // Also reset input to allow re-selecting same file
+                document.getElementById('file-input-hidden').value = '';
+            },
+            
+            updateFileListUI: function() {
+                const container = document.getElementById('file-list-widget');
+                const dropZone = document.getElementById('drop-zone');
+                const restoreDropZone = document.getElementById('restore-drop-zone');
+                
+                // Helper for DnD
+                const setupDnD = (el, handler) => {
+                    if(!el) return;
+                    el.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        el.style.borderColor = 'var(--primary)';
+                        el.style.background = 'rgba(255,255,255,0.05)';
+                    });
+                    el.addEventListener('dragleave', (e) => {
+                        e.preventDefault();
+                        el.style.borderColor = 'var(--border)';
+                        el.style.background = 'rgba(0,0,0,0.1)';
+                    });
+                    el.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        el.style.borderColor = 'var(--border)';
+                        el.style.background = 'rgba(0,0,0,0.1)';
+                        if(e.dataTransfer.files.length > 0) {
+                            handler(e.dataTransfer.files);
+                        }
+                    });
+                };
+                
+                setupDnD(dropZone, (files) => this.handleB64Files(files));
+                setupDnD(restoreDropZone, (files) => {
+                    // Wrap single file in mock input object for existing loadJsonFile
+                    this.loadJsonFile({files: files});
+                });
+
+                container.innerHTML = '';
+                
+                if (this.b64Files.length === 0) {
+                    container.style.display = 'none';
+                    return;
+                }
+                
+                container.style.display = 'block';
+                
+                this.b64Files.forEach((file, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'file-list-item';
+                    div.innerHTML = `
+                        <div class="file-info">
+                            <span class="file-name" title="${file.name}">${file.name}</span>
+                            <span class="file-meta">${(file.size / 1024).toFixed(1)} KB | ${file.type || 'Unknown'}</span>
+                        </div>
+                        <button class="remove-btn" onclick="fileEncTool.removeFile(${index})" title="移除文件">✕</button>
+                    `;
+                    container.appendChild(div);
+                });
+            },
+            
+            updateBadge: function(type, status) {
+                const badge = document.getElementById(`badge-${type}`);
+                if(!badge) return;
+                
+                badge.className = 'status-badge'; // Reset
+                
+                if(status === 'loading') {
+                    badge.classList.add('loading');
+                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: Loading...`;
+                } else if (status === 'ready') {
+                    badge.classList.add('ready');
+                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: Ready`;
+                } else if (status === 'error') {
+                    badge.classList.add('error');
+                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: Error`;
+                } else {
+                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: Idle`;
+                }
+            },
+
+            encodeB64: async function() {
+                if (this.b64Files.length === 0) {
+                    app.showToast('请先选择文件', 'error');
+                    return;
+                }
+                
+                const compressFmt = document.getElementById('b64-compress').value;
+                
+                // Update badges
+                if (compressFmt === 'brotli') this.updateBadge('brotli', 'loading');
+                if (compressFmt === 'zstd') this.updateBadge('zstd', 'loading');
+
+                app.showToast('正在处理...', 'info');
+                document.getElementById('b64-out').value = '正在生成...';
+                this.currentJsonBlob = null;
+                
+                try {
+                    const chunks = [];
+                    // Use streaming
+                    await this.runWorkerTask('encode_stream', {
+                        files: this.b64Files,
+                        compressFmt
+                    }, (chunk) => {
+                        chunks.push(chunk);
+                    });
+                    
+                    this.currentJsonBlob = new Blob(chunks, {type: 'application/json'});
+                    
+                    // Check size for preview (Limit 2MB)
+                    if (this.currentJsonBlob.size < 2 * 1024 * 1024) {
+                         const text = await this.currentJsonBlob.text();
+                         document.getElementById('b64-out').value = text;
+                    } else {
+                         document.getElementById('b64-out').value = `[文件过大 (${(this.currentJsonBlob.size/1024/1024).toFixed(2)} MB) 无法预览，请直接下载]`;
+                    }
+
+                    app.showToast('生成成功');
+                    
+                    if (compressFmt === 'brotli') this.updateBadge('brotli', 'ready');
+                    if (compressFmt === 'zstd') this.updateBadge('zstd', 'ready');
+                } catch (e) {
+                    console.error(e);
+                    app.showToast('生成失败: ' + e.message, 'error');
+                    document.getElementById('b64-out').value = '';
+                    if (compressFmt === 'brotli') this.updateBadge('brotli', 'error');
+                    if (compressFmt === 'zstd') this.updateBadge('zstd', 'error');
+                }
+            },
+            
+            downloadB64Json: function() {
+                if (this.currentJsonBlob) {
+                     saveAs(this.currentJsonBlob, `filebundle_${new Date().getTime()}.json`);
+                     return;
+                }
+                const content = document.getElementById('b64-out').value;
+                if(!content || content.startsWith('[文件过大')) {
+                     if (!this.currentJsonBlob) app.showToast('无有效内容可下载', 'error');
+                     return;
+                }
+                const blob = new Blob([content], {type: 'application/json'});
+                saveAs(blob, `filebundle_${new Date().getTime()}.json`);
+            },
+            
+            loadJsonFile: function(input) {
+                const file = input.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('b64-in').value = e.target.result;
+                    app.showToast('JSON 加载成功');
+                };
+                reader.readAsText(file);
+            },
+            
+            restoreB64: async function() {
+                const inputVal = document.getElementById('b64-in').value.trim();
+                if(!inputVal) return;
+                
+                const listEl = document.getElementById('b64-restore-list');
+                listEl.innerHTML = '';
+                
+                app.showToast('正在解析并还原...', 'info');
+                
+                try {
+                    const results = await this.runWorkerTask('decode', {
+                        jsonStr: inputVal
+                    });
+                    
+                    for (const f of results) {
+                        const blob = new Blob([f.data], {type: f.type});
+                        const item = document.createElement('div');
+                        item.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);";
+                        item.innerHTML = `
+                            <div style="overflow:hidden; text-overflow:ellipsis;">
+                                <div style="font-weight:bold">${f.name}</div>
+                                <div style="font-size:0.8rem; color:var(--text-dim)">${(f.data.length/1024).toFixed(1)} KB | ${f.type || 'Unknown'}</div>
+                            </div>
+                        `;
+                        
+                        const btn = document.createElement('button');
+                        btn.className = 'btn btn-sm btn-secondary';
+                        btn.innerText = '下载';
+                        btn.onclick = () => saveAs(blob, f.name);
+                        
+                        item.appendChild(btn);
+                        listEl.appendChild(item);
+                    }
+                    app.showToast('还原完成');
+                } catch(e) {
+                    console.error(e);
+                    app.showToast('还原失败: ' + e.message, 'error');
+                }
+            },
+            
+            downloadManual: function() {
+                const b64 = document.getElementById('b64-in').value.trim();
+                if(!b64) {
+                    app.showToast('请先输入 Base64 数据', 'error');
+                    return;
+                }
+                
+                // Strip data: prefix if present
+                const cleanB64 = b64.replace(/^data:.*?;base64,/, '');
+                
+                try {
+                    const binString = atob(cleanB64);
+                    const len = binString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binString.charCodeAt(i);
+                    }
+                    
+                    const mime = document.getElementById('manual-mime').value;
+                    const name = document.getElementById('manual-name').value || 'download.bin';
+                    
+                    const blob = new Blob([bytes], {type: mime});
+                    saveAs(blob, name);
+                } catch(e) {
+                    app.showToast('Base64 解码失败', 'error');
+                }
+            }
+        };
+    </script>
+</body>
+</html>

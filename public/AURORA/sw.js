@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-toolbox-v1';
+const CACHE_NAME = 'aurora-toolbox-v2';
 const DYNAMIC_LIBS = [
     'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js',
     'https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js',
@@ -25,7 +25,18 @@ const DYNAMIC_LIBS = [
     'https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
     'https://cdn.jsdelivr.net/npm/fflate@0.8.0/umd/index.min.js',
-    'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js'
+    'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js',
+    'https://cdn.jsdelivr.net/npm/hash-wasm@4.9.0/dist/index.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/jsondiffpatch@0.4.1/dist/jsondiffpatch.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/jsondiffpatch@0.4.1/dist/formatters-styles/html.css',
+    'https://unpkg.com/brotli-wasm@1.3.1/index.web.js',
+    'https://unpkg.com/brotli-wasm@1.3.1/brotli_wasm_bg.wasm',
+    'https://cdn.jsdelivr.net/npm/markdown-wasm/dist/markdown.js',
+    'https://cdn.jsdelivr.net/npm/markdown-wasm/dist/markdown.wasm',
+    'https://cdn.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs.js',
+    'https://cdn.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs_bg.wasm',
+    'https://unpkg.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
+    'https://unpkg.com/zstd-wasm@0.0.21/dist/zstd-wasm.wasm'
 ];
 
 const APP_SHELL = [
@@ -34,6 +45,7 @@ const APP_SHELL = [
     './css/style.css',
     './js/app.js',
     './js/loader.js',
+    './js/perf-monitor.js',
     './favicon.svg',
     './tools/home.html'
 ];
@@ -50,45 +62,47 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-    event.waitUntil(clients.claim()); // Take control of all clients immediately
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => clients.claim())
+    );
 });
 
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
-    // Cache First for Dynamic Libs (CDN)
-    if (DYNAMIC_LIBS.includes(url.href) || DYNAMIC_LIBS.some(lib => url.href.startsWith(lib))) {
-        event.respondWith(
-            caches.match(event.request).then(response => {
-                if (response) return response;
-                return fetch(event.request).then(networkResponse => {
-                    // Clone safely
-                    try {
-                        const responseToCache = networkResponse.clone();
-                        caches.open(CACHE_NAME).then(cache => {
-                            cache.put(event.request, responseToCache);
-                        });
-                    } catch (e) { console.warn('Cache clone failed:', e); }
-                    return networkResponse;
-                });
-            })
-        );
-        return;
-    }
-
-    // Stale-While-Revalidate for App Shell & Tools
+    // Stale-While-Revalidate Strategy
+    // Works for both App Shell and Dynamic Libs
+    // 1. Return cached response immediately if available (Stale)
+    // 2. Fetch from network in background (Revalidate)
+    // 3. Update cache with network response
     event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            const fetchPromise = fetch(event.request).then(networkResponse => {
-                try {
-                    const responseToCache = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, responseToCache);
-                    });
-                } catch (e) { console.warn('Cache clone failed:', e); }
-                return networkResponse;
+        caches.open(CACHE_NAME).then(cache => {
+            return cache.match(event.request).then(cachedResponse => {
+                const fetchPromise = fetch(event.request).then(networkResponse => {
+                    // Update cache with new response
+                    if (networkResponse.ok) {
+                        try {
+                            cache.put(event.request, networkResponse.clone());
+                        } catch (e) { console.warn('Cache update failed:', e); }
+                    }
+                    return networkResponse;
+                }).catch(err => {
+                    // Network failed, if we have no cache, throw error
+                    // If we have cache, the outer promise chain handles it (returns cachedResponse)
+                    // But if both fail?
+                    console.warn('Network fetch failed:', err);
+                });
+
+                return cachedResponse || fetchPromise;
             });
-            return cachedResponse || fetchPromise;
         })
     );
 });

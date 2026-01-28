@@ -22,7 +22,7 @@ export default [
       items: [
         { text: 'Windows11美化(自用24H2)',
           items: [
-          { text: '硬盘图标修改', link: '../../../DiskIconChanger.html', target: '_self', },
+          { text: '硬盘图标修改', link: '../../../Beautify/DiskIconChanger.html', target: '_self', },
           { text: 'Win11文件管理器背景', link: '../../../Beautify/ExplorerBg.md', target: '_self', },
           { text: 'Win11文件管理器透明', link: '../../../Beautify/ExplorerBlueMica.md', target: '_self', },
           ],

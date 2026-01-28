@@ -6,200 +6,44 @@
     <title>故障艺术生成器</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        body {
-            background: transparent;
-            padding: 20px;
-            overflow-y: auto;
-            display: block;
-            height: auto;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
-        }
-
-        .panel {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        .mode-tabs {
-            display: flex;
-            margin-bottom: 5px;
-            border-bottom: 1px solid var(--border);
-        }
-        .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            color: var(--text-dim);
-            border-bottom: 2px solid transparent;
-            font-size: 0.95rem;
-            transition: all 0.3s;
-        }
-        .tab.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-        }
-        .tab:hover:not(.active) {
-            color: var(--text-main);
-        }
-
-        .control-group {
-            border-bottom: 1px dashed rgba(255,255,255,0.1);
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-        }
-        .control-group:last-child { border-bottom: none; }
-
-        .control-title {
-            color: var(--primary);
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.95rem;
-        }
-
+        /* Tool-specific overrides only */
         .slider-row {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 8px;
         }
-        .slider-row label { flex: 1; font-size: 0.85rem; color: var(--text-main); }
+        .slider-row label { flex: 1; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0; }
         .slider-row span { font-size: 0.85rem; color: var(--secondary); width: 30px; text-align: right; }
-
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-            appearance: none;
-            flex: 2;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            appearance: none;
-            width: 14px;
-            height: 14px;
-            background: var(--primary);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-        .btn {
-            width: 100%;
-            padding: 10px;
-            border-radius: var(--radius-sm);
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.95rem;
+        
+        .control-title {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
             margin-bottom: 10px;
-        }
-        .btn-primary { 
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white; 
-        }
-        .btn-primary:hover { 
-            box-shadow: 0 4px 15px rgba(192, 132, 252, 0.4); 
-        }
-        .btn-secondary { 
-            background: transparent;
-            border: 1px solid var(--secondary);
-            color: var(--secondary);
-        }
-        .btn-secondary:hover { 
-            background: rgba(45, 212, 191, 0.1);
-        }
-        .btn-upload {
-            background: rgba(255,255,255,0.1);
-            color: var(--text-main);
-            border: 1px dashed var(--border);
-        }
-        .btn-upload:hover {
-            border-color: var(--primary);
-            background: rgba(192, 132, 252, 0.1);
-        }
-
-        .preview-container {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 500px;
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        canvas {
-            max-width: 100%;
-            max-height: 80vh;
-            object-fit: contain;
-            border-radius: var(--radius-md);
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-        }
-
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-            margin-bottom: 15px;
-        }
-        .file-input-wrapper input[type=file] {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        @media (max-width: 800px) {
-            .container { grid-template-columns: 1fr; }
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.95rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="layout-sidebar">
         <!-- Controls -->
-        <div class="panel">
-            <h2 style="margin:0 0 10px 0; color:var(--primary); font-size:1.5rem;">故障艺术生成器</h2>
+        <div class="controls panel">
+            <h2 style="margin:0 0 15px 0; color:var(--primary); font-size:1.5rem;">故障艺术</h2>
             
-            <div class="file-input-wrapper">
-                <button class="btn btn-upload">📂 上传图片</button>
-                <input type="file" id="input-file" accept="image/*">
+            <div class="control-group">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-dim);"></i>
+                    <div style="font-size: 0.8rem;">点击 or 拖放图片</div>
+                    <input type="file" id="input-file" accept="image/*" hidden>
+                </div>
             </div>
 
-            <div class="mode-tabs">
-                <div class="tab active" onclick="setMode('layer')">图层故障</div>
-                <div class="tab" onclick="setMode('data')">数据破坏</div>
+            <div class="sub-tab-group">
+                <div class="sub-tab active" onclick="setMode('layer')">图层故障</div>
+                <div class="sub-tab" onclick="setMode('data')">数据破坏</div>
             </div>
 
             <!-- MODE: Layer Glitch (Canvas) -->
@@ -260,13 +104,13 @@
                     </div>
                 </div>
                 
-                <button class="btn btn-primary" id="btn-render">⚡ 重新渲染</button>
-                <button class="btn btn-secondary" id="btn-random">🎲 随机参数</button>
+                <button class="btn btn-primary" id="btn-render" style="width: 100%; margin-bottom: 10px;">⚡ 重新渲染</button>
+                <button class="btn btn-secondary" id="btn-random" style="width: 100%;">🎲 随机参数</button>
             </div>
 
             <!-- MODE: Data Glitch (Binary) -->
             <div id="controls-data" style="display: none;">
-                <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px;">
+                <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px; padding: 10px; background: rgba(244, 63, 94, 0.1); border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.2);">
                     ⚠️ 警告：这是对 JPEG 二进制数据的破坏性编辑，结果不可预测且可能导致图片无法显示。
                 </p>
                 
@@ -289,17 +133,17 @@
                     </div>
                 </div>
 
-                <button class="btn btn-secondary" id="btn-mosh">☠️ 破坏数据 (MOSH)</button>
+                <button class="btn btn-danger" id="btn-mosh" style="width: 100%;">☠️ 破坏数据 (MOSH)</button>
             </div>
             
-            <a id="btn-download" class="btn btn-success" style="text-align:center; text-decoration:none; margin-top: auto; display: none;">💾 保存图片</a>
+            <a id="btn-download" class="btn btn-success" style="text-align:center; text-decoration:none; margin-top: auto; display: none; justify-content: center;">💾 保存图片</a>
         </div>
 
         <!-- Preview -->
-        <div class="preview-container">
+        <div class="preview-area">
             <div id="placeholder-text" style="color:var(--text-dim);">请先上传图片</div>
-            <canvas id="cvs-main" style="display:none;"></canvas>
-            <img id="img-mosh" style="display: none; max-width: 100%; max-height: 80vh; border-radius: 8px;">
+            <canvas id="cvs-main" class="canvas-responsive" style="display:none; border-radius: var(--radius-md); box-shadow: var(--shadow);"></canvas>
+            <img id="img-mosh" class="canvas-responsive" style="display: none; border-radius: var(--radius-md); box-shadow: var(--shadow);">
         </div>
 
     </div>
@@ -362,7 +206,7 @@
         // --- Mode Switching ---
         window.setMode = (mode) => {
             currentMode = mode;
-            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sub-tab').forEach(el => el.classList.remove('active'));
             event.target.classList.add('active');
             
             document.getElementById('controls-layer').style.display = mode === 'layer' ? 'block' : 'none';
@@ -380,8 +224,23 @@
         };
 
         // --- File Loading ---
-        document.getElementById('input-file').onchange = (e) => {
-            const file = e.target.files[0];
+        const uploadArea = document.getElementById('uploadArea');
+        const inputFile = document.getElementById('input-file');
+
+        uploadArea.addEventListener('click', () => inputFile.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border)'; });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--border)';
+            if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+        });
+
+        inputFile.onchange = (e) => {
+            if(e.target.files[0]) handleFile(e.target.files[0]);
+        };
+
+        function handleFile(file) {
             if(!file) return;
             
             document.getElementById('placeholder-text').style.display = 'none';
@@ -405,7 +264,7 @@
                 srcImg.src = ev.target.result;
             };
             reader.readAsDataURL(file);
-        };
+        }
 
         // --- Layer Glitch Logic ---
         function renderLayerGlitch() {

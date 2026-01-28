@@ -1,45 +1,34 @@
 self.onmessage = function(e) {
-    const { type, dataFront, dataBack, config } = e.data;
+    const { cmd, imgFront, imgBack, width, height, alphaBoost } = e.data;
 
-    if (type === 'process') {
+    if (cmd === 'process') {
         try {
-            const w = config.width;
-            const h = config.height;
-            const contrast = config.contrast;
-            const brightness = config.brightness;
-            
-            // Output buffer
-            const outputData = new Uint8ClampedArray(w * h * 4);
-            
-            const split = 128 + brightness;
-            
-            for (let i = 0; i < w * h * 4; i += 4) {
-                // Grayscale
-                const rA = dataFront[i], gA = dataFront[i+1], bA = dataFront[i+2];
-                const rB = dataBack[i], gB = dataBack[i+1], bB = dataBack[i+2];
-                
-                const grayA = 0.299 * rA + 0.587 * gA + 0.114 * bA;
-                const grayB = 0.299 * rB + 0.587 * gB + 0.114 * bB;
+            const d1 = new Uint8ClampedArray(imgFront);
+            const d2 = new Uint8ClampedArray(imgBack);
+            const outputData = new Uint8ClampedArray(width * height * 4);
 
-                const A_new = (grayA / 255.0) * (255 - split) + split;
-                const B_new = (grayB / 255.0) * split;
+            for(let i=0; i<d1.length; i+=4) {
+                // Gray conversion
+                const g1 = 0.299*d1[i] + 0.587*d1[i+1] + 0.114*d1[i+2];
+                const g2 = 0.299*d2[i] + 0.587*d2[i+1] + 0.114*d2[i+2];
                 
-                let alpha = 255 - (A_new - B_new);
+                // Formula: Alpha = 255 - (g1 - g2)
+                let a = 255 - (g1 - g2);
+                if (a < 0) a = 0;
+                if (a > 255) a = 255;
                 
-                let gray;
-                if (alpha === 0) {
-                    gray = 0;
-                } else {
-                    gray = (B_new * 255) / alpha;
-                }
-                
+                // C_a = g2 / alpha (approx)
+                let gray = 0;
+                if (a > 0) gray = 255 * g2 / a;
+                if (gray > 255) gray = 255;
+
                 outputData[i] = gray;
                 outputData[i+1] = gray;
                 outputData[i+2] = gray;
-                outputData[i+3] = alpha;
+                outputData[i+3] = a * alphaBoost; // Apply boost
             }
             
-            self.postMessage({ type: 'complete', outputData: outputData }, [outputData.buffer]);
+            self.postMessage({ type: 'success', outputData: outputData.buffer }, [outputData.buffer]);
         } catch (error) {
             self.postMessage({ type: 'error', error: error.message });
         }

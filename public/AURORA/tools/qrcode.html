@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>二维码生成器</title>
     <link rel="stylesheet" href="../css/style.css">
-    <!-- Use EasyQRCodeJS for richer features -->
-    <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js"></script>
     <style>
         /* 布局重构：响应式流式布局 */
         .workspace-split {
@@ -231,6 +229,7 @@
 
     <div id="toast" class="toast">操作成功</div>
     <script src="../js/app.js"></script>
+    <script src="../js/loader.js"></script>
     <script>
         // Sync color pickers
         document.getElementById('qr-color-dark').addEventListener('input', (e) => {
@@ -283,6 +282,14 @@
 
             if (!text) {
                 // Don't toast on initial load empty, just return
+                return;
+            }
+
+            if (typeof QRCode === 'undefined') {
+                app.showToast('正在加载组件...', 'info');
+                ResourceLoader.load('easyqrcodejs').then(() => {
+                    generateQR(); // Retry after load
+                });
                 return;
             }
 

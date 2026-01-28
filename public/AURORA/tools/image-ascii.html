@@ -25,7 +25,7 @@
         
         .sidebar {
             width: 300px;
-            background: rgba(20, 25, 40, 0.6);
+            background: var(--bg-panel);
             border-radius: var(--radius-lg);
             padding: 1rem;
             border: 1px solid var(--border);
@@ -37,7 +37,7 @@
         
         .main-view {
             flex: 1;
-            background: rgba(20, 25, 40, 0.6);
+            background: var(--bg-panel);
             border-radius: var(--radius-lg);
             padding: 1rem;
             border: 1px solid var(--border);
@@ -55,8 +55,8 @@
             font-size: 8px; /* Dynamic */
             line-height: 8px;
             overflow: auto;
-            background: #000;
-            color: #fff;
+            background: var(--bg-panel);
+            color: var(--text-main);
             padding: 1rem;
             border-radius: var(--radius-md);
             text-align: center;
@@ -78,7 +78,7 @@
         
         select, input[type="number"], input[type="color"] {
             width: 100%;
-            background: rgba(0,0,0,0.3);
+            background: var(--input-bg);
             border: 1px solid var(--border);
             color: var(--text-main);
             padding: 0.5rem;
@@ -98,8 +98,11 @@
             
             <div class="control-group">
                 <label>上传媒体 (图片/视频/GIF)</label>
-                <input type="file" id="fileInput" accept="image/*,video/*" style="display:none">
-                <button class="btn btn-secondary" style="width:100%; justify-content:center;" onclick="document.getElementById('fileInput').click()">选择文件</button>
+                <div class="upload-area" id="uploadArea" style="border: 2px dashed var(--border); border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; background: var(--input-bg); transition: all 0.3s ease;">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-dim);"></i>
+                    <div style="font-size: 0.8rem;">点击或拖放文件</div>
+                    <input type="file" id="fileInput" accept="image/*,video/*" hidden>
+                </div>
             </div>
             
             <div class="control-group">
@@ -174,6 +177,17 @@
         const videoEl = document.getElementById('sourceVideo');
         const videoControls = document.getElementById('video-controls');
         const playPauseBtn = document.getElementById('playPauseBtn');
+        const uploadArea = document.getElementById('uploadArea');
+        
+        // Setup Drag and Drop
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border)'; });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--border)';
+            if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+        });
         
         let currentSource = null; // 'image' or 'video'
         let currentImg = null;
@@ -216,7 +230,10 @@
         }
 
         fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
+            if(e.target.files[0]) handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
             if(!file) return;
             
             // Stop previous video if any
@@ -246,7 +263,7 @@
                 };
                 img.src = url;
             }
-        });
+        }
         
         playPauseBtn.addEventListener('click', () => {
             if (videoEl.paused) {

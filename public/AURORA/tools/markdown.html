@@ -121,8 +121,18 @@
                 <button class="btn btn-primary" onclick="mdTool.toMd()">转 MD →</button>
             </div>
             <div class="tool-group">
+                <div class="group-label">引擎</div>
+                <select id="md-engine" onchange="mdTool.onEngineChange()" style="font-size:0.8rem; padding:4px;">
+                    <option value="js">JavaScript (Regex)</option>
+                    <option value="wasm">WebAssembly (High Perf)</option>
+                </select>
+                <div id="engine-status" style="font-size:0.75rem; color:var(--text-dim); display:none;">
+                    Wasm Loaded
+                </div>
+            </div>
+            <div class="tool-group">
                 <div class="group-label">选项</div>
-                <label style="font-size:0.8rem; display:flex; align-items:center; gap:8px; cursor:pointer; color: var(--text-main);">
+                <label style="font-size:0.8rem; display:flex; align-items:center; gap:8px; cursor:pointer;">
                     <input type="checkbox" id="md-escape" checked> 转义特殊字符
                 </label>
             </div>
@@ -185,9 +195,18 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="../js/loader.js"></script>
     <script src="../js/app.js"></script>
     <script>
+        // Register markdown-wasm in loader (custom manual registration if not in loader.js)
+        // Or we can just load it dynamically here.
+        // Let's assume ResourceLoader handles standard libs, but for wasm we might need direct handling or custom loader entry.
+        // Since we didn't add markdown-wasm to loader.js registry, we'll handle it here or update loader.js? 
+        // Updating loader.js is better practice but for now direct import/script is fine if we handle fallback.
+        // Actually, let's just add it to the script tags dynamically if needed.
+        
+        let wasmModule = null;
+
         const ENTITY_DATA = [
             {
                 category: "数学符号 (Math)",
@@ -347,6 +366,66 @@
         ];
 
         const mdTool = {
+            wasmLoaded: false,
+            
+            onEngineChange: function() {
+                const engine = document.getElementById('md-engine').value;
+                if(engine === 'wasm') {
+                    this.loadWasm();
+                }
+            },
+
+            loadWasm: function() {
+                if(this.wasmLoaded) return;
+                
+                app.showToast('正在加载 WebAssembly 模块...', 'info');
+                
+                // Try ESM first
+                ResourceLoader.import('markdown-wasm-esm').then(module => {
+                    // ESM usually exports { parse, ready }
+                    // Or default export.
+                    // markdown-wasm esm export: export { parse, ready, ... }
+                    if(module.ready) {
+                        module.ready.then(() => {
+                            window.markdown = module; // shim for existing code
+                            this.onWasmReady();
+                        });
+                    } else {
+                        // Maybe default export?
+                        // If direct esm fail, try UMD fallback in catch
+                        throw new Error("Invalid ESM module structure");
+                    }
+                }).catch(e => {
+                    console.warn("Markdown ESM load failed, trying UMD...", e);
+                    // Fallback to UMD
+                    ResourceLoader.load('markdown-wasm').then(() => {
+                        window.markdown.ready.then(() => {
+                            this.onWasmReady();
+                        }).catch(err => {
+                            console.error(err);
+                            this.fallbackToJs('Wasm 初始化失败');
+                        });
+                    }).catch(() => {
+                        this.fallbackToJs('Wasm 下载失败');
+                    });
+                });
+            },
+            
+            onWasmReady: function() {
+                this.wasmLoaded = true;
+                document.getElementById('engine-status').style.display = 'block';
+                document.getElementById('engine-status').innerText = 'Wasm Ready';
+                document.getElementById('engine-status').style.color = 'var(--primary)';
+                app.showToast('Wasm 引擎加载成功');
+            },
+
+            fallbackToJs: function(reason) {
+                app.showToast(reason + '，已自动降级回 JavaScript 引擎', 'error');
+                document.getElementById('md-engine').value = 'js';
+                this.wasmLoaded = false;
+                document.getElementById('engine-status').style.display = 'none';
+            },
+
             showEntityModal: function() {
                 const modal = document.getElementById('entity-modal');
                 const body = document.getElementById('entity-list-body');
@@ -407,10 +486,26 @@
             },
 
             toHtml: function() {
-                let md = document.getElementById('md-input').value;
+                let mdContent = document.getElementById('md-input').value;
+                const engine = document.getElementById('md-engine').value;
+
+                if (engine === 'wasm' && this.wasmLoaded) {
+                    try {
+                        const html = window.markdown.parse(mdContent);
+                        document.getElementById('md-output').value = html;
+                        app.showToast('转换完成 (Wasm)');
+                        return;
+                    } catch(e) {
+                        console.error(e);
+                        app.showToast('Wasm 转换出错，尝试 JS 降级...', 'error');
+                        // Fallback continue below
+                    }
+                }
+
+                // JS Fallback / Default
                 const shouldEscape = document.getElementById('md-escape').checked;
                 
-                let html = md;
+                let html = mdContent;
                 
                 // 如果开启转义，先对全文进行转义
                 if (shouldEscape) {
@@ -441,22 +536,25 @@
                 const file = input.files[0];
                 if (!file) return;
                 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const arrayBuffer = e.target.result;
-                    mammoth.convertToHtml({arrayBuffer: arrayBuffer})
-                        .then(function(result) {
-                            const html = result.value; 
-                            const md = mdTool.convertHtmlStrToMd(html);
-                            document.getElementById('md-input').value = md;
-                            app.showToast('Word 导入成功');
-                        })
-                        .catch(function(error) {
-                            console.error(error);
-                            app.showToast('Word 转换失败: ' + error.message);
-                        });
-                };
-                reader.readAsArrayBuffer(file);
+                app.showToast('正在加载组件...', 'info');
+                ResourceLoader.load('mammoth').then(() => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const arrayBuffer = e.target.result;
+                        mammoth.convertToHtml({arrayBuffer: arrayBuffer})
+                            .then(function(result) {
+                                const html = result.value; 
+                                const md = mdTool.convertHtmlStrToMd(html);
+                                document.getElementById('md-input').value = md;
+                                app.showToast('Word 导入成功');
+                            })
+                            .catch(function(error) {
+                                console.error(error);
+                                app.showToast('Word 转换失败: ' + error.message);
+                            });
+                    };
+                    reader.readAsArrayBuffer(file);
+                });
             },
 
             convertHtmlStrToMd: function(html) {

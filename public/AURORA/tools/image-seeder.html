@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图种生成器</title>
     <link rel="stylesheet" href="../css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/loader.js"></script>
     <style>
         body {
             background: transparent;
@@ -272,7 +273,7 @@
                     <input type="file" id="input-zip" accept=".zip,.rar,.7z,.tar" style="display: none;">
                     <div class="upload-zone" onclick="document.getElementById('input-zip').click()" style="min-height: 120px;">
                         <p id="ph-zip" style="color: var(--text-dim);">点击上传已有的压缩包 (.zip/.rar等)</p>
-                        <div id="zip-info" style="display:none; color: var(--success); font-weight: bold; margin-top: 10px;"></div>
+                        <div id="zip-info" style="display:none; color: var(--secondary); font-weight: bold; margin-top: 10px;"></div>
                     </div>
                 </div>
             </div>
@@ -465,7 +466,10 @@
                     finalZipBlob = hiddenBlob;
                 } else {
                     if (hiddenFiles.length === 0) throw new Error("请至少选择一个文件！");
-                    if (typeof JSZip === 'undefined') throw new Error("JSZip 库加载失败，请检查网络连接。");
+                    
+                    // Use ResourceLoader instead of assuming global JSZip
+                    if(window.app && app.showToast) app.showToast('正在加载组件...', 'info');
+                    await ResourceLoader.load('jszip');
                     
                     const zip = new JSZip();
                     hiddenFiles.forEach(f => zip.file(f.name, f));

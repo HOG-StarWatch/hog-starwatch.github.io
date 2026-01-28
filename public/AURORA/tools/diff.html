@@ -3,39 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文本对比</title>
+    <title>智能对比工具</title>
     <link rel="stylesheet" href="../css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js" onerror="this.onerror=null;this.src='https://cdn.bootcdn.net/ajax/libs/diff_match_patch/20121119/diff_match_patch.js'"></script>
-    <style>
-        /* Custom Diff Styles for Dark Mode */
-        ins {
-            background-color: rgba(46, 160, 67, 0.4); /* Dark Green */
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 2px;
-            padding: 0 1px;
-        }
-        del {
-            background-color: rgba(200, 50, 50, 0.5); /* Dark Red */
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 2px;
-            padding: 0 1px;
-        }
-        /* Update Legend Colors */
-        .legend-ins { background: rgba(46, 160, 67, 0.4); color: #fff; padding: 2px 4px; border-radius: 2px; }
-        .legend-del { background: rgba(200, 50, 50, 0.5); color: #fff; padding: 2px 4px; border-radius: 2px; }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsondiffpatch@0.4.1/dist/formatters-styles/html.css">
 </head>
 <body>
-    <div class="workspace" style="flex-direction: column;">
-        <div class="diff-container">
+    <div class="workspace layout-vertical">
+        
+        <div class="sub-tab-group">
+            <div class="sub-tab active" onclick="diffTool.setMode('text')" id="tab-text">文本对比 (Text)</div>
+            <div class="sub-tab" onclick="diffTool.setMode('json')" id="tab-json">JSON 结构化对比</div>
+        </div>
+
+        <div class="layout-split">
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">原文 (Old)</div>
                     <div class="panel-actions">
                         <button class="btn btn-icon" onclick="document.getElementById('file-old').click()" title="加载文件">📂</button>
                         <input type="file" id="file-old" style="display:none" onchange="diffTool.loadFile(this, 'diff-old')">
+                        <button class="btn btn-icon" onclick="diffTool.formatJSON('diff-old')" title="格式化 JSON" id="btn-fmt-old" style="display:none;">{}</button>
                         <button class="btn btn-icon" onclick="document.getElementById('diff-old').value=''">清空</button>
                     </div>
                 </div>
@@ -47,6 +34,7 @@
                     <div class="panel-actions">
                         <button class="btn btn-icon" onclick="document.getElementById('file-new').click()" title="加载文件">📂</button>
                         <input type="file" id="file-new" style="display:none" onchange="diffTool.loadFile(this, 'diff-new')">
+                        <button class="btn btn-icon" onclick="diffTool.formatJSON('diff-new')" title="格式化 JSON" id="btn-fmt-new" style="display:none;">{}</button>
                         <button class="btn btn-icon" onclick="document.getElementById('diff-new').value=''">清空</button>
                     </div>
                 </div>
@@ -56,9 +44,9 @@
         
         <div style="display: flex; gap: 1rem; align-items: center; padding: 0.5rem 0;">
             <button class="btn btn-primary" onclick="diffTool.compare()">开始对比 (Compare)</button>
-            <div style="font-size: 0.8rem; color: var(--text-dim);">
-                <span style="background:rgba(46, 160, 67, 0.3); color:#e6ffec; padding:2px 4px; border-radius:2px;">新增</span>
-                <span style="background:rgba(248, 81, 73, 0.3); color:#ffdcd7; padding:2px 4px; border-radius:2px;">删除</span>
+            <div style="font-size: 0.8rem; color: var(--text-dim);" id="legend-text">
+                <span class="legend-badge ins">新增</span>
+                <span class="legend-badge del">删除</span>
             </div>
         </div>
 
@@ -71,43 +59,131 @@
     </div>
 
     <div id="toast" class="toast">操作成功</div>
+    <script src="../js/loader.js"></script>
     <script src="../js/app.js"></script>
     <script>
         const diffTool = {
+            mode: 'text',
+
+            setMode: function(mode) {
+                this.mode = mode;
+                
+                // Update Tabs
+                document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+                document.getElementById('tab-' + mode).classList.add('active');
+                
+                // Update UI controls
+                const showJsonBtns = mode === 'json' ? 'inline-flex' : 'none';
+                document.getElementById('btn-fmt-old').style.display = showJsonBtns;
+                document.getElementById('btn-fmt-new').style.display = showJsonBtns;
+                
+                // Clear output
+                document.getElementById('diff-output').innerHTML = '';
+                
+                app.showToast('已切换至 ' + (mode === 'json' ? 'JSON 结构化对比' : '文本对比') + ' 模式');
+            },
+
+            formatJSON: function(id) {
+                const el = document.getElementById(id);
+                try {
+                    const val = el.value.trim();
+                    if (!val) return;
+                    const obj = JSON.parse(val);
+                    el.value = JSON.stringify(obj, null, 2);
+                    app.showToast('格式化成功');
+                } catch(e) {
+                    app.showToast('JSON 格式错误: ' + e.message, 'error');
+                }
+            },
+
             compare: function() {
+                if (this.mode === 'json') {
+                    this.compareJSON();
+                } else {
+                    this.compareText();
+                }
+            },
+
+            compareText: function() {
                 const oldTxt = document.getElementById('diff-old').value;
                 const newTxt = document.getElementById('diff-new').value;
                 
-                if (typeof diff_match_patch === 'undefined') {
-                    app.showToast('Diff 库未加载', 'error');
-                    return;
+                app.showToast('正在加载组件...', 'info');
+                ResourceLoader.load('diff_match_patch').then(() => {
+                    const dmp = new diff_match_patch();
+                    const diffs = dmp.diff_main(oldTxt, newTxt);
+                    dmp.diff_cleanupSemantic(diffs);
+                    
+                    // Custom pretty HTML generation
+                    const html = [];
+                    for (let x = 0; x < diffs.length; x++) {
+                        const op = diffs[x][0];    // Operation (insert, delete, equal)
+                        const data = diffs[x][1];  // Text of change
+                        const text = data.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                        
+                        switch (op) {
+                            case DIFF_INSERT:
+                                html[x] = '<ins>' + text + '</ins>';
+                                break;
+                            case DIFF_DELETE:
+                                html[x] = '<del>' + text + '</del>';
+                                break;
+                            case DIFF_EQUAL:
+                                html[x] = '<span>' + text + '</span>';
+                                break;
+                        }
+                    }
+                    
+                    document.getElementById('diff-output').innerHTML = html.join('');
+                    app.showToast('对比完成');
+                });
+            },
+
+            compareJSON: function() {
+                const oldTxt = document.getElementById('diff-old').value;
+                const newTxt = document.getElementById('diff-new').value;
+                
+                let oldObj, newObj;
+                try {
+                    oldObj = oldTxt ? JSON.parse(oldTxt) : undefined;
+                } catch(e) {
+                    return app.showToast('原文不是有效的 JSON', 'error');
+                }
+                
+                try {
+                    newObj = newTxt ? JSON.parse(newTxt) : undefined;
+                } catch(e) {
+                    return app.showToast('新文不是有效的 JSON', 'error');
                 }
 
-                const dmp = new diff_match_patch();
-                const diffs = dmp.diff_main(oldTxt, newTxt);
-                dmp.diff_cleanupSemantic(diffs);
-                
-                // Custom pretty HTML generation
-                const html = [];
-                for (let x = 0; x < diffs.length; x++) {
-                    const op = diffs[x][0];    // Operation (insert, delete, equal)
-                    const data = diffs[x][1];  // Text of change
-                    const text = data.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                app.showToast('正在加载组件...', 'info');
+                ResourceLoader.load('jsondiffpatch').then(() => {
+                    const delta = jsondiffpatch.diff(oldObj, newObj);
                     
-                    switch (op) {
-                        case DIFF_INSERT:
-                            html[x] = '<ins>' + text + '</ins>';
-                            break;
-                        case DIFF_DELETE:
-                            html[x] = '<del>' + text + '</del>';
-                            break;
-                        case DIFF_EQUAL:
-                            html[x] = '<span>' + text + '</span>';
-                            break;
+                    if (!delta) {
+                        document.getElementById('diff-output').innerHTML = '<div style="padding:1rem; opacity:0.7;">没有发现差异 (No differences found)</div>';
+                        app.showToast('对比完成: 无差异');
+                        return;
                     }
-                }
-                
-                document.getElementById('diff-output').innerHTML = html.join('');
+
+                    // Render Diff
+                    // Note: jsondiffpatch.formatters.html.format returns HTML string
+                    // But we might need to load CSS if not loaded. (Handled in head)
+                    const html = jsondiffpatch.formatters.html.format(delta, oldObj);
+                    
+                    // jsondiffpatch css requires a wrapper or global css. 
+                    // We added CSS link in head.
+                    document.getElementById('diff-output').innerHTML = html;
+                    
+                    // Enable visual interactions if needed (unhiding unchanged parts etc)
+                    // jsondiffpatch.formatters.html.hideUnchanged() is a feature but requires JS to toggle classes
+                    // We can stick to basic static view first.
+                    
+                    app.showToast('对比完成');
+                }).catch(err => {
+                    console.error(err);
+                    app.showToast('加载组件失败', 'error');
+                });
             },
 
             loadFile: function(input, targetId) {

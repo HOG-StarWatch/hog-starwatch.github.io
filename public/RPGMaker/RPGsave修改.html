@@ -4,31 +4,141 @@
 <meta charset="UTF-8">
 <title>RPG Maker MV存档修改器 - by Mandarava(鳗驼螺)</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-  }
-  .container {
-    width: 80%;
-    margin: auto;
-  }
-  .textarea {
-    width: 100%;
-    height: 200px;
-  }
-  .buttons {
-    margin: 10px 0;
-    text-align: center;
-  }
-  .button {
-    padding: 5px 10px;
-    margin: 0 5px;
-    cursor: pointer;
-  }
-  .tip {
-    color: #090;
-    margin-top: 10px;
-  }
+    :root {
+        --bg-color: #0b0914;
+        --glass-bg: rgba(20, 17, 40, 0.65);
+        --glass-border: rgba(124, 58, 237, 0.3);
+        --text: #e9e6ff;
+        --muted: #b3abdb;
+        --accent: #7c3aed;
+        --accent-hover: #8b5cf6;
+        --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    body {
+        font-family: 'Microsoft YaHei', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(circle at 50% -20%, #4c1d95 0%, #0b0914 60%),
+                    radial-gradient(circle at 90% 90%, #2e1065 0%, #0b0914 40%),
+                    var(--bg-color);
+        background-attachment: fixed;
+        color: var(--text);
+        margin: 0;
+        padding: 40px 20px;
+        min-height: 100vh;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .container {
+        width: 100%;
+        max-width: 900px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 40px;
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--glass-border);
+    }
+    h2 {
+        text-align: center;
+        color: var(--text);
+        margin-top: 0;
+        margin-bottom: 30px;
+        text-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+        letter-spacing: 1px;
+        font-weight: 300;
+    }
+    p {
+        color: var(--muted);
+        margin-bottom: 10px;
+        font-weight: 400;
+        font-size: 0.95em;
+    }
+    .textarea {
+        width: 100%;
+        height: 200px;
+        background-color: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--glass-border);
+        color: #e6e2ff;
+        padding: 16px;
+        border-radius: 16px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 13px;
+        resize: vertical;
+        outline: none;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(4px);
+    }
+    .textarea:focus {
+        border-color: var(--accent);
+        background-color: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+    }
+    .buttons {
+        margin: 24px 0;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .button {
+        padding: 12px 32px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+        backdrop-filter: blur(4px);
+    }
+    .button:hover {
+        filter: brightness(1.1);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
+    }
+    .button:active {
+        transform: scale(0.98);
+    }
+    .tip {
+        display: block;
+        width: 100%;
+        color: var(--accent-2);
+        margin-top: 10px;
+        font-size: 14px;
+        min-height: 20px;
+        text-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
+    }
+    a {
+        color: #d8b4fe;
+        text-decoration: none;
+        border-bottom: 1px dashed rgba(124, 58, 237, 0.6);
+        padding-bottom: 1px;
+        transition: all 0.3s ease;
+        background: linear-gradient(to top, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0) 100%);
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin: 0 2px;
+    }
+    a:hover {
+        color: #fff;
+        background: rgba(124, 58, 237, 0.5);
+        box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+        border-bottom-style: solid;
+        text-shadow: none;
+    }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-thumb { background: #4c3a8f; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: #5b45ab; }
 </style>
 </head>
 <body>
@@ -43,7 +153,7 @@
   </div>
   <p>存档明文内容 Profile Plaintext：</p>
   <textarea class="textarea" id="deEdit"></textarea>
-  <p>你制作的游戏，存档能被解密吗？如何加密你的游戏存档？查看<a href="./RPGMaker/RPGMakerMV存档的加密解密与保护">解决办法！</a></p>
+  <p>你制作的游戏，存档能被解密吗？如何加密你的游戏存档？查看<a href="./RPGMaker/RPGMakerMV存档的加密解密与保护">解决办法 !</a></p>
   <p>by <a href="http://www.jianshu.com/u/a7454e40399d">Mandarava(鳗驼螺)</a> 2017.08.15</p>
   <p>UI By HOG-StarWatch</p>
 </div>

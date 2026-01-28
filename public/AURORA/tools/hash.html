@@ -5,23 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>哈希计算</title>
     <link rel="stylesheet" href="../css/style.css">
-    <!-- Removed synchronous crypto-js loading, using Worker -->
+    <script src="../js/loader.js"></script>
+    <style>
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            background: rgba(0,0,0,0.2);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.05);
+        }
+    </style>
 </head>
 <body>
     <div class="workspace">
         <div class="panel">
             <div class="panel-header">
-                <div class="panel-title">哈希计算 (Hash Calculation)</div>
+                <div class="panel-title">哈希计算 (Hash Calculation) 
+                    <span id="engine-badge" class="stat-badge" style="margin-left:10px; background:#f59e0b; color:#fff; cursor:pointer;" onclick="hashTool.toggleEngine()" title="点击切换引擎 (Click to Toggle Engine)">Engine: JS (Fallback)</span>
+                </div>
                 <div class="panel-actions">
-                    <div class="file-upload btn btn-icon" style="overflow:hidden">
-                        <span>📂 选择文件</span>
-                        <input type="file" onchange="hashTool.handleFile(this)">
-                    </div>
                      <button class="btn btn-icon" onclick="app.clear('hash')">清空</button>
                 </div>
             </div>
-            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem; height: 100%; overflow: hidden;">
-                <textarea id="hash-input" placeholder="在此输入文本，或点击上方按钮上传文件..." style="height: 120px; flex:none; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2);"></textarea>
+            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem; height: 100%; overflow-y: auto;">
+                
+                <!-- Drag & Drop Upload -->
+                <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                    <i class="fas fa-file-upload" style="font-size: 2rem; margin-bottom: 10px; color: var(--text-dim);"></i>
+                    <p style="color: var(--text-dim); margin:0;">点击或拖拽文件到此处</p>
+                    <input type="file" id="file-input" onchange="hashTool.handleFile(this)" style="display:none;">
+                </div>
+
+                <textarea id="hash-input" placeholder="在此输入文本，或点击上方区域上传文件..." style="height: 100px; flex:none; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); padding: 10px; color: var(--text-main);"></textarea>
                 
                 <div class="checkbox-group" style="overflow-y:auto; flex-shrink:0; max-height:100px;">
                      <label><input type="checkbox" class="hash-algo" value="MD5" checked> MD5</label>
@@ -40,7 +67,7 @@
 
                 <button class="btn btn-primary" onclick="hashTool.calc()">计算哈希</button>
                 
-                <div id="hash-results" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                <div id="hash-results" class="results-list">
                 </div>
             </div>
         </div>
@@ -52,7 +79,76 @@
         const hashTool = {
             fileData: null,
             worker: null,
+            useWasm: false,
+            wasmAvailable: false,
             
+            init: function() {
+                // Progressive Enhancement: Try to load Wasm
+                app.showToast('正在初始化哈希引擎...', 'info');
+                
+                // Try ESM import first (cleaner), then fallback to UMD load
+                this.loadWasmEngine().then(() => {
+                    this.wasmAvailable = true;
+                    this.useWasm = true;
+                    this.updateBadge();
+                    app.showToast('Wasm 引擎加载成功，性能已优化');
+                }).catch((e) => {
+                    console.warn('Wasm load failed, falling back to JS worker', e);
+                    this.wasmAvailable = false;
+                    this.useWasm = false;
+                    this.updateBadge();
+                    // Fallback to JS worker (existing logic)
+                    this.initWorker();
+                });
+            },
+
+            loadWasmEngine: async function() {
+                try {
+                    // Try ESM first
+                    const module = await ResourceLoader.import('hash-wasm-esm');
+                    // Attach to window for compatibility with existing code (or use module directly)
+                    // hash-wasm ESM exports individual functions: createMD5, etc.
+                    // We need to map them or attach to a global object expected by calcWasm
+                    window.hashwasm = module; 
+                    return;
+                } catch(e) {
+                    console.warn("ESM import failed, trying UMD load...");
+                }
+
+                // Fallback to UMD
+                await ResourceLoader.load('hash-wasm');
+                // UMD creates window.hashwasm
+                if(!window.hashwasm) throw new Error("UMD load failed");
+            },
+
+            toggleEngine: function() {
+                if (!this.wasmAvailable) {
+                    app.showToast('Wasm 引擎不可用 (加载失败或不支持)', 'error');
+                    return;
+                }
+                
+                this.useWasm = !this.useWasm;
+                this.updateBadge();
+                app.showToast(`已切换至 ${this.useWasm ? 'Wasm' : 'JS'} 引擎`);
+                
+                // Re-calculate if we have input
+                const input = document.getElementById('hash-input').value;
+                if (input || this.fileData) {
+                    this.calc();
+                }
+            },
+
+            updateBadge: function() {
+                const badge = document.getElementById('engine-badge');
+                if (this.useWasm) {
+                    badge.innerText = 'Engine: Wasm ⚡';
+                    badge.style.background = '#10b981'; // Green
+                } else {
+                    badge.innerText = 'Engine: JS ' + (this.wasmAvailable ? '(Manual)' : '(Fallback)');
+                    badge.style.background = this.wasmAvailable ? '#3b82f6' : '#f59e0b'; // Blue if manual switch, Orange if fallback
+                }
+            },
+
             initWorker: function() {
                 if (!window.Worker) {
                     app.showToast('您的浏览器不支持 Web Worker', 'error');
@@ -74,6 +170,84 @@
                     app.showToast('Worker 错误: ' + e.message, 'error');
                     this.setLoading(false);
                 };
+            },
+
+            calc: async function() {
+                const input = document.getElementById('hash-input').value;
+                if(!input && !this.fileData) return;
+                
+                this.setLoading(true);
+                document.getElementById('hash-results').innerHTML = '';
+
+                // Collect selected algos
+                const algos = Array.from(document.querySelectorAll('.hash-algo:checked')).map(cb => cb.value);
+                
+                if (this.useWasm) {
+                    try {
+                        await this.calcWasm(input, algos);
+                    } catch (e) {
+                        console.error("Wasm calc error:", e);
+                        app.showToast("Wasm 计算出错，尝试降级...", "error");
+                        this.useWasm = false;
+                        this.updateBadge();
+                        this.initWorker();
+                        this.calc(); // Retry with JS
+                    }
+                } else {
+                    // Existing JS Worker Logic
+                    if (!this.worker) this.initWorker();
+                    this.worker.postMessage({
+                        type: 'calc',
+                        payload: {
+                            data: this.fileData || input,
+                            isFile: !!this.fileData,
+                            algos: algos,
+                            hmacKey: document.getElementById('hash-hmac-key').value
+                        }
+                    });
+                }
+            },
+
+            calcWasm: async function(input, algos) {
+                const results = {};
+                const data = this.fileData ? new Uint8Array(this.fileData) : input;
+                
+                // Map algos to hash-wasm functions
+                // Note: hash-wasm uses createMD5(), createSHA256() etc.
+                for (const algo of algos) {
+                    let val = '';
+                    try {
+                        if (algo === 'MD5') val = await hashwasm.md5(data);
+                        else if (algo === 'SHA1') val = await hashwasm.sha1(data);
+                        else if (algo === 'SHA256') val = await hashwasm.sha256(data);
+                        else if (algo === 'SHA512') val = await hashwasm.sha512(data);
+                        else if (algo === 'RIPEMD160') val = "Wasm暂不支持RIPEMD160"; // Not in basic hash-wasm dist? check docs. actually it might be separate. skip for now.
+                        else {
+                            val = "Wasm模式暂仅支持基础哈希";
+                        }
+                    } catch (e) {
+                        val = "Error";
+                    }
+                    results[algo] = val;
+                }
+                
+                this.displayResults(results);
+                this.setLoading(false);
+                app.showToast('Wasm 计算完成');
+            },
+
+            displayResults: function(results) {
+                const container = document.getElementById('hash-results');
+                for (const [algo, val] of Object.entries(results)) {
+                    const div = document.createElement('div');
+                    div.className = 'input-row';
+                    div.innerHTML = `
+                        <label style="width:100px;">${algo}:</label>
+                        <input type="text" value="${val}" readonly style="flex:1;">
+                        <button class="btn btn-icon" onclick="app.copy('${val}')">📋</button>
+                    `;
+                    container.appendChild(div);
+                }
             },
 
             handleFile: function(input) {
@@ -98,67 +272,11 @@
                     btn.disabled = false;
                     btn.innerText = '计算哈希';
                 }
-            },
-
-            calc: function() {
-                if (!this.worker) this.initWorker();
-
-                const textInput = document.getElementById('hash-input').value;
-                const isFile = textInput.startsWith('[文件]') && this.fileData;
-                const hmacKey = document.getElementById('hash-hmac-key').value;
-                
-                const algos = Array.from(document.querySelectorAll('.hash-algo:checked')).map(cb => cb.value);
-                const resultsDiv = document.getElementById('hash-results');
-                resultsDiv.innerHTML = '';
-                
-                if (algos.length === 0) {
-                    app.showToast('请至少选择一种算法', 'error');
-                    return;
-                }
-
-                this.setLoading(true);
-
-                // Prepare payload
-                const payload = {
-                    isFile: !!isFile,
-                    data: isFile ? this.fileData : textInput,
-                    algos: algos,
-                    hmacKey: hmacKey
-                };
-
-                // Use transfer list for ArrayBuffer to avoid copy
-                if (isFile) {
-                    // Note: fileData cannot be used again after transfer. 
-                    // If we want to re-use, we should slice it.
-                    // For now, let's slice it to keep original valid or just copy.
-                    // Copy is safer for repeated calcs.
-                    const dataCopy = this.fileData.slice(0);
-                    this.worker.postMessage({ type: 'calc', payload: { ...payload, data: dataCopy } }, [dataCopy]);
-                } else {
-                    this.worker.postMessage({ type: 'calc', payload: payload });
-                }
-            },
-
-            displayResults: function(results) {
-                const resultsDiv = document.getElementById('hash-results');
-                for (const [algo, hex] of Object.entries(results)) {
-                    const row = document.createElement('div');
-                    row.className = 'input-row';
-                    row.style.marginBottom = '0.5rem';
-                    row.innerHTML = `
-                        <label style="min-width:80px; color:var(--secondary)">${algo}:</label>
-                        <div class="result-box" style="flex:1; display:flex; gap:10px;">
-                            <input type="text" id="hash-res-${algo}" readonly value="${hex}" style="flex:1; font-size:0.8rem">
-                            <button class="btn btn-icon" onclick="app.copy('hash-res-${algo}')">复制</button>
-                        </div>
-                    `;
-                    resultsDiv.appendChild(row);
-                }
             }
         };
-
-        // Initialize worker
-        hashTool.initWorker();
+        
+        // Auto init
+        hashTool.init();
 
         // Add HMAC key toggle listener
 

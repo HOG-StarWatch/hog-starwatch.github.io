@@ -10,7 +10,6 @@
     <style>
         :root {
             --bg-dark: transparent;
-            --bg-panel-local: rgba(20, 25, 40, 0.6);
             --primary-hover: #9333ea;
             --success: #10b981;
             --sidebar-width: 240px;
@@ -29,7 +28,7 @@
         /* Top Navigation Bar */
         .navbar {
             width: 100%;
-            background: var(--bg-panel-local);
+            background: var(--bg-panel);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -256,10 +255,10 @@
             height: 8px;
             border-radius: 4px;
             overflow: hidden;
-            background: rgba(0,0,0,0.3);
+            background: var(--input-bg);
             border: none;
         }
-        progress::-webkit-progress-bar { background: rgba(0,0,0,0.3); }
+        progress::-webkit-progress-bar { background: var(--input-bg); }
         progress::-webkit-progress-value { background: var(--primary); transition: width 0.3s; }
         progress::-moz-progress-bar { background: var(--primary); }
 

@@ -6,73 +6,44 @@
     <title>交互式画板</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        :root {
-            --bg-secondary: rgba(0, 0, 0, 0.2);
-            --success: #2dd4bf;
-            --danger: #f472b6;
-        }
-        
         body {
             background: transparent;
-            padding: 20px;
-            overflow-y: auto;
-            display: block;
-            height: auto;
+            padding: 1rem;
+            overflow-y: auto; /* Allow body scroll */
+            display: flex;
+            flex-direction: column;
+            height: auto; /* Remove fixed height constraint */
+            min-height: 100vh;
         }
         
         .container {
-            max-width: 1400px;
+            width: 100%;
+            height: auto; /* Allow container to grow */
+            min-height: 100%;
             margin: 0 auto;
             display: flex;
             gap: 20px;
+            overflow: visible; /* Show overflow */
+            flex-wrap: wrap; /* Allow wrapping on smaller PC screens */
         }
+
+        /* ... other styles ... */
         
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--bg-panel);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
+        .color-tools {
+            flex: 0 0 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            /* overflow-y: auto; Removed internal scroll to allow page scroll */
         }
-        
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-top: 0;
+
+        /* Ensure left column takes remaining space but has a min-width */
+        .container > div:first-child {
+            flex: 1;
+            min-width: 300px;
         }
-        
-        .subtitle {
-            font-size: 1rem;
-            color: var(--text-dim);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .btn {
-            display: inline-block;
-            background: var(--primary);
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            font-family: inherit;
-        }
-        
-        .btn:hover {
-            box-shadow: 0 0 15px rgba(192, 132, 252, 0.4);
-            transform: scale(1.05);
-        }
-        
+
+        /* Mobile Layout Fix */
         .card {
             background: var(--bg-panel);
             border-radius: var(--radius-lg);
@@ -80,10 +51,12 @@
             border: 1px solid var(--border);
             backdrop-filter: blur(10px);
             margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
         }
         
         .card-header {
-            background: rgba(192, 132, 252, 0.1);
+            background: var(--bg-header);
             color: var(--text-main);
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border);
@@ -97,6 +70,7 @@
         
         .card-body {
             padding: 1.5rem;
+            overflow-y: auto;
         }
         
         /* 画板样式 */
@@ -192,22 +166,6 @@
             flex-wrap: wrap;
         }
         
-        .btn-danger {
-            background: rgba(244, 114, 182, 0.2);
-            color: #fca5a5;
-            border: 1px solid rgba(244, 114, 182, 0.5);
-        }
-        
-        .btn-danger:hover {
-            background: rgba(244, 114, 182, 0.3);
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, var(--secondary), #22c55e);
-        }
-        
         /* 绘图工具选择 */
         .drawing-tools {
             display: flex;
@@ -217,7 +175,7 @@
         
         .tool-btn {
             padding: 0.6rem 1.2rem;
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--input-bg);
             color: var(--text-main);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
@@ -228,7 +186,7 @@
         
         .tool-btn:hover {
             border-color: var(--primary);
-            background: rgba(192, 132, 252, 0.1);
+            background: var(--btn-hover-bg);
         }
         
         .tool-btn.active {
@@ -243,6 +201,7 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            overflow-y: auto;
         }
         
         .color-section {
@@ -272,7 +231,7 @@
             padding: 8px;
             border-radius: var(--radius-sm);
             border: 1px solid var(--border);
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--input-bg);
             color: var(--text-main);
             font-family: monospace;
         }
@@ -366,7 +325,7 @@
             display: none;
             border: 1px solid var(--border);
             object-fit: contain;
-            background: rgba(0,0,0,0.2);
+            background: var(--input-bg);
         }
         
         .file-input-wrapper {
@@ -389,7 +348,7 @@
         .file-input-label {
             display: block;
             padding: 10px 15px;
-            background: rgba(0,0,0,0.2);
+            background: var(--input-bg);
             color: var(--text-main);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
@@ -399,17 +358,19 @@
         }
         
         .file-input-label:hover {
-            background: rgba(192, 132, 252, 0.1);
+            background: var(--btn-hover-bg);
             border-color: var(--primary);
         }
         
         @media (max-width: 1024px) {
             .container {
                 flex-direction: column;
+                overflow-y: auto;
             }
             
             .color-tools {
-                flex: 1;
+                flex: none;
+                height: auto;
             }
         }
         
@@ -426,6 +387,31 @@
             
             .drawing-tools {
                 flex-wrap: wrap;
+            }
+        }
+
+        /* Mobile Layout Fix */
+        @media (max-width: 768px) {
+            body {
+                height: auto !important;
+                overflow-y: auto !important;
+                display: block !important;
+                padding: 10px !important;
+            }
+            .container {
+                flex-direction: column !important;
+                height: auto !important;
+                overflow: visible !important;
+                gap: 15px;
+            }
+            .card {
+                margin-bottom: 15px;
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: none !important;
+            }
+            .canvas-container {
+                height: 400px; /* Reduced height for mobile */
             }
         }
     </style>

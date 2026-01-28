@@ -6,140 +6,34 @@
     <title>图片像素化</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background: transparent;
-            color: var(--text-main);
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .app-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .controls {
-            background: rgba(20, 25, 40, 0.6);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            width: 100%;
-            max-width: 350px;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            height: fit-content;
-        }
-        
-        .preview {
-            background: rgba(20, 25, 40, 0.6);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            flex: 1;
-            min-width: 300px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border: 1px solid var(--border);
-        }
-        
-        .control-group {
-            margin-bottom: 1.5rem;
-            width: 100%;
-        }
-        
-        label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--text-main);
-        }
-        
-        label i {
-            margin-right: 0.5rem;
-            color: var(--primary);
-        }
-        
-        .upload-area {
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-md);
-            padding: 2rem;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .upload-area:hover {
-            border-color: var(--primary);
-            background: rgba(192, 132, 252, 0.1);
-        }
-        
-        .canvas-container {
-            position: relative;
-            width: 100%;
-            max-width: 100%;
-            margin: 1rem 0;
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            background: rgba(0,0,0,0.2);
-            min-height: 300px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        canvas {
-            max-width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            height: 6px;
-            border-radius: 3px;
-            appearance: none;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: var(--primary);
-            border-radius: 50%;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="controls">
+    <div class="layout-sidebar">
+        <!-- Controls -->
+        <div class="controls panel">
+            <h2 style="margin:0 0 15px 0; color:var(--primary); font-size:1.5rem;">像素化工具</h2>
+            
             <div class="control-group">
-                <label><i class="fas fa-upload"></i> 上传图片</label>
                 <div class="upload-area" id="uploadArea">
-                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-dim);"></i>
-                    <div style="font-size: 0.9rem;">点击或拖放图片</div>
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-dim);"></i>
+                    <div style="font-size: 0.8rem;">点击或拖放图片</div>
                     <input type="file" id="imageUpload" accept="image/*" hidden>
                 </div>
             </div>
             
             <div class="control-group">
-                <label><i class="fas fa-th-large"></i> 像素块大小: <span id="pixelValue" style="color:var(--primary)">8</span>px</label>
-                <input type="range" id="pixelSize" min="2" max="50" value="8">
+                <label style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span><i class="fas fa-th-large" style="margin-right:5px; color:var(--primary);"></i> 像素块大小</span>
+                    <span id="pixelValue" style="color:var(--secondary)">8px</span>
+                </label>
+                <input type="range" id="pixelSize" min="2" max="50" value="8" style="width:100%">
             </div>
             
-            <div class="control-group" style="display:flex; flex-direction:column; gap:0.5rem;">
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px;">
                 <button id="processBtn" class="btn btn-primary" style="justify-content:center" disabled>
                     <i class="fas fa-magic"></i> 处理图片
                 </button>
-                <button id="downloadBtn" class="btn btn-secondary" style="justify-content:center" disabled>
+                <button id="downloadBtn" class="btn btn-success" style="justify-content:center" disabled>
                     <i class="fas fa-download"></i> 下载图片
                 </button>
                 <button id="resetBtn" class="btn btn-secondary" style="justify-content:center">
@@ -148,15 +42,14 @@
             </div>
         </div>
         
-        <div class="preview">
-            <div class="canvas-container">
-                <div id="previewPlaceholder" style="text-align:center; color:var(--text-dim);">
-                    <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                    <div>图片处理预览区域</div>
-                </div>
-                <canvas id="originalCanvas" style="display:none;"></canvas>
-                <canvas id="pixelatedCanvas" style="display:none;"></canvas>
+        <!-- Preview -->
+        <div class="preview-area">
+            <div id="previewPlaceholder" style="text-align:center; color:var(--text-dim);">
+                <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <div>请上传图片并点击处理</div>
             </div>
+            <canvas id="originalCanvas" class="canvas-responsive" style="display:none; border-radius: var(--radius-md); box-shadow: var(--shadow);"></canvas>
+            <canvas id="pixelatedCanvas" class="canvas-responsive" style="display:none; border-radius: var(--radius-md); box-shadow: var(--shadow);"></canvas>
         </div>
     </div>
 
@@ -180,7 +73,7 @@
 
         pixelSize.addEventListener('input', (e) => {
             pixelSizeValue = parseInt(e.target.value);
-            pixelValue.innerText = pixelSizeValue;
+            pixelValue.innerText = pixelSizeValue + 'px';
         });
 
         uploadArea.addEventListener('click', () => imageUpload.click());
@@ -211,10 +104,9 @@
                     previewPlaceholder.style.display = 'none';
                     originalCanvas.style.display = 'block';
                     pixelatedCanvas.style.display = 'none';
+                    downloadBtn.disabled = true;
                     
-                    // Auto process preview if small enough? Or just wait for button.
-                    // Let's wait for button to save performance on large images
-                    app.showToast('图片已加载');
+                    if(window.app && app.showToast) app.showToast('图片已加载');
                 };
                 img.src = e.target.result;
             };
@@ -257,7 +149,7 @@
             originalCanvas.style.display = 'none';
             pixelatedCanvas.style.display = 'block';
             downloadBtn.disabled = false;
-            app.showToast('处理完成');
+            if(window.app && app.showToast) app.showToast('处理完成');
         });
 
         downloadBtn.addEventListener('click', () => {
@@ -275,6 +167,9 @@
             pixelatedCanvas.style.display = 'none';
             previewPlaceholder.style.display = 'block';
             imageUpload.value = '';
+            
+            // Reset border
+            uploadArea.style.borderColor = 'var(--border)';
         });
     </script>
 </body>

@@ -6,40 +6,49 @@
     <title>硬盘图标修改器 (Web生成版)</title>
     <style>
         :root {
-            --bg: #0b0914;
-            --panel: #141128;
-            --panel-border: #2a2348;
+            --bg-color: #0b0914;
+            --glass-bg: rgba(20, 17, 40, 0.65);
+            --glass-border: rgba(124, 58, 237, 0.3);
+            --section-bg: rgba(0, 0, 0, 0.2);
             --text: #e9e6ff;
             --muted: #b3abdb;
             --accent: #7c3aed;
+            --accent-hover: #8b5cf6;
             --accent-2: #a78bfa;
             --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #22c55e;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
         body {
             font-family: 'Microsoft YaHei', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-            background: radial-gradient(1200px 500px at 30% -10%, #2b2358 0%, #0b0914 50%), var(--bg);
+            background: radial-gradient(circle at 50% -20%, #4c1d95 0%, #0b0914 60%),
+                        radial-gradient(circle at 90% 90%, #2e1065 0%, #0b0914 40%),
+                        var(--bg-color);
+            background-attachment: fixed;
             color: var(--text);
             margin: 0;
             padding: 24px;
             display: flex;
             justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
         .container {
-            background-color: var(--panel);
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             padding: 28px;
-            border-radius: 14px;
-            box-shadow: 0 12px 40px rgba(124, 58, 237, 0.25);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
             width: 960px;
             max-width: 100%;
-            border: 1px solid var(--panel-border);
+            border: 1px solid var(--glass-border);
         }
         h1 {
             text-align: center;
             color: var(--text);
             margin-bottom: 12px;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
         }
         .description {
             text-align: center;
@@ -56,6 +65,11 @@
         .meta a {
             color: var(--accent-2);
             text-decoration: none;
+            transition: color 0.2s;
+        }
+        .meta a:hover {
+            color: var(--accent);
+            text-shadow: 0 0 8px var(--accent);
         }
         .layout {
             display: grid;
@@ -63,9 +77,7 @@
             gap: 24px;
             align-items: start;
         }
-        .left-panel {
-            min-width: 0;
-        }
+        .left-panel { min-width: 0; }
         .right-panel {
             position: sticky;
             top: 24px;
@@ -73,116 +85,126 @@
         }
         .section {
             margin-bottom: 20px;
-            padding: 18px;
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            background-color: rgba(20, 17, 40, 0.7);
+            padding: 20px;
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            background-color: var(--section-bg);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
         }
         .section h2 {
             margin-top: 0;
             font-size: 1.1em;
             color: var(--accent-2);
-            border-bottom: 1px dashed var(--panel-border);
-            padding-bottom: 8px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
-        .form-group {
-            margin-bottom: 14px;
-        }
+        .form-group { margin-bottom: 16px; }
         label {
             display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
+            margin-bottom: 8px;
+            font-weight: 500;
             color: var(--muted);
         }
         input[type="text"], select, input[type="file"] {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--panel-border);
-            background-color: #0f0d1f;
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.4);
             color: var(--text);
-            border-radius: 8px;
+            border-radius: 12px;
             box-sizing: border-box;
             font-size: 14px;
             outline: none;
+            transition: all 0.3s ease;
         }
         input[type="text"]:focus, select:focus, input[type="file"]:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+            background-color: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
         }
         .btn-group {
             display: grid;
             grid-template-columns: repeat(3, minmax(140px, 1fr));
-            gap: 10px;
+            gap: 12px;
         }
         button {
-            padding: 10px 16px;
+            padding: 12px 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 13px;
-            transition: transform 0.08s ease, box-shadow 0.2s ease;
+            font-weight: 600;
+            transition: all 0.2s ease;
             color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
         }
-        button:active {
-            transform: translateY(1px);
-        }
-        .btn-reg { background: linear-gradient(135deg, #6d28d9, #7c3aed); }
-        .btn-cmd { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
-        .btn-py  { background: linear-gradient(135deg, #a855f7, #7c3aed); }
-        .btn-reset { background: linear-gradient(135deg, #ef4444, #f87171); }
-        .btn-fix { background: linear-gradient(135deg, #6d28d9, #a78bfa); }
+        button:active { transform: scale(0.98); }
+        .btn-reg { background: linear-gradient(135deg, #6d28d9, #7c3aed); box-shadow: 0 4px 15px rgba(109, 40, 217, 0.4); }
+        .btn-cmd { background: linear-gradient(135deg, #7c3aed, #8b5cf6); box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4); }
+        .btn-py  { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
+        .btn-reset { background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4); }
+        .btn-fix { background: linear-gradient(135deg, #4c1d95, #6d28d9); box-shadow: 0 4px 15px rgba(76, 29, 149, 0.4); }
         .btn-download { 
             background: linear-gradient(135deg, #7c3aed, #6d28d9);
             width: 100%;
             margin-top: 10px;
-            padding: 12px;
+            padding: 14px;
             font-size: 16px;
-            box-shadow: 0 10px 20px rgba(124, 58, 237, 0.35);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
         }
         .btn-download:disabled {
             background: #3b2e68;
             cursor: not-allowed;
             box-shadow: none;
+            opacity: 0.6;
         }
-        button:hover:not(:disabled) { box-shadow: 0 8px 16px rgba(124, 58, 237, 0.35); }
+        button:hover:not(:disabled) {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
         .note {
             font-size: 12px;
             color: var(--muted);
-            margin-top: 6px;
+            margin-top: 8px;
+            opacity: 0.8;
         }
         .icon-preview {
             max-width: 64px;
             max-height: 64px;
             margin-top: 10px;
-            border: 1px solid var(--panel-border);
+            border: 1px solid var(--glass-border);
             display: none;
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .preview-container {
             display: flex;
             flex-direction: column;
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            background-color: #0f0d1f;
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            background-color: rgba(0, 0, 0, 0.3);
             overflow: hidden;
             min-height: 420px;
+            backdrop-filter: blur(10px);
         }
         .preview-header {
-            background-color: #0d0b19;
+            background-color: rgba(255, 255, 255, 0.05);
             color: var(--muted);
-            padding: 8px 12px;
+            padding: 10px 16px;
             font-size: 12px;
-            border-bottom: 1px solid var(--panel-border);
+            border-bottom: 1px solid var(--glass-border);
             display: flex;
             justify-content: space-between;
         }
         #code-preview {
             width: 100%;
             flex: 1 1 auto;
-            background-color: #0f0d1f;
+            background-color: transparent;
             color: #e6e2ff;
             border: none;
-            padding: 12px;
+            padding: 16px;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 12px;
             resize: none;
@@ -192,84 +214,166 @@
             overflow-x: auto;
             max-height: 520px;
             box-sizing: border-box;
-            scrollbar-color: #4c3a8f #0d0b19;
+            scrollbar-color: #4c3a8f rgba(0,0,0,0.2);
             scrollbar-width: thin;
         }
-        #code-preview::-webkit-scrollbar { width: 12px; height: 12px; }
-        #code-preview::-webkit-scrollbar-track { background: #0d0b19; border-radius: 8px; }
-        #code-preview::-webkit-scrollbar-thumb { background: #4c3a8f; border-radius: 8px; border: 2px solid #0d0b19; }
-        /* Ensure horizontal scrollbar aligns flush with container */
-        .preview-container { padding-bottom: 0; }
-        #code-preview { display: block; }
-        .tabs {
-            display: block;
-        }
+        #code-preview::-webkit-scrollbar { width: 8px; height: 8px; }
+        #code-preview::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        #code-preview::-webkit-scrollbar-thumb { background: #4c3a8f; border-radius: 4px; }
+        .tabs { display: block; }
         .tab-nav {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            background: rgba(0,0,0,0.2);
+            padding: 4px;
+            border-radius: 14px;
         }
         .tab-btn {
-            background-color: #221a44;
-            border: 1px solid var(--panel-border);
-            color: var(--text);
-            padding: 10px 12px;
-            border-radius: 8px;
+            background-color: transparent;
+            border: none;
+            color: var(--muted);
+            padding: 8px;
+            border-radius: 10px;
             cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            box-shadow: none;
+        }
+        .tab-btn:hover {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--text);
         }
         .tab-btn.active {
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            border-color: #7c3aed;
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 2px 10px rgba(124, 58, 237, 0.4);
         }
         .tab-content {
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            background-color: rgba(20, 17, 40, 0.7);
-            padding: 12px;
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            background-color: rgba(255, 255, 255, 0.02);
+            padding: 20px;
         }
-        .tab-pane { display: none; }
+        .tab-pane { display: none; animation: fadeIn 0.3s ease; }
         .tab-pane.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .tips {
             font-size: 13px;
             color: var(--muted);
             line-height: 1.6;
         }
-        .tips strong {
-            color: var(--accent-2);
-        }
+        .tips strong { color: var(--accent-2); }
         @media (max-width: 1080px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
-            .right-panel {
-                position: static;
-            }
-            .btn-group {
-                grid-template-columns: repeat(2, minmax(140px, 1fr));
-            }
-            .preview-container {
-                min-height: 360px;
-            }
+            .layout { grid-template-columns: 1fr; }
+            .right-panel { position: static; }
+            .btn-group { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+            .preview-container { min-height: 360px; }
         }
         @media (max-width: 640px) {
-            .container {
-                padding: 18px;
-            }
-            .section {
-                padding: 14px;
-            }
-            .btn-group {
+            .container { padding: 18px; }
+            .section { padding: 14px; }
+            .btn-group { grid-template-columns: 1fr; }
+            .tab-nav { grid-template-columns: repeat(3, 1fr); }
+            .tab-nav button:nth-last-child(-n+2) { grid-column: span 1.5; }
+        }
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 900px) {
+            .bottom-grid {
                 grid-template-columns: 1fr;
             }
-            input[type="text"], select, input[type="file"] {
-                font-size: 15px;
-                padding: 12px;
-            }
-            button {
-                padding: 12px 16px;
-                font-size: 14px;
-            }
+        }
+
+        /* File Upload Styling */
+        .file-upload-wrapper {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .file-upload-wrapper:hover {
+            border-color: var(--accent);
+            background: rgba(124, 58, 237, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .file-upload-wrapper.drag-over {
+            border-color: var(--accent-hover);
+            background: rgba(124, 58, 237, 0.15);
+            transform: scale(1.02);
+        }
+        .file-upload-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .file-upload-content {
+            text-align: center;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 20px;
+        }
+        .file-upload-icon {
+            width: 32px;
+            height: 32px;
+            color: var(--accent-2);
+            margin-bottom: 4px;
+            transition: transform 0.3s ease;
+        }
+        .file-upload-wrapper:hover .file-upload-icon {
+            transform: scale(1.1) translateY(-2px);
+            color: var(--accent);
+        }
+        .file-upload-text {
+            color: var(--muted);
+            font-size: 13px;
+            transition: color 0.3s;
+        }
+        .file-upload-filename {
+            color: var(--text);
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 4px;
+            word-break: break-all;
+            max-width: 90%;
+            display: none;
+            background: rgba(124, 58, 237, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .file-upload-wrapper.has-file {
+            border-style: solid;
+            border-color: rgba(124, 58, 237, 0.5);
+            background: rgba(124, 58, 237, 0.05);
+        }
+        .file-upload-wrapper.has-file .file-upload-text {
+            display: none;
+        }
+        .file-upload-wrapper.has-file .file-upload-filename {
+            display: inline-block;
         }
     </style>
 </head>
@@ -319,7 +423,14 @@
                             </div>
                             <div class="form-group">
                                 <label>选择图标 (.ico):</label>
-                                <input type="file" id="icon-file-py" accept=".ico" onchange="handleFileSelect(this, 'py')">
+                                <div class="file-upload-wrapper" id="wrap-py">
+                                    <input type="file" id="icon-file-py" class="file-upload-input" accept=".ico" onchange="handleFileSelect(this, 'py')">
+                                    <div class="file-upload-content">
+                                        <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                        <span class="file-upload-text">点击或拖拽上传 .ico 文件</span>
+                                        <span class="file-upload-filename" id="filename-py"></span>
+                                    </div>
+                                </div>
                                 <img id="icon-preview-py" class="icon-preview" alt="Icon Preview">
                                 <div class="note">生成 Python 脚本需选择图标文件以嵌入。</div>
                             </div>
@@ -334,7 +445,14 @@
                             </div>
                             <div class="form-group">
                                 <label>选择图标 (.ico) 或输入路径:</label>
-                                <input type="file" id="icon-file-cmd" accept=".ico" onchange="handleFileSelect(this, 'cmd')">
+                                <div class="file-upload-wrapper" id="wrap-cmd">
+                                    <input type="file" id="icon-file-cmd" class="file-upload-input" accept=".ico" onchange="handleFileSelect(this, 'cmd')">
+                                    <div class="file-upload-content">
+                                        <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                        <span class="file-upload-text">点击或拖拽上传 .ico 文件</span>
+                                        <span class="file-upload-filename" id="filename-cmd"></span>
+                                    </div>
+                                </div>
                                 <img id="icon-preview-cmd" class="icon-preview" alt="Icon Preview">
                                 <input type="text" id="icon-path-manual-cmd" placeholder="例如: C:\Users\Name\icon.ico" style="margin-top:8px;">
                                 <div class="note">优先使用内嵌图标，其次复制路径图标。</div>
@@ -351,7 +469,14 @@
                             </div>
                             <div class="form-group">
                                 <label>选择图标 (.ico) 或输入路径:</label>
-                                <input type="file" id="icon-file-inf" accept=".ico" onchange="handleFileSelect(this, 'inf')">
+                                <div class="file-upload-wrapper" id="wrap-inf">
+                                    <input type="file" id="icon-file-inf" class="file-upload-input" accept=".ico" onchange="handleFileSelect(this, 'inf')">
+                                    <div class="file-upload-content">
+                                        <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                        <span class="file-upload-text">点击或拖拽上传 .ico 文件</span>
+                                        <span class="file-upload-filename" id="filename-inf"></span>
+                                    </div>
+                                </div>
                                 <img id="icon-preview-inf" class="icon-preview" alt="Icon Preview">
                                 <input type="text" id="icon-path-manual-inf" placeholder="例如: C:\Users\Name\icon.ico" style="margin-top:8px;">
                                 <div class="note">U盘/移动硬盘使用 autorun.inf 设置图标。</div>
@@ -403,9 +528,42 @@
         });
     }
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', populateDriveSelects);
+        document.addEventListener('DOMContentLoaded', () => {
+            populateDriveSelects();
+            initDragEvents();
+        });
     } else {
         populateDriveSelects();
+        initDragEvents();
+    }
+
+    function initDragEvents() {
+        document.querySelectorAll('.file-upload-input').forEach(input => {
+            const wrapper = input.closest('.file-upload-wrapper');
+            if (!wrapper) return;
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                input.addEventListener(eventName, () => wrapper.classList.add('drag-over'), false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                input.addEventListener(eventName, () => wrapper.classList.remove('drag-over'), false);
+            });
+        });
+    }
+
+    function updateFileUploadUI(inputElement, filenameId, wrapperId) {
+        const file = inputElement.files[0];
+        const wrapper = document.getElementById(wrapperId);
+        const filenameSpan = document.getElementById(filenameId);
+        
+        if (file && wrapper && filenameSpan) {
+            wrapper.classList.add('has-file');
+            filenameSpan.textContent = file.name;
+        } else if (wrapper && filenameSpan) {
+            wrapper.classList.remove('has-file');
+            filenameSpan.textContent = "";
+        }
     }
 
     function switchTab(tab) {
@@ -421,6 +579,7 @@
     }
 
     function handleFileSelect(el, tab) {
+        updateFileUploadUI(el, `filename-${tab}`, `wrap-${tab}`);
         const file = el.files[0];
         if (file) {
             const reader = new FileReader();
@@ -815,18 +974,135 @@ pause
 </script>
 
 <div class="container" style="margin-top:16px;">
-    <div class="section">
-        <h2>使用说明与提示</h2>
-        <div class="tips">
-            <p>图片格式支持 <strong>ico、png、jpg、bmp、tif</strong> 等常用格式，建议图片格式为 <strong>ico</strong>，比例为 <strong>1:1</strong>，分辨率 <strong>大于 48×48</strong>。</p>
-            <p>程序会在 <strong>C:\Windows\_XizoDiskIconChanger</strong> 下创建文件夹，其中保存程序配置和所有图标文件，用于防止 Windows 图标缓存丢失。</p>
-            <p>正常情况这些缓存文件会在重置时移除，无需手动清理。</p>
-            <p><strong>.cmd/.py 嵌入模式：</strong>脚本内置图标数据，无需依赖本地图标文件路径，因此可直接分享/备份使用；运行后会自动释放图标并写入注册表。</p>
-            <p><strong>.cmd</strong>脚本可能遇到设置新图标不成功的问题，请检查<strong>C:\Windows\_XizoDiskIconChanger\icon</strong>路径下是否存在重名文件，此问题是因为出于安全考虑脚本不会替换已存在文件导致图标释放失败</p>
-            <p><strong>.cmd</strong>脚本下载后可能无法运行，<strong>Windows 安全中心</strong>弹窗提示:<strong>你的 Internet 安全设置阻止打开一个或多个文件。</strong> 遇到这个问题请<strong>右键</strong>脚本，打开<strong>属性</strong>，然后勾选<strong>常规</strong>标签页下<strong>安全：此文件来自其他计算机，可能被阻止以帮助保护该计算机</strong>的复选框<strong>解除锁定(K)</strong>。</p>
+    <div class="bottom-grid">
+        <div class="section">
+            <h2>使用说明与提示</h2>
+            <div class="tips">
+                <p>图片格式支持 <strong>ico、png、jpg、bmp、tif</strong> 等常用格式，建议图片格式为 <strong>ico</strong>，比例为 <strong>1:1</strong>，分辨率 <strong>大于 48×48</strong>。</p>
+                <p>程序会在 <strong>C:\Windows\_XizoDiskIconChanger</strong> 下创建文件夹，其中保存程序配置和所有图标文件，用于防止 Windows 图标缓存丢失。</p>
+                <p>正常情况这些缓存文件会在重置时移除，无需手动清理。</p>
+                <p><strong>.cmd/.py 嵌入模式：</strong>脚本内置图标数据，无需依赖本地图标文件路径，因此可直接分享/备份使用；运行后会自动释放图标并写入注册表。</p>
+                <p><strong>.cmd</strong>脚本可能遇到设置新图标不成功的问题，请检查<strong>C:\Windows\_XizoDiskIconChanger\icon</strong>路径下是否存在重名文件，此问题是因为出于安全考虑脚本不会替换已存在文件导致图标释放失败</p>
+                <p><strong>.cmd</strong>脚本下载后可能无法运行，<strong>Windows 安全中心</strong>弹窗提示:<strong>你的 Internet 安全设置阻止打开一个或多个文件。</strong> 遇到这个问题请<strong>右键</strong>脚本，打开<strong>属性</strong>，然后勾选<strong>常规</strong>标签页下<strong>安全：此文件来自其他计算机，可能被阻止以帮助保护该计算机</strong>的复选框<strong>解除锁定(K)</strong>。</p>
+            </div>
+        </div>
+        <div class="section">
+            <h2>图片转 ICO 工具</h2>
+            <p class="description" style="text-align: left; margin-bottom: 15px;">简单的格式转换工具，将任意图片转换为 Windows 图标格式 (.ico)。</p>
+            <div class="form-group">
+                <label>选择图片 (支持 PNG, JPG, WEBP 等):</label>
+                <div class="file-upload-wrapper" id="wrap-img-to-ico">
+                    <input type="file" id="img-to-ico-input" class="file-upload-input" accept="image/*" onchange="handleIcoConvertSelect(this)">
+                    <div class="file-upload-content">
+                        <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span class="file-upload-text">点击或拖拽上传图片文件</span>
+                        <span class="file-upload-filename" id="filename-img-to-ico"></span>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: center; justify-content: center; margin: 20px 0; min-height: 100px; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 20px;">
+                <img id="ico-convert-preview" style="max-width: 128px; max-height: 128px; display: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" alt="Preview">
+                <div id="ico-placeholder" style="color: var(--muted); font-size: 14px;">预览区域</div>
+            </div>
+            <button class="btn-download" id="btn-convert-download" onclick="downloadConvertedIco()" disabled>转换并下载 .ico</button>
         </div>
     </div>
 </div>
+
+<script>
+    // ICO Converter Logic
+    let convertedIcoBlob = null;
+    let convertedIcoName = "";
+
+    function handleIcoConvertSelect(input) {
+        updateFileUploadUI(input, 'filename-img-to-ico', 'wrap-img-to-ico');
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                convertImageToIco(img, file.name);
+                document.getElementById('ico-convert-preview').src = img.src;
+                document.getElementById('ico-convert-preview').style.display = 'block';
+                document.getElementById('ico-placeholder').style.display = 'none';
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function convertImageToIco(img, filename) {
+        const canvas = document.createElement('canvas');
+        const size = 256; // Standard large icon size
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        
+        // Draw and resize
+        ctx.drawImage(img, 0, 0, size, size);
+        
+        // Convert to PNG
+        canvas.toBlob(function(blob) {
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const pngData = new Uint8Array(reader.result);
+                const icoData = createIcoFromPng(pngData, size);
+                convertedIcoBlob = new Blob([icoData], { type: 'image/x-icon' });
+                convertedIcoName = filename.substring(0, filename.lastIndexOf('.')) + '.ico';
+                
+                const btn = document.getElementById('btn-convert-download');
+                btn.disabled = false;
+                btn.textContent = "下载 " + convertedIcoName;
+            };
+            reader.readAsArrayBuffer(blob);
+        }, 'image/png');
+    }
+
+    function createIcoFromPng(pngData, size) {
+        const header = new Uint8Array([
+            0, 0,             // Reserved
+            1, 0,             // Type (1 = ICO)
+            1, 0              // Count (1 image)
+        ]);
+        
+        const len = pngData.length;
+        const width = size === 256 ? 0 : size;
+        const height = size === 256 ? 0 : size;
+        
+        const entry = new Uint8Array([
+            width,            // Width
+            height,           // Height
+            0,                // Color count (0 = >=256)
+            0,                // Reserved
+            1, 0,             // Planes
+            32, 0,            // Bit count
+            len & 0xFF, (len >> 8) & 0xFF, (len >> 16) & 0xFF, (len >> 24) & 0xFF, // Size
+            22, 0, 0, 0       // Offset (6 header + 16 entry = 22)
+        ]);
+        
+        // Combine
+        const ico = new Uint8Array(header.length + entry.length + len);
+        ico.set(header, 0);
+        ico.set(entry, header.length);
+        ico.set(pngData, header.length + entry.length);
+        
+        return ico;
+    }
+
+    function downloadConvertedIco() {
+        if (!convertedIcoBlob) return;
+        const url = URL.createObjectURL(convertedIcoBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = convertedIcoName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
 
 </body>
 </html>
