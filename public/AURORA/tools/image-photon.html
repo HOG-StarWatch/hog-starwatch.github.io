@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wasm 滤镜 (Photon)</title>
+    <title>通用图片滤镜</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/loader.js"></script>
     <script src="../js/perf-monitor.js"></script>
@@ -11,14 +11,17 @@
         body { padding: 1rem; display: flex; flex-direction: column; height: 100vh; overflow: auto; }
         .workspace { flex: 1; display: flex; gap: 1rem; min-height: 0; }
         #engine-status { font-size: 0.8rem; color: var(--text-dim); margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+        .tab-content { display: flex; flex-direction: column; gap: 1rem; animation: fadeIn 0.3s; }
+        .tab-content[hidden] { display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
     <div class="panel-header">
         <div class="panel-title">
-            高性能图片滤镜
+            通用图片滤镜 (General Filters)
             <div id="engine-status">
-                <span id="badge" class="stat-badge" style="background:#f59e0b; cursor:pointer;" onclick="photonTool.toggleEngine()">Engine: JS (Fallback)</span>
+                <span id="badge" class="stat-badge" style="background:#3b82f6;">Engine: Pure JS</span>
                 <span id="perf-time" style="margin-left:10px;"></span>
             </div>
         </div>
@@ -38,39 +41,149 @@
                 </div>
             </div>
 
-            <div class="control-group">
-                <div class="filter-title">基础调整 (Basic)</div>
-                <div class="btn-grid">
-                    <button class="btn" onclick="photonTool.apply('grayscale')">灰度</button>
-                    <button class="btn" onclick="photonTool.apply('invert')">反色</button>
-                    <button class="btn" onclick="photonTool.apply('sepia')">复古 (Sepia)</button>
-                    <button class="btn" onclick="photonTool.apply('solarize')">过曝 (Solarize)</button>
-                </div>
+            <!-- Tabs -->
+            <div class="sub-tab-group">
+                <div class="sub-tab active" data-tab="filters" onclick="photonTool.switchTab('filters')">滤镜</div>
+                <div class="sub-tab" data-tab="adjust" onclick="photonTool.switchTab('adjust')">色彩</div>
+                <div class="sub-tab" data-tab="transform" onclick="photonTool.switchTab('transform')">变换</div>
+                <div class="sub-tab" data-tab="export" onclick="photonTool.switchTab('export')">导出</div>
             </div>
-            
-            <div class="control-group">
-                <div class="filter-title">风格化 (Stylize) - Wasm Only</div>
-                <div class="btn-grid">
-                    <button class="btn" onclick="photonTool.apply('emboss')">浮雕</button>
-                    <button class="btn" onclick="photonTool.apply('edge_detection')">边缘检测</button>
-                    <button class="btn" onclick="photonTool.apply('sharpen')">锐化</button>
-                    <button class="btn" onclick="photonTool.apply('noise_reduction')">降噪</button>
+
+            <!-- Tab: Filters -->
+            <div id="tab-filters" class="tab-content">
+                <div class="control-group">
+                    <div class="filter-title">基础 (Basic)</div>
+                    <div class="btn-grid">
+                        <button class="btn" onclick="photonTool.toggle('grayscale')" id="btn-grayscale">灰度</button>
+                        <button class="btn" onclick="photonTool.toggle('invert')" id="btn-invert">反色</button>
+                        <button class="btn" onclick="photonTool.toggle('sepia')" id="btn-sepia">复古</button>
+                        <button class="btn" onclick="photonTool.toggle('solarize')" id="btn-solarize">过曝</button>
+                        <button class="btn" onclick="photonTool.toggle('posterize')" id="btn-posterize">色调分离</button>
+                        <button class="btn" onclick="photonTool.toggle('threshold')" id="btn-threshold">二值化</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="filter-title">风格化 (Stylize)</div>
+                    <div class="btn-grid">
+                        <button class="btn" onclick="photonTool.toggle('emboss')" id="btn-emboss">浮雕</button>
+                        <button class="btn" onclick="photonTool.toggle('edge_detection')" id="btn-edge_detection">边缘</button>
+                        <button class="btn" onclick="photonTool.toggle('sharpen')" id="btn-sharpen">锐化</button>
+                        <button class="btn" onclick="photonTool.toggle('noise_reduction')" id="btn-noise_reduction">降噪</button>
+                        <button class="btn" onclick="photonTool.toggle('blur')" id="btn-blur">模糊</button>
+                        <button class="btn" onclick="photonTool.toggle('mosaic')" id="btn-mosaic">马赛克</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="filter-title">艺术效果 (Artistic)</div>
+                    <div class="btn-grid">
+                        <button class="btn" onclick="photonTool.toggle('vignette')" id="btn-vignette">暗角</button>
+                        <button class="btn" onclick="photonTool.toggle('duotone')" id="btn-duotone">双色</button>
+                        <button class="btn" onclick="photonTool.toggle('colorize')" id="btn-colorize">着色</button>
+                        <button class="btn" onclick="photonTool.toggle('vintage')" id="btn-vintage">老照片</button>
+                        <button class="btn" onclick="photonTool.toggle('rgb_split')" id="btn-rgb_split">RGB分离</button>
+                        <button class="btn" onclick="photonTool.toggle('scanlines')" id="btn-scanlines">扫描线</button>
+                    </div>
                 </div>
             </div>
 
-             <div class="control-group">
-                <div class="filter-title">色彩 (Color)</div>
-                <div class="input-row" style="flex-direction:column; align-items:flex-start;">
-                    <label>亮度 (Brightness)</label>
-                    <input type="range" min="-50" max="50" value="0" style="width:100%" onchange="photonTool.apply('brightness', this.value)">
+            <!-- Tab: Adjust -->
+            <div id="tab-adjust" class="tab-content" hidden>
+                <div class="control-group">
+                    <div class="filter-title">色彩调整</div>
+                    <div class="input-row" style="flex-direction:column; align-items:flex-start;">
+                        <label>亮度 (Brightness) <span id="val-brightness">0</span></label>
+                        <input type="range" min="-100" max="100" value="0" style="width:100%" oninput="photonTool.updateValue('brightness', this.value)">
+                    </div>
+                    <div class="input-row" style="flex-direction:column; align-items:flex-start;">
+                        <label>对比度 (Contrast) <span id="val-contrast">0</span></label>
+                        <input type="range" min="-100" max="100" value="0" style="width:100%" oninput="photonTool.updateValue('contrast', this.value)">
+                    </div>
+                    <div class="input-row" style="flex-direction:column; align-items:flex-start;">
+                        <label>饱和度 (Saturation) <span id="val-saturation">0</span></label>
+                        <input type="range" min="-100" max="100" value="0" style="width:100%" oninput="photonTool.updateValue('saturation', this.value)">
+                    </div>
+                    <div class="input-row" style="flex-direction:column; align-items:flex-start;">
+                        <label>色相旋转 (Hue) <span id="val-hue">0</span></label>
+                        <input type="range" min="-180" max="180" value="0" style="width:100%" oninput="photonTool.updateValue('hue', this.value)">
+                    </div>
                 </div>
-                <div class="input-row" style="flex-direction:column; align-items:flex-start;">
-                    <label>对比度 (Contrast)</label>
-                    <input type="range" min="-50" max="50" value="0" style="width:100%" onchange="photonTool.apply('contrast', this.value)">
+                <div class="control-group">
+                    <div class="filter-title">色温 (Temp)</div>
+                    <div class="btn-grid">
+                        <button class="btn" onclick="photonTool.toggle('warm')" id="btn-warm">暖色调</button>
+                        <button class="btn" onclick="photonTool.toggle('cool')" id="btn-cool">冷色调</button>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn btn-secondary" onclick="photonTool.reset()">↺ 重置原图</button>
+            <!-- Tab: Transform -->
+            <div id="tab-transform" class="tab-content" hidden>
+                <div class="control-group">
+                    <div class="filter-title">镜像 (Mirror)</div>
+                    <div class="btn-grid">
+                        <button class="btn" onclick="photonTool.toggle('mirror_h')" id="btn-mirror_h">水平镜像</button>
+                        <button class="btn" onclick="photonTool.toggle('mirror_v')" id="btn-mirror_v">垂直镜像</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="filter-title">缩放 (Scale)</div>
+                    <div class="input-row">
+                        <label style="width:80px">百分比 %</label>
+                        <input type="number" id="scale-percent" value="100" min="1" max="500" onchange="photonTool.updateScale('percent', this.value)">
+                    </div>
+                    <div class="input-row">
+                        <label style="width:80px">宽 px</label>
+                        <input type="number" id="scale-width" onchange="photonTool.updateScale('width', this.value)">
+                    </div>
+                    <div class="input-row">
+                        <label style="width:80px">高 px</label>
+                        <input type="number" id="scale-height" onchange="photonTool.updateScale('height', this.value)">
+                    </div>
+                    <div style="font-size:0.8rem; color:var(--text-dim); margin-top:5px;">
+                        原始尺寸: <span id="original-size">- x -</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="filter-title">
+                        裁剪 (Crop) 
+                        <label style="margin-left:auto; font-size:0.8rem;"><input type="checkbox" id="crop-enabled" onchange="photonTool.toggleCrop(this.checked)"> 启用</label>
+                    </div>
+                    <div id="crop-controls" style="opacity:0.5; pointer-events:none; display:flex; flex-direction:column; gap:5px;">
+                        <div class="input-row"><label style="width:30px">X</label><input type="number" id="crop-x" value="0" onchange="photonTool.updateCrop()"></div>
+                        <div class="input-row"><label style="width:30px">Y</label><input type="number" id="crop-y" value="0" onchange="photonTool.updateCrop()"></div>
+                        <div class="input-row"><label style="width:30px">W</label><input type="number" id="crop-w" onchange="photonTool.updateCrop()"></div>
+                        <div class="input-row"><label style="width:30px">H</label><input type="number" id="crop-h" onchange="photonTool.updateCrop()"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Export -->
+            <div id="tab-export" class="tab-content" hidden>
+                <div class="control-group">
+                    <div class="filter-title">导出设置</div>
+                    <div class="input-row">
+                        <label>格式</label>
+                        <select id="export-format">
+                            <option value="image/png">PNG (无损)</option>
+                            <option value="image/jpeg">JPEG (压缩)</option>
+                            <option value="image/webp">WebP (高效)</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <label>质量 (0-1)</label>
+                        <input type="number" id="export-quality" value="0.9" step="0.1" min="0.1" max="1.0">
+                    </div>
+                    <div class="input-row" style="margin-top:10px;">
+                        <button class="btn btn-primary" onclick="photonTool.download()" style="width:100%;">下载图片</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" onclick="photonTool.reset()" style="margin-top:auto;">↺ 重置所有</button>
         </div>
 
         <div class="preview-area">
@@ -86,116 +199,45 @@
         const uploadArea = document.getElementById('uploadArea');
         const imageUpload = document.getElementById('imageUpload');
 
-        uploadArea.addEventListener('click', () => imageUpload.click());
-        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
-        uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border)'; });
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = 'var(--border)';
-            photonTool.handleFile(e.dataTransfer.files[0]);
-        });
+        if(uploadArea && imageUpload) {
+            uploadArea.addEventListener('click', () => imageUpload.click());
+            uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
+            uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border)'; });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'var(--border)';
+                photonTool.handleFile(e.dataTransfer.files[0]);
+            });
+        }
 
-        // Photon Wasm Loader
-        // Since Photon requires specific loading sequence for wasm, we handle it here.
-        // We use unpkg for demo.
-        
-        const photonTool = {
-            wasmModule: null,
-            wasmAvailable: false,
-            useWasm: false,
-            originalImage: null, // Image Object
+        // Pure JS Image Processing Tool with Multi-Filter State
+        window.photonTool = {
+            originalImage: null,
             ctx: null,
             canvas: null,
+            
+            // State
+            activeFilters: new Set(),
+            values: {
+                brightness: 0,
+                contrast: 0,
+                saturation: 0,
+                hue: 0
+            },
+            transform: {
+                scalePercent: 100,
+                scaleW: 0,
+                scaleH: 0,
+                cropEnabled: false,
+                crop: { x: 0, y: 0, w: 0, h: 0 }
+            },
 
-            init: async function() {
+            init: function() {
                 this.canvas = document.getElementById('canvas');
-                this.ctx = this.canvas.getContext('2d');
-                
-                app.showToast('正在加载 Photon Wasm...', 'info');
-                
-                // Try ESM first
-                try {
-                    // ESM import for photon
-                    // Note: esm.sh usually exports init function as default
-                    const photonModule = await ResourceLoader.import('photon-esm');
-                    
-                    // Check if it has init function (web target) or direct exports (bundler)
-                    if (typeof photonModule.default === 'function') {
-                        // Web target pattern: await init()
-                        await photonModule.default();
-                        this.wasmModule = photonModule;
-                    } else if (photonModule.grayscale) {
-                        // Bundler pattern (might fail if wasm not loaded, but if it loaded, it's ready)
-                        // Or maybe it exported init as named export?
-                        if (typeof photonModule.init === 'function') {
-                            await photonModule.init();
-                        }
-                        this.wasmModule = photonModule;
-                    } else {
-                        // Fallback: assume default export is the module instance
-                        this.wasmModule = photonModule;
-                    }
-                    
-                    this.finishInit(true);
-                    return;
-                } catch(e) {
-                    console.warn("Photon ESM load failed, trying UMD...", e);
-                }
-
-                // Fallback to UMD/Global
-                try {
-                    await ResourceLoader.load('photon');
-                    if (typeof wasm_bindgen !== 'undefined') {
-                         await wasm_bindgen();
-                         this.wasmModule = wasm_bindgen;
-                         this.finishInit(true);
-                    } else {
-                        // If no global, maybe it failed silently or is not UMD.
-                        // Throw to trigger JS fallback
-                        throw new Error("Photon UMD Global object not found");
-                    }
-                } catch(e) {
-                    console.error("Photon load failed", e);
-                    this.finishInit(false, e.message);
-                }
+                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+                if(window.app && app.showToast) app.showToast('JS 引擎就绪');
             },
             
-            finishInit: function(success, msg) {
-                if(success) {
-                    this.wasmAvailable = true;
-                    this.useWasm = true;
-                    this.updateBadge();
-                    app.showToast('Wasm 引擎就绪');
-                } else {
-                    this.wasmAvailable = false;
-                    this.useWasm = false;
-                    this.updateBadge();
-                    app.showToast('Wasm 加载失败，使用 JS 降级模式', 'warning');
-                    PerfMonitor.logFallback('Photon Init', msg);
-                }
-            },
-
-            updateBadge: function() {
-                const badge = document.getElementById('badge');
-                if (this.useWasm) {
-                    badge.innerText = 'Engine: Wasm ⚡';
-                    badge.style.background = '#10b981';
-                } else {
-                    badge.innerText = 'Engine: JS ' + (this.wasmAvailable ? '(Manual)' : '(Fallback)');
-                    badge.style.background = this.wasmAvailable ? '#3b82f6' : '#f59e0b';
-                }
-            },
-
-            toggleEngine: function() {
-                if (!this.wasmAvailable) {
-                    app.showToast('Wasm 不可用', 'error');
-                    return;
-                }
-                this.useWasm = !this.useWasm;
-                this.updateBadge();
-                app.showToast(`切换至 ${this.useWasm ? 'Wasm' : 'JS'} 引擎`);
-            },
-
             handleFile: function(file) {
                 if(!file || !file.type.startsWith('image/')) return;
                 const reader = new FileReader();
@@ -205,131 +247,517 @@
                         this.originalImage = img;
                         this.reset();
                         document.getElementById('placeholder').style.display = 'none';
-                        app.showToast('图片已加载');
+                        if(window.app && app.showToast) app.showToast('图片已加载');
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             },
 
+            switchTab: function(tabName) {
+                document.querySelectorAll('.sub-tab').forEach(t => {
+                    if(t.dataset.tab === tabName) t.classList.add('active');
+                    else t.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-content').forEach(c => c.hidden = true);
+                document.getElementById('tab-' + tabName).hidden = false;
+            },
+
             reset: function() {
                 if(!this.originalImage) return;
-                this.canvas.width = this.originalImage.width;
-                this.canvas.height = this.originalImage.height;
-                this.ctx.drawImage(this.originalImage, 0, 0);
+                this.activeFilters.clear();
+                this.values = { brightness: 0, contrast: 0, saturation: 0, hue: 0 };
+                
+                // Reset Transform
+                this.transform = {
+                    scalePercent: 100,
+                    scaleW: this.originalImage.width,
+                    scaleH: this.originalImage.height,
+                    cropEnabled: false,
+                    crop: { x: 0, y: 0, w: this.originalImage.width, h: this.originalImage.height }
+                };
+
+                // Update UI
+                document.querySelectorAll('.btn-grid .btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.innerText = b.innerText.replace('✔ ', '');
+                });
+                document.querySelectorAll('input[type="range"]').forEach(i => i.value = 0);
+                ['brightness', 'contrast', 'saturation', 'hue'].forEach(k => {
+                    const el = document.getElementById('val-' + k);
+                    if(el) el.innerText = '0';
+                });
+
+                // Update Transform UI
+                document.getElementById('scale-percent').value = 100;
+                document.getElementById('scale-width').value = this.originalImage.width;
+                document.getElementById('scale-height').value = this.originalImage.height;
+                document.getElementById('original-size').innerText = `${this.originalImage.width} x ${this.originalImage.height}`;
+                
+                document.getElementById('crop-enabled').checked = false;
+                this.toggleCrop(false);
+                document.getElementById('crop-x').value = 0;
+                document.getElementById('crop-y').value = 0;
+                document.getElementById('crop-w').value = this.originalImage.width;
+                document.getElementById('crop-h').value = this.originalImage.height;
+
+                this.render();
             },
 
-            apply: async function(filter, value) {
-                if(!this.originalImage) return app.showToast('请先上传图片', 'error');
-
-                // Reset to original before applying (simple impl, real app might chain)
-                // For simplicity, we apply on top of original each time
-                this.ctx.drawImage(this.originalImage, 0, 0);
-                
-                const timerId = PerfMonitor.start(filter);
-                const engine = this.useWasm ? 'wasm' : 'js';
-
-                try {
-                    if (this.useWasm && this.wasmModule) {
-                        // Wasm Implementation
-                        const image = this.wasmModule.open_image(this.canvas, this.ctx);
-                        
-                        switch(filter) {
-                            case 'grayscale': this.wasmModule.grayscale(image); break;
-                            case 'invert': this.wasmModule.invert(image); break;
-                            case 'sepia': this.wasmModule.sepia(image); break;
-                            case 'solarize': this.wasmModule.solarize(image); break;
-                            case 'emboss': this.wasmModule.emboss(image); break;
-                            case 'edge_detection': this.wasmModule.edge_detection(image); break;
-                            case 'sharpen': this.wasmModule.sharpen(image); break;
-                            case 'noise_reduction': this.wasmModule.noise_reduction(image); break;
-                            case 'brightness': this.wasmModule.alter_channel(image, 1, parseInt(value)); break; // 1=Red? No, photon alter_channel adds to RGB. Simplification.
-                            // Actually photon has adjust_contrast, inc_brightness.
-                            // Let's use correct functions
-                            break;
-                            case 'contrast': this.wasmModule.adjust_contrast(image, parseInt(value)); break;
-                        }
-
-                        // Special handling for brightness which might differ
-                        if(filter === 'brightness') {
-                             // photon: inc_brightness(img, u8)
-                             // value is -50 to 50. 
-                             const v = parseInt(value);
-                             if(v > 0) this.wasmModule.inc_brightness(image, v);
-                             // photon doesn't have dec_brightness easily exposed in basic docs sometimes, 
-                             // but let's assume standard behavior or skip negative for demo.
-                        }
-
-                        this.wasmModule.putImageData(this.canvas, this.ctx, image);
-                        // image.free(); // Photon handles memory? Ideally yes.
-                    } else {
-                        // JS Fallback
-                        this.applyJS(filter, value);
+            toggle: function(filter) {
+                const btn = document.getElementById('btn-' + filter);
+                if (this.activeFilters.has(filter)) {
+                    this.activeFilters.delete(filter);
+                    if(btn) {
+                        btn.classList.remove('active');
+                        btn.innerText = btn.innerText.replace('✔ ', '');
                     }
-                    
-                    const duration = PerfMonitor.end(timerId, engine, true);
-                    document.getElementById('perf-time').innerText = `Time: ${duration.toFixed(2)}ms`;
-                    
-                } catch(e) {
-                    PerfMonitor.end(timerId, engine, false);
-                    console.error(e);
-                    app.showToast('处理出错: ' + e.message, 'error');
-                    
-                    // If Wasm failed, try fallback automatically if not already JS
-                    if (this.useWasm) {
-                         app.showToast('Wasm 出错，自动尝试 JS 降级', 'warning');
-                         PerfMonitor.logFallback(filter, e.message);
-                         this.applyJS(filter, value);
+                } else {
+                    this.activeFilters.add(filter);
+                    if(btn) {
+                        btn.classList.add('active');
+                        if(!btn.innerText.includes('✔')) {
+                            btn.innerText = '✔ ' + btn.innerText;
+                        }
                     }
                 }
+                this.render();
             },
 
-            applyJS: function(filter, value) {
-                // Simple Canvas manipulation fallback
-                const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            updateValue: function(key, val) {
+                this.values[key] = parseInt(val);
+                document.getElementById('val-' + key).innerText = val;
+                this.render();
+            },
+
+            updateScale: function(type, val) {
+                if(!this.originalImage) return;
+                const aspect = this.originalImage.width / this.originalImage.height;
+                
+                if(type === 'percent') {
+                    this.transform.scalePercent = parseFloat(val);
+                    this.transform.scaleW = Math.round(this.originalImage.width * (this.transform.scalePercent / 100));
+                    this.transform.scaleH = Math.round(this.originalImage.height * (this.transform.scalePercent / 100));
+                } else if(type === 'width') {
+                    this.transform.scaleW = parseInt(val);
+                    this.transform.scaleH = Math.round(this.transform.scaleW / aspect);
+                    this.transform.scalePercent = Math.round((this.transform.scaleW / this.originalImage.width) * 100);
+                } else if(type === 'height') {
+                    this.transform.scaleH = parseInt(val);
+                    this.transform.scaleW = Math.round(this.transform.scaleH * aspect);
+                    this.transform.scalePercent = Math.round((this.transform.scaleH / this.originalImage.height) * 100);
+                }
+
+                // Update UI inputs
+                document.getElementById('scale-percent').value = this.transform.scalePercent;
+                document.getElementById('scale-width').value = this.transform.scaleW;
+                document.getElementById('scale-height').value = this.transform.scaleH;
+
+                this.render();
+            },
+
+            toggleCrop: function(enabled) {
+                this.transform.cropEnabled = enabled;
+                const controls = document.getElementById('crop-controls');
+                if(enabled) {
+                    controls.style.opacity = '1';
+                    controls.style.pointerEvents = 'auto';
+                } else {
+                    controls.style.opacity = '0.5';
+                    controls.style.pointerEvents = 'none';
+                }
+                this.render();
+            },
+
+            updateCrop: function() {
+                this.transform.crop.x = parseInt(document.getElementById('crop-x').value) || 0;
+                this.transform.crop.y = parseInt(document.getElementById('crop-y').value) || 0;
+                this.transform.crop.w = parseInt(document.getElementById('crop-w').value) || this.originalImage.width;
+                this.transform.crop.h = parseInt(document.getElementById('crop-h').value) || this.originalImage.height;
+                this.render();
+            },
+
+            render: function() {
+                if(!this.originalImage) return;
+
+                const timerId = PerfMonitor.start('render');
+                
+                // 1. Calculate Dimensions
+                // If crop is enabled, we crop from original, then scale
+                // But for simplicity, let's assume Scale applies to the Cropped result
+                
+                let srcX = 0, srcY = 0, srcW = this.originalImage.width, srcH = this.originalImage.height;
+                
+                if (this.transform.cropEnabled) {
+                    srcX = this.transform.crop.x;
+                    srcY = this.transform.crop.y;
+                    srcW = this.transform.crop.w;
+                    srcH = this.transform.crop.h;
+                }
+
+                // Ensure src bounds are valid
+                if(srcW <= 0) srcW = 1;
+                if(srcH <= 0) srcH = 1;
+
+                // Determine Destination Size (Scale)
+                // If user changed Scale, we need to respect that ratio
+                // But Scale is based on Original Size. 
+                // If we crop, should Scale Percent apply to Crop Size?
+                // Usually "Scale 50%" means "50% of current view".
+                // Let's re-calculate Dest Size based on Scale Percent of the SOURCE region
+                
+                const destW = Math.round(srcW * (this.transform.scalePercent / 100));
+                const destH = Math.round(srcH * (this.transform.scalePercent / 100));
+
+                this.canvas.width = destW;
+                this.canvas.height = destH;
+                
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+
+                // 2. Draw with Transform (Mirror -> Draw)
+                this.ctx.save();
+                this.ctx.clearRect(0, 0, w, h);
+
+                let scaleX = 1, scaleY = 1;
+                let transX = 0, transY = 0;
+
+                if (this.activeFilters.has('mirror_h')) {
+                    scaleX = -1;
+                    transX = w;
+                }
+                if (this.activeFilters.has('mirror_v')) {
+                    scaleY = -1;
+                    transY = h;
+                }
+
+                this.ctx.translate(transX, transY);
+                this.ctx.scale(scaleX, scaleY);
+
+                // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+                this.ctx.drawImage(
+                    this.originalImage, 
+                    srcX, srcY, srcW, srcH, 
+                    0, 0, w, h
+                );
+                
+                this.ctx.restore();
+
+                const imageData = this.ctx.getImageData(0, 0, w, h);
                 const data = imageData.data;
 
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i], g = data[i+1], b = data[i+2];
+                // Pre-calculate Hue Matrix if needed
+                let hueMatrix = null;
+                if (this.values.hue !== 0) {
+                    const angle = this.values.hue * Math.PI / 180;
+                    const c = Math.cos(angle);
+                    const s = Math.sin(angle);
+                    const rw = 0.213, gw = 0.715, bw = 0.072;
                     
-                    if (filter === 'grayscale') {
-                        const v = 0.299*r + 0.587*g + 0.114*b;
-                        data[i] = v; data[i+1] = v; data[i+2] = v;
-                    } else if (filter === 'invert') {
-                        data[i] = 255 - r; data[i+1] = 255 - g; data[i+2] = 255 - b;
-                    } else if (filter === 'sepia') {
-                        data[i] = (r * 0.393) + (g * 0.769) + (b * 0.189);
-                        data[i+1] = (r * 0.349) + (g * 0.686) + (b * 0.168);
-                        data[i+2] = (r * 0.272) + (g * 0.534) + (b * 0.131);
-                    } else if (filter === 'brightness') {
-                         const v = parseInt(value);
-                         data[i] += v; data[i+1] += v; data[i+2] += v;
-                    } else if (filter === 'contrast') {
-                         const v = parseInt(value);
-                         const factor = (259 * (v + 255)) / (255 * (259 - v));
-                         data[i] = factor * (r - 128) + 128;
-                         data[i+1] = factor * (g - 128) + 128;
-                         data[i+2] = factor * (b - 128) + 128;
-                    } else if (['emboss', 'sharpen', 'edge_detection'].includes(filter)) {
-                         // Convolution filters are hard to implement efficiently in raw JS loop here without helper
-                         // Just show toast
-                         throw new Error("此滤镜仅支持 Wasm 模式 (JS 实现过慢或未实现)");
+                    hueMatrix = [
+                        rw + c * (1 - rw) + s * (-rw),       gw + c * (-gw) + s * (-gw),       bw + c * (-bw) + s * (1 - bw),
+                        rw + c * (-rw) + s * 0.143,          gw + c * (1 - gw) + s * 0.140,    bw + c * (-bw) + s * (-0.283),
+                        rw + c * (-rw) + s * (-(1 - rw)),    gw + c * (-gw) + s * 0.283,       bw + c * (1 - bw) + s * 0.283
+                    ];
+                }
+
+                // 2. Apply Pixel Filters (Loop once for performance)
+                for (let i = 0; i < data.length; i += 4) {
+                    let r = data[i], g = data[i+1], b = data[i+2];
+
+                    // --- Value Adjustments ---
+                    
+                    // Brightness
+                    if (this.values.brightness !== 0) {
+                        const v = this.values.brightness;
+                        r += v; g += v; b += v;
                     }
+
+                    // Contrast
+                    if (this.values.contrast !== 0) {
+                        const v = this.values.contrast;
+                        const factor = (259 * (v + 255)) / (255 * (259 - v));
+                        r = factor * (r - 128) + 128;
+                        g = factor * (g - 128) + 128;
+                        b = factor * (b - 128) + 128;
+                    }
+
+                    // Saturation
+                    if (this.values.saturation !== 0) {
+                        const v = this.values.saturation / 100; // -1 to 1
+                        const gray = 0.299*r + 0.587*g + 0.114*b;
+                        const satMult = 1 + v;
+                        r = gray + (r - gray) * satMult;
+                        g = gray + (g - gray) * satMult;
+                        b = gray + (b - gray) * satMult;
+                    }
+
+                    // Hue Rotate
+                    if (hueMatrix) {
+                        const newR = r * hueMatrix[0] + g * hueMatrix[1] + b * hueMatrix[2];
+                        const newG = r * hueMatrix[3] + g * hueMatrix[4] + b * hueMatrix[5];
+                        const newB = r * hueMatrix[6] + g * hueMatrix[7] + b * hueMatrix[8];
+                        r = newR; g = newG; b = newB;
+                    }
+
+                    // --- Boolean Filters ---
+
+                    // Grayscale
+                    if (this.activeFilters.has('grayscale')) {
+                        const v = 0.299*r + 0.587*g + 0.114*b;
+                        r = v; g = v; b = v;
+                    }
+
+                    // Invert
+                    if (this.activeFilters.has('invert')) {
+                        r = 255 - r; g = 255 - g; b = 255 - b;
+                    }
+
+                    // Sepia
+                    if (this.activeFilters.has('sepia')) {
+                        const nr = (r * 0.393) + (g * 0.769) + (b * 0.189);
+                        const ng = (r * 0.349) + (g * 0.686) + (b * 0.168);
+                        const nb = (r * 0.272) + (g * 0.534) + (b * 0.131);
+                        r = nr; g = ng; b = nb;
+                    }
+
+                    // Solarize
+                    if (this.activeFilters.has('solarize')) {
+                        const threshold = 128;
+                        r = r > threshold ? 255 - r : r;
+                        g = g > threshold ? 255 - g : g;
+                        b = b > threshold ? 255 - b : b;
+                    }
+
+                    // Posterize
+                    if (this.activeFilters.has('posterize')) {
+                        const levels = 4;
+                        const step = 255 / (levels - 1);
+                        r = Math.floor(r / step) * step;
+                        g = Math.floor(g / step) * step;
+                        b = Math.floor(b / step) * step;
+                    }
+
+                    // Threshold (Binary)
+                    if (this.activeFilters.has('threshold')) {
+                        const threshold = 128;
+                        const v = (0.299*r + 0.587*g + 0.114*b >= threshold) ? 255 : 0;
+                        r = v; g = v; b = v;
+                    }
+
+                    // Warm
+                    if (this.activeFilters.has('warm')) {
+                        r += 30;
+                        b -= 10;
+                    }
+
+                    // Cool
+                    if (this.activeFilters.has('cool')) {
+                        b += 30;
+                        r -= 10;
+                    }
+
+                    // Duotone
+                    if (this.activeFilters.has('duotone')) {
+                        const avg = (r + g + b) / 3;
+                        const r1=0, g1=0, b1=255; 
+                        const r2=255, g2=165, b2=0;
+                        const ratio = avg / 255;
+                        r = r1 + (r2 - r1) * ratio;
+                        g = g1 + (g2 - g1) * ratio;
+                        b = b1 + (b2 - b1) * ratio;
+                    }
+
+                    // Colorize (Tint)
+                    if (this.activeFilters.has('colorize')) {
+                        r += 50; 
+                    }
+
+                    // Clamp values
+                    data[i] = Math.min(255, Math.max(0, r));
+                    data[i+1] = Math.min(255, Math.max(0, g));
+                    data[i+2] = Math.min(255, Math.max(0, b));
                 }
                 
                 this.ctx.putImageData(imageData, 0, 0);
+
+                // 3. Apply Convolution / Complex Filters
+                if (this.activeFilters.has('blur')) {
+                    this.applyConvolution([ 1/16, 2/16, 1/16, 2/16, 4/16, 2/16, 1/16, 2/16, 1/16 ]);
+                }
+                if (this.activeFilters.has('sharpen')) {
+                    this.applyConvolution([ 0, -1, 0, -1, 5, -1, 0, -1, 0 ]);
+                }
+                if (this.activeFilters.has('emboss')) {
+                    this.applyConvolution([ -2, -1, 0, -1, 1, 1, 0, 1, 2 ]);
+                }
+                if (this.activeFilters.has('edge_detection')) {
+                    this.applyConvolution([ -1, -1, -1, -1, 8, -1, -1, -1, -1 ]);
+                }
+                if (this.activeFilters.has('noise_reduction')) {
+                    this.applyConvolution([ 1/9, 1/9, 1/9, 1/9, 1/9, 1/9, 1/9, 1/9, 1/9 ]);
+                }
+
+                // 4. Special Effects
+                if (this.activeFilters.has('mosaic')) {
+                    this.applyMosaic(10);
+                }
+                if (this.activeFilters.has('scanlines')) {
+                    this.applyScanlines();
+                }
+                if (this.activeFilters.has('rgb_split')) {
+                    this.applyRGBSplit(10);
+                }
+                if (this.activeFilters.has('vignette') || this.activeFilters.has('vintage')) {
+                    this.applyVignette();
+                }
+                if (this.activeFilters.has('vintage')) {
+                    this.applyNoise(30);
+                }
+
+                const duration = PerfMonitor.end(timerId, 'js', true);
+                document.getElementById('perf-time').innerText = `Time: ${duration.toFixed(2)}ms`;
+            },
+
+            applyConvolution: function(kernel) {
+                const w = this.canvas.width, h = this.canvas.height;
+                const srcData = this.ctx.getImageData(0, 0, w, h);
+                const src = srcData.data;
+                const output = this.ctx.createImageData(w, h);
+                const dst = output.data;
+                const side = Math.round(Math.sqrt(kernel.length));
+                const halfSide = Math.floor(side/2);
+
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        const dstOff = (y * w + x) * 4;
+                        let r = 0, g = 0, b = 0;
+                        for (let cy = 0; cy < side; cy++) {
+                            for (let cx = 0; cx < side; cx++) {
+                                const scy = y + cy - halfSide;
+                                const scx = x + cx - halfSide;
+                                if (scy >= 0 && scy < h && scx >= 0 && scx < w) {
+                                    const srcOff = (scy * w + scx) * 4;
+                                    const wt = kernel[cy * side + cx];
+                                    r += src[srcOff] * wt;
+                                    g += src[srcOff+1] * wt;
+                                    b += src[srcOff+2] * wt;
+                                }
+                            }
+                        }
+                        dst[dstOff] = r;
+                        dst[dstOff+1] = g;
+                        dst[dstOff+2] = b;
+                        dst[dstOff+3] = src[dstOff+3];
+                    }
+                }
+                this.ctx.putImageData(output, 0, 0);
+            },
+
+            applyMosaic: function(size) {
+                const w = this.canvas.width, h = this.canvas.height;
+                const tempCvs = document.createElement('canvas');
+                tempCvs.width = Math.ceil(w / size);
+                tempCvs.height = Math.ceil(h / size);
+                const tempCtx = tempCvs.getContext('2d');
+                tempCtx.imageSmoothingEnabled = false;
+                tempCtx.drawImage(this.canvas, 0, 0, tempCvs.width, tempCvs.height);
+                this.ctx.imageSmoothingEnabled = false;
+                this.ctx.drawImage(tempCvs, 0, 0, tempCvs.width, tempCvs.height, 0, 0, w, h);
+                this.ctx.imageSmoothingEnabled = true;
+            },
+
+            applyRGBSplit: function(offset) {
+                const w = this.canvas.width, h = this.canvas.height;
+                const srcData = this.ctx.getImageData(0, 0, w, h);
+                const d = srcData.data;
+                const output = this.ctx.createImageData(w, h);
+                const out = output.data;
+
+                for (let i = 0; i < d.length; i += 4) {
+                    const r = d[i];
+                    const g = d[i+1];
+                    const b = d[i+2];
+                    const a = d[i+3];
+                    const pixelIdx = i / 4;
+                    const y = Math.floor(pixelIdx / w);
+                    const x = pixelIdx % w;
+
+                    let rVal = r;
+                    const rx = x - offset;
+                    if(rx >= 0) rVal = d[(y * w + rx) * 4];
+
+                    let bVal = b;
+                    const bx = x + offset;
+                    if(bx < w) bVal = d[(y * w + bx) * 4 + 2];
+
+                    out[i] = rVal;
+                    out[i+1] = g;
+                    out[i+2] = bVal;
+                    out[i+3] = a;
+                }
+                this.ctx.putImageData(output, 0, 0);
+            },
+
+            applyVignette: function() {
+                const w = this.canvas.width, h = this.canvas.height;
+                const gradient = this.ctx.createRadialGradient(w/2, h/2, w/4, w/2, h/2, w/1.2);
+                gradient.addColorStop(0, "rgba(0,0,0,0)");
+                gradient.addColorStop(1, "rgba(0,0,0,0.6)");
+                this.ctx.globalCompositeOperation = 'source-over';
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, w, h);
+            },
+
+            applyNoise: function(amount) {
+                const w = this.canvas.width, h = this.canvas.height;
+                const imgData = this.ctx.getImageData(0, 0, w, h);
+                const d = imgData.data;
+                for (let i = 0; i < d.length; i += 4) {
+                    const noise = (Math.random() - 0.5) * amount;
+                    d[i] += noise;
+                    d[i+1] += noise;
+                    d[i+2] += noise;
+                }
+                this.ctx.putImageData(imgData, 0, 0);
+            },
+
+            applyScanlines: function() {
+                const w = this.canvas.width, h = this.canvas.height;
+                const imgData = this.ctx.getImageData(0, 0, w, h);
+                const d = imgData.data;
+                for (let y = 0; y < h; y++) {
+                    if (y % 3 === 0) {
+                        for (let x = 0; x < w; x++) {
+                            const i = (y * w + x) * 4;
+                            d[i] *= 0.7;
+                            d[i+1] *= 0.7;
+                            d[i+2] *= 0.7;
+                        }
+                    }
+                }
+                this.ctx.putImageData(imgData, 0, 0);
             },
 
             download: function() {
                 if(!this.originalImage) return;
+                const format = document.getElementById('export-format').value;
+                const quality = parseFloat(document.getElementById('export-quality').value);
+                
                 const link = document.createElement('a');
-                link.download = 'edited_image.png';
-                link.href = this.canvas.toDataURL();
+                let ext = 'png';
+                if(format === 'image/jpeg') ext = 'jpg';
+                if(format === 'image/webp') ext = 'webp';
+                
+                link.download = `edited_image.${ext}`;
+                link.href = this.canvas.toDataURL(format, quality);
                 link.click();
             }
         };
 
-        photonTool.init();
+        window.onload = () => {
+            photonTool.init();
+        };
     </script>
 </body>
 </html>

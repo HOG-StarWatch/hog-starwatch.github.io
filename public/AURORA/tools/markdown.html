@@ -92,6 +92,71 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        /* Markdown Preview Styles */
+        #md-preview {
+            padding: 1.5rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        #md-preview h1, #md-preview h2, #md-preview h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.3rem;
+        }
+        #md-preview h1 { font-size: 1.8rem; }
+        #md-preview h2 { font-size: 1.5rem; }
+        #md-preview h3 { font-size: 1.25rem; }
+        #md-preview p { margin-bottom: 1rem; }
+        #md-preview ul, #md-preview ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+        #md-preview li { margin-bottom: 0.25rem; }
+        #md-preview blockquote {
+            border-left: 4px solid var(--secondary);
+            margin: 1rem 0;
+            padding-left: 1rem;
+            color: var(--text-dim);
+            background: rgba(255,255,255,0.05);
+            padding: 0.5rem 1rem;
+            border-radius: 0 4px 4px 0;
+        }
+        #md-preview pre {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+        #md-preview code {
+            font-family: var(--font-mono);
+            background: rgba(255,255,255,0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        #md-preview pre code {
+            background: transparent;
+            padding: 0;
+            color: var(--text-main);
+        }
+        #md-preview a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+        #md-preview a:hover {
+            text-decoration: underline;
+        }
+        #md-preview hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+        #md-preview img {
+            max-width: 100%;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -117,8 +182,9 @@
         <div class="toolbar">
             <div class="tool-group">
                 <div class="group-label">转换</div>
-                <button class="btn btn-primary" onclick="mdTool.toHtml()">转 HTML →</button>
-                <button class="btn btn-primary" onclick="mdTool.toMd()">转 MD →</button>
+                <button class="btn btn-primary" onclick="mdTool.renderPreview()">渲染预览 (MD) →</button>
+                <button class="btn btn-secondary" onclick="mdTool.htmlToMdInput()">HTML 转 MD ↺</button>
+                <button class="btn btn-secondary" onclick="mdTool.toHtml()">转 HTML 代码 →</button>
             </div>
             <div class="tool-group">
                 <div class="group-label">引擎</div>
@@ -144,10 +210,13 @@
                     <span style="color:var(--secondary)">### H3</span> <span>&lt;h3&gt;</span>
                     <span style="color:var(--secondary)">**Bold**</span> <span>&lt;b&gt;</span>
                     <span style="color:var(--secondary)">*Italic*</span> <span>&lt;i&gt;</span>
+                    <span style="color:var(--secondary)">~~Del~~</span> <span>&lt;del&gt;</span>
                     <span style="color:var(--secondary)">> Quote</span> <span>&lt;blockquote&gt;</span>
                     <span style="color:var(--secondary)">`Code`</span> <span>&lt;code&gt;</span>
                     <span style="color:var(--secondary)">```Pre```</span> <span>&lt;pre&gt;</span>
                     <span style="color:var(--secondary)">[Txt](Url)</span> <span>&lt;a&gt;</span>
+                    <span style="color:var(--secondary)">![Alt](Src)</span> <span>&lt;img&gt;</span>
+                    <span style="color:var(--secondary)">- [ ] Task</span> <span>&lt;input&gt;</span>
                     <span style="color:var(--secondary)">---</span> <span>&lt;hr&gt;</span>
                     <span style="color:var(--secondary)">\n\n</span> <span>&lt;br&gt;</span>
                 </div>
@@ -172,11 +241,15 @@
             <div class="panel-header">
                 <div class="panel-title">结果</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon btn-secondary" onclick="app.copy('md-output')">复制代码</button>
-                    <button class="btn btn-icon" onclick="mdTool.preview()">预览</button>
+                    <div class="btn-group" style="display:flex; gap:2px; margin-right:8px;">
+                        <button class="btn btn-sm btn-primary" id="view-preview-btn" onclick="mdTool.switchView('preview')">预览</button>
+                        <button class="btn btn-sm btn-secondary" id="view-code-btn" onclick="mdTool.switchView('code')">源码</button>
+                    </div>
+                    <button class="btn btn-icon btn-secondary" onclick="app.copy('md-output')">复制</button>
                 </div>
             </div>
-            <textarea id="md-output" placeholder="<h1...>结果..."></textarea>
+            <div id="md-preview" class="scroll-content" style="display:block; background:rgba(0,0,0,0.2);"></div>
+            <textarea id="md-output" placeholder="<h1...>结果..." style="display:none;"></textarea>
         </div>
     </div>
 
@@ -519,13 +592,17 @@
                 html = html.replace(/^(?:>|&gt;) (.*$)/gim, '<blockquote>$1</blockquote>');
                 html = html.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>');
                 html = html.replace(/\*(.*)\*/gim, '<i>$1</i>');
+                html = html.replace(/~~(.*?)~~/gim, '<del>$1</del>');
                 html = html.replace(/```([\s\S]*?)```/gim, (match, code) => {
                     return '<pre><code>' + code + '</code></pre>';
                 });
                 html = html.replace(/`([^`]+)`/gim, (match, code) => {
                     return '<code>' + code + '</code>';
                 });
+                html = html.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2'>");
                 html = html.replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2'>$1</a>");
+                html = html.replace(/- \[(x|X)\] (.*)/gim, '<div style="display:flex;align-items:center;gap:6px;"><input type="checkbox" checked disabled> <span>$2</span></div>');
+                html = html.replace(/- \[ \] (.*)/gim, '<div style="display:flex;align-items:center;gap:6px;"><input type="checkbox" disabled> <span>$1</span></div>');
                 html = html.replace(/^---$/gim, '<hr>');
                 html = html.replace(/\n\n/g, '<br><br>');
 
@@ -566,7 +643,14 @@
                     .replace(/<strong[^>]*>(.*?)<\/strong>/gim, '**$1**')
                     .replace(/<i[^>]*>(.*?)<\/i>/gim, '*$1*')
                     .replace(/<em[^>]*>(.*?)<\/em>/gim, '*$1*')
+                    .replace(/<del[^>]*>(.*?)<\/del>/gim, '~~$1~~')
+                    .replace(/<s[^>]*>(.*?)<\/s>/gim, '~~$1~~')
+                    .replace(/<strike[^>]*>(.*?)<\/strike>/gim, '~~$1~~')
+                    .replace(/<img[^>]*src=['"](.*?)['"][^>]*alt=['"](.*?)['"][^>]*>/gim, '![$2]($1)')
+                    .replace(/<img[^>]*alt=['"](.*?)['"][^>]*src=['"](.*?)['"][^>]*>/gim, '![$1]($2)')
                     .replace(/<a[^>]*href=['"](.*?)['"][^>]*>(.*?)<\/a>/gim, '[$2]($1)')
+                    .replace(/<input[^>]*type=['"]checkbox['"][^>]*checked[^>]*>\s*<span>(.*?)<\/span>/gim, '- [x] $1')
+                    .replace(/<input[^>]*type=['"]checkbox['"][^>]*>\s*<span>(.*?)<\/span>/gim, '- [ ] $1')
                     .replace(/<p[^>]*>(.*?)<\/p>/gim, '$1\n\n')
                     .replace(/<br\s*\/?>/gim, '\n')
                     .replace(/<ul>([\s\S]*?)<\/ul>/gim, function(match, content) {
@@ -591,7 +675,43 @@
                 document.getElementById('md-output').value = this.convertHtmlStrToMd(html);
             },
             
+            // New Methods
+            switchView: function(mode) {
+                const preview = document.getElementById('md-preview');
+                const output = document.getElementById('md-output');
+                const btnPreview = document.getElementById('view-preview-btn');
+                const btnCode = document.getElementById('view-code-btn');
+
+                if (mode === 'preview') {
+                    preview.style.display = 'block';
+                    output.style.display = 'none';
+                    btnPreview.classList.replace('btn-secondary', 'btn-primary');
+                    btnCode.classList.replace('btn-primary', 'btn-secondary');
+                    // Sync content
+                    preview.innerHTML = output.value;
+                } else {
+                    preview.style.display = 'none';
+                    output.style.display = 'block';
+                    btnPreview.classList.replace('btn-primary', 'btn-secondary');
+                    btnCode.classList.replace('btn-secondary', 'btn-primary');
+                }
+            },
+
+            renderPreview: function() {
+                this.toHtml(); // This populates md-output
+                this.switchView('preview');
+            },
+
+            htmlToMdInput: function() {
+                const html = document.getElementById('md-input').value;
+                const md = this.convertHtmlStrToMd(html);
+                document.getElementById('md-input').value = md;
+                this.renderPreview();
+                app.showToast('HTML 已转换为 MD 并渲染预览');
+            },
+            
             preview: function() {
+                // Legacy external preview
                 const html = document.getElementById('md-output').value;
                 const win = window.open("", "Preview", "width=800,height=600");
                 win.document.write('<' + 'html><' + 'head><' + 'title>Preview</' + 'title>');

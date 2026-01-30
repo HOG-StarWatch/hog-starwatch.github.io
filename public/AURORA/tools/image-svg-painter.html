@@ -8,41 +8,52 @@
     <script src="../js/app.js"></script>
     <style>
         body {
-            padding: 20px;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
-            gap: 20px;
             height: 100vh;
+            overflow: hidden;
         }
+        /* Override style.css .controls if needed, but style.css .controls is actually what we want for sidebar */
+        /* Local overrides */
         .controls {
+            /* Ensure it uses column layout from style.css or force it here */
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-            background: var(--bg-panel);
-            padding: 15px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
+            flex-direction: column;
+            gap: 15px;
+            align-items: stretch; /* Stretch to fill width */
+            max-width: 100%; /* Let grid handle width */
+            height: 100%; /* Fill sidebar height */
         }
+        
         .canvas-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: grid;
+            place-items: center;
             background: rgba(0,0,0,0.2);
             border-radius: var(--radius-md);
-            overflow: hidden;
+            overflow: auto;
             border: 1px dashed var(--border);
+            height: 100%; /* Fill remaining height */
+            width: 100%;
         }
         #svg-canvas {
             background: white;
             box-shadow: 0 0 20px rgba(0,0,0,0.3);
             cursor: crosshair;
+            min-width: 512px;
+            min-height: 512px;
         }
         .color-picker-wrapper {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 5px;
+        }
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
         }
         .tool-btn.active {
             background: var(--secondary);
@@ -58,58 +69,99 @@
         </div>
     </div>
 
-    <div class="controls">
-        <div class="color-picker-wrapper">
-            <span>描边:</span>
-            <input type="color" id="stroke-color" value="#000000">
+    <div class="layout-sidebar">
+        <div class="controls panel">
+            <div class="color-picker-wrapper">
+                <span>描边:</span>
+                <input type="color" id="stroke-color" value="#000000">
+            </div>
+            <div class="color-picker-wrapper">
+                <span>填充:</span>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <input type="color" id="fill-color" value="#ffffff">
+                    <label style="font-size:0.8rem;"><input type="checkbox" id="enable-fill"> 启用</label>
+                </div>
+            </div>
+            <div class="color-picker-wrapper">
+                <span>粗细:</span>
+                <div style="display:flex; align-items:center; gap:5px; flex:1; justify-content:flex-end;">
+                    <input type="range" id="stroke-width" min="1" max="50" value="3" style="width:100px">
+                    <span id="width-val" style="width:20px; text-align:right;">3</span>
+                </div>
+            </div>
+            <div class="color-picker-wrapper">
+                <span>透明度:</span>
+                <div style="display:flex; align-items:center; gap:5px; flex:1; justify-content:flex-end;">
+                    <input type="range" id="opacity" min="0" max="100" value="100" style="width:100px">
+                    <span id="opacity-val" style="width:35px; text-align:right;">100%</span>
+                </div>
+            </div>
+            <div class="color-picker-wrapper">
+                <span>笔触:</span>
+                <select id="line-cap" style="background:var(--bg-deep); color:var(--text-main); border:1px solid var(--border); border-radius:4px; padding:2px;">
+                    <option value="round">圆头</option>
+                    <option value="square">方头</option>
+                    <option value="butt">平头</option>
+                </select>
+            </div>
+            
+            <div style="width:100%; height:1px; background:var(--border); margin:5px 0;"></div>
+            
+            <div class="tool-grid">
+                <button class="btn btn-primary tool-btn active" onclick="setMode('path', this)">✏️ 自由笔</button>
+                <button class="btn tool-btn" onclick="setMode('line', this)">📏 直线</button>
+                <button class="btn tool-btn" onclick="setMode('rect', this)">⬜ 矩形</button>
+                <button class="btn tool-btn" onclick="setMode('circle', this)">⭕ 圆形</button>
+                <button class="btn tool-btn" onclick="setMode('ellipse', this)">🥚 椭圆</button>
+                <button class="btn tool-btn" onclick="setMode('text', this)">T 文本</button>
+                <button class="btn tool-btn" onclick="setMode('spray', this)">🚿 喷枪</button>
+                <button class="btn tool-btn" onclick="setMode('calligraphy', this)">✒️ 书法笔</button>
+            </div>
+            
+            <div style="width:100%; height:1px; background:var(--border); margin:5px 0;"></div>
+            
+            <div class="tool-grid">
+                <button class="btn btn-success" onclick="undo()">↩️ 撤销</button>
+                <button class="btn btn-danger" onclick="clearCanvas()">🗑️ 清空</button>
+            </div>
+            <button class="btn btn-primary" onclick="exportSVG()" style="margin-top:auto;">💾 导出 SVG</button>
+            
+            <div style="width:100%; height:1px; background:var(--border); margin:5px 0;"></div>
+            
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <input type="text" id="art-seed" placeholder="留空则随机" style="width:80px; font-size:0.8rem; padding:4px;">
+                    <button class="btn btn-secondary" onclick="generateRandomArt()" style="flex:1; font-size:0.8rem;">🎲 生成艺术</button>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                    <label style="font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:5px; user-select:none;">
+                        <input type="checkbox" id="clear-before-gen" checked> 覆盖清空
+                    </label>
+                    <span id="seed-display" 
+                          style="font-size:0.75rem; color:var(--text-main); background:var(--bg-deep); padding:2px 6px; border-radius:4px; border:1px solid var(--border); cursor:pointer; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
+                          title="点击复制当前种子" 
+                          onclick="copySeed()">
+                    </span>
+                </div>
+                
+                <div style="border:1px solid var(--border); border-radius:4px; padding:5px; margin-top:5px; max-height:150px; overflow-y:auto; font-size:0.8rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="font-weight:bold;">风格筛选:</span>
+                        <a href="javascript:void(0)" onclick="toggleAllStyles(this)" style="color:var(--secondary); text-decoration:none;">全选</a>
+                    </div>
+                    <div id="style-list" style="display:grid; grid-template-columns: 1fr 1fr; gap:2px;">
+                        <!-- Styles injected by JS -->
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="color-picker-wrapper">
-            <span>填充:</span>
-            <input type="color" id="fill-color" value="#ffffff">
-            <label><input type="checkbox" id="enable-fill"> 启用</label>
+
+        <div class="canvas-container">
+            <svg id="svg-canvas" width="512" height="512" xmlns="http://www.w3.org/2000/svg"></svg>
         </div>
-        <div class="color-picker-wrapper">
-            <span>粗细:</span>
-            <input type="range" id="stroke-width" min="1" max="50" value="3" style="width:100px">
-            <span id="width-val">3</span>
-        </div>
-        <div class="color-picker-wrapper">
-            <span>透明度:</span>
-            <input type="range" id="opacity" min="0" max="100" value="100" style="width:80px">
-            <span id="opacity-val">100%</span>
-        </div>
-        <div class="color-picker-wrapper">
-            <span>笔触:</span>
-            <select id="line-cap" style="background:var(--bg-deep); color:var(--text-main); border:1px solid var(--border); border-radius:4px; padding:2px;">
-                <option value="round">圆头</option>
-                <option value="square">方头</option>
-                <option value="butt">平头</option>
-            </select>
-        </div>
-        
-        <div style="width:100%; height:1px; background:var(--border); margin:10px 0;"></div>
-        
-        <button class="btn btn-primary tool-btn active" onclick="setMode('path', this)">✏️ 自由笔</button>
-        <button class="btn tool-btn" onclick="setMode('line', this)">📏 直线</button>
-        <button class="btn tool-btn" onclick="setMode('rect', this)">⬜ 矩形</button>
-        <button class="btn tool-btn" onclick="setMode('circle', this)">⭕ 圆形</button>
-        <button class="btn tool-btn" onclick="setMode('ellipse', this)">🥚 椭圆</button>
-        <button class="btn tool-btn" onclick="setMode('text', this)">T 文本</button>
-        <!-- Spray brush is complex in pure SVG DOM, simulated by multiple circles -->
-        <button class="btn tool-btn" onclick="setMode('spray', this)">🚿 喷枪</button>
-        <button class="btn tool-btn" onclick="setMode('calligraphy', this)">✒️ 书法笔</button>
-        
-        <div style="width:1px; height:20px; background:var(--border); margin:0 10px;"></div>
-        
-        <button class="btn btn-danger" onclick="clearCanvas()">🗑️ 清空</button>
-        <button class="btn btn-success" onclick="undo()">↩️ 撤销</button>
-        <button class="btn btn-primary" onclick="exportSVG()">💾 导出 SVG</button>
     </div>
 
-    <div class="canvas-container">
-        <svg id="svg-canvas" width="512" height="512" xmlns="http://www.w3.org/2000/svg"></svg>
-    </div>
-
+    <div id="toast"></div>
     <script>
         const svg = document.getElementById('svg-canvas');
         let isDrawing = false;
@@ -119,6 +171,40 @@
         let history = [];
         let sprayInterval = null;
         let lastPos = {x: 0, y: 0};
+        
+        // Styles Configuration
+        const styleDefs = [
+            { id: 'geometric', name: '几何' },
+            { id: 'mandala', name: '曼陀罗' },
+            { id: 'flow', name: '流光' },
+            { id: 'circuit', name: '电路' },
+            { id: 'pixel', name: '像素' },
+            { id: 'starfield', name: '星空' },
+            { id: 'bubbles', name: '气泡' },
+            { id: 'waves', name: '波浪' },
+            { id: 'memphis', name: '孟菲斯' },
+            { id: 'fractal', name: '分形树' },
+            { id: 'maze', name: '迷宫' },
+            { id: 'hexagons', name: '六边形' },
+            { id: 'rain', name: '数码雨' },
+            { id: 'spirals', name: '螺旋' },
+            { id: 'crossstitch', name: '十字绣' }
+        ];
+
+        // Init Style List
+        const styleListEl = document.getElementById('style-list');
+        styleDefs.forEach(s => {
+            const div = document.createElement('div');
+            div.innerHTML = `<label style="cursor:pointer; display:flex; align-items:center; gap:3px;"><input type="checkbox" name="style-filter" value="${s.id}" checked> ${s.name}</label>`;
+            styleListEl.appendChild(div);
+        });
+
+        function toggleAllStyles(btn) {
+            const checkboxes = document.querySelectorAll('input[name="style-filter"]');
+            const allChecked = Array.from(checkboxes).every(c => c.checked);
+            checkboxes.forEach(c => c.checked = !allChecked);
+            btn.innerText = allChecked ? '全选' : '全不选';
+        }
 
         // Setup Controls
         document.getElementById('stroke-width').addEventListener('input', (e) => {
@@ -381,6 +467,780 @@
             a.click();
             document.body.removeChild(a);
             app.showToast('SVG 已导出');
+        }
+
+        function copySeed() {
+            const seedText = document.getElementById('seed-display').innerText;
+            if(seedText) {
+                const val = seedText.split(': ')[1];
+                if(val) {
+                    navigator.clipboard.writeText(val);
+                    app.showToast('种子已复制: ' + val);
+                }
+            }
+        }
+
+        function generateRandomArt() {
+            // 1. Handle Canvas Clearing
+            const shouldClear = document.getElementById('clear-before-gen').checked;
+            if (shouldClear) {
+                svg.innerHTML = '';
+                history = [];
+            }
+
+            // 2. Seed Processing
+            const seedInput = document.getElementById('art-seed');
+            let seedVal = seedInput.value.trim();
+            
+            // If empty, use random, but DON'T fill input (so next click is random again)
+            if (!seedVal) {
+                seedVal = Math.random().toString(36).substring(2, 8).toUpperCase();
+            }
+            
+            // Display seed
+            document.getElementById('seed-display').innerText = `种子: ${seedVal}`;
+
+            // Hash function (cyrb53)
+            const cyrb53 = function(str, seed = 0) {
+                let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+                for (let i = 0, ch; i < str.length; i++) {
+                    ch = str.charCodeAt(i);
+                    h1 = Math.imul(h1 ^ ch, 2654435761);
+                    h2 = Math.imul(h2 ^ ch, 1597334677);
+                }
+                h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+                h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+                return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+            };
+
+            const seedHash = cyrb53(seedVal);
+
+            // PRNG (Mulberry32)
+            const random = (function(a) {
+                return function() {
+                  var t = a += 0x6D2B79F5;
+                  t = Math.imul(t ^ t >>> 15, t | 1);
+                  t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+                }
+            })(seedHash);
+
+            // Helper: Random Range
+            const randRange = (min, max) => min + random() * (max - min);
+            const randInt = (min, max) => Math.floor(randRange(min, max));
+            const randChoice = (arr) => arr[Math.floor(random() * arr.length)];
+            const chance = (prob) => random() < prob;
+
+            // 3. Palette Generator
+            const generatePalette = () => {
+                const hue = randInt(0, 360);
+                const scheme = randChoice(['complementary', 'analogous', 'triadic', 'split']);
+                const palette = [];
+                
+                const addColor = (h, s, l) => {
+                    palette.push(`hsl(${h % 360}, ${s}%, ${l}%)`);
+                };
+
+                // Base color
+                const s = randInt(60, 90);
+                const l = randInt(40, 60);
+                addColor(hue, s, l);
+
+                if (scheme === 'complementary') {
+                    addColor(hue + 180, s, l);
+                    addColor(hue, s - 20, l + 20);
+                    addColor(hue + 180, s - 20, l - 10);
+                } else if (scheme === 'analogous') {
+                    addColor(hue + 30, s, l);
+                    addColor(hue - 30, s, l);
+                    addColor(hue + 60, s - 10, l + 10);
+                } else if (scheme === 'triadic') {
+                    addColor(hue + 120, s, l);
+                    addColor(hue + 240, s, l);
+                    addColor(hue, s - 30, l + 30);
+                } else { // split
+                    addColor(hue + 150, s, l);
+                    addColor(hue + 210, s, l);
+                    addColor(hue, s - 10, l + 30);
+                }
+                // Add a dark and a light neutral
+                palette.push(`hsl(${hue}, 10%, 90%)`);
+                palette.push(`hsl(${hue}, 20%, 20%)`);
+                return palette;
+            };
+
+            const palette = generatePalette();
+            
+            // Filter styles
+            const selectedStyles = Array.from(document.querySelectorAll('input[name="style-filter"]:checked')).map(cb => cb.value);
+            if (selectedStyles.length === 0) {
+                app.showToast('请至少选择一种风格');
+                return;
+            }
+            
+            const style = randChoice(selectedStyles);
+            const width = 512;
+            const height = 512;
+
+            // 4. Generators
+            const generators = {
+                geometric: () => {
+                    // Recursive subdivision (Bauhaus style)
+                    const maxDepth = 4;
+                    
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#f0f0f0');
+                        svg.appendChild(bg);
+                    }
+
+                    const drawRect = (x, y, w, h, depth) => {
+                        if (depth >= maxDepth || (chance(0.3) && depth > 1)) {
+                            const color = randChoice(palette);
+                            const el = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            el.setAttribute('x', x);
+                            el.setAttribute('y', y);
+                            el.setAttribute('width', w);
+                            el.setAttribute('height', h);
+                            el.setAttribute('fill', color);
+                            el.setAttribute('stroke', '#333');
+                            el.setAttribute('stroke-width', 2);
+                            svg.appendChild(el);
+                            
+                            // Add detail?
+                            if (chance(0.3) && w > 40 && h > 40) {
+                                const type = randChoice(['circle', 'lines']);
+                                if (type === 'circle') {
+                                    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                                    c.setAttribute('cx', x + w/2);
+                                    c.setAttribute('cy', y + h/2);
+                                    c.setAttribute('r', Math.min(w, h)/3);
+                                    c.setAttribute('fill', randChoice(palette));
+                                    svg.appendChild(c);
+                                }
+                            }
+                            return;
+                        }
+
+                        // Split
+                        const splitVert = random() > 0.5;
+                        if (splitVert) {
+                            const split = w * randRange(0.3, 0.7);
+                            drawRect(x, y, split, h, depth + 1);
+                            drawRect(x + split, y, w - split, h, depth + 1);
+                        } else {
+                            const split = h * randRange(0.3, 0.7);
+                            drawRect(x, y, w, split, depth + 1);
+                            drawRect(x, y + split, w, h - split, depth + 1);
+                        }
+                    };
+                    
+                    drawRect(10, 10, width-20, height-20, 0);
+                },
+                
+                mandala: () => {
+                    // Radial symmetry
+                    const cx = width / 2;
+                    const cy = height / 2;
+                    const rings = randInt(5, 12);
+                    
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', palette[palette.length-1]);
+                        svg.appendChild(bg);
+                    }
+
+                    for (let r = rings; r > 0; r--) {
+                        const radius = (width / 2) * (r / rings);
+                        const points = randInt(6, 24);
+                        const shape = randChoice(['circle', 'petal', 'triangle']);
+                        const color = palette[r % palette.length];
+                        
+                        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        svg.appendChild(g);
+
+                        for (let i = 0; i < points; i++) {
+                            const angle = (i / points) * Math.PI * 2;
+                            const x = cx + Math.cos(angle) * radius * 0.8;
+                            const y = cy + Math.sin(angle) * radius * 0.8;
+                            
+                            let el;
+                            if (shape === 'circle') {
+                                el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                                el.setAttribute('cx', x);
+                                el.setAttribute('cy', y);
+                                el.setAttribute('r', radius * 0.2);
+                            } else if (shape === 'triangle') {
+                                el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                                const s = radius * 0.2;
+                                const pts = `${x},${y-s} ${x-s},${y+s} ${x+s},${y+s}`;
+                                el.setAttribute('points', pts);
+                                el.setAttribute('transform', `rotate(${(angle * 180 / Math.PI) + 90}, ${x}, ${y})`);
+                            } else {
+                                // Petal (Ellipse)
+                                el = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                                el.setAttribute('cx', x);
+                                el.setAttribute('cy', y);
+                                el.setAttribute('rx', radius * 0.1);
+                                el.setAttribute('ry', radius * 0.3);
+                                el.setAttribute('transform', `rotate(${(angle * 180 / Math.PI) + 90}, ${x}, ${y})`);
+                            }
+                            
+                            el.setAttribute('fill', color);
+                            el.setAttribute('opacity', 0.8);
+                            g.appendChild(el);
+                        }
+                    }
+                },
+                
+                flow: () => {
+                    // Flowing lines
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#111');
+                        svg.appendChild(bg);
+                    }
+
+                    const lines = randInt(50, 100);
+                    const steps = 20;
+                    
+                    for(let i=0; i<lines; i++) {
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        let d = `M ${randRange(0, width)} ${randRange(0, height)}`;
+                        let x = randRange(0, width);
+                        let y = randRange(0, height);
+                        
+                        // Create a smooth curve
+                        for(let s=0; s<steps; s++) {
+                             const angle = (x / width) * Math.PI * 4 + (y / height) * Math.PI * 4;
+                             x += Math.cos(angle) * 20;
+                             y += Math.sin(angle) * 20;
+                             d += ` L ${x} ${y}`;
+                        }
+                        
+                        path.setAttribute('d', d);
+                        path.setAttribute('fill', 'none');
+                        path.setAttribute('stroke', randChoice(palette));
+                        path.setAttribute('stroke-width', randRange(1, 4));
+                        path.setAttribute('opacity', randRange(0.3, 0.8));
+                        svg.appendChild(path);
+                    }
+                },
+
+                circuit: () => {
+                    // Circuit board style
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#002');
+                        svg.appendChild(bg);
+                    }
+                    
+                    const gridSize = 32;
+                    const cols = Math.floor(width / gridSize);
+                    const rows = Math.floor(height / gridSize);
+                    const traces = randInt(20, 50);
+                    
+                    for(let i=0; i<traces; i++) {
+                        let cx = randInt(1, cols-1) * gridSize;
+                        let cy = randInt(1, rows-1) * gridSize;
+                        const len = randInt(5, 15);
+                        let points = [[cx, cy]];
+                        let dir = randInt(0, 4); // 0:R, 1:D, 2:L, 3:U
+                        
+                        for(let j=0; j<len; j++) {
+                            if(chance(0.3)) dir = (dir + (chance(0.5)?1:3)) % 4;
+                            if(dir === 0) cx += gridSize;
+                            else if(dir === 1) cy += gridSize;
+                            else if(dir === 2) cx -= gridSize;
+                            else cy -= gridSize;
+                            
+                            // Clamp
+                            cx = Math.max(0, Math.min(width, cx));
+                            cy = Math.max(0, Math.min(height, cy));
+                            points.push([cx, cy]);
+                        }
+                        
+                        const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                        polyline.setAttribute('points', points.map(p => p.join(',')).join(' '));
+                        polyline.setAttribute('fill', 'none');
+                        polyline.setAttribute('stroke', randChoice(palette));
+                        polyline.setAttribute('stroke-width', 2);
+                        polyline.setAttribute('stroke-linecap', 'round');
+                        polyline.setAttribute('stroke-linejoin', 'round');
+                        polyline.setAttribute('opacity', 0.8);
+                        svg.appendChild(polyline);
+                        
+                        // Terminals
+                        const start = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        start.setAttribute('cx', points[0][0]);
+                        start.setAttribute('cy', points[0][1]);
+                        start.setAttribute('r', 3);
+                        start.setAttribute('fill', '#fff');
+                        svg.appendChild(start);
+                        
+                        const end = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        end.setAttribute('cx', points[points.length-1][0]);
+                        end.setAttribute('cy', points[points.length-1][1]);
+                        end.setAttribute('r', 3);
+                        end.setAttribute('fill', '#fff');
+                        svg.appendChild(end);
+                    }
+                },
+
+                pixel: () => {
+                    // Pixel art grid
+                    const pSize = randChoice([16, 32, 64]);
+                    const cols = Math.ceil(width / pSize);
+                    const rows = Math.ceil(height / pSize);
+                    
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#000');
+                        svg.appendChild(bg);
+                    }
+                    
+                    // Symmetry?
+                    const symX = chance(0.5);
+                    const symY = chance(0.5);
+                    
+                    for(let y=0; y<rows; y++) {
+                        for(let x=0; x<cols; x++) {
+                            // Check symmetry
+                            let srcX = x, srcY = y;
+                            if(symX && x >= cols/2) srcX = cols - 1 - x;
+                            if(symY && y >= rows/2) srcY = rows - 1 - y;
+                            
+                            // Noise based on position
+                            const noise = (Math.sin(srcX*0.5) + Math.cos(srcY*0.5)) * 0.5 + 0.5;
+                            
+                            if (random() > 0.4) { // Sparsity
+                                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                                rect.setAttribute('x', x * pSize);
+                                rect.setAttribute('y', y * pSize);
+                                rect.setAttribute('width', pSize);
+                                rect.setAttribute('height', pSize);
+                                rect.setAttribute('fill', randChoice(palette));
+                                rect.setAttribute('opacity', 0.8 + random()*0.2);
+                                svg.appendChild(rect);
+                            }
+                        }
+                    }
+                },
+                
+                starfield: () => {
+                    // Constellation / Starfield
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#0a0a1a');
+                        svg.appendChild(bg);
+                    }
+                    
+                    const starCount = randInt(50, 100);
+                    const stars = [];
+                    
+                    // Generate stars
+                    for(let i=0; i<starCount; i++) {
+                        const s = {
+                            x: randRange(0, width),
+                            y: randRange(0, height),
+                            r: randRange(1, 3)
+                        };
+                        stars.push(s);
+                        
+                        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        c.setAttribute('cx', s.x);
+                        c.setAttribute('cy', s.y);
+                        c.setAttribute('r', s.r);
+                        c.setAttribute('fill', '#fff');
+                        c.setAttribute('opacity', randRange(0.5, 1));
+                        svg.appendChild(c);
+                    }
+                    
+                    // Connect neighbors
+                    const maxDist = 80;
+                    for(let i=0; i<stars.length; i++) {
+                        for(let j=i+1; j<stars.length; j++) {
+                            const dx = stars[i].x - stars[j].x;
+                            const dy = stars[i].y - stars[j].y;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            
+                            if (dist < maxDist) {
+                                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                line.setAttribute('x1', stars[i].x);
+                                line.setAttribute('y1', stars[i].y);
+                                line.setAttribute('x2', stars[j].x);
+                                line.setAttribute('y2', stars[j].y);
+                                line.setAttribute('stroke', randChoice(palette));
+                                line.setAttribute('stroke-width', (1 - dist/maxDist) * 2);
+                                line.setAttribute('opacity', (1 - dist/maxDist) * 0.5);
+                                svg.appendChild(line);
+                            }
+                        }
+                    }
+                },
+
+                bubbles: () => {
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', palette[palette.length-1]);
+                        svg.appendChild(bg);
+                    }
+                    const count = randInt(20, 50);
+                    for(let i=0; i<count; i++) {
+                        const r = randRange(10, 80);
+                        const cx = randRange(0, width);
+                        const cy = randRange(0, height);
+                        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        c.setAttribute('cx', cx);
+                        c.setAttribute('cy', cy);
+                        c.setAttribute('r', r);
+                        c.setAttribute('fill', randChoice(palette));
+                        c.setAttribute('opacity', randRange(0.2, 0.6));
+                        // Add some gradient-like stroke
+                        if(chance(0.5)) {
+                            c.setAttribute('stroke', '#fff');
+                            c.setAttribute('stroke-width', 2);
+                            c.setAttribute('stroke-opacity', 0.4);
+                        }
+                        svg.appendChild(c);
+                    }
+                },
+
+                waves: () => {
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', palette[palette.length-1]);
+                        svg.appendChild(bg);
+                    }
+                    const layers = randInt(5, 10);
+                    const stepY = height / layers;
+                    
+                    for(let i=0; i<layers; i++) {
+                        const yBase = i * stepY;
+                        let d = `M 0 ${yBase + 50}`;
+                        const freq = randRange(0.01, 0.05);
+                        const amp = randRange(20, 50);
+                        const phase = randRange(0, Math.PI*2);
+                        
+                        for(let x=0; x<=width; x+=10) {
+                            const y = yBase + Math.sin(x * freq + phase) * amp;
+                            d += ` L ${x} ${y}`;
+                        }
+                        d += ` L ${width} ${height} L 0 ${height} Z`;
+                        
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        path.setAttribute('d', d);
+                        path.setAttribute('fill', palette[i % palette.length]);
+                        path.setAttribute('opacity', 0.7);
+                        svg.appendChild(path);
+                    }
+                },
+
+                memphis: () => {
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#fff'); // 80s style usually white/pastel bg
+                        svg.appendChild(bg);
+                    }
+                    const count = randInt(30, 60);
+                    for(let i=0; i<count; i++) {
+                        const type = randChoice(['rect', 'circle', 'line', 'triangle', 'squiggle']);
+                        const x = randRange(0, width);
+                        const y = randRange(0, height);
+                        const color = randChoice(palette);
+                        const rot = randRange(0, 360);
+                        
+                        let el;
+                        if(type === 'rect') {
+                            el = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            el.setAttribute('x', x);
+                            el.setAttribute('y', y);
+                            el.setAttribute('width', randRange(20, 60));
+                            el.setAttribute('height', randRange(20, 60));
+                        } else if (type === 'circle') {
+                            el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                            el.setAttribute('cx', x);
+                            el.setAttribute('cy', y);
+                            el.setAttribute('r', randRange(10, 30));
+                        } else if (type === 'triangle') {
+                            el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                            el.setAttribute('points', '0,-20 -20,20 20,20');
+                        } else if (type === 'line') {
+                            el = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            el.setAttribute('width', randRange(40, 80));
+                            el.setAttribute('height', 5);
+                            el.setAttribute('x', x);
+                            el.setAttribute('y', y);
+                        } else { // squiggle
+                            el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            el.setAttribute('d', 'M0,0 Q10,-20 20,0 T40,0');
+                            el.setAttribute('fill', 'none');
+                            el.setAttribute('stroke', color);
+                            el.setAttribute('stroke-width', 4);
+                            el.setAttribute('transform', `translate(${x},${y}) rotate(${rot}) scale(${randRange(1,2)})`);
+                            svg.appendChild(el);
+                            continue; // Special handling for path
+                        }
+                        
+                        if(type !== 'squiggle') {
+                            el.setAttribute('fill', color);
+                            if(type === 'triangle') {
+                                el.setAttribute('transform', `translate(${x},${y}) rotate(${rot})`);
+                            } else if (type === 'rect') {
+                                el.setAttribute('transform', `rotate(${rot}, ${x}, ${y})`);
+                            }
+                        }
+                        svg.appendChild(el);
+                    }
+                },
+
+                fractal: () => {
+                    // Recursive Tree
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#111');
+                        svg.appendChild(bg);
+                    }
+                    
+                    const drawBranch = (x, y, len, angle, depth) => {
+                        if (depth === 0) return;
+                        
+                        const x2 = x + Math.cos(angle) * len;
+                        const y2 = y + Math.sin(angle) * len;
+                        
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', x);
+                        line.setAttribute('y1', y);
+                        line.setAttribute('x2', x2);
+                        line.setAttribute('y2', y2);
+                        line.setAttribute('stroke', palette[depth % palette.length]);
+                        line.setAttribute('stroke-width', depth);
+                        line.setAttribute('stroke-linecap', 'round');
+                        svg.appendChild(line);
+                        
+                        // Recursive calls
+                        const subLen = len * 0.7;
+                        drawBranch(x2, y2, subLen, angle - 0.4, depth - 1);
+                        drawBranch(x2, y2, subLen, angle + 0.4, depth - 1);
+                    };
+                    
+                    // Start from bottom center
+                    drawBranch(width/2, height, 120, -Math.PI/2, 9);
+                },
+
+                maze: () => {
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#fff');
+                        svg.appendChild(bg);
+                    }
+                    const cellSize = 20;
+                    const cols = Math.floor(width/cellSize);
+                    const rows = Math.floor(height/cellSize);
+                    
+                    for(let y=0; y<rows; y++) {
+                        for(let x=0; x<cols; x++) {
+                            const px = x * cellSize;
+                            const py = y * cellSize;
+                            
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line.setAttribute('stroke', '#000');
+                            line.setAttribute('stroke-width', 2);
+                            line.setAttribute('stroke-linecap', 'round');
+                            
+                            if (chance(0.5)) {
+                                // Forward slash
+                                line.setAttribute('x1', px);
+                                line.setAttribute('y1', py + cellSize);
+                                line.setAttribute('x2', px + cellSize);
+                                line.setAttribute('y2', py);
+                            } else {
+                                // Backslash
+                                line.setAttribute('x1', px);
+                                line.setAttribute('y1', py);
+                                line.setAttribute('x2', px + cellSize);
+                                line.setAttribute('y2', py + cellSize);
+                            }
+                            // Add color variation
+                            if (chance(0.2)) line.setAttribute('stroke', randChoice(palette));
+                            
+                            svg.appendChild(line);
+                        }
+                    }
+                },
+
+                hexagons: () => {
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#222');
+                        svg.appendChild(bg);
+                    }
+                    const r = 30;
+                    const h = r * Math.sqrt(3);
+                    const cols = Math.ceil(width / (r * 1.5));
+                    const rows = Math.ceil(height / h);
+                    
+                    for(let y=0; y<rows; y++) {
+                        for(let x=0; x<cols; x++) {
+                            const cx = x * r * 1.5;
+                            const cy = y * h + (x % 2 === 0 ? 0 : h/2);
+                            
+                            if (chance(0.8)) {
+                                const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                                let pts = "";
+                                for(let i=0; i<6; i++) {
+                                    const ang = i * Math.PI / 3;
+                                    pts += `${cx + r*Math.cos(ang)},${cy + r*Math.sin(ang)} `;
+                                }
+                                poly.setAttribute('points', pts);
+                                poly.setAttribute('fill', randChoice(palette));
+                                poly.setAttribute('stroke', '#111');
+                                poly.setAttribute('stroke-width', 2);
+                                poly.setAttribute('opacity', randRange(0.5, 0.9));
+                                svg.appendChild(poly);
+                            }
+                        }
+                    }
+                },
+
+                rain: () => {
+                    // Digital Rain
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#000');
+                        svg.appendChild(bg);
+                    }
+                    const cols = 40;
+                    const colWidth = width / cols;
+                    
+                    for(let i=0; i<cols; i++) {
+                        const drops = randInt(5, 15);
+                        const x = i * colWidth + colWidth/2;
+                        
+                        for(let j=0; j<drops; j++) {
+                            const y = randRange(0, height);
+                            const len = randRange(10, 50);
+                            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                            text.setAttribute('x', x);
+                            text.setAttribute('y', y);
+                            text.setAttribute('fill', i%2===0 ? '#0f0' : randChoice(palette));
+                            text.setAttribute('font-family', 'monospace');
+                            text.setAttribute('font-size', randRange(10, 20));
+                            text.setAttribute('opacity', randRange(0.2, 0.9));
+                            // Random char
+                            text.textContent = String.fromCharCode(0x30A0 + randInt(0, 96));
+                            svg.appendChild(text);
+                        }
+                    }
+                },
+
+                spirals: () => {
+                    if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', palette[0]);
+                        svg.appendChild(bg);
+                    }
+                    const cx = width/2;
+                    const cy = height/2;
+                    const count = 300;
+                    const a = 5;
+                    const b = 2;
+                    
+                    let pathD = `M ${cx} ${cy}`;
+                    
+                    for(let i=0; i<count; i++) {
+                        const angle = 0.5 * i;
+                        const r = a + b * angle;
+                        const x = cx + r * Math.cos(angle);
+                        const y = cy + r * Math.sin(angle);
+                        
+                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        circle.setAttribute('cx', x);
+                        circle.setAttribute('cy', y);
+                        circle.setAttribute('r', i/10);
+                        circle.setAttribute('fill', randChoice(palette));
+                        svg.appendChild(circle);
+                    }
+                },
+
+                crossstitch: () => {
+                     if (shouldClear) {
+                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        bg.setAttribute('width', width);
+                        bg.setAttribute('height', height);
+                        bg.setAttribute('fill', '#fff');
+                        svg.appendChild(bg);
+                    }
+                    const gridSize = 10;
+                    const cols = width / gridSize;
+                    const rows = height / gridSize;
+                    
+                    // Pattern generator
+                    for(let y=0; y<rows; y++) {
+                        for(let x=0; x<cols; x++) {
+                            // Simple cellular automata or noise pattern
+                            const noise = (Math.sin(x*0.2) * Math.cos(y*0.2));
+                            if(noise > 0 || chance(0.3)) {
+                                const px = x * gridSize;
+                                const py = y * gridSize;
+                                const color = randChoice(palette);
+                                
+                                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                                g.setAttribute('stroke', color);
+                                g.setAttribute('stroke-width', 2);
+                                
+                                const l1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                l1.setAttribute('x1', px + 2);
+                                l1.setAttribute('y1', py + 2);
+                                l1.setAttribute('x2', px + gridSize - 2);
+                                l1.setAttribute('y2', py + gridSize - 2);
+                                
+                                const l2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                l2.setAttribute('x1', px + gridSize - 2);
+                                l2.setAttribute('y1', py + 2);
+                                l2.setAttribute('x2', px + 2);
+                                l2.setAttribute('y2', py + gridSize - 2);
+                                
+                                g.appendChild(l1);
+                                g.appendChild(l2);
+                                svg.appendChild(g);
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Run
+            generators[style]();
+            app.showToast(`生成完毕: ${style}`);
         }
     </script>
 </body>

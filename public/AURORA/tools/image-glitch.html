@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>故障艺术生成器</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/loader.js"></script>
     <style>
         /* Tool-specific overrides only */
         .slider-row {
@@ -25,6 +26,45 @@
             font-weight: 600;
             font-size: 0.95rem;
         }
+
+        .frame-item {
+            position: relative;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            background: #000;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .frame-item:hover {
+            border-color: var(--text-dim);
+        }
+        .frame-item.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.3);
+        }
+        .frame-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: space-between;
+            padding: 2px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .frame-item:hover .frame-overlay, .frame-item.active .frame-overlay {
+            opacity: 1;
+        }
+        
+        /* Fix for scrolling issue */
+        .layout-sidebar .controls {
+            max-height: 100%;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -44,6 +84,7 @@
             <div class="sub-tab-group">
                 <div class="sub-tab active" onclick="setMode('layer')">图层故障</div>
                 <div class="sub-tab" onclick="setMode('data')">数据破坏</div>
+                <div class="sub-tab" onclick="setMode('gif')">GIF 动图</div>
             </div>
 
             <!-- MODE: Layer Glitch (Canvas) -->
@@ -55,12 +96,12 @@
                     </div>
                     <div class="slider-row">
                         <label>水平偏移 X</label>
-                        <input type="range" id="rgb-amount" min="0" max="50" value="10">
+                        <input type="range" id="rgb-amount" min="-50" max="50" value="10">
                         <span id="val-rgb">10</span>
                     </div>
                     <div class="slider-row">
                         <label>垂直偏移 Y</label>
-                        <input type="range" id="rgb-angle" min="0" max="50" value="0">
+                        <input type="range" id="rgb-angle" min="-50" max="50" value="0">
                         <span id="val-rgb-y">0</span>
                     </div>
                 </div>
@@ -136,6 +177,70 @@
                 <button class="btn btn-danger" id="btn-mosh" style="width: 100%;">☠️ 破坏数据 (MOSH)</button>
             </div>
             
+            <!-- MODE: GIF Glitch -->
+            <div id="controls-gif" style="display: none;">
+                 <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px;">
+                    生成包含多个随机破坏效果帧的 GIF 动画。
+                </p>
+                <div class="control-group">
+                    <div class="control-title">动画设置</div>
+                    <div class="slider-row">
+                        <label>帧数 (Frames)</label>
+                        <input type="range" id="gif-frames" min="2" max="50" value="10">
+                        <span id="val-gif-frames">10</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>帧间隔 (ms)</label>
+                        <input type="range" id="gif-delay" min="20" max="500" value="100" step="10">
+                        <span id="val-gif-delay">100</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-title">数据破坏参数</div>
+                    <div class="slider-row">
+                        <label>破坏数量</label>
+                        <input type="range" id="gif-amount" min="1" max="100" value="10">
+                        <span id="val-gif-amt">10</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>迭代次数</label>
+                        <input type="range" id="gif-iter" min="1" max="20" value="5">
+                        <span id="val-gif-iter">5</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>随机种子变化</label>
+                        <input type="checkbox" id="gif-seed-random" checked>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <button class="btn btn-primary" id="btn-gen-frames" style="flex:1;">📸 生成帧序列</button>
+                    <button class="btn btn-success" id="btn-render-gif" style="flex:1;" disabled>🎬 导出 GIF</button>
+                </div>
+
+                <!-- Frame Editor -->
+                <div id="frame-editor" style="display:none; margin-bottom:15px;">
+                    <div class="control-title">
+                        <span>帧编辑 (<span id="frame-count-display">0</span>)</span>
+                        <button class="btn btn-sm btn-secondary" onclick="clearFrames()" style="font-size:0.7rem; padding:2px 6px;">清空</button>
+                    </div>
+                    <div id="frame-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap:8px; max-height:300px; overflow-y:auto; padding:5px; background:rgba(0,0,0,0.2); border-radius:4px; overscroll-behavior: contain;">
+                        <!-- Frames injected here -->
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div id="gif-progress-container" style="display:none; margin-top:10px;">
+                    <div style="height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                        <div id="gif-progress-bar" style="width:0%; height:100%; background:var(--primary); transition:width 0.2s;"></div>
+                    </div>
+                    <div id="gif-progress-text" style="font-size:0.8rem; color:var(--text-dim); text-align:center; margin-top:4px;">0%</div>
+                </div>
+
+                <div id="gif-status" style="font-size:0.8rem; color:var(--text-dim); text-align:center; margin-top:5px;"></div>
+            </div>
+
             <a id="btn-download" class="btn btn-success" style="text-align:center; text-decoration:none; margin-top: auto; display: none; justify-content: center;">💾 保存图片</a>
         </div>
 
@@ -144,6 +249,7 @@
             <div id="placeholder-text" style="color:var(--text-dim);">请先上传图片</div>
             <canvas id="cvs-main" class="canvas-responsive" style="display:none; border-radius: var(--radius-md); box-shadow: var(--shadow);"></canvas>
             <img id="img-mosh" class="canvas-responsive" style="display: none; border-radius: var(--radius-md); box-shadow: var(--shadow);">
+            <img id="img-gif" class="canvas-responsive" style="display: none; border-radius: var(--radius-md); box-shadow: var(--shadow);">
         </div>
 
     </div>
@@ -155,7 +261,14 @@
         const cvs = document.getElementById('cvs-main');
         const ctx = cvs.getContext('2d', { willReadFrequently: true });
         let currentMode = 'layer';
+        let gifLibLoaded = false;
         
+        // Load GIF Library
+        ResourceLoader.load('gif.js').then(() => {
+            gifLibLoaded = true;
+            console.log('GIF Library Loaded');
+        });
+
         // Worker Init
         let glitchWorker = null;
         if(window.Worker) {
@@ -188,7 +301,11 @@
             'scan-opacity': 'val-scan-o',
             'data-seed': 'val-data-seed',
             'data-amount': 'val-data-amt',
-            'data-iter': 'val-data-iter'
+            'data-iter': 'val-data-iter',
+            'gif-frames': 'val-gif-frames',
+            'gif-delay': 'val-gif-delay',
+            'gif-amount': 'val-gif-amt',
+            'gif-iter': 'val-gif-iter'
         };
 
         Object.keys(idMap).forEach(id => {
@@ -211,15 +328,33 @@
             
             document.getElementById('controls-layer').style.display = mode === 'layer' ? 'block' : 'none';
             document.getElementById('controls-data').style.display = mode === 'data' ? 'block' : 'none';
+            document.getElementById('controls-gif').style.display = mode === 'gif' ? 'block' : 'none';
             
+            // Reset Preview Visibility
+            cvs.style.display = 'none';
+            document.getElementById('img-mosh').style.display = 'none';
+            document.getElementById('img-gif').style.display = 'none';
+
             if(mode === 'layer') {
                 if(srcLoaded) {
                     cvs.style.display = 'block';
-                    document.getElementById('img-mosh').style.display = 'none';
                     renderLayerGlitch();
                 }
-            } else {
-                // Keep showing last result until clicked
+            } else if (mode === 'data') {
+                if(srcLoaded && document.getElementById('img-mosh').src) {
+                    document.getElementById('img-mosh').style.display = 'block';
+                } else if (srcLoaded) {
+                    // Show original if no result yet
+                    document.getElementById('img-mosh').src = srcImg.src;
+                    document.getElementById('img-mosh').style.display = 'block';
+                }
+            } else if (mode === 'gif') {
+                if(srcLoaded && document.getElementById('img-gif').src) {
+                    document.getElementById('img-gif').style.display = 'block';
+                } else if (srcLoaded) {
+                     document.getElementById('img-gif').src = srcImg.src;
+                     document.getElementById('img-gif').style.display = 'block';
+                }
             }
         };
 
@@ -250,16 +385,24 @@
                 srcImg.onload = () => {
                     srcLoaded = true;
                     // Reset Canvas size
-                    const maxW = 1200;
+                    const maxW = 800; // Limit size for performance
                     const scale = Math.min(1, maxW / srcImg.width);
                     cvs.width = srcImg.width * scale;
                     cvs.height = srcImg.height * scale;
                     
+                    // Always draw initial image to canvas to ensure data exists for other modes
+                    ctx.drawImage(srcImg, 0, 0, cvs.width, cvs.height);
+                    
                     if(currentMode === 'layer') {
                         cvs.style.display = 'block';
                         renderLayerGlitch();
+                    } else if (currentMode === 'data') {
+                        document.getElementById('img-mosh').src = srcImg.src;
+                        document.getElementById('img-mosh').style.display = 'block';
+                    } else if (currentMode === 'gif') {
+                        document.getElementById('img-gif').src = srcImg.src;
+                        document.getElementById('img-gif').style.display = 'block';
                     }
-                    else document.getElementById('img-mosh').src = srcImg.src;
                 };
                 srcImg.src = ev.target.result;
             };
@@ -337,7 +480,7 @@
                 const offX = parseInt(document.getElementById('rgb-amount').value);
                 const offY = parseInt(document.getElementById('rgb-angle').value);
                 
-                if(offX > 0 || offY > 0) {
+                if(offX !== 0 || offY !== 0) {
                     const imgData = ctx.getImageData(0, 0, w, h);
                     const original = ctx.getImageData(0, 0, w, h); // Copy
                     const d = imgData.data;
@@ -381,6 +524,31 @@
         }
 
         // --- Data Mosh Logic ---
+        function performDataMosh(uint8, seed, amount, iter) {
+             const corrupted = new Uint8Array(uint8);
+             // Simple PRNG for reproducibility if needed (but we use Math.random for now)
+             
+             for(let i=0; i<iter; i++) {
+                // Pick a random spot, strictly after header (assume ~5% header safe zone)
+                const maxIdx = corrupted.length - 100;
+                const minIdx = Math.floor(corrupted.length / 20); 
+                
+                const idx = Math.floor(minIdx + Math.random() * (maxIdx - minIdx));
+                
+                // Action: Replace byte
+                const val = Math.floor(Math.random() * 256);
+                corrupted[idx] = val;
+                
+                // Action: Replace chunk with 0
+                if(Math.random() > 0.5) {
+                    for(let j=0; j<amount; j++) {
+                        if(idx+j < maxIdx) corrupted[idx+j] = 0;
+                    }
+                }
+            }
+            return corrupted;
+        }
+
         document.getElementById('btn-mosh').onclick = () => {
             if(!srcLoaded) return alert("请先上传图片！");
             
@@ -394,39 +562,16 @@
                     const buffer = e.target.result; // ArrayBuffer
                     const uint8 = new Uint8Array(buffer);
                     
-                    const seed = parseInt(document.getElementById('data-seed').value);
                     const amount = parseInt(document.getElementById('data-amount').value); 
                     const iter = parseInt(document.getElementById('data-iter').value); 
                     
-                    // Clone buffer
-                    const corrupted = new Uint8Array(uint8);
-                    
-                    for(let i=0; i<iter; i++) {
-                        // Pick a random spot, strictly after header
-                        const maxIdx = corrupted.length - 100;
-                        const minIdx = Math.floor(corrupted.length / 20); // Skip first 5%
-                        
-                        const idx = Math.floor(minIdx + Math.random() * (maxIdx - minIdx));
-                        
-                        // Action: Replace byte
-                        const val = Math.floor(Math.random() * 256);
-                        corrupted[idx] = val;
-                        
-                        // Action: Replace chunk with 0
-                        if(Math.random() > 0.5) {
-                            for(let j=0; j<amount; j++) {
-                                if(idx+j < maxIdx) corrupted[idx+j] = 0;
-                            }
-                        }
-                    }
+                    const corrupted = performDataMosh(uint8, 0, amount, iter);
                     
                     const newBlob = new Blob([corrupted], {type: 'image/jpeg'});
                     const url = URL.createObjectURL(newBlob);
                     
                     const imgMosh = document.getElementById('img-mosh');
                     imgMosh.src = url;
-                    imgMosh.style.display = 'block';
-                    cvs.style.display = 'none';
                     
                     updateDownload(url);
                     btn.disabled = false;
@@ -434,6 +579,296 @@
                 };
                 reader.readAsArrayBuffer(blob);
             }, 'image/jpeg', 0.8);
+        };
+
+        // --- GIF Generation Logic ---
+        let generatedFrames = []; // Stores { blob, url, seed, params }
+
+        // 1. Generate Frames Step
+        document.getElementById('btn-gen-frames').onclick = async () => {
+             if(!srcLoaded) return alert("请先上传图片！");
+             
+             const btn = document.getElementById('btn-gen-frames');
+             const status = document.getElementById('gif-status');
+             
+             btn.disabled = true;
+             btn.innerText = "生成中...";
+             status.innerText = "生成帧数据...";
+             
+             try {
+                 const framesCount = parseInt(document.getElementById('gif-frames').value);
+                 const amount = parseInt(document.getElementById('gif-amount').value);
+                 const iter = parseInt(document.getElementById('gif-iter').value);
+                 const randomSeed = document.getElementById('gif-seed-random').checked;
+                 
+                 // Clear existing if needed? Or append? Let's clear for now based on "Generate Frames" usually implies fresh set
+                 // But user might want to add more. Let's Append if Shift key pressed? No, keep simple: Clear first.
+                 // Actually, let's just clear for simplicity unless we add "Add Frames" button.
+                 generatedFrames = []; 
+                 
+                 // Get Source Blob
+                 const srcBlob = await new Promise(resolve => cvs.toBlob(resolve, 'image/jpeg', 0.8));
+                 const srcBuffer = await srcBlob.arrayBuffer();
+                 const srcUint8 = new Uint8Array(srcBuffer);
+                 
+                 for(let i=0; i<framesCount; i++) {
+                     // status.innerText = `生成帧 ${i+1}/${framesCount}...`;
+                     // Allow UI to update
+                     await new Promise(r => requestAnimationFrame(r));
+                     
+                     const seed = randomSeed ? Math.floor(Math.random() * 10000) : i;
+                     const corrupted = performDataMosh(srcUint8, seed, amount, iter); 
+                     const blob = new Blob([corrupted], {type: 'image/jpeg'});
+                     const url = URL.createObjectURL(blob);
+                     
+                     generatedFrames.push({
+                         blob: blob,
+                         url: url,
+                         seed: seed,
+                         amount: amount,
+                         iter: iter,
+                         srcUint8: srcUint8 // Keep ref to source for regeneration
+                     });
+                 }
+                 
+                 renderFrameEditor();
+                 status.innerText = `已生成 ${generatedFrames.length} 帧`;
+                 
+             } catch (e) {
+                 console.error(e);
+                 alert('帧生成失败: ' + e.message);
+             } finally {
+                 btn.disabled = false;
+                 btn.innerText = "📸 生成帧序列";
+             }
+        };
+
+        // 2. Render Frame Editor UI
+        function renderFrameEditor() {
+            const container = document.getElementById('frame-editor');
+            const list = document.getElementById('frame-list');
+            const countDisplay = document.getElementById('frame-count-display');
+            const renderBtn = document.getElementById('btn-render-gif');
+            
+            if(generatedFrames.length > 0) {
+                container.style.display = 'block';
+                renderBtn.disabled = false;
+            } else {
+                container.style.display = 'none';
+                renderBtn.disabled = true;
+            }
+            
+            countDisplay.innerText = generatedFrames.length;
+            list.innerHTML = '';
+            
+            generatedFrames.forEach((frame, index) => {
+                 const item = document.createElement('div');
+                 item.id = `frame-item-${index}`;
+                 item.className = 'frame-item';
+                 item.onclick = (e) => {
+                    // Ignore clicks on buttons inside
+                    if(e.target.tagName === 'BUTTON') return;
+                    previewFrame(index);
+                 };
+                 
+                 // Image
+                 const img = document.createElement('img');
+                 img.src = frame.url;
+                 img.style.width = '100%';
+                 img.style.height = '100%';
+                 img.style.objectFit = 'cover';
+                 
+                 // Overlay Controls
+                 const overlay = document.createElement('div');
+                 overlay.className = 'frame-overlay';
+                 
+                 // Regenerate Btn
+                 const btnRegen = document.createElement('button');
+                 btnRegen.innerHTML = '↻';
+                 btnRegen.title = '重新生成此帧';
+                 btnRegen.onclick = (e) => { e.stopPropagation(); regenerateFrame(index); };
+                 styleMiniBtn(btnRegen);
+
+                 // Delete Btn
+                 const btnDel = document.createElement('button');
+                 btnDel.innerHTML = '×';
+                 btnDel.style.color = '#ff4d4d';
+                 btnDel.title = '删除此帧';
+                 btnDel.onclick = (e) => { e.stopPropagation(); deleteFrame(index); };
+                 styleMiniBtn(btnDel);
+                 
+                 // Move Left
+                 const btnLeft = document.createElement('button');
+                 btnLeft.innerHTML = '‹';
+                 btnLeft.onclick = (e) => { e.stopPropagation(); moveFrame(index, -1); };
+                 styleMiniBtn(btnLeft);
+                 if(index === 0) btnLeft.style.visibility = 'hidden';
+
+                 // Move Right
+                 const btnRight = document.createElement('button');
+                 btnRight.innerHTML = '›';
+                 btnRight.onclick = (e) => { e.stopPropagation(); moveFrame(index, 1); };
+                 styleMiniBtn(btnRight);
+                 if(index === generatedFrames.length - 1) btnRight.style.visibility = 'hidden';
+
+                 overlay.appendChild(btnLeft);
+                 overlay.appendChild(btnRegen);
+                 overlay.appendChild(btnDel);
+                 overlay.appendChild(btnRight);
+                 
+                 item.appendChild(img);
+                 item.appendChild(overlay);
+                 list.appendChild(item);
+             });
+         }
+
+         window.previewFrame = (index) => {
+             // Highlight
+             document.querySelectorAll('.frame-item').forEach(el => el.classList.remove('active'));
+             const item = document.getElementById(`frame-item-${index}`);
+             if(item) item.classList.add('active');
+             
+             // Show Image
+             if(generatedFrames[index]) {
+                 const imgGif = document.getElementById('img-gif');
+                 imgGif.src = generatedFrames[index].url;
+                 imgGif.style.display = 'block';
+                 
+                 // Update status text just for feedback
+                 document.getElementById('gif-status').innerText = `预览第 ${index+1} 帧`;
+             }
+         };
+
+        function styleMiniBtn(btn) {
+            btn.style.background = 'none';
+            btn.style.border = 'none';
+            btn.style.color = '#fff';
+            btn.style.cursor = 'pointer';
+            btn.style.fontSize = '12px';
+            btn.style.padding = '2px 4px';
+            btn.onmouseover = () => btn.style.opacity = '1';
+            btn.onmouseout = () => btn.style.opacity = '0.7';
+            btn.style.opacity = '0.7';
+        }
+
+        window.clearFrames = () => {
+            generatedFrames.forEach(f => URL.revokeObjectURL(f.url));
+            generatedFrames = [];
+            renderFrameEditor();
+        };
+
+        window.deleteFrame = (index) => {
+            URL.revokeObjectURL(generatedFrames[index].url);
+            generatedFrames.splice(index, 1);
+            renderFrameEditor();
+        };
+
+        window.moveFrame = (index, dir) => {
+            if(index + dir < 0 || index + dir >= generatedFrames.length) return;
+            const temp = generatedFrames[index];
+            generatedFrames[index] = generatedFrames[index+dir];
+            generatedFrames[index+dir] = temp;
+            renderFrameEditor();
+        };
+
+        window.regenerateFrame = (index) => {
+            const frame = generatedFrames[index];
+            const newSeed = Math.floor(Math.random() * 10000); // New random seed
+            const corrupted = performDataMosh(frame.srcUint8, newSeed, frame.amount, frame.iter);
+            
+            URL.revokeObjectURL(frame.url); // Free old
+            const blob = new Blob([corrupted], {type: 'image/jpeg'});
+            
+            generatedFrames[index] = {
+                ...frame,
+                blob: blob,
+                url: URL.createObjectURL(blob),
+                seed: newSeed
+            };
+            renderFrameEditor();
+        };
+
+        // 3. Render Final GIF
+        document.getElementById('btn-render-gif').onclick = async () => {
+             if(generatedFrames.length === 0) return;
+             if(!gifLibLoaded) return alert("GIF 库尚未加载，请稍候...");
+             
+             const btn = document.getElementById('btn-render-gif');
+             const status = document.getElementById('gif-status');
+             const progressContainer = document.getElementById('gif-progress-container');
+             const progressBar = document.getElementById('gif-progress-bar');
+             const progressText = document.getElementById('gif-progress-text');
+
+             btn.disabled = true;
+             btn.innerText = "生成中...";
+             status.innerText = "开始渲染 GIF...";
+             
+             // Reset & Show Progress
+             progressContainer.style.display = 'block';
+             progressBar.style.width = '0%';
+             progressText.innerText = '0%';
+
+             try {
+                 const delay = parseInt(document.getElementById('gif-delay').value);
+                 
+                 // Initialize GIF Encoder with local worker
+                 const gif = new GIF({
+                    workers: 2,
+                    quality: 10,
+                    workerScript: '../js/workers/gif.worker.js'
+                 });
+                 
+                 // Progress Event
+                 gif.on('progress', function(p) {
+                    const pct = Math.round(p * 100);
+                    progressBar.style.width = pct + '%';
+                    progressText.innerText = `渲染中... ${pct}%`;
+                 });
+
+                 // Add frames from generated list
+                 for(let i=0; i<generatedFrames.length; i++) {
+                     const frame = generatedFrames[i];
+                     const img = new Image();
+                     await new Promise((resolve) => {
+                         img.onload = resolve;
+                         img.onerror = resolve; 
+                         img.src = frame.url;
+                     });
+                     
+                     if(img.width > 0) {
+                         gif.addFrame(img, {delay: delay});
+                     }
+                 }
+                 
+                 status.innerText = "编码 GIF 中 (可能需要几秒)...";
+                 
+                 gif.on('finished', function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const imgGif = document.getElementById('img-gif');
+                    imgGif.src = url;
+                    imgGif.style.display = 'block';
+                    
+                    updateDownload(url, 'glitch.gif');
+                    btn.disabled = false;
+                    btn.innerText = "🎬 导出 GIF";
+                    status.innerText = "完成!";
+                    
+                    // Hide Progress after delay
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                    }, 2000);
+                 });
+                 
+                 gif.render();
+                 
+             } catch (e) {
+                 console.error(e);
+                 alert('GIF 生成失败: ' + e.message);
+                 btn.disabled = false;
+                 btn.innerText = "🎬 导出 GIF";
+                 status.innerText = "出错";
+                 progressContainer.style.display = 'none';
+             }
         };
 
         // --- Utils ---
@@ -449,11 +884,11 @@
             renderLayerGlitch();
         };
 
-        function updateDownload(url) {
+        function updateDownload(url, filename) {
             const btn = document.getElementById('btn-download');
             btn.style.display = 'flex';
             btn.href = url;
-            btn.download = `glitch_${Date.now()}.jpg`;
+            btn.download = filename || `glitch_${Date.now()}.jpg`;
         }
     </script>
 </body>

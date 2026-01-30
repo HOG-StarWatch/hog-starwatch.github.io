@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIF 制作工具</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/loader.js"></script>
+    <style>
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .slider-row label { flex: 1; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0; }
+        .slider-row span { font-size: 0.85rem; color: var(--secondary); width: 30px; text-align: right; }
+        
+        .file-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+        
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        
+        .file-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        
+        .file-item .info {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .file-item .actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .file-item button {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 2px;
+        }
+        
+        .file-item button:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="layout-sidebar">
+        <!-- Controls -->
+        <div class="controls panel">
+            <h2 style="margin:0 0 15px 0; color:var(--primary); font-size:1.5rem;">GIF 制作</h2>
+            
+            <div class="control-group">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-images" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-dim);"></i>
+                    <div style="font-size: 0.8rem;">点击或拖放多张图片</div>
+                    <input type="file" id="input-files" accept="image/*" multiple hidden>
+                </div>
+            </div>
+
+            <div id="file-list-container" class="control-group" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <label style="font-size:0.9rem; font-weight:600;">已选图片 <span id="file-count" style="font-weight:normal; color:var(--text-dim);">(0)</span></label>
+                    <button class="btn btn-sm" onclick="clearFiles()" style="padding: 2px 8px; font-size: 0.75rem;">清空</button>
+                </div>
+                <div class="file-list" id="file-list">
+                    <!-- File items will be added here -->
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="filter-title">参数设置</div>
+                <div class="slider-row">
+                    <label>宽度 (px)</label>
+                    <input type="number" id="gif-width" placeholder="自动" style="width: 60px; padding: 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg);">
+                </div>
+                <div class="slider-row">
+                    <label>高度 (px)</label>
+                    <input type="number" id="gif-height" placeholder="自动" style="width: 60px; padding: 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg);">
+                </div>
+                <div class="slider-row">
+                    <label>帧间隔 (ms)</label>
+                    <input type="range" id="gif-delay" min="20" max="1000" value="200" step="10">
+                    <span id="val-gif-delay">200</span>
+                </div>
+                <div class="slider-row">
+                    <label>质量 (1-10)</label>
+                    <input type="range" id="gif-quality" min="1" max="30" value="10" step="1" title="越低越好">
+                    <span id="val-gif-quality">10</span>
+                </div>
+                <div class="slider-row">
+                    <label>循环播放</label>
+                    <input type="checkbox" id="gif-loop" checked>
+                </div>
+                <div class="slider-row">
+                    <label>透明背景</label>
+                    <input type="checkbox" id="gif-transparent">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-generate" style="width: 100%; margin-bottom: 10px;">🎬 生成 GIF</button>
+            
+            <!-- Progress Bar -->
+            <div id="progress-container" style="display:none; margin-top:10px;">
+                <div style="height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                    <div id="progress-bar" style="width:0%; height:100%; background:var(--primary); transition:width 0.2s;"></div>
+                </div>
+                <div id="progress-text" style="font-size:0.8rem; color:var(--text-dim); text-align:center; margin-top:4px;">0%</div>
+            </div>
+            
+            <a id="btn-download" class="btn btn-success" style="text-align:center; text-decoration:none; display: none; justify-content: center;">💾 保存 GIF</a>
+        </div>
+
+        <!-- Preview -->
+        <div class="preview-area">
+            <div id="placeholder-text" style="color:var(--text-dim);">请上传图片并点击生成</div>
+            <img id="img-preview" class="canvas-responsive" style="display: none; border-radius: var(--radius-md); box-shadow: var(--shadow);">
+        </div>
+    </div>
+
+    <script>
+        let uploadedFiles = []; // Array of { file, url, id }
+        let gif = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await ResourceLoader.load('gif.js');
+                console.log('GIF.js loaded');
+            } catch (err) {
+                console.error('Failed to load libraries:', err);
+                alert('资源加载失败，请检查网络连接');
+            }
+
+            initUI();
+        });
+
+        function initUI() {
+            // Upload handling
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('input-files');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'var(--primary)';
+                uploadArea.style.background = 'rgba(var(--primary-rgb), 0.1)';
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'var(--border)';
+                uploadArea.style.background = 'transparent';
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'var(--border)';
+                uploadArea.style.background = 'transparent';
+                handleFiles(e.dataTransfer.files);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+                fileInput.value = ''; // Reset
+            });
+
+            // Sliders
+            setupSlider('gif-delay', 'val-gif-delay');
+            setupSlider('gif-quality', 'val-gif-quality');
+
+            // Generate Button
+            document.getElementById('btn-generate').addEventListener('click', generateGIF);
+        }
+
+        function setupSlider(id, valId) {
+            const slider = document.getElementById(id);
+            const display = document.getElementById(valId);
+            slider.addEventListener('input', () => {
+                display.innerText = slider.value;
+            });
+        }
+
+        function handleFiles(files) {
+            if (!files || files.length === 0) return;
+
+            const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+            if (newFiles.length === 0) {
+                alert('请上传有效的图片文件');
+                return;
+            }
+
+            // Process new files
+            newFiles.forEach(file => {
+                const url = URL.createObjectURL(file);
+                uploadedFiles.push({
+                    file: file,
+                    url: url,
+                    id: Math.random().toString(36).substr(2, 9)
+                });
+            });
+
+            updateFileList();
+        }
+
+        function updateFileList() {
+            const container = document.getElementById('file-list-container');
+            const list = document.getElementById('file-list');
+            const count = document.getElementById('file-count');
+
+            if (uploadedFiles.length > 0) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+
+            count.innerText = `(${uploadedFiles.length})`;
+            list.innerHTML = '';
+
+            uploadedFiles.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `
+                    <img src="${item.url}" alt="thumb">
+                    <div class="info" title="${item.file.name}">${item.file.name}</div>
+                    <div class="actions">
+                        <button onclick="moveFile(${index}, -1)" title="上移" ${index === 0 ? 'disabled' : ''}>↑</button>
+                        <button onclick="moveFile(${index}, 1)" title="下移" ${index === uploadedFiles.length - 1 ? 'disabled' : ''}>↓</button>
+                        <button onclick="removeFile(${index})" title="删除" style="color:var(--danger)">×</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function moveFile(index, direction) {
+            if (index + direction < 0 || index + direction >= uploadedFiles.length) return;
+            
+            const temp = uploadedFiles[index];
+            uploadedFiles[index] = uploadedFiles[index + direction];
+            uploadedFiles[index + direction] = temp;
+            
+            updateFileList();
+        }
+
+        function removeFile(index) {
+            URL.revokeObjectURL(uploadedFiles[index].url);
+            uploadedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        function clearFiles() {
+            uploadedFiles.forEach(f => URL.revokeObjectURL(f.url));
+            uploadedFiles = [];
+            updateFileList();
+            
+            // Clear preview
+            document.getElementById('img-preview').style.display = 'none';
+            document.getElementById('btn-download').style.display = 'none';
+            document.getElementById('placeholder-text').style.display = 'block';
+        }
+
+        async function generateGIF() {
+            if (uploadedFiles.length === 0) {
+                alert('请先上传图片');
+                return;
+            }
+
+            const btn = document.getElementById('btn-generate');
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const preview = document.getElementById('img-preview');
+            const downloadBtn = document.getElementById('btn-download');
+
+            btn.disabled = true;
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.innerText = '准备中...';
+
+            try {
+                const widthInput = document.getElementById('gif-width').value;
+                const heightInput = document.getElementById('gif-height').value;
+                const delay = parseInt(document.getElementById('gif-delay').value);
+                const quality = parseInt(document.getElementById('gif-quality').value);
+                const loop = document.getElementById('gif-loop').checked ? 0 : -1; // 0 = infinite
+                const transparent = document.getElementById('gif-transparent').checked ? 'rgba(0,0,0,0)' : null;
+
+                // Determine output dimensions based on first image or input
+                let width = parseInt(widthInput) || 0;
+                let height = parseInt(heightInput) || 0;
+
+                // Load all images to get dimensions if needed
+                const images = await Promise.all(uploadedFiles.map(f => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = () => resolve(img);
+                        img.onerror = reject;
+                        img.src = f.url;
+                    });
+                }));
+
+                if (width === 0 || height === 0) {
+                    // Default to first image dimensions if not set
+                    if (images.length > 0) {
+                        width = width || images[0].naturalWidth;
+                        height = height || images[0].naturalHeight;
+                    }
+                }
+
+                // Initialize GIF
+                const gif = new GIF({
+                    workers: 2,
+                    quality: quality,
+                    width: width,
+                    height: height,
+                    workerScript: '../js/workers/gif.worker.js',
+                    repeat: loop,
+                    transparent: transparent
+                });
+
+                // Add frames
+                images.forEach(img => {
+                    // We might need to draw to a canvas first to resize if dimensions don't match
+                    if (img.naturalWidth !== width || img.naturalHeight !== height) {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Fill background if not transparent? Or let it be transparent
+                        // if (!transparent) {
+                        //     ctx.fillStyle = '#ffffff';
+                        //     ctx.fillRect(0, 0, width, height);
+                        // }
+                        
+                        // Fit image (contain)
+                        const scale = Math.min(width / img.naturalWidth, height / img.naturalHeight);
+                        const x = (width - img.naturalWidth * scale) / 2;
+                        const y = (height - img.naturalHeight * scale) / 2;
+                        ctx.drawImage(img, x, y, img.naturalWidth * scale, img.naturalHeight * scale);
+                        
+                        gif.addFrame(canvas, { delay: delay });
+                    } else {
+                        gif.addFrame(img, { delay: delay });
+                    }
+                });
+
+                gif.on('progress', (p) => {
+                    const pct = Math.round(p * 100);
+                    progressBar.style.width = pct + '%';
+                    progressText.innerText = `渲染中... ${pct}%`;
+                });
+
+                gif.on('finished', (blob) => {
+                    const url = URL.createObjectURL(blob);
+                    preview.src = url;
+                    preview.style.display = 'block';
+                    document.getElementById('placeholder-text').style.display = 'none';
+                    
+                    downloadBtn.href = url;
+                    downloadBtn.download = `animation_${Date.now()}.gif`;
+                    downloadBtn.style.display = 'flex'; // flex to center content
+                    
+                    btn.disabled = false;
+                    progressText.innerText = '完成!';
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                    }, 2000);
+                });
+
+                gif.render();
+
+            } catch (err) {
+                console.error(err);
+                alert('GIF 生成出错: ' + err.message);
+                btn.disabled = false;
+                progressContainer.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

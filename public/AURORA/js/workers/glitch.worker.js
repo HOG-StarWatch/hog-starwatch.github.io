@@ -18,7 +18,7 @@ self.onmessage = function(e) {
                 const offX = config.rgb.amount;
                 const offY = config.rgb.angle;
 
-                if (offX > 0 || offY > 0) {
+                if (offX !== 0 || offY !== 0) {
                     for (let y = 0; y < height; y++) {
                         for (let x = 0; x < width; x++) {
                             const idx = (y * width + x) * 4;

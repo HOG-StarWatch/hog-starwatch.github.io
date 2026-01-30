@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub 探索者</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .layout-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: rgba(0,0,0,0.2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            gap: 15px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .repo-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .repo-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 15px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 200px;
+        }
+
+        .repo-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .repo-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .repo-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--secondary);
+            word-break: break-all;
+        }
+
+        .repo-desc {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            flex: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            margin-bottom: 15px;
+        }
+
+        .repo-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            align-items: center;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .lang-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background: var(--bg-deep);
+            border-left: 1px solid var(--border);
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+        }
+
+        .preview-panel.active {
+            transform: translateX(0);
+        }
+
+        .preview-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-header);
+        }
+
+        .preview-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            background: #0d1117; /* GitHub dark bg */
+        }
+        
+        /* Markdown Styles (Minimal GitHub Dark) */
+        .markdown-body {
+            color: #c9d1d9;
+            font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .markdown-body h1, .markdown-body h2 {
+            border-bottom: 1px solid #21262d;
+            padding-bottom: 0.3em;
+            color: #f0f6fc;
+        }
+        .markdown-body a { color: #58a6ff; text-decoration: none; }
+        .markdown-body code {
+            background-color: rgba(110,118,129,0.4);
+            border-radius: 6px;
+            padding: 0.2em 0.4em;
+            font-family: var(--font-mono);
+        }
+        .markdown-body pre {
+            background-color: #161b22;
+            border-radius: 6px;
+            padding: 16px;
+            overflow: auto;
+        }
+        .markdown-body pre code { background: transparent; padding: 0; }
+        .markdown-body img { 
+            max-width: 100%; 
+            display: block;
+            margin: 10px 0;
+            min-height: 50px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px dashed var(--border);
+            border-radius: 4px;
+        }
+        
+        /* Raw Source View */
+        .source-view {
+            white-space: pre-wrap;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .layout-container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; max-height: 200px; }
+            .preview-panel { width: 100%; }
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 8px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            text-align: center;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="layout-container">
+        <!-- Sidebar: Filters -->
+        <div class="sidebar">
+            <div class="panel-title">🔍 筛选与搜索</div>
+            
+            <div class="tab-group">
+                <div class="tab-btn active" onclick="switchMode('search')" id="tab-search">关键词搜索</div>
+                <div class="tab-btn" onclick="switchMode('trending')" id="tab-trending">🔥 趋势榜单</div>
+            </div>
+
+            <div id="search-controls">
+                <div class="tool-group">
+                    <div class="group-label">关键词</div>
+                    <input type="text" id="searchInput" placeholder="React, Vue, AI..." style="width: 100%">
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <div class="group-label">编程语言</div>
+                <select id="langSelect" style="width: 100%">
+                    <option value="">全部语言</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="python">Python</option>
+                    <option value="java">Java</option>
+                    <option value="go">Go</option>
+                    <option value="rust">Rust</option>
+                    <option value="c++">C++</option>
+                    <option value="c">C</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="vue">Vue</option>
+                    <option value="swift">Swift</option>
+                    <option value="kotlin">Kotlin</option>
+                    <option value="dart">Dart</option>
+                </select>
+            </div>
+
+            <div class="tool-group">
+                <div class="group-label">排序方式</div>
+                <select id="sortSelect" style="width: 100%">
+                    <option value="stars">按 Stars 数</option>
+                    <option value="forks">按 Forks 数</option>
+                    <option value="updated">按更新时间</option>
+                </select>
+            </div>
+
+            <div class="tool-group">
+                <div class="group-label">最低 Stars</div>
+                <input type="number" id="minStars" placeholder="例如: 1000" min="0" style="width: 100%">
+            </div>
+
+            <div class="tool-group">
+                <div class="group-label">时间范围 (趋势)</div>
+                <select id="dateRange" style="width: 100%" disabled>
+                    <option value="daily">今日热门</option>
+                    <option value="weekly" selected>本周热门</option>
+                    <option value="monthly">本月热门</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" id="actionBtn" style="margin-top: 10px;">🔍 开始搜索</button>
+            <div style="font-size: 0.8rem; color: var(--text-dim); text-align: center; margin-top: 5px;">
+                点击卡片预览 README
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="panel-header">
+                <div class="panel-title" id="list-title">搜索结果</div>
+                <div class="panel-actions">
+                    <span class="stat-badge" id="result-count">0 个项目</span>
+                </div>
+            </div>
+
+            <div id="repo-list" class="repo-list">
+                <!-- Repos injected here -->
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: var(--text-dim);">
+                    👈 在左侧输入关键词或选择趋势榜单
+                </div>
+            </div>
+
+            <!-- Preview Sidebar -->
+            <div id="preview-panel" class="preview-panel">
+                <div class="preview-header">
+                    <div style="font-weight: bold;" id="preview-title">项目预览</div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" id="toggle-view-btn" onclick="toggleView()" style="font-size: 0.8rem; padding: 4px 8px;">📜 源码</button>
+                        <button class="btn btn-secondary" onclick="closePreview()">✕</button>
+                    </div>
+                </div>
+                <div class="preview-content markdown-body" id="preview-content">
+                    <div style="text-align: center; margin-top: 50px;">
+                        <div class="spinner"></div>
+                        <p>正在加载 README...</p>
+                    </div>
+                </div>
+                <div class="preview-header" style="border-top: 1px solid var(--border); border-bottom: none;">
+                    <a href="#" target="_blank" id="preview-link" class="btn btn-primary" style="width: 100%; text-align: center;">在 GitHub 上查看</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script src="../js/loader.js"></script>
+    <script>
+        let currentMode = 'search';
+        let markedLoaded = false;
+        let currentRawContent = ''; // Store raw markdown
+        let isRawView = false; // Toggle state
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load marked library
+            ResourceLoader.load('marked').then(() => {
+                markedLoaded = true;
+                console.log('Marked library loaded');
+            }).catch(err => console.error('Failed to load marked', err));
+
+            document.getElementById('actionBtn').addEventListener('click', performAction);
+            document.getElementById('dateRange').addEventListener('change', performAction);
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') performAction();
+            });
+        });
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('tab-search').className = `tab-btn ${mode === 'search' ? 'active' : ''}`;
+            document.getElementById('tab-trending').className = `tab-btn ${mode === 'trending' ? 'active' : ''}`;
+            
+            const searchInput = document.getElementById('searchInput');
+            const dateRange = document.getElementById('dateRange');
+            const actionBtn = document.getElementById('actionBtn');
+
+            if (mode === 'trending') {
+                searchInput.disabled = true;
+                searchInput.placeholder = "趋势模式下无需关键词";
+                dateRange.disabled = false;
+                actionBtn.textContent = "🔥 查看榜单";
+                performAction();
+            } else {
+                searchInput.disabled = false;
+                searchInput.placeholder = "React, Vue, AI...";
+                dateRange.disabled = true;
+                actionBtn.textContent = "🔍 开始搜索";
+            }
+        }
+
+        async function performAction() {
+            const listEl = document.getElementById('repo-list');
+            listEl.innerHTML = '<div style="grid-column: 1/-1; display: flex; justify-content: center; padding: 50px;"><div class="loader"></div></div>';
+            closePreview();
+
+            try {
+                const query = buildQuery();
+                const sort = document.getElementById('sortSelect').value;
+                const url = `https://api.github.com/search/repositories?q=${query}&sort=${sort}&order=desc&per_page=30`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                
+                const data = await response.json();
+                renderRepos(data.items);
+                document.getElementById('result-count').textContent = `${data.total_count > 1000 ? '1000+' : data.total_count} 个项目`;
+                document.getElementById('list-title').textContent = currentMode === 'search' ? `"${document.getElementById('searchInput').value}" 的结果` : "🔥 热门趋势";
+
+            } catch (error) {
+                listEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ff4d4f;">❌ 获取失败: ${error.message}</div>`;
+            }
+        }
+
+        function buildQuery() {
+            let q = [];
+            
+            if (currentMode === 'search') {
+                const keyword = document.getElementById('searchInput').value.trim();
+                if (keyword) q.push(keyword);
+                else if (!document.getElementById('langSelect').value) q.push('stars:>1000'); // Default fallback
+            } else {
+                // Trending logic
+                const range = document.getElementById('dateRange').value;
+                const date = new Date();
+                if (range === 'daily') date.setDate(date.getDate() - 1);
+                else if (range === 'weekly') date.setDate(date.getDate() - 7);
+                else if (range === 'monthly') date.setMonth(date.getMonth() - 1);
+                
+                const dateStr = date.toISOString().split('T')[0];
+                q.push(`created:>${dateStr}`);
+            }
+
+            const lang = document.getElementById('langSelect').value;
+            if (lang) q.push(`language:${lang}`);
+
+            const minStars = document.getElementById('minStars').value;
+            if (minStars) q.push(`stars:>${minStars}`);
+
+            return q.join(' ');
+        }
+
+        function renderRepos(repos) {
+            const listEl = document.getElementById('repo-list');
+            listEl.innerHTML = '';
+
+            if (!repos || repos.length === 0) {
+                listEl.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-dim);">未找到相关项目</div>';
+                return;
+            }
+
+            repos.forEach(repo => {
+                const card = document.createElement('div');
+                card.className = 'repo-card';
+                card.onclick = () => showPreview(repo);
+                
+                // Color based on language (simple hash)
+                let langColor = '#ccc';
+                if (repo.language) {
+                    const colors = { JavaScript: '#f1e05a', TypeScript: '#2b7489', Python: '#3572A5', Java: '#b07219', Go: '#00ADD8', Rust: '#dea584', Vue: '#41b883' };
+                    langColor = colors[repo.language] || '#ccc';
+                }
+
+                card.innerHTML = `
+                    <div class="repo-header">
+                        <div class="repo-name">${repo.full_name}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim);">${new Date(repo.updated_at).toLocaleDateString()}</div>
+                    </div>
+                    <div class="repo-desc">${repo.description || '暂无描述'}</div>
+                    <div class="repo-meta">
+                        <div class="meta-item" style="color: ${langColor}">
+                            <span class="lang-dot" style="background: ${langColor}"></span>
+                            ${repo.language || 'Unknown'}
+                        </div>
+                        <div class="meta-item">⭐ ${(repo.stargazers_count/1000).toFixed(1)}k</div>
+                        <div class="meta-item">🍴 ${repo.forks_count}</div>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        async function showPreview(repo) {
+            const panel = document.getElementById('preview-panel');
+            const contentEl = document.getElementById('preview-content');
+            const titleEl = document.getElementById('preview-title');
+            const linkEl = document.getElementById('preview-link');
+            const toggleBtn = document.getElementById('toggle-view-btn');
+
+            panel.classList.add('active');
+            titleEl.textContent = repo.full_name;
+            linkEl.href = repo.html_url;
+            contentEl.innerHTML = '<div style="text-align: center; margin-top: 50px;"><div class="loader"></div><p>正在加载 README...</p></div>';
+            
+            // Reset toggle state
+            isRawView = false;
+            toggleBtn.textContent = '📜 源码';
+            toggleBtn.disabled = true;
+
+            try {
+                // Fetch Readme
+                const response = await fetch(`https://api.github.com/repos/${repo.full_name}/readme`);
+                if (!response.ok) throw new Error('No README found');
+                
+                const data = await response.json();
+                // GitHub API returns Base64 encoded content
+                // Need to handle UTF-8 properly
+                const rawContent = decodeURIComponent(escape(window.atob(data.content.replace(/\n/g, ''))));
+                
+                currentRawContent = rawContent; // Save for toggle
+                toggleBtn.disabled = false;
+
+                renderPreviewContent();
+
+            } catch (error) {
+                contentEl.innerHTML = `<div style="text-align: center; padding: 20px;">
+                    <h3>无法加载预览</h3>
+                    <p>${error.message}</p>
+                    <p>请点击下方按钮直接访问 GitHub 查看</p>
+                </div>`;
+                toggleBtn.disabled = true;
+            }
+        }
+
+        function toggleView() {
+            if (!currentRawContent) return;
+            isRawView = !isRawView;
+            document.getElementById('toggle-view-btn').textContent = isRawView ? '👁️ 预览' : '📜 源码';
+            renderPreviewContent();
+        }
+
+        function renderPreviewContent() {
+            const contentEl = document.getElementById('preview-content');
+            
+            if (isRawView) {
+                // Raw View
+                contentEl.innerHTML = `<div class="source-view">${escapeHtml(currentRawContent)}</div>`;
+            } else {
+                // Rendered View
+                if (markedLoaded && window.marked) {
+                    contentEl.innerHTML = window.marked.parse(currentRawContent);
+                } else {
+                    contentEl.innerHTML = `<div class="source-view">${escapeHtml(currentRawContent)}</div>`;
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function closePreview() {
+            document.getElementById('preview-panel').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

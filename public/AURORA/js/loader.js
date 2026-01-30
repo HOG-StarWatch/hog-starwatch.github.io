@@ -170,16 +170,17 @@ const ResourceLoader = {
             'https://fastly.jsdelivr.net/npm/brotli-wasm@1.3.1/index.web.js'
         ],
         'photon': [
-            'https://cdn.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs.js',
-            'https://unpkg.com/@silvia-odwyer/photon@0.3.2/photon_rs.js',
-            'https://npm.elemecdn.com/@silvia-odwyer/photon@0.3.2/photon_rs.js',
-            'https://unpkg.zhimg.com/@silvia-odwyer/photon@0.3.2/photon_rs.js',
-            'https://fastly.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs.js'
+            // No reliable UMD source found for photon currently. 
+            // The ones below are likely ESM and will fail in script tags.
+            // Keeping them as placeholder or if user has local setup.
+            'https://cdn.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs.js' 
         ],
         'photon-esm': [
-            'https://esm.sh/@silvia-odwyer/photon@0.3.2?target=es2022',
-            'https://cdn.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs.js',
-            'https://unpkg.com/@silvia-odwyer/photon@0.3.2/photon_rs.js'
+            // Use @cf-wasm/photon which has better browser support via 'others' submodule
+            'https://esm.sh/@cf-wasm/photon@0.5.1/others',
+            // Fallbacks
+            'https://cdn.skypack.dev/@silvia-odwyer/photon@0.3.2', 
+            'https://esm.sh/@silvia-odwyer/photon@0.3.2?target=es2022'
         ],
         'zstd-wasm': [
             'https://unpkg.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
@@ -188,12 +189,15 @@ const ResourceLoader = {
             'https://unpkg.zhimg.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
             'https://fastly.jsdelivr.net/npm/zstd-wasm@0.0.21/dist/zstd-wasm.js'
         ],
-        'zstd-wasm-esm': [
-            'https://unpkg.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
-            'https://cdn.jsdelivr.net/npm/zstd-wasm@0.0.21/dist/zstd-wasm.js',
-            'https://npm.elemecdn.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
-            'https://unpkg.zhimg.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
-            'https://fastly.jsdelivr.net/npm/zstd-wasm@0.0.21/dist/zstd-wasm.js'
+        'gif.js': [
+            'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js',
+            'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js',
+            'https://unpkg.com/gif.js@0.2.0/dist/gif.js'
+        ],
+        'marked': [
+            'https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js',
+            'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
+            'https://unpkg.com/marked@9.1.2/marked.min.js'
         ]
     },
 

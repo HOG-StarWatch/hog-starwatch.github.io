@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurora-toolbox-v2';
+const CACHE_NAME = 'aurora-toolbox-v3';
 const DYNAMIC_LIBS = [
     'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js',
     'https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js',
@@ -36,7 +36,10 @@ const DYNAMIC_LIBS = [
     'https://cdn.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs.js',
     'https://cdn.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs_bg.wasm',
     'https://unpkg.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
-    'https://unpkg.com/zstd-wasm@0.0.21/dist/zstd-wasm.wasm'
+    'https://unpkg.com/zstd-wasm@0.0.21/dist/zstd-wasm.wasm',
+    'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js',
+    'https://unpkg.com/marked@9.1.2/marked.min.js'
 ];
 
 const APP_SHELL = [
@@ -78,11 +81,22 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
+    // Bypass SW for API/Proxy requests (prevent CORS issues and caching of dynamic data)
+    // We only cache same-origin assets and specific CDNs
+    const isSameOrigin = url.origin === self.location.origin;
+    const isCdnLib = DYNAMIC_LIBS.some(lib => url.href.startsWith(lib));
+    
+    // Explicitly exclude known proxy services to be safe
+    const isProxyService = url.hostname.includes('cors') || 
+                          url.hostname.includes('allorigins') || 
+                          url.hostname.includes('thingproxy') ||
+                          url.hostname.includes('codetabs');
+
+    if (isProxyService || (!isSameOrigin && !isCdnLib)) {
+        return; // Fallback to browser's default network behavior
+    }
+
     // Stale-While-Revalidate Strategy
-    // Works for both App Shell and Dynamic Libs
-    // 1. Return cached response immediately if available (Stale)
-    // 2. Fetch from network in background (Revalidate)
-    // 3. Update cache with network response
     event.respondWith(
         caches.open(CACHE_NAME).then(cache => {
             return cache.match(event.request).then(cachedResponse => {
@@ -95,10 +109,19 @@ self.addEventListener('fetch', event => {
                     }
                     return networkResponse;
                 }).catch(err => {
-                    // Network failed, if we have no cache, throw error
-                    // If we have cache, the outer promise chain handles it (returns cachedResponse)
-                    // But if both fail?
                     console.warn('Network fetch failed:', err);
+                    // If cachedResponse exists, this error is swallowed (we use stale data).
+                    // If cachedResponse is undefined, we need to make sure we don't return undefined to respondWith.
+                    // However, returning undefined here causes the outer promise to resolve to undefined,
+                    // which is then caught by 'return cachedResponse || fetchPromise' ??
+                    // Actually, if catch returns undefined, fetchPromise resolves to undefined.
+                    // If cachedResponse is undefined, then 'undefined || undefined' is undefined.
+                    // respondWith(undefined) throws.
+                    
+                    // We must throw here if we want the outer catch/fallback to handle it, 
+                    // or return a fallback response.
+                    if (cachedResponse) return; // Swallowing error is fine if we have cache
+                    throw err; // Re-throw if no cache so browser sees network error
                 });
 
                 return cachedResponse || fetchPromise;
