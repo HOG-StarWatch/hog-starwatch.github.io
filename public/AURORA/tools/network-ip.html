@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IP地址信息查询工具</title>
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
 
         html {
@@ -73,7 +72,39 @@
         .ip-label {
             font-size: 1.2rem;
             color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 5px;
+            font-size: 1rem;
+            border-radius: 50%;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+        }
+
+        .icon-btn:hover {
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(180deg);
+        }
+        
+        /* Fix missing variable if not in global css */
+        :root {
+            --primary-rgb: 192, 132, 252;
+        }
+
         
         .info-grid {
             display: grid;
@@ -317,7 +348,7 @@
         
         <div class="main-content">
             <div class="ip-display">
-                <p class="ip-label">您的IP地址</p>
+                <p class="ip-label">您的IP地址 <button id="refresh-ip-btn" class="icon-btn" title="刷新IP"><i class="fas fa-sync-alt"></i></button></p>
                 <div class="ip-address" id="user-ip">正在查询...</div>
                 <p style="color: var(--text-dim);">基于您的网络连接检测到的公共IP地址</p>
                 <div class="api-status" id="api-status">
@@ -447,19 +478,28 @@
         </footer>
     </div>
 
+    <script src="../js/loader.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            ResourceLoader.load('font-awesome');
             const userIpElement = document.getElementById('user-ip');
             const loadingInfo = document.getElementById('loading-info');
             const ipInfo = document.getElementById('ip-info');
             const validateBtn = document.getElementById('validate-btn');
             const validationResult = document.getElementById('validation-result');
             const copyIpBtn = document.getElementById('copy-ip-btn');
+            const refreshIpBtn = document.getElementById('refresh-ip-btn');
             
-            // 多个IP查询API作为备用
+            // 缓存IP详细信息，避免重复请求
+            let cachedIPDetails = null;
+
+            // 多个IP查询API优先级配置：
+            // 1. ipapi.co (首选，含详细信息)
+            // 2. ipify (快速稳定，仅IP)
+            // 3. ipinfo.io (备用)
             const ipApis = [
+                'https://ipapi.co/json/',
                 'https://api.ipify.org?format=json',
-                'https://api64.ipify.org?format=json',
                 'https://ipinfo.io/json'
             ];
             
@@ -481,6 +521,12 @@
                         const ip = data.ip || data.query;
                         
                         if (ip) {
+                            // 如果API返回了详细信息（如国家/城市），则缓存起来
+                            if (data.country || data.city || data.country_name) {
+                                console.log(`API ${i+1} 返回了详细信息，已缓存`);
+                                cachedIPDetails = data;
+                            }
+
                             userIpElement.textContent = ip;
                             document.getElementById('data-source').textContent = `API ${i+1}`;
                             return ip;
@@ -535,7 +581,16 @@
                      return;
                 }
 
-                const data = await getIPDetails(ip);
+                let data = null;
+                
+                // 如果缓存中有对应此IP的详细数据，直接使用
+                if (cachedIPDetails && (cachedIPDetails.ip === ip || cachedIPDetails.query === ip)) {
+                    console.log('使用缓存的IP详细信息');
+                    data = cachedIPDetails;
+                } else {
+                    // 否则查询详情API
+                    data = await getIPDetails(ip);
+                }
                 
                 if (data) {
                     // 更新页面上的IP信息
@@ -635,6 +690,34 @@
                             console.error('复制失败:', err);
                         });
                 }
+            });
+            
+            // 刷新IP功能
+            refreshIpBtn.addEventListener('click', function() {
+                // 旋转图标动画
+                const icon = refreshIpBtn.querySelector('i');
+                icon.style.transition = 'transform 1s';
+                icon.style.transform = 'rotate(360deg)';
+                setTimeout(() => {
+                    icon.style.transition = 'none';
+                    icon.style.transform = 'rotate(0deg)';
+                }, 1000);
+
+                // 重置UI状态
+                userIpElement.textContent = '正在查询...';
+                loadingInfo.style.display = 'block';
+                ipInfo.style.display = 'none';
+                document.getElementById('data-source').textContent = '-';
+                
+                // 清除缓存
+                cachedIPDetails = null;
+
+                // 重置API状态指示器
+                const dots = document.querySelectorAll('.status-dot');
+                dots.forEach(dot => dot.className = 'status-dot');
+                
+                // 重新初始化
+                init();
             });
             
             function showValidationResult(message, type) {

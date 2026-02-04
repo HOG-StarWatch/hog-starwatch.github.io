@@ -107,6 +107,7 @@
 <body style="padding: 1rem;">
     <div class="sub-tab-group">
         <div class="sub-tab active" onclick="switchSubTab('format', this)">格式转换</div>
+        <div class="sub-tab" onclick="switchSubTab('resize', this)">尺寸调整</div>
         <div class="sub-tab" onclick="switchSubTab('base64', this)">Base64 转换</div>
     </div>
 
@@ -152,6 +153,75 @@
                 <!-- Preview List -->
                 <div class="preview-grid" id="preview-list">
                     <!-- Items will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Resize Tool -->
+        <div id="tab-resize" class="panel" style="padding: 1.5rem; display: none;">
+            <div class="panel-title">图片尺寸调整</div>
+            
+            <!-- Upload Area -->
+            <div class="upload-area" id="resize-drop-zone" onclick="document.getElementById('resize-file-input').click()" style="margin-bottom: 1.5rem;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📐</div>
+                <div>点击或拖拽图片到此处</div>
+                <input type="file" id="resize-file-input" accept="image/*" style="display: none;" onchange="resizeTool.handleFile(this.files[0])">
+            </div>
+
+            <!-- Workspace (Hidden until file loaded) -->
+            <div id="resize-workspace" style="display: none;">
+                <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
+                    <!-- Controls -->
+                    <div style="flex: 1; min-width: 300px;">
+                        <div class="input-row">
+                            <label>原始尺寸</label>
+                            <div id="original-size" style="color: var(--text-dim); padding: 0.5rem 0;">- x -</div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="flex: 1;">
+                                <label>宽度 (px)</label>
+                                <input type="number" id="resize-width" min="1" class="input-box" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.6rem;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label>高度 (px)</label>
+                                <input type="number" id="resize-height" min="1" class="input-box" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.6rem;">
+                            </div>
+                        </div>
+
+                        <div class="input-row" style="margin-bottom: 1.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" id="resize-lock" checked style="width: auto;">
+                                锁定长宽比
+                            </label>
+                        </div>
+
+                        <div class="input-row">
+                            <label>输出格式</label>
+                            <select id="resize-format" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.6rem; margin-bottom: 1rem;">
+                                <option value="image/png">PNG</option>
+                                <option value="image/jpeg">JPEG</option>
+                                <option value="image/webp">WEBP</option>
+                            </select>
+                        </div>
+
+                        <div class="input-row" id="resize-quality-wrapper" style="display: none;">
+                            <label>质量 (<span id="resize-quality-val">0.9</span>)</label>
+                            <input type="range" id="resize-quality" min="0.1" max="1.0" step="0.05" value="0.9" style="width: 100%;">
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button class="btn btn-primary" onclick="resizeTool.process()" style="flex: 1;">应用并预览</button>
+                            <button class="btn btn-secondary" id="resize-download-btn" disabled onclick="resizeTool.download()" style="flex: 1;">下载图片</button>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div style="flex: 1; min-width: 300px; background: rgba(0,0,0,0.2); border-radius: var(--radius-md); padding: 1rem; display: flex; align-items: center; justify-content: center; min-height: 300px; border: 1px dashed var(--border);">
+                        <div id="resize-preview-container" style="max-width: 100%; max-height: 400px; overflow: auto;">
+                            <span style="color: var(--text-dim);">预览区域</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -217,8 +287,159 @@
             el.classList.add('active');
             
             document.getElementById('tab-format').style.display = tab === 'format' ? 'block' : 'none';
+            document.getElementById('tab-resize').style.display = tab === 'resize' ? 'block' : 'none';
             document.getElementById('tab-base64').style.display = tab === 'base64' ? 'block' : 'none';
         }
+
+        const resizeTool = {
+            currentFile: null,
+            currentImage: null,
+            ratio: 1,
+            blobUrl: null,
+
+            init: function() {
+                const dropZone = document.getElementById('resize-drop-zone');
+                if (!dropZone) return;
+
+                // Drag & Drop
+                dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+                dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('drag-over'); });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('drag-over');
+                    this.handleFile(e.dataTransfer.files[0]);
+                });
+
+                // Input Listeners
+                const widthInput = document.getElementById('resize-width');
+                const heightInput = document.getElementById('resize-height');
+                const lockInput = document.getElementById('resize-lock');
+                const formatSelect = document.getElementById('resize-format');
+                const qualityInput = document.getElementById('resize-quality');
+
+                widthInput.addEventListener('input', () => {
+                    if (lockInput.checked && widthInput.value && this.ratio) {
+                        heightInput.value = Math.round(Number(widthInput.value) / this.ratio);
+                    }
+                });
+
+                heightInput.addEventListener('input', () => {
+                    if (lockInput.checked && heightInput.value && this.ratio) {
+                        widthInput.value = Math.round(Number(heightInput.value) * this.ratio);
+                    }
+                });
+                
+                // Show quality slider for JPEG/WEBP
+                formatSelect.addEventListener('change', () => {
+                    const fmt = formatSelect.value;
+                    const wrapper = document.getElementById('resize-quality-wrapper');
+                    if (fmt === 'image/jpeg' || fmt === 'image/webp') {
+                        wrapper.style.display = 'block';
+                    } else {
+                        wrapper.style.display = 'none';
+                    }
+                });
+
+                qualityInput.addEventListener('input', (e) => {
+                    document.getElementById('resize-quality-val').textContent = e.target.value;
+                });
+            },
+
+            handleFile: function(file) {
+                if (!file || !file.type.startsWith('image/')) {
+                    app.showToast('请上传有效的图片文件', 'error');
+                    return;
+                }
+
+                this.currentFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.currentImage = new Image();
+                    this.currentImage.onload = () => {
+                        this.ratio = this.currentImage.naturalWidth / this.currentImage.naturalHeight;
+                        
+                        // Update UI
+                        document.getElementById('original-size').textContent = `${this.currentImage.naturalWidth} x ${this.currentImage.naturalHeight}`;
+                        document.getElementById('resize-width').value = this.currentImage.naturalWidth;
+                        document.getElementById('resize-height').value = this.currentImage.naturalHeight;
+                        
+                        // Reset preview
+                        const container = document.getElementById('resize-preview-container');
+                        container.innerHTML = '';
+                        const img = this.currentImage.cloneNode();
+                        img.style.maxWidth = '100%';
+                        img.style.maxHeight = '100%';
+                        container.appendChild(img);
+                        
+                        document.getElementById('resize-workspace').style.display = 'block';
+                        document.getElementById('resize-download-btn').disabled = true; // Need to process first
+                    };
+                    this.currentImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            process: function() {
+                if (!this.currentImage) return;
+
+                const width = parseInt(document.getElementById('resize-width').value);
+                const height = parseInt(document.getElementById('resize-height').value);
+                const format = document.getElementById('resize-format').value;
+                const quality = parseFloat(document.getElementById('resize-quality').value);
+
+                if (!width || !height) {
+                    app.showToast('请输入有效的宽高', 'error');
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                
+                // Handle transparent background for JPEG
+                if (format === 'image/jpeg') {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, width, height);
+                }
+                
+                ctx.drawImage(this.currentImage, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        app.showToast('处理失败', 'error');
+                        return;
+                    }
+                    
+                    if (this.blobUrl) URL.revokeObjectURL(this.blobUrl);
+                    this.blobUrl = URL.createObjectURL(blob);
+                    
+                    const container = document.getElementById('resize-preview-container');
+                    container.innerHTML = '';
+                    const img = new Image();
+                    img.src = this.blobUrl;
+                    img.style.maxWidth = '100%';
+                    img.style.maxHeight = '100%';
+                    container.appendChild(img);
+                    
+                    document.getElementById('resize-download-btn').disabled = false;
+                    app.showToast('图片已生成');
+                }, format, quality);
+            },
+
+            download: function() {
+                if (!this.blobUrl) return;
+                
+                const format = document.getElementById('resize-format').value;
+                const ext = format.split('/')[1];
+                const link = document.createElement('a');
+                link.download = `resized_${Date.now()}.${ext}`;
+                link.href = this.blobUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
 
         const base64Tool = {
             currentMode: 'toBase64',
@@ -514,6 +735,7 @@
         window.onload = function() {
              imgConverter.init();
              base64Tool.init();
+             resizeTool.init();
         };
     </script>
 </body>

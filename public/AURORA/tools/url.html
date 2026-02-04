@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL 解析工具</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/app.js"></script>
+    <style>
+        .url-container {
+            max-width: 800px;
+            margin: 0 auto;
+            flex-direction: column !important;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .result-item strong {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .result-item div {
+            font-family: var(--font-mono);
+            word-break: break-all;
+            color: var(--secondary);
+        }
+
+        .query-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(255,255,255,0.02);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .query-table th, .query-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .query-table th {
+            background: rgba(0,0,0,0.2);
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .query-table td {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+
+        .status-msg {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+        .status-msg.error { color: #f43f5e; }
+    </style>
+</head>
+<body>
+    <div class="workspace url-container">
+        
+        <div class="panel" style="height: auto;">
+            <div class="panel-header">
+                <div class="panel-title">URL 解析器</div>
+            </div>
+            <div style="padding: 2rem;">
+                <div class="input-group" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+                    <input type="text" id="url-input" placeholder="输入 URL (例如 https://example.com/path?query=1)" style="flex:1; min-width:300px;">
+                    <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
+                        <input type="checkbox" id="auto-protocol" checked>
+                        <label for="auto-protocol" style="font-size:0.9rem; color:var(--text-dim);">自动补全协议</label>
+                    </div>
+                    <button class="btn btn-primary" onclick="parseUrl()">解析</button>
+                    <button class="btn" onclick="document.getElementById('url-input').value=''; parseUrl();">清空</button>
+                </div>
+
+                <div id="result-area" style="display:none;">
+                    <div class="result-grid" id="result-grid">
+                        <!-- Items injected here -->
+                    </div>
+
+                    <div id="query-section" style="display:none; margin-top:30px;">
+                        <h4 style="margin-bottom:10px; color:var(--primary);">查询参数 (Query Params)</h4>
+                        <table class="query-table">
+                            <thead>
+                                <tr>
+                                    <th width="30%">参数名</th>
+                                    <th>参数值</th>
+                                </tr>
+                            </thead>
+                            <tbody id="query-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="status-msg" id="status">输入 URL 并点击解析</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+
+    <script>
+        function parseUrl() {
+            const input = document.getElementById('url-input');
+            const status = document.getElementById('status');
+            const resultArea = document.getElementById('result-area');
+            const resultGrid = document.getElementById('result-grid');
+            const querySection = document.getElementById('query-section');
+            const queryBody = document.getElementById('query-body');
+            
+            let raw = input.value.trim();
+            if (!raw) {
+                resultArea.style.display = 'none';
+                status.innerText = '请输入 URL';
+                status.classList.remove('error');
+                return;
+            }
+
+            if (document.getElementById('auto-protocol').checked && !/^https?:\/\//i.test(raw)) {
+                raw = 'https://' + raw;
+            }
+
+            try {
+                const url = new URL(raw);
+                
+                // Build Grid Items
+                const items = [
+                    { label: '协议 Protocol', val: url.protocol.replace(':', '') },
+                    { label: '主机 Host', val: url.host },
+                    { label: '路径 Path', val: url.pathname },
+                    { label: '端口 Port', val: url.port || '80/443' },
+                    { label: '查询字符串', val: url.search || '-' },
+                    { label: '锚点 Hash', val: url.hash || '-' }
+                ];
+
+                resultGrid.innerHTML = items.map(item => `
+                    <div class="result-item">
+                        <strong>${item.label}</strong>
+                        <div onclick="app.copyText('${item.val}')" title="点击复制" style="cursor:pointer">${item.val}</div>
+                    </div>
+                `).join('');
+
+                // Query Params
+                const params = Array.from(url.searchParams.entries());
+                if (params.length > 0) {
+                    queryBody.innerHTML = params.map(([k, v]) => `
+                        <tr>
+                            <td>${k}</td>
+                            <td><div onclick="app.copyText('${v}')" title="点击复制" style="cursor:pointer">${v}</div></td>
+                        </tr>
+                    `).join('');
+                    querySection.style.display = 'block';
+                } else {
+                    querySection.style.display = 'none';
+                }
+
+                resultArea.style.display = 'block';
+                status.innerText = '解析成功';
+                status.classList.remove('error');
+
+            } catch (e) {
+                resultArea.style.display = 'none';
+                status.innerText = '无效的 URL 格式';
+                status.classList.add('error');
+            }
+        }
+        
+        // Add copy helper if not in app.js
+        if(!app.copyText) {
+            app.copyText = function(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    app.showToast('已复制');
+                });
+            }
+        }
+
+        // Trigger on Enter
+        document.getElementById('url-input').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') parseUrl();
+        });
+    </script>
+</body>
+</html>

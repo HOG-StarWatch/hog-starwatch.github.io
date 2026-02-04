@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单位换算</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/app.js"></script>
+    <style>
+        .unit-container {
+            max-width: 800px;
+            margin: 0 auto;
+            flex-direction: column !important;
+        }
+
+        .type-selector {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .type-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 20px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .type-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
+        .type-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
+
+        .converter-box {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            background: var(--bg-panel);
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .unit-select {
+            background: var(--bg-deep);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+        }
+
+        .value-input {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            font-size: 1.5rem;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-family: var(--font-mono);
+        }
+        .value-input:focus { border-color: var(--primary); }
+
+        .equal-sign {
+            font-size: 2rem;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 600px) {
+            .converter-box { grid-template-columns: 1fr; }
+            .equal-sign { transform: rotate(90deg); text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="workspace unit-container">
+        <div class="type-selector" id="type-selector">
+            <!-- Injected by JS -->
+        </div>
+
+        <div class="converter-box">
+            <div class="input-group">
+                <select id="unit-from" class="unit-select" onchange="convert('from')"></select>
+                <input type="number" id="val-from" class="value-input" placeholder="0" oninput="convert('from')">
+            </div>
+
+            <div class="equal-sign">=</div>
+
+            <div class="input-group">
+                <select id="unit-to" class="unit-select" onchange="convert('from')"></select>
+                <input type="number" id="val-to" class="value-input" placeholder="0" oninput="convert('to')">
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center; color: var(--text-dim); font-size: 0.9rem;">
+            支持实时双向换算
+        </div>
+    </div>
+
+    <script>
+        const units = {
+            length: {
+                name: '长度',
+                rates: {
+                    m: 1,
+                    km: 1000,
+                    cm: 0.01,
+                    mm: 0.001,
+                    inch: 0.0254,
+                    ft: 0.3048,
+                    yd: 0.9144,
+                    mile: 1609.344
+                },
+                names: {
+                    m: '米 (m)', km: '千米 (km)', cm: '厘米 (cm)', mm: '毫米 (mm)',
+                    inch: '英寸 (in)', ft: '英尺 (ft)', yd: '码 (yd)', mile: '英里 (mi)'
+                }
+            },
+            weight: {
+                name: '重量',
+                rates: {
+                    kg: 1,
+                    g: 0.001,
+                    mg: 0.000001,
+                    t: 1000,
+                    lb: 0.45359237,
+                    oz: 0.0283495
+                },
+                names: {
+                    kg: '千克 (kg)', g: '克 (g)', mg: '毫克 (mg)', t: '吨 (t)',
+                    lb: '磅 (lb)', oz: '盎司 (oz)'
+                }
+            },
+            area: {
+                name: '面积',
+                rates: {
+                    sqm: 1,
+                    sqkm: 1000000,
+                    sqft: 0.092903,
+                    acre: 4046.86,
+                    hectare: 10000
+                },
+                names: {
+                    sqm: '平方米 (m²)', sqkm: '平方千米 (km²)', sqft: '平方英尺 (ft²)',
+                    acre: '英亩 (ac)', hectare: '公顷 (ha)'
+                }
+            },
+            volume: {
+                name: '体积',
+                rates: {
+                    l: 1,
+                    ml: 0.001,
+                    m3: 1000,
+                    gal: 3.78541
+                },
+                names: {
+                    l: '升 (L)', ml: '毫升 (mL)', m3: '立方米 (m³)', gal: '加仑 (gal)'
+                }
+            },
+            temperature: {
+                name: '温度',
+                // Temp needs special handling logic
+                special: true
+            },
+            data: {
+                name: '数据存储',
+                rates: {
+                    B: 1,
+                    KB: 1024,
+                    MB: 1048576,
+                    GB: 1073741824,
+                    TB: 1099511627776
+                },
+                names: {
+                    B: 'Byte', KB: 'KB', MB: 'MB', GB: 'GB', TB: 'TB'
+                }
+            }
+        };
+
+        let currentType = 'length';
+
+        function init() {
+            const selector = document.getElementById('type-selector');
+            Object.keys(units).forEach(key => {
+                const btn = document.createElement('button');
+                btn.className = `type-btn ${key === currentType ? 'active' : ''}`;
+                btn.innerText = units[key].name;
+                btn.onclick = () => switchType(key, btn);
+                selector.appendChild(btn);
+            });
+            renderOptions();
+        }
+
+        function switchType(type, btn) {
+            currentType = type;
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderOptions();
+            document.getElementById('val-from').value = '';
+            document.getElementById('val-to').value = '';
+        }
+
+        function renderOptions() {
+            const fromSel = document.getElementById('unit-from');
+            const toSel = document.getElementById('unit-to');
+            fromSel.innerHTML = '';
+            toSel.innerHTML = '';
+
+            const unitData = units[currentType];
+            const keys = unitData.special ? ['c', 'f', 'k'] : Object.keys(unitData.rates);
+            const names = unitData.special ? { c: '摄氏度 (°C)', f: '华氏度 (°F)', k: '开尔文 (K)' } : unitData.names;
+
+            keys.forEach(k => {
+                const opt1 = new Option(names[k], k);
+                const opt2 = new Option(names[k], k);
+                fromSel.add(opt1);
+                toSel.add(opt2);
+            });
+
+            // Default selection
+            if(keys.length > 1) toSel.selectedIndex = 1;
+        }
+
+        function convert(direction) {
+            const fromVal = parseFloat(document.getElementById(direction === 'from' ? 'val-from' : 'val-to').value);
+            if (isNaN(fromVal)) {
+                document.getElementById(direction === 'from' ? 'val-to' : 'val-from').value = '';
+                return;
+            }
+
+            const fromUnit = document.getElementById(direction === 'from' ? 'unit-from' : 'unit-to').value;
+            const toUnit = document.getElementById(direction === 'from' ? 'unit-to' : 'unit-from').value;
+            const targetInput = document.getElementById(direction === 'from' ? 'val-to' : 'val-from');
+
+            let result;
+
+            if (units[currentType].special && currentType === 'temperature') {
+                // Temp conversion
+                let celsius;
+                // To Celsius
+                if (fromUnit === 'c') celsius = fromVal;
+                else if (fromUnit === 'f') celsius = (fromVal - 32) * 5/9;
+                else if (fromUnit === 'k') celsius = fromVal - 273.15;
+
+                // From Celsius
+                if (toUnit === 'c') result = celsius;
+                else if (toUnit === 'f') result = (celsius * 9/5) + 32;
+                else if (toUnit === 'k') result = celsius + 273.15;
+            } else {
+                // Standard rate conversion
+                // base = val * rate[from]
+                // res = base / rate[to]
+                // Actually: base unit is the one with rate 1.
+                // val in base = val * rate[from]
+                // val in target = (val * rate[from]) / rate[to]
+                const rates = units[currentType].rates;
+                const baseVal = fromVal * rates[fromUnit];
+                result = baseVal / rates[toUnit];
+            }
+
+            // Format result
+            targetInput.value = parseFloat(result.toPrecision(10)); // Avoid floating point errors
+        }
+
+        init();
+    </script>
+</body>
+</html>

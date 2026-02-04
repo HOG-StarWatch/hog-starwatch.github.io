@@ -199,7 +199,24 @@ header {
     border-radius: 0 0 var(--radius-md) var(--radius-md);
     padding: 0.5rem 0;
     flex-direction: column;
-    backdrop-filter: blur(10px);
+    backdrop-filter: var(--glass);
+}
+
+.dropdown-header {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: default;
+    pointer-events: none;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.5rem 0;
 }
 
 .dropdown:hover .dropdown-content {

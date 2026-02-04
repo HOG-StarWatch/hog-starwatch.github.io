@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迷宫算法实验室 & 挑战</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; margin: 0; background-color: #1e1e1e; color: #e0e0e0; overflow-x: hidden; overflow-y: auto; padding: 10px; }
+        h1 { margin: 10px 0; font-size: 22px; color: #61dafb; text-align: center; }
+        .main-layout { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
+        .hidden { display: none !important; }
+        .controls-area { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; margin-bottom: 10px; }
+        .ui-box { padding: 8px 12px; background: #2d2d2d; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-start; border: 1px solid #444; flex: 1; min-width: 300px; }
+        .controls { z-index: 100; }
+        .panel { display: none; }
+        .panel.active { display: flex; }
+        .panel h3 { margin: 0; font-size: 14px; color: #61dafb; border-right: 1px solid #444; padding-right: 10px; margin-right: 5px; }
+        .stat-row { display: flex; align-items: center; gap: 5px; font-size: 13px; }
+        .stat-val { color: #fff; font-weight: bold; }
+        .game-container { position: relative; margin: 10px 0; }
+        .control-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        @media (min-width: 800px) { .controls-area { flex-direction: row; align-items: flex-start; } }
+        #joystickZone { position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px; z-index: 150; display: none; }
+        .joystick-base { width: 100%; height: 100%; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; position: relative; }
+        .joystick-stick { width: 50px; height: 50px; background: rgba(97, 218, 251, 0.5); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+        canvas { border: 2px solid #444; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); background: #000; cursor: crosshair; touch-action: none; }
+        button { padding: 6px 12px; font-size: 13px; cursor: pointer; background-color: #007acc; color: white; border: none; border-radius: 4px; transition: all 0.2s; font-weight: 600; }
+        button:hover { background-color: #0098ff; transform: translateY(-1px); }
+        button.secondary { background-color: #444; }
+        button.secondary:hover { background-color: #555; }
+        input[type="text"], input[type="number"], select, input[type="range"] { padding: 4px 8px; border: 1px solid #555; border-radius: 4px; background-color: #333; color: #fff; font-family: inherit; font-size: 13px; }
+        input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+        label { font-size: 13px; color: #aaa; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+        label:hover { color: #fff; }
+        .legend { display: flex; gap: 15px; margin-top: 5px; font-size: 12px; color: #888; flex-wrap: wrap; justify-content: center; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        #winnerOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 200; pointer-events: none; }
+        #winnerText { font-size: 48px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 20px rgba(241, 196, 15, 0.5); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>迷宫算法实验室 & 挑战</h1>
+    
+    <div class="main-layout">
+        <div class="controls-area">
+            <div class="ui-box controls">
+                <div class="control-group">
+                    <label>模式:</label>
+                    <div style="display:flex; border-bottom: 1px solid #444;">
+                        <div class="tab active" onclick="setMode('play')" style="padding: 5px 10px; cursor: pointer; color: #888; font-size: 13px;">🎮 游玩</div>
+                        <div class="tab" onclick="setMode('learn')" style="padding: 5px 10px; cursor: pointer; color: #888; font-size: 13px;">🎓 教学</div>
+                        <div class="tab" onclick="setMode('edit')" style="padding: 5px 10px; cursor: pointer; color: #888; font-size: 13px;">✏️ 编辑</div>
+                    </div>
+                </div>
+                
+                <div class="control-group" style="border-left: 1px solid #555; padding-left: 10px;">
+                    <label>迷宫: 
+                        <select id="mazeType" onchange="initGame()">
+                            <option value="square">方块</option>
+                            <option value="hex">六边形</option>
+                            <option value="triangle">三角形</option>
+                        </select>
+                    </label>
+                    <label>大小: <input type="number" id="mazeSize" value="20" min="5" max="50" style="width: 40px;"></label>
+                    <label>种子: <input type="text" id="mazeSeed" placeholder="随机" style="width: 60px;"></label>
+                    <label>生成: 
+                        <select id="genAlgo">
+                            <option value="dfs">递归回溯 (DFS)</option>
+                            <option value="prim">随机 Prim</option>
+                            <option value="kruskal">随机 Kruskal</option>
+                            <option value="huntkill">猎杀-杀死 (Hunt&Kill)</option>
+                        </select>
+                    </label>
+                    <button onclick="initGame()">生成</button>
+                </div>
+
+                <!-- Learn Mode Controls -->
+                <div id="learnControls" class="control-group hidden" style="border-left: 1px solid #555; padding-left: 10px;">
+                    <label>算法: 
+                        <select id="algoType">
+                            <option value="bfs">广度优先 (BFS)</option>
+                            <option value="dfs">深度优先 (DFS)</option>
+                            <option value="astar">A* 启发式</option>
+                            <option value="greedy">贪婪最佳优先</option>
+                            <option value="jps">跳点搜索 (JPS)</option>
+                            <option value="bibfs">双向 BFS</option>
+                            <option value="flow">泛洪/流水 (Flow)</option>
+                        </select>
+                    </label>
+                    <label>速度: <input type="range" id="animSpeed" min="1" max="200" value="50" oninput="updateSpeedLabel(this.value)"></label>
+                    <span id="speedLabel" style="font-size:10px; width:40px;">50ms</span>
+                    <button onclick="runVisualization()" class="secondary">▶ 演示</button>
+                    <button onclick="clearPath()" class="secondary">清除</button>
+                </div>
+                
+                <!-- Edit Mode Controls -->
+                <div id="editControls" class="control-group hidden" style="border-left: 1px solid #555; padding-left: 10px;">
+                    <span style="font-size:12px; color:#aaa;">点击墙壁以切换</span>
+                    <button onclick="clearMazeWalls()" class="secondary">清空墙壁</button>
+                    <button onclick="fillMazeWalls()" class="secondary">填满墙壁</button>
+                    <button onclick="saveMazeToPlay()">▶ 试玩</button>
+                </div>
+
+                <!-- Play Mode Controls -->
+                <div id="playControls" class="control-group" style="border-left: 1px solid #555; padding-left: 10px;">
+                    <label>视野:
+                        <select id="visibilityMode" onchange="updateVisibilityMode()">
+                            <option value="none">正常</option>
+                            <option value="fog">战争迷雾</option>
+                            <option value="hardcore">暗无天日</option>
+                        </select>
+                    </label>
+                    <label><input type="checkbox" id="twoPlayerToggle" onchange="toggleTwoPlayer()"> 双人竞速</label>
+                    <label><input type="checkbox" id="dynamicToggle" onchange="toggleDynamic()"> 动态迷宫</label>
+                    <label><input type="checkbox" id="joystickToggle" onchange="toggleJoystick()"> 摇杆</label>
+                    <span style="font-size:11px; color:#888; margin-left:5px;">P1: WASD | P2: 方向键</span>
+                </div>
+                
+                <div id="timerDisplay" style="margin-left:auto; font-family:monospace; font-size:16px; color:#f1c40f; font-weight:bold;">00:00</div>
+            </div>
+
+            <!-- Stats Panel (Responsive) -->
+            <div id="infoPanel" class="ui-box panel">
+                <h3>算法统计</h3>
+                <div class="stat-row"><span>状态:</span> <span id="statusVal" class="stat-val">就绪</span></div>
+                <div class="stat-row"><span>访问节点:</span> <span id="visitedVal" class="stat-val">0</span></div>
+                <div class="stat-row"><span>路径长度:</span> <span id="pathVal" class="stat-val">0</span></div>
+                <div class="stat-row"><span>耗时:</span> <span id="timeVal" class="stat-val">0 ms</span></div>
+                <div style="width: 100%; margin-top:5px; padding-top:5px; border-top:1px solid #444; font-size:12px; color:#888; line-height:1.4;" id="algoDesc"></div>
+            </div>
+        </div>
+        
+        <div class="game-container">
+            <canvas id="mazeCanvas"></canvas>
+            <div id="winnerOverlay" onclick="initGame()">
+                <div id="winnerText">玩家 1 获胜!</div>
+                <div style="color:white; font-size:18px;">按 回车/空格 或 点击 重新开始</div>
+            </div>
+            <div id="joystickZone">
+                <div class="joystick-base">
+                    <div class="joystick-stick" id="joystickStick"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item"><div class="dot" style="background:#3498db"></div>P1(蓝)</div>
+            <div class="legend-item p2-legend hidden"><div class="dot" style="background:#e67e22"></div>P2(橙)</div>
+            <div class="legend-item"><div class="dot" style="background:#e74c3c"></div>终点</div>
+            <div class="legend-item learn-only hidden"><div class="dot" style="background:rgba(46, 204, 113, 0.5)"></div>探索中</div>
+            <div class="legend-item learn-only hidden"><div class="dot" style="background:rgba(231, 76, 60, 0.3)"></div>已访问</div>
+            <div class="legend-item learn-only hidden"><div class="dot" style="background:#f1c40f"></div>路径</div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('mazeCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // UI Elements
+    const infoPanel = document.getElementById('infoPanel');
+    const learnControls = document.getElementById('learnControls');
+    const editControls = document.getElementById('editControls');
+    const playControls = document.getElementById('playControls');
+    const learnLegends = document.querySelectorAll('.learn-only');
+    const winnerOverlay = document.getElementById('winnerOverlay');
+    const winnerText = document.getElementById('winnerText');
+    const p2Legend = document.querySelector('.p2-legend');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const visibilitySelect = document.getElementById('visibilityMode');
+    const joystickZone = document.getElementById('joystickZone');
+    const joystickStick = document.getElementById('joystickStick');
+    
+    // Stats
+    const statusVal = document.getElementById('statusVal');
+    const visitedVal = document.getElementById('visitedVal');
+    const pathVal = document.getElementById('pathVal');
+    const timeVal = document.getElementById('timeVal');
+    const algoDesc = document.getElementById('algoDesc');
+
+    // Configuration
+    let config = {
+        mode: 'play', // 'play' or 'learn'
+        type: 'square',
+        size: 20,
+        width: 900,
+        height: 600,
+        stepDelay: 50, // ms
+        seed: '',
+        visibility: 'none', // 'none', 'fog', 'hardcore'
+        twoPlayer: false,
+        fogRadius: 4, // Visibility radius
+        genAlgo: 'dfs'
+    };
+
+    // Game State
+    let maze = null;
+    let player1 = null; 
+    let player2 = null;
+    let goal = null;
+    let visualizer = null;
+    let animationTimeout = null;
+    let rng = null;
+    let isGameOver = false;
+    let startTime = 0;
+    let gameTimerInterval = null;
+    let gameActive = false;
+    
+    // Animation State
+    let p1RenderPos = {x:0, y:0};
+    let p2RenderPos = {x:0, y:0};
+    const ANIM_SPEED = 0.3; // Interpolation factor (0-1)
+    
+    // Dynamic Mode State
+    let isDynamic = false;
+    let lastDynamicUpdate = 0;
+    const DYNAMIC_INTERVAL = 2000; // 2 seconds
+
+    // Particles State
+    let particles = [];
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            let angle = Math.random() * Math.PI * 2;
+            let speed = Math.random() * 1.5; // Slight random movement
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+            this.life = 1.0;
+            this.decay = 0.03 + Math.random() * 0.03;
+            this.size = 3 + Math.random() * 3;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= this.decay;
+        }
+        draw(ctx) {
+            ctx.globalAlpha = Math.max(0, this.life);
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    // Input State
+    const keys = new Set();
+    let isMouseDown = false;
+    let lastMousePos = { x: 0, y: 0 };
+    let moveInterval = null;
+    
+    // Joystick State
+    let joystickActive = false;
+    let joystickData = { x: 0, y: 0 };
+    let joystickInterval = null;
+
+    // PRNG
+    class Random {
+        constructor(seed) {
+            this.seed = seed ? this.hash(seed) : Math.floor(Math.random() * 2147483647);
+        }
+        hash(str) {
+            let hash = 0;
+            if (str.length === 0) return hash;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return Math.abs(hash);
+        }
+        next() {
+            this.seed = (this.seed * 16807) % 2147483647;
+            return (this.seed - 1) / 2147483646;
+        }
+        nextInt(min, max) {
+            return Math.floor(this.next() * (max - min)) + min;
+        }
+    }
+
+    // --- Helper Functions ---
+    function lerp(start, end, amt) {
+        return (1 - amt) * start + amt * end;
+    }
+
+    // --- Maze Logic ---
+    class Cell {
+        constructor(c, r, index) {
+            this.c = c;
+            this.r = r;
+            this.index = index;
+            this.visited = false; 
+            this.walls = []; 
+            this.algoState = 'none'; // none, open, closed, path
+            this.parent = null;
+            this.distance = -1; 
+            this.g = 0; this.h = 0; this.f = 0;
+            this.discovered = false; // For Fog of War
+        }
+        resetAlgo() {
+            this.algoState = 'none';
+            this.parent = null;
+            this.distance = -1;
+            this.g = this.h = this.f = 0;
+            this.discovered = false;
+        }
+    }
+
+    class MazeBase {
+        constructor(size) {
+            this.size = size;
+            this.cells = [];
+            this.stack = [];
+        }
+        init(algo = 'dfs') {
+            this.cells = [];
+            this.createCells();
+            
+            if (algo === 'dfs') this.generateDFS();
+            else if (algo === 'prim') this.generatePrim();
+            else if (algo === 'kruskal') this.generateKruskal();
+            else if (algo === 'huntkill') this.generateHuntAndKill();
+            else this.generateDFS(); // Default
+        }
+        
+        generateHuntAndKill() {
+            let start = this.cells[rng.nextInt(0, this.cells.length)];
+            start.visited = true;
+            let current = start;
+            
+            while (current) {
+                let neighbors = this.getAllNeighbors(current);
+                let unvisited = neighbors.filter(n => !n.visited);
+                
+                if (unvisited.length > 0) {
+                    let next = unvisited[rng.nextInt(0, unvisited.length)];
+                    this.removeWalls(current, next);
+                    next.visited = true;
+                    current = next;
+                } else {
+                    current = null;
+                    // Hunt phase
+                    for (let c of this.cells) {
+                        if (!c.visited) {
+                            let visitedNeighbors = this.getAllNeighbors(c).filter(n => n.visited);
+                            if (visitedNeighbors.length > 0) {
+                                current = c;
+                                current.visited = true;
+                                let neighbor = visitedNeighbors[rng.nextInt(0, visitedNeighbors.length)];
+                                this.removeWalls(current, neighbor);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        generateDFS() {
+            let start = this.cells[0];
+            start.visited = true;
+            this.stack.push(start);
+            while (this.stack.length > 0) {
+                let current = this.stack[this.stack.length - 1];
+                let next = this.checkNeighbors(current);
+                if (next) {
+                    next.visited = true;
+                    this.removeWalls(current, next);
+                    this.stack.push(next);
+                } else {
+                    this.stack.pop();
+                }
+            }
+        }
+        
+        generatePrim() {
+            // Simplified Randomized Prim's
+            let start = this.cells[rng.nextInt(0, this.cells.length)];
+            start.visited = true;
+            let frontier = this.getAllNeighbors(start);
+            
+            while (frontier.length > 0) {
+                // Pick random frontier cell
+                let randIdx = rng.nextInt(0, frontier.length);
+                let current = frontier[randIdx];
+                frontier.splice(randIdx, 1);
+                
+                if (current.visited) continue;
+                current.visited = true;
+                
+                // Connect to random visited neighbor
+                let visitedNeighbors = this.getAllNeighbors(current).filter(n => n.visited);
+                if (visitedNeighbors.length > 0) {
+                    let target = visitedNeighbors[rng.nextInt(0, visitedNeighbors.length)];
+                    this.removeWalls(current, target);
+                }
+                
+                // Add unvisited neighbors to frontier
+                let neighbors = this.getAllNeighbors(current);
+                neighbors.forEach(n => {
+                    if (!n.visited && !frontier.includes(n)) {
+                        frontier.push(n);
+                    }
+                });
+            }
+        }
+
+        generateKruskal() {
+            // Randomized Kruskal's Algorithm (Disjoint Set)
+            let sets = new Map();
+            let edges = [];
+            
+            this.cells.forEach(c => {
+                sets.set(c.index, c.index);
+                let neighbors = this.getAllNeighbors(c);
+                neighbors.forEach(n => {
+                     // Add edge only once (e.g., if c.index < n.index)
+                     if (c.index < n.index) edges.push({a: c, b: n});
+                });
+            });
+            
+            // Shuffle edges
+            for (let i = edges.length - 1; i > 0; i--) {
+                const j = rng.nextInt(0, i + 1);
+                [edges[i], edges[j]] = [edges[j], edges[i]];
+            }
+            
+            function find(i) {
+                if (sets.get(i) === i) return i;
+                let root = find(sets.get(i));
+                sets.set(i, root); // Path compression
+                return root;
+            }
+            
+            function union(i, j) {
+                let rootA = find(i);
+                let rootB = find(j);
+                if (rootA !== rootB) {
+                    sets.set(rootA, rootB);
+                    return true;
+                }
+                return false;
+            }
+            
+            edges.forEach(edge => {
+                if (union(edge.a.index, edge.b.index)) {
+                    this.removeWalls(edge.a, edge.b);
+                }
+            });
+        }
+
+        createCells() {}
+        checkNeighbors(cell) {}
+        removeWalls(a, b) {}
+        draw(ctx) {}
+        getCellAt(x, y) { return null; }
+        getCenter(cell) {} 
+        getUnvisitedNeighbor(cell, neighbors) {
+            let unvisited = neighbors.filter(n => n && !n.visited);
+            if (unvisited.length > 0) return unvisited[rng.nextInt(0, unvisited.length)];
+            return undefined;
+        }
+        getNeighbors(cell) { return []; }
+        getAllNeighbors(cell) { return []; }
+    }
+
+    // --- Draw Helpers ---
+    function setCellColor(ctx, c) {
+        if (c.algoState !== 'none' || c.distance > -1) {
+            if (c.algoState === 'path') ctx.fillStyle = '#f1c40f';
+            else if (c.algoState === 'open') ctx.fillStyle = 'rgba(46, 204, 113, 0.3)';
+            else if (c.algoState === 'closed') ctx.fillStyle = 'rgba(231, 76, 60, 0.2)';
+            if (c.distance > -1 && config.mode === 'learn') { 
+                 let alpha = Math.min(0.8, Math.max(0.1, 1 - c.distance / (maze.cols + maze.rows)));
+                 ctx.fillStyle = `rgba(52, 152, 219, ${alpha})`;
+                 if (c.algoState === 'path') ctx.fillStyle = '#f1c40f';
+            }
+            return true;
+        } else if (config.visibility === 'fog' || config.visibility === 'hardcore') {
+            if (isInLineOfSight(c)) ctx.fillStyle = '#2c3e50';
+            else if (c.discovered) ctx.fillStyle = '#111';
+            else return false;
+            return true;
+        }
+        return false; // Should not draw floor? Wait, in 'none' mode, we need default?
+        // Ah, in 'none' mode, we don't draw floor unless it has algoState.
+        // The background is already cleared/black?
+        // Wait, draw() clears with black in fog mode, or clearRect in none mode.
+        // If none mode, and no algoState, we usually don't draw floor (transparent/black).
+    }
+
+    function getWallColor(c) {
+        if (config.visibility !== 'none') {
+            if (isInLineOfSight(c)) return '#ecf0f1';
+            else if (c.discovered) return '#444';
+            else return null;
+        }
+        return '#555';
+    }
+
+    // --- Square Maze ---
+    class SquareMaze extends MazeBase {
+        constructor(size) {
+            super(size);
+            this.cols = size;
+            this.rows = Math.floor(size * (config.height/config.width));
+            if (this.rows < 5) this.rows = 5;
+            this.cellSize = Math.floor(Math.min(config.width/this.cols, config.height/this.rows));
+            this.offsetX = (config.width - this.cols * this.cellSize) / 2;
+            this.offsetY = (config.height - this.rows * this.cellSize) / 2;
+        }
+        createCells() {
+            for (let r = 0; r < this.rows; r++) {
+                for (let c = 0; c < this.cols; c++) {
+                    let cell = new Cell(c, r, c + r * this.cols);
+                    cell.walls = [true, true, true, true]; // T, R, B, L
+                    this.cells.push(cell);
+                }
+            }
+        }
+        index(c, r) {
+            if (c < 0 || r < 0 || c >= this.cols || r >= this.rows) return -1;
+            return c + r * this.cols;
+        }
+        getAllNeighbors(cell) {
+            let neighbors = [];
+            let dirs = [[0,-1], [1,0], [0,1], [-1,0]];
+            dirs.forEach(d => {
+                let idx = this.index(cell.c + d[0], cell.r + d[1]);
+                if (idx !== -1) neighbors.push(this.cells[idx]);
+            });
+            return neighbors;
+        }
+        checkNeighbors(cell) { return this.getUnvisitedNeighbor(cell, this.getAllNeighbors(cell)); }
+        removeWalls(a, b) {
+            let x = a.c - b.c;
+            if (x === 1) { a.walls[3] = false; b.walls[1] = false; }
+            if (x === -1) { a.walls[1] = false; b.walls[3] = false; }
+            let y = a.r - b.r;
+            if (y === 1) { a.walls[0] = false; b.walls[2] = false; }
+            if (y === -1) { a.walls[2] = false; b.walls[0] = false; }
+        }
+        getNeighbors(cell) {
+            let neighbors = [];
+            let dirs = [{c:0, r:-1, w:0}, {c:1, r:0, w:1}, {c:0, r:1, w:2}, {c:-1, r:0, w:3}];
+            dirs.forEach(d => {
+                if (!cell.walls[d.w]) {
+                    let idx = this.index(cell.c + d.c, cell.r + d.r);
+                    if (idx !== -1) neighbors.push(this.cells[idx]);
+                }
+            });
+            return neighbors;
+        }
+        getCenter(cell) {
+            return {
+                x: this.offsetX + cell.c * this.cellSize + this.cellSize/2,
+                y: this.offsetY + cell.r * this.cellSize + this.cellSize/2
+            };
+        }
+        getCellAt(x, y) {
+            let c = Math.floor((x - this.offsetX) / this.cellSize);
+            let r = Math.floor((y - this.offsetY) / this.cellSize);
+            let idx = this.index(c, r);
+            return idx !== -1 ? this.cells[idx] : null;
+        }
+        draw(ctx) {
+            ctx.lineWidth = 2;
+            this.cells.forEach(c => {
+                if (!isCellVisible(c)) return;
+
+                let x = this.offsetX + c.c * this.cellSize;
+                let y = this.offsetY + c.r * this.cellSize;
+                
+                if (setCellColor(ctx, c)) {
+                    ctx.fillRect(x, y, this.cellSize, this.cellSize);
+                }
+
+                let wc = getWallColor(c);
+                if (!wc) return;
+                ctx.strokeStyle = wc;
+                
+                ctx.beginPath();
+                if (c.walls[0]) { ctx.moveTo(x, y); ctx.lineTo(x + this.cellSize, y); }
+                if (c.walls[1]) { ctx.moveTo(x + this.cellSize, y); ctx.lineTo(x + this.cellSize, y + this.cellSize); }
+                if (c.walls[2]) { ctx.moveTo(x + this.cellSize, y + this.cellSize); ctx.lineTo(x, y + this.cellSize); }
+                if (c.walls[3]) { ctx.moveTo(x, y + this.cellSize); ctx.lineTo(x, y); }
+                ctx.stroke();
+            });
+        }
+    }
+
+    // --- Hex Maze ---
+    class HexMaze extends MazeBase {
+        constructor(size) {
+            super(size);
+            this.cols = size;
+            
+            let aspect = config.height / config.width;
+            let wEstimate = config.width / (this.cols * Math.sqrt(3) + Math.sqrt(3)/2);
+            let rEstimate = Math.floor((config.height - 0.5 * wEstimate) / (1.5 * wEstimate));
+            this.rows = rEstimate;
+            if (this.rows < 5) this.rows = 5;
+            
+            let sideW = config.width / (this.cols * Math.sqrt(3) + Math.sqrt(3)/2);
+            let sideH = config.height / (this.rows * 1.5 + 0.5);
+            this.side = Math.min(sideW, sideH);
+            
+            this.hexW = Math.sqrt(3) * this.side;
+            this.hexH = 2 * this.side;
+            this.offsetX = (config.width - (this.cols * this.hexW + this.hexW/2)) / 2;
+            this.offsetY = (config.height - (this.rows * 1.5 * this.side + 0.5 * this.side)) / 2;
+        }
+        createCells() {
+            for (let r = 0; r < this.rows; r++) {
+                for (let c = 0; c < this.cols; c++) {
+                    let cell = new Cell(c, r, c + r * this.cols);
+                    cell.walls = [true, true, true, true, true, true]; 
+                    this.cells.push(cell);
+                }
+            }
+        }
+        index(c, r) {
+            if (c < 0 || r < 0 || c >= this.cols || r >= this.rows) return -1;
+            return c + r * this.cols;
+        }
+        getNeighborCoords(c, r) {
+            let parity = r & 1;
+            let dirs = [[parity, -1], [1, 0], [parity, 1], [parity-1, 1], [-1, 0], [parity-1, -1]];
+            return dirs.map(d => ({c: c + d[0], r: r + d[1]}));
+        }
+        getAllNeighbors(cell) {
+            let neighbors = [];
+            let coords = this.getNeighborCoords(cell.c, cell.r);
+            coords.forEach(coord => {
+                let idx = this.index(coord.c, coord.r);
+                if (idx !== -1) neighbors.push(this.cells[idx]);
+            });
+            return neighbors;
+        }
+        checkNeighbors(cell) { return this.getUnvisitedNeighbor(cell, this.getAllNeighbors(cell)); }
+        removeWalls(a, b) {
+            let coords = this.getNeighborCoords(a.c, a.r);
+            let dir = -1;
+            for(let i=0; i<6; i++) {
+                if (coords[i].c === b.c && coords[i].r === b.r) { dir = i; break; }
+            }
+            if (dir !== -1) { a.walls[dir] = false; b.walls[(dir + 3) % 6] = false; }
+        }
+        getNeighbors(cell) {
+            let neighbors = [];
+            let coords = this.getNeighborCoords(cell.c, cell.r);
+            for(let i=0; i<6; i++) {
+                if (!cell.walls[i]) {
+                    let idx = this.index(coords[i].c, coords[i].r);
+                    if (idx !== -1) neighbors.push(this.cells[idx]);
+                }
+            }
+            return neighbors;
+        }
+        getCenter(cell) {
+            let cx = this.offsetX + cell.c * this.hexW + (cell.r & 1 ? this.hexW/2 : 0) + this.hexW/2;
+            let cy = this.offsetY + cell.r * (this.side * 1.5) + this.side;
+            return {x: cx, y: cy};
+        }
+        getHexPoints(cx, cy) {
+            let points = [];
+            for (let i = 0; i < 6; i++) {
+                let angle_deg = 30 + 60 * i;
+                let angle_rad = Math.PI / 180 * angle_deg;
+                points.push({x: cx + this.side * Math.cos(angle_rad), y: cy + this.side * Math.sin(angle_rad)});
+            }
+            return points;
+        }
+        getCellAt(x, y) {
+            let minDist = Infinity;
+            let closest = null;
+            for(let c of this.cells) {
+                let center = this.getCenter(c);
+                let dist = (x - center.x)**2 + (y - center.y)**2;
+                if (dist < this.side * this.side && dist < minDist) { minDist = dist; closest = c; }
+            }
+            return closest;
+        }
+        draw(ctx) {
+            ctx.lineWidth = 2;
+            this.cells.forEach(c => {
+                if (!isCellVisible(c)) return;
+
+                let center = this.getCenter(c);
+                let pts = this.getHexPoints(center.x, center.y);
+                
+                if (setCellColor(ctx, c)) {
+                    ctx.beginPath();
+                    ctx.moveTo(pts[0].x, pts[0].y);
+                    for(let i=1; i<6; i++) ctx.lineTo(pts[i].x, pts[i].y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                let wc = getWallColor(c);
+                if (!wc) return;
+                ctx.strokeStyle = wc;
+                
+                ctx.beginPath();
+                if (c.walls[0]) { ctx.moveTo(pts[4].x, pts[4].y); ctx.lineTo(pts[5].x, pts[5].y); }
+                if (c.walls[1]) { ctx.moveTo(pts[5].x, pts[5].y); ctx.lineTo(pts[0].x, pts[0].y); }
+                if (c.walls[2]) { ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[1].x, pts[1].y); }
+                if (c.walls[3]) { ctx.moveTo(pts[1].x, pts[1].y); ctx.lineTo(pts[2].x, pts[2].y); }
+                if (c.walls[4]) { ctx.moveTo(pts[2].x, pts[2].y); ctx.lineTo(pts[3].x, pts[3].y); }
+                if (c.walls[5]) { ctx.moveTo(pts[3].x, pts[3].y); ctx.lineTo(pts[4].x, pts[4].y); }
+                ctx.stroke();
+            });
+        }
+    }
+
+    // --- Triangle Maze ---
+    class TriangleMaze extends MazeBase {
+        constructor(size) {
+            super(size);
+            this.cols = Math.floor(size * 1.5);
+            this.rows = Math.floor(size); 
+            this.side = Math.min(config.width / (this.cols/2 + 0.5), config.height / (this.rows * Math.sqrt(3)/2));
+            this.h = (Math.sqrt(3)/2) * this.side;
+            this.offsetX = (config.width - (this.cols/2 + 0.5) * this.side) / 2;
+            this.offsetY = (config.height - this.rows * this.h) / 2;
+        }
+        createCells() {
+            for (let r = 0; r < this.rows; r++) {
+                for (let c = 0; c < this.cols; c++) {
+                    let cell = new Cell(c, r, c + r * this.cols);
+                    cell.walls = [true, true, true]; 
+                    this.cells.push(cell);
+                }
+            }
+        }
+        index(c, r) {
+            if (c < 0 || r < 0 || c >= this.cols || r >= this.rows) return -1;
+            return c + r * this.cols;
+        }
+        isUpright(cell) { return (cell.c + cell.r) % 2 === 0; }
+        getAllNeighbors(cell) {
+            let neighbors = [];
+            let dirs = this.isUpright(cell) ? [{c:-1, r:0}, {c:1, r:0}, {c:0, r:1}] : [{c:-1, r:0}, {c:1, r:0}, {c:0, r:-1}];
+            dirs.forEach(d => {
+                let idx = this.index(cell.c + d.c, cell.r + d.r);
+                if (idx !== -1) neighbors.push(this.cells[idx]);
+            });
+            return neighbors;
+        }
+        checkNeighbors(cell) { return this.getUnvisitedNeighbor(cell, this.getAllNeighbors(cell)); }
+        removeWalls(a, b) {
+            let dc = b.c - a.c;
+            let dr = b.r - a.r;
+            if (dc === -1) { a.walls[0] = false; b.walls[1] = false; }
+            if (dc === 1)  { a.walls[1] = false; b.walls[0] = false; }
+            if (dr !== 0)  { a.walls[2] = false; b.walls[2] = false; }
+        }
+        getNeighbors(cell) {
+            let neighbors = [];
+            let dirs = this.isUpright(cell) ? 
+                [{c:-1, r:0, w:0}, {c:1, r:0, w:1}, {c:0, r:1, w:2}] : 
+                [{c:-1, r:0, w:0}, {c:1, r:0, w:1}, {c:0, r:-1, w:2}];
+            dirs.forEach(d => {
+                if (!cell.walls[d.w]) {
+                    let idx = this.index(cell.c + d.c, cell.r + d.r);
+                    if (idx !== -1) neighbors.push(this.cells[idx]);
+                }
+            });
+            return neighbors;
+        }
+        getCenter(cell) {
+            let cx = this.offsetX + (cell.c * 0.5 * this.side) + 0.5 * this.side;
+            let cy = this.isUpright(cell) ? 
+                this.offsetY + (cell.r + 1) * this.h - this.h/3 : 
+                this.offsetY + cell.r * this.h + this.h/3;
+            return {x: cx, y: cy};
+        }
+        getTrianglePoints(cell) {
+            let xBase = this.offsetX + (cell.c * 0.5 * this.side);
+            let yTop = this.offsetY + cell.r * this.h;
+            let yBot = this.offsetY + (cell.r + 1) * this.h;
+            if (this.isUpright(cell)) {
+                return [{x: xBase + 0.5 * this.side, y: yTop}, {x: xBase + this.side, y: yBot}, {x: xBase, y: yBot}];
+            } else {
+                return [{x: xBase, y: yTop}, {x: xBase + this.side, y: yTop}, {x: xBase + 0.5 * this.side, y: yBot}];
+            }
+        }
+        getCellAt(x, y) {
+            let minDist = Infinity;
+            let closest = null;
+            for(let c of this.cells) {
+                let center = this.getCenter(c);
+                let dist = (x - center.x)**2 + (y - center.y)**2;
+                if (dist < (this.side/2)**2 && dist < minDist) { minDist = dist; closest = c; }
+            }
+            return closest;
+        }
+        draw(ctx) {
+            ctx.lineWidth = 2;
+            this.cells.forEach(c => {
+                if (!isCellVisible(c)) return;
+
+                let pts = this.getTrianglePoints(c);
+                
+                if (setCellColor(ctx, c)) {
+                    ctx.beginPath();
+                    ctx.moveTo(pts[0].x, pts[0].y);
+                    ctx.lineTo(pts[1].x, pts[1].y);
+                    ctx.lineTo(pts[2].x, pts[2].y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                let wc = getWallColor(c);
+                if (!wc) return;
+                ctx.strokeStyle = wc;
+                
+                ctx.beginPath();
+                if (this.isUpright(c)) {
+                    if (c.walls[0]) { ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[2].x, pts[2].y); }
+                    if (c.walls[1]) { ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[1].x, pts[1].y); }
+                    if (c.walls[2]) { ctx.moveTo(pts[1].x, pts[1].y); ctx.lineTo(pts[2].x, pts[2].y); }
+                } else {
+                    if (c.walls[0]) { ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[2].x, pts[2].y); }
+                    if (c.walls[1]) { ctx.moveTo(pts[1].x, pts[1].y); ctx.lineTo(pts[2].x, pts[2].y); }
+                    if (c.walls[2]) { ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[1].x, pts[1].y); }
+                }
+                ctx.stroke();
+            });
+        }
+    }
+
+    // --- Visibility / Fog Logic ---
+    function isCellVisible(cell) {
+        if (config.visibility === 'none') return true;
+        
+        // Hardcore mode: No memory, strictly line of sight
+        if (config.visibility === 'hardcore') {
+            return isInLineOfSight(cell);
+        }
+
+        // Normal Fog: Has memory
+        if (cell.discovered) return true;
+        if (isInLineOfSight(cell)) {
+            cell.discovered = true;
+            return true;
+        }
+        return false;
+    }
+
+    function isInLineOfSight(cell) {
+        if (config.visibility === 'none') return true;
+        
+        // Reduce radius in Hardcore mode
+        let radius = config.visibility === 'hardcore' ? 2.5 : config.fogRadius;
+        
+        let p1Dist = getDistSq(cell, player1);
+        if (p1Dist < radius**2) return true;
+        
+        if (config.twoPlayer && player2) {
+            let p2Dist = getDistSq(cell, player2);
+            if (p2Dist < radius**2) return true;
+        }
+        return false;
+    }
+
+    function getDistSq(c1, c2) {
+        // Manhattan distance approximation for grid-based fog is usually enough
+        // But Euclidean is better for circle.
+        // Let's use cell coordinates diff for simplicity across shapes
+        // (Hex/Triangle coordinates are tricky, but approx is fine)
+        let dx = c1.c - c2.c;
+        let dy = c1.r - c2.r;
+        return dx*dx + dy*dy;
+    }
+
+    // --- Main Logic ---
+    function setMode(mode) {
+        let prevMode = config.mode;
+        config.mode = mode;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.tab[onclick="setMode('${mode}')"]`).classList.add('active');
+        
+        if (mode === 'play') {
+            learnControls.classList.add('hidden');
+            editControls.classList.add('hidden');
+            playControls.classList.remove('hidden');
+            infoPanel.classList.remove('active');
+            learnLegends.forEach(el => el.classList.add('hidden'));
+            timerDisplay.classList.remove('hidden');
+            clearPath();
+            
+            if (prevMode !== 'edit') {
+                initGame();
+            } else {
+                 if (maze && maze.cells.length > 0) {
+                      player1 = maze.cells[0];
+                      let startCenter = maze.getCenter(player1);
+                      p1RenderPos = {x: startCenter.x, y: startCenter.y};
+                      
+                      if (config.twoPlayer) {
+                         player2 = maze.cells[0];
+                         p2RenderPos = {x: startCenter.x, y: startCenter.y};
+                      }
+                      goal = maze.cells[maze.cells.length - 1];
+                 }
+            }
+        } else if (mode === 'learn') {
+            config.visibility = 'none';
+            visibilitySelect.value = 'none';
+            
+            learnControls.classList.remove('hidden');
+            editControls.classList.add('hidden');
+            playControls.classList.add('hidden');
+            infoPanel.classList.add('active');
+            learnLegends.forEach(el => el.classList.remove('hidden'));
+            timerDisplay.classList.add('hidden');
+            clearPath();
+        } else if (mode === 'edit') {
+            config.visibility = 'none';
+            visibilitySelect.value = 'none';
+            
+            learnControls.classList.add('hidden');
+            editControls.classList.remove('hidden');
+            playControls.classList.add('hidden');
+            infoPanel.classList.remove('active');
+            learnLegends.forEach(el => el.classList.add('hidden'));
+            timerDisplay.classList.add('hidden');
+            clearPath();
+            if (!maze) initGame();
+        }
+        draw();
+    }
+
+    function saveMazeToPlay() {
+        setMode('play');
+    }
+
+    function clearMazeWalls() {
+        if (!maze) return;
+        maze.cells.forEach(c => {
+            c.walls.fill(false);
+            
+            if (config.type === 'square') {
+                if (c.r === 0) c.walls[0] = true;
+                if (c.c === maze.cols - 1) c.walls[1] = true;
+                if (c.r === maze.rows - 1) c.walls[2] = true;
+                if (c.c === 0) c.walls[3] = true;
+            }
+        });
+        draw();
+    }
+    
+    function fillMazeWalls() {
+        if (!maze) return;
+        maze.cells.forEach(c => {
+            c.walls.fill(true);
+        });
+        draw();
+    }
+
+    function updateVisibilityMode() {
+        config.visibility = visibilitySelect.value;
+        if (config.visibility === 'fog' || config.visibility === 'hardcore') {
+            if (maze) {
+                maze.cells.forEach(c => c.discovered = false);
+                if (config.visibility === 'fog') {
+                    maze.cells.forEach(c => {
+                        if (isInLineOfSight(c)) c.discovered = true;
+                    });
+                }
+            }
+        }
+        draw();
+    }
+    
+    function toggleJoystick() {
+        let active = document.getElementById('joystickToggle').checked;
+        joystickZone.style.display = active ? 'block' : 'none';
+    }
+
+    function toggleTwoPlayer() {
+        config.twoPlayer = document.getElementById('twoPlayerToggle').checked;
+        if (config.twoPlayer) {
+            p2Legend.classList.remove('hidden');
+            // Restart game to ensure fairness (both start at 0)
+            initGame();
+        } else {
+            player2 = null;
+            p2Legend.classList.add('hidden');
+            draw();
+        }
+    }
+
+    function toggleDynamic() {
+        isDynamic = document.getElementById('dynamicToggle').checked;
+        lastDynamicUpdate = 0;
+    }
+    
+    function mutateMaze() {
+        if (!maze || isGameOver) return;
+        
+        for(let i=0; i<10; i++) {
+            let cell = maze.cells[rng.nextInt(0, maze.cells.length)];
+            let neighbors = maze.getAllNeighbors(cell);
+            if (neighbors.length === 0) continue;
+            
+            let n = neighbors[rng.nextInt(0, neighbors.length)];
+            
+            if (config.type === 'square') {
+                let wallIdx = -1;
+                if (n.r < cell.r) wallIdx = 0; 
+                else if (n.c > cell.c) wallIdx = 1; 
+                else if (n.r > cell.r) wallIdx = 2; 
+                else if (n.c < cell.c) wallIdx = 3; 
+                
+                if (wallIdx !== -1) {
+                    let oldState = cell.walls[wallIdx];
+                    cell.walls[wallIdx] = !oldState;
+                    let opIdx = (wallIdx + 2) % 4;
+                    n.walls[opIdx] = !oldState;
+                    
+                    if (checkConnectivity()) {
+                        return; 
+                    } else {
+                        cell.walls[wallIdx] = oldState;
+                        n.walls[opIdx] = oldState;
+                    }
+                }
+            } else {
+                return; 
+            }
+        }
+    }
+    
+    function checkConnectivity() {
+        let start = player1;
+        let end = goal;
+        let q = [start];
+        let visited = new Set();
+        visited.add(start);
+        
+        while(q.length > 0) {
+            let curr = q.shift();
+            if (curr === end) return true;
+            
+            let neighbors = maze.getNeighbors(curr);
+            for(let n of neighbors) {
+                if (!visited.has(n)) {
+                    visited.add(n);
+                    q.push(n);
+                }
+            }
+        }
+        return false;
+    }
+
+    function updateSpeedLabel(val) {
+        config.stepDelay = parseInt(val);
+        document.getElementById('speedLabel').innerText = val + 'ms';
+    }
+
+    function initGame() {
+        clearPath();
+        isGameOver = false;
+        gameActive = false; 
+        winnerOverlay.style.display = 'none';
+        timerDisplay.innerText = "00:00";
+        if (animationTimeout) clearTimeout(animationTimeout);
+        if (gameTimerInterval) clearInterval(gameTimerInterval);
+        
+        config.type = document.getElementById('mazeType').value;
+        config.size = parseInt(document.getElementById('mazeSize').value);
+        let seedInput = document.getElementById('mazeSeed').value;
+        config.seed = seedInput || Date.now().toString();
+        
+        config.visibility = visibilitySelect.value;
+        config.genAlgo = document.getElementById('genAlgo').value;
+        config.twoPlayer = document.getElementById('twoPlayerToggle').checked;
+        if (config.twoPlayer) p2Legend.classList.remove('hidden');
+        else p2Legend.classList.add('hidden');
+        
+        let joystickActive = document.getElementById('joystickToggle').checked;
+        joystickZone.style.display = joystickActive ? 'block' : 'none';
+
+        canvas.width = config.width;
+        canvas.height = config.height;
+
+        rng = new Random(config.seed);
+
+        if (config.type === 'square') maze = new SquareMaze(config.size);
+        else if (config.type === 'hex') maze = new HexMaze(config.size);
+        else if (config.type === 'triangle') maze = new TriangleMaze(config.size);
+
+        maze.init(config.genAlgo);
+        
+        player1 = maze.cells[0];
+        let startCenter = maze.getCenter(player1);
+        p1RenderPos = {x: startCenter.x, y: startCenter.y};
+
+        if (config.twoPlayer) {
+            player2 = maze.cells[0];
+            p2RenderPos = {x: startCenter.x, y: startCenter.y};
+        }
+        
+        goal = maze.cells[maze.cells.length - 1];
+        
+        maze.cells.forEach(c => c.discovered = false);
+        
+        if (config.visibility !== 'hardcore') {
+            maze.cells.forEach(c => {
+                if (isInLineOfSight(c)) c.discovered = true;
+            });
+        }
+        
+        updateAlgoDesc();
+
+        draw();
+    }
+    
+    function updateAlgoDesc() {
+        let algo = config.genAlgo;
+        let desc = "";
+        if (algo === 'dfs') desc = "递归回溯 (DFS): 经典算法，主路较长，分支较少，适合初学者。";
+        else if (algo === 'prim') desc = "随机 Prim: 分支极多，死胡同多，难度较高，形状像自然生长的根系。";
+        else if (algo === 'kruskal') desc = "随机 Kruskal: 基于集合合并，生成的纹理独特，路径通常较短。";
+        else if (algo === 'huntkill') desc = "猎杀-杀死 (Hunt&Kill): 类似 DFS 但更随机，生成蜿蜒曲折的长路径。";
+        
+        let descEl = document.getElementById('genAlgoDesc');
+        if (!descEl) {
+            descEl = document.createElement('div');
+            descEl.id = 'genAlgoDesc';
+            descEl.style.width = '100%';
+            descEl.style.marginTop = '8px';
+            descEl.style.paddingTop = '8px';
+            descEl.style.borderTop = '1px solid #444';
+            descEl.style.fontSize = '12px';
+            descEl.style.color = '#888';
+            descEl.style.textAlign = 'left';
+            descEl.style.lineHeight = '1.4';
+            
+            // Append INSIDE .controls instead of after
+            document.querySelector('.controls').appendChild(descEl);
+        }
+        descEl.innerText = "当前迷宫: " + desc;
+    }
+    
+    function startGameTimer() {
+        if (gameActive) return;
+        gameActive = true;
+        startTime = Date.now();
+        gameTimerInterval = setInterval(() => {
+            let elapsed = Date.now() - startTime;
+            let secs = Math.floor(elapsed / 1000);
+            let mins = Math.floor(secs / 60);
+            secs = secs % 60;
+            let ms = Math.floor((elapsed % 1000) / 10);
+            timerDisplay.innerText = 
+                (mins < 10 ? "0"+mins : mins) + ":" + 
+                (secs < 10 ? "0"+secs : secs); // + "." + (ms < 10 ? "0"+ms : ms); // Simplified
+        }, 100);
+    }
+
+    function draw() {
+        if (config.visibility === 'none') {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } else {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        if (!maze) return;
+        
+        maze.draw(ctx);
+        
+        // Ensure visibility mask is applied strictly if needed (double check)
+        // Although maze.draw handles individual cells, sometimes walls can leak.
+        // But with current logic (skip if !visible), it should be fine.
+        
+        // Draw Start/End
+        let startPos = maze.getCenter(maze.cells[0]);
+        let endPos = maze.getCenter(goal);
+        
+        // Always draw Start/End in Hardcore mode (as markers), 
+        // or check visibility for normal fog.
+        if (config.visibility === 'hardcore' || isCellVisible(maze.cells[0])) {
+            ctx.fillStyle = '#3498db';
+            ctx.beginPath(); ctx.arc(startPos.x, startPos.y, 6, 0, Math.PI*2); ctx.fill();
+        }
+        
+        if (config.visibility === 'hardcore' || isCellVisible(goal)) {
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath(); ctx.arc(endPos.x, endPos.y, 6, 0, Math.PI*2); ctx.fill();
+        }
+
+        // Draw Players
+        if (config.mode === 'play') {
+             // Draw Particles
+             particles.forEach(p => p.draw(ctx));
+
+             // P1
+             // Interpolated position is handled in gameLoop, but if we are just drawing static (e.g. init), use p1RenderPos
+             // Note: p1RenderPos should be initialized in initGame
+             
+             ctx.fillStyle = '#3498db';
+             ctx.beginPath(); ctx.arc(p1RenderPos.x, p1RenderPos.y, 5, 0, Math.PI*2); ctx.fill();
+             ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+
+             // P2
+             if (config.twoPlayer && player2) {
+                 ctx.fillStyle = '#e67e22';
+                 ctx.beginPath(); ctx.arc(p2RenderPos.x, p2RenderPos.y, 5, 0, Math.PI*2); ctx.fill();
+                 ctx.strokeStyle = '#fff'; ctx.stroke();
+             }
+        }
+    }
+
+    function clearPath() {
+        if (maze) maze.cells.forEach(c => c.resetAlgo());
+        if (animationTimeout) clearTimeout(animationTimeout);
+        visualizer = null;
+        if (config.mode === 'learn') {
+            statusVal.innerText = '就绪'; statusVal.style.color = '#fff';
+            visitedVal.innerText = '0'; pathVal.innerText = '0'; timeVal.innerText = '0 ms';
+        }
+        draw();
+    }
+
+    function runVisualization() {
+        clearPath();
+        let algo = document.getElementById('algoType').value;
+        let start = maze.cells[0];
+        let end = goal;
+        
+        statusVal.innerText = '运行中...'; statusVal.style.color = '#f1c40f';
+        
+        let desc = "";
+        if (algo === 'bfs') desc = "广度优先 (BFS): 波纹扩散，保证最短路径。";
+        else if (algo === 'dfs') desc = "深度优先 (DFS): 撞墙回头，路径随机。";
+        else if (algo === 'astar') desc = "A* 算法: 启发式搜索，直奔终点。";
+        else if (algo === 'greedy') desc = "贪婪最佳优先: 仅看目标方向，极快但可能绕路。";
+        else if (algo === 'jps') desc = "跳点搜索 (JPS): A* 的优化版，跳过直路，仅在路口停留 (仅限方块迷宫)。";
+        else if (algo === 'bibfs') desc = "双向 BFS: 起终点同时扩散，相遇即止，效率极高。";
+        else if (algo === 'flow') desc = "泛洪 (Flow): 计算全图距离场，生成热力图。";
+        algoDesc.innerText = desc;
+
+        if (algo === 'bfs') visualizer = bfs(start, end);
+        else if (algo === 'dfs') visualizer = dfs(start, end);
+        else if (algo === 'astar') visualizer = astar(start, end);
+        else if (algo === 'greedy') visualizer = greedy(start, end);
+        else if (algo === 'jps') visualizer = jps(start, end);
+        else if (algo === 'bibfs') visualizer = bibfs(start, end);
+        else if (algo === 'flow') visualizer = flowField(end); 
+
+        let startTime = Date.now();
+        
+        function step() {
+            let res = visualizer.next();
+            draw();
+            
+            let visitedCount = maze.cells.filter(c => c.algoState === 'closed' || c.distance > -1).length;
+            visitedVal.innerText = visitedCount;
+
+            if (res.done) {
+                statusVal.innerText = '完成'; statusVal.style.color = '#2ecc71';
+                timeVal.innerText = (Date.now() - startTime) + ' ms';
+                let pathCount = maze.cells.filter(c => c.algoState === 'path').length;
+                pathVal.innerText = pathCount;
+            } else {
+                animationTimeout = setTimeout(step, config.stepDelay);
+            }
+        }
+        step();
+    }
+
+    // --- Algorithms (Generators) ---
+    function* bfs(start, end) { /* Same as before */ 
+        let queue = [start]; start.algoState = 'open';
+        while (queue.length > 0) {
+            let current = queue.shift(); current.algoState = 'closed';
+            if (current === end) { yield* reconstructPath(current); return; }
+            let neighbors = maze.getNeighbors(current);
+            for (let next of neighbors) {
+                if (next.algoState === 'none') { next.algoState = 'open'; next.parent = current; queue.push(next); }
+            }
+            yield;
+        }
+    }
+    function* dfs(start, end) { /* Same as before */
+        let stack = [start]; start.algoState = 'open';
+        while (stack.length > 0) {
+            let current = stack.pop();
+            if (current.algoState === 'closed') continue;
+            current.algoState = 'closed';
+            if (current === end) { yield* reconstructPath(current); return; }
+            let neighbors = maze.getNeighbors(current);
+            for (let next of neighbors) {
+                if (next.algoState === 'none') { next.algoState = 'open'; next.parent = current; stack.push(next); }
+            }
+            yield;
+        }
+    }
+    function* astar(start, end) { /* Same as before */
+        let openSet = [start]; start.g = 0; start.h = heuristic(start, end); start.f = start.h; start.algoState = 'open';
+        while (openSet.length > 0) {
+            let idx = 0; for(let i=1; i<openSet.length; i++) if (openSet[i].f < openSet[idx].f) idx = i;
+            let current = openSet[idx];
+            if (current === end) { yield* reconstructPath(current); return; }
+            openSet.splice(idx, 1); current.algoState = 'closed';
+            let neighbors = maze.getNeighbors(current);
+            for (let next of neighbors) {
+                if (next.algoState === 'closed') continue;
+                let tempG = current.g + 1; let newPath = false;
+                if (next.algoState === 'open') { if (tempG < next.g) { next.g = tempG; newPath = true; } }
+                else { next.g = tempG; next.algoState = 'open'; openSet.push(next); newPath = true; }
+                if (newPath) { next.h = heuristic(next, end); next.f = next.g + next.h; next.parent = current; }
+            }
+            yield;
+        }
+    }
+    function* greedy(start, end) {
+        let openSet = [start]; start.h = heuristic(start, end); start.f = start.h; start.algoState = 'open';
+        while (openSet.length > 0) {
+            let idx = 0; for(let i=1; i<openSet.length; i++) if (openSet[i].f < openSet[idx].f) idx = i;
+            let current = openSet[idx];
+            if (current === end) { yield* reconstructPath(current); return; }
+            openSet.splice(idx, 1); current.algoState = 'closed';
+            let neighbors = maze.getNeighbors(current);
+            for (let next of neighbors) {
+                if (next.algoState === 'closed' || next.algoState === 'open') continue;
+                next.h = heuristic(next, end); next.f = next.h; 
+                next.parent = current; next.algoState = 'open'; openSet.push(next);
+            }
+            yield;
+        }
+    }
+    function* bibfs(start, end) {
+        let q1 = [start]; start.algoState = 'open'; start.g = 1; // 1 for start set
+        let q2 = [end]; end.algoState = 'open'; end.g = 2; // 2 for end set
+        let parents1 = new Map();
+        let parents2 = new Map();
+        
+        while (q1.length > 0 && q2.length > 0) {
+            // Step 1
+            if (q1.length > 0) {
+                let curr = q1.shift();
+                if (curr.g === 2) { yield* reconstructBiPath(curr, parents1, parents2); return; } // Meet
+                let neighbors = maze.getNeighbors(curr);
+                for (let next of neighbors) {
+                    if (next.g === 2) { 
+                        parents1.set(next, curr);
+                        yield* reconstructBiPath(next, parents1, parents2); return; 
+                    }
+                    if (next.algoState === 'none') {
+                        next.algoState = 'open'; next.g = 1;
+                        parents1.set(next, curr); q1.push(next);
+                    }
+                }
+            }
+            yield;
+            // Step 2
+            if (q2.length > 0) {
+                let curr = q2.shift();
+                if (curr.g === 1) { yield* reconstructBiPath(curr, parents1, parents2); return; }
+                let neighbors = maze.getNeighbors(curr);
+                for (let next of neighbors) {
+                    if (next.g === 1) { 
+                        parents2.set(next, curr);
+                        yield* reconstructBiPath(next, parents1, parents2); return; 
+                    }
+                    if (next.algoState === 'none') {
+                        next.algoState = 'open'; next.g = 2;
+                        parents2.set(next, curr); q2.push(next);
+                    }
+                }
+            }
+            yield;
+        }
+    }
+    function* reconstructBiPath(meetNode, p1, p2) {
+        // Path from Start -> Meet
+        let curr = meetNode;
+        while (curr) { curr.algoState = 'path'; curr = p1.get(curr); yield; }
+        // Path from Meet -> End
+        curr = p2.get(meetNode);
+        while (curr) { curr.algoState = 'path'; curr = p2.get(curr); yield; }
+    }
+    function* flowField(target) { /* Same as before */
+        let queue = [target]; target.distance = 0;
+        while (queue.length > 0) {
+            let current = queue.shift();
+            let neighbors = maze.getNeighbors(current);
+            for (let next of neighbors) { if (next.distance === -1) { next.distance = current.distance + 1; queue.push(next); } }
+            yield;
+        }
+        let curr = maze.cells[0];
+        while (curr !== target) {
+            curr.algoState = 'path';
+            let neighbors = maze.getNeighbors(curr);
+            let best = neighbors[0];
+            let minD = best.distance === -1 ? Infinity : best.distance;
+            for(let n of neighbors) { if (n.distance !== -1 && n.distance < minD) { minD = n.distance; best = n; } }
+            curr = best; yield;
+        }
+        target.algoState = 'path';
+    }
+    function* jps(start, end) {
+        // Fallback for non-square mazes
+        if (config.type !== 'square') {
+            statusVal.innerText = 'JPS 仅支持方块迷宫, 已切换为 A*';
+            yield* astar(start, end);
+            return;
+        }
+
+        let openSet = [start]; 
+        start.g = 0; 
+        start.h = heuristic(start, end); 
+        start.f = start.h; 
+        start.algoState = 'open';
+        
+        while (openSet.length > 0) {
+            let idx = 0;
+            for(let i=1; i<openSet.length; i++) if (openSet[i].f < openSet[idx].f) idx = i;
+            let current = openSet[idx];
+            
+            if (current === end) { yield* reconstructJPSPath(current); return; }
+            
+            openSet.splice(idx, 1);
+            current.algoState = 'closed';
+            
+            let neighbors = maze.getNeighbors(current);
+            for (let next of neighbors) {
+                // Determine direction
+                let dx = next.c - current.c;
+                let dy = next.r - current.r;
+                
+                // Scan in this direction
+                let scanResult = yield* scan(next, dx, dy, end);
+                
+                if (scanResult) {
+                    let jumpPoint = scanResult.node;
+                    let steps = scanResult.steps;
+                    let newG = current.g + steps;
+                    
+                    if (jumpPoint.algoState === 'closed') continue;
+                    
+                    let newPath = false;
+                    if (jumpPoint.algoState === 'open') {
+                        if (newG < jumpPoint.g) {
+                            jumpPoint.g = newG;
+                            newPath = true;
+                        }
+                    } else {
+                        jumpPoint.g = newG;
+                        jumpPoint.algoState = 'open';
+                        openSet.push(jumpPoint);
+                        newPath = true;
+                    }
+                    
+                    if (newPath) {
+                        jumpPoint.h = heuristic(jumpPoint, end);
+                        jumpPoint.f = jumpPoint.g + jumpPoint.h;
+                        jumpPoint.parent = current; 
+                    }
+                }
+            }
+            yield;
+        }
+    }
+
+    function* scan(startNode, dx, dy, end) {
+        let curr = startNode;
+        let steps = 1;
+        
+        while (true) {
+            // Visualize scan (optional, maybe skip some frames for speed)
+             // curr.algoState = 'open'; // Don't mark as open, maybe just yield to show progress
+            // yield;
+            
+            if (curr === end) return {node: curr, steps: steps};
+            
+            let neighbors = maze.getNeighbors(curr);
+            
+            // Junction Check: In 4-way maze, if > 2 neighbors, it's a junction.
+            // Also if it's a corner (2 neighbors, but direction changes).
+            // Logic: We came from (-dx, -dy).
+            // If we have any neighbor NOT in (dx, dy) and NOT in (-dx, -dy), it's a forced turn.
+            
+            let hasForced = false;
+            let nextInDir = null;
+            
+            for(let n of neighbors) {
+                let ndx = n.c - curr.c;
+                let ndy = n.r - curr.r;
+                
+                if (ndx === -dx && ndy === -dy) continue; // Backwards
+                
+                if (ndx === dx && ndy === dy) {
+                    nextInDir = n;
+                } else {
+                    hasForced = true; // Side path available
+                }
+            }
+            
+            if (hasForced) return {node: curr, steps: steps};
+            
+            if (nextInDir) {
+                curr = nextInDir;
+                steps++;
+            } else {
+                // Dead end or Corner (if hasForced was false, but no nextInDir... 
+                // wait, if hasForced is false and no nextInDir, then neighbors count is 1 (only back).
+                // That's a dead end. Return null.
+                return null;
+            }
+        }
+    }
+    
+    function* reconstructJPSPath(current) {
+        while (current) {
+            current.algoState = 'path';
+            if (current.parent) {
+                // Fill straight line gap
+                let p = current.parent;
+                let c = current;
+                // Since it's a straight line scan (or straight segments in JPS),
+                // we can just walk from parent to current.
+                // Or simply:
+                let currFill = c;
+                while (currFill !== p) {
+                     currFill.algoState = 'path';
+                     let neighbors = maze.getNeighbors(currFill);
+                     // Find neighbor closer to p
+                     let best = null; let minD = Infinity;
+                     for(let n of neighbors) {
+                         let d = heuristic(n, p);
+                         if (d < minD) { minD = d; best = n; }
+                     }
+                     currFill = best;
+                     yield;
+                }
+            }
+            current = current.parent;
+            yield;
+        }
+    }
+
+    function heuristic(a, b) { let p1 = maze.getCenter(a); let p2 = maze.getCenter(b); return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2) / maze.cellSize; }
+    function* reconstructPath(current) { while (current) { current.algoState = 'path'; current = current.parent; yield; } }
+
+    // --- Input & Game Loop ---
+    window.addEventListener('keydown', e => {
+        if (isGameOver && winnerOverlay.style.display !== 'none') {
+            // Only Enter or Space restarts
+            if (e.key === 'Enter' || e.key === ' ') {
+                initGame();
+            }
+            return;
+        }
+        if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key)) {
+            keys.add(e.key.toLowerCase());
+            e.preventDefault();
+            // Start timer on first input if in play mode
+            if (config.mode === 'play' && !isGameOver) {
+                startGameTimer();
+            }
+        }
+    });
+    window.addEventListener('keyup', e => {
+        keys.delete(e.key.toLowerCase());
+    });
+
+    // Mouse Interaction
+    function getMousePos(evt) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+    }
+
+    function instantPath(start, end) {
+        let visited = new Set(); visited.add(start);
+        let queue = [start]; let parent = new Map();
+        while(queue.length > 0) {
+            let current = queue.shift();
+            if (current === end) {
+                let path = [];
+                while(current !== start) { path.unshift(current); current = parent.get(current); }
+                return path;
+            }
+            for(let next of maze.getNeighbors(current)) {
+                if (!visited.has(next)) { visited.add(next); parent.set(next, current); queue.push(next); }
+            }
+        }
+        return null;
+    }
+
+    function handleMouseInput() {
+        if (!maze) return;
+        
+        // Edit Mode
+        if (config.mode === 'edit') {
+            let targetCell = maze.getCellAt(lastMousePos.x, lastMousePos.y);
+            if (!targetCell) return;
+            
+            // Mark as edited so we don't overwrite on Play
+            config.seed = 'edited';
+            
+            // Determine which wall to toggle
+            // Simple approach: Angle from center
+            let center = maze.getCenter(targetCell);
+            let dx = lastMousePos.x - center.x;
+            let dy = lastMousePos.y - center.y;
+            let angle = Math.atan2(dy, dx); // -PI to PI
+            if (angle < 0) angle += 2 * Math.PI; // 0 to 2PI
+            
+            let wallIdx = -1;
+            
+            if (config.type === 'square') {
+                // 0:Top (-PI/2), 1:Right (0), 2:Bottom (PI/2), 3:Left (PI)
+                // Angle regions:
+                // Right: -PI/4 to PI/4 (7/4 PI to 1/4 PI)
+                // Bottom: PI/4 to 3/4 PI
+                // Left: 3/4 PI to 5/4 PI
+                // Top: 5/4 PI to 7/4 PI
+                
+                let normAngle = angle / (Math.PI/2); // 0 to 4
+                // 0-0.5 & 3.5-4 -> Right (1)
+                // 0.5-1.5 -> Bottom (2)
+                // 1.5-2.5 -> Left (3)
+                // 2.5-3.5 -> Top (0)
+                
+                if (normAngle >= 0.5 && normAngle < 1.5) wallIdx = 2;
+                else if (normAngle >= 1.5 && normAngle < 2.5) wallIdx = 3;
+                else if (normAngle >= 2.5 && normAngle < 3.5) wallIdx = 0;
+                else wallIdx = 1;
+                
+                // Toggle wall
+                targetCell.walls[wallIdx] = !targetCell.walls[wallIdx];
+                
+                // Toggle neighbor's wall
+                let neighbors = maze.getAllNeighbors(targetCell);
+                // We need to find the specific neighbor in that direction
+                // For Square: 0:T, 1:R, 2:B, 3:L
+                let n = null;
+                if (wallIdx === 0) n = neighbors.find(nc => nc.c === targetCell.c && nc.r === targetCell.r - 1);
+                if (wallIdx === 1) n = neighbors.find(nc => nc.c === targetCell.c + 1 && nc.r === targetCell.r);
+                if (wallIdx === 2) n = neighbors.find(nc => nc.c === targetCell.c && nc.r === targetCell.r + 1);
+                if (wallIdx === 3) n = neighbors.find(nc => nc.c === targetCell.c - 1 && nc.r === targetCell.r);
+                
+                if (n) {
+                    // Neighbor's opposite wall
+                    // 0<->2, 1<->3
+                    let opIdx = (wallIdx + 2) % 4;
+                    n.walls[opIdx] = targetCell.walls[wallIdx];
+                }
+            }
+            else if (config.type === 'hex') {
+                // 6 walls. 0 is top-leftish? 
+                // HexMaze dirs: [[parity, -1], [1, 0], [parity, 1], [parity-1, 1], [-1, 0], [parity-1, -1]]
+                // Angles for HexMaze points start at 30 deg (PI/6)
+                // Walls are between points.
+                // Wall 0: Between pt 4 & 5. 
+                // Let's rely on sector angle. 
+                // 6 sectors of 60 deg.
+                // Wall 0 corresponds to direction 0?
+                // Let's assume standard order.
+                // For Hex, let's simplify: Toggle all walls? No.
+                // It's hard to get right without visualizing indices.
+                // Let's stick to Square maze editing support mostly, or try approx.
+                // Hex sectors are 60deg.
+                // Wall 0 is Top-Right? No, getNeighborCoords order:
+                // 0: Top-Right/Left (depends on parity)
+                // Let's just use simple heuristic: Click near edge.
+                // Actually, let's skip Hex/Triangle detailed editing for now or just generic.
+                // Generic: Find neighbor whose center is closest to mousePos (but further than current center).
+                // Actually, check distance to neighbor centers.
+                let allN = maze.getAllNeighbors(targetCell);
+                let bestN = null;
+                let minD = Infinity;
+                
+                for (let n of allN) {
+                    let nc = maze.getCenter(n);
+                    // Midpoint between centers is roughly the wall location
+                    let midX = (center.x + nc.x) / 2;
+                    let midY = (center.y + nc.y) / 2;
+                    let d = (lastMousePos.x - midX)**2 + (lastMousePos.y - midY)**2;
+                    if (d < minD) { minD = d; bestN = n; }
+                }
+                
+                if (bestN && minD < 2500) { // Within 50px sq
+                     // Toggle wall between targetCell and bestN
+                     // We need to know which wall index connects them.
+                     // Re-use removeWalls logic but for toggling?
+                     // maze.removeWalls(targetCell, bestN) sets to false.
+                     // We need check if wall exists.
+                     // Let's find index.
+                     if (config.type === 'hex') {
+                         let coords = maze.getNeighborCoords(targetCell.c, targetCell.r);
+                         for(let i=0; i<6; i++) {
+                             if (coords[i].c === bestN.c && coords[i].r === bestN.r) {
+                                 targetCell.walls[i] = !targetCell.walls[i];
+                                 bestN.walls[(i+3)%6] = targetCell.walls[i];
+                                 break;
+                             }
+                         }
+                     }
+                     else if (config.type === 'triangle') {
+                         // Triangle logic
+                         let dirs = maze.isUpright(targetCell) ? 
+                            [{c:-1, r:0, w:0}, {c:1, r:0, w:1}, {c:0, r:1, w:2}] : 
+                            [{c:-1, r:0, w:0}, {c:1, r:0, w:1}, {c:0, r:-1, w:2}];
+                         for(let d of dirs) {
+                             if (targetCell.c + d.c === bestN.c && targetCell.r + d.r === bestN.r) {
+                                 targetCell.walls[d.w] = !targetCell.walls[d.w];
+                                 // Neighbor op wall?
+                                 // Triangle walls are 0:Left, 1:Right, 2:Bottom/Top
+                                 // If Upright: 0(L)<->1(R of LeftN), 1(R)<->0(L of RightN), 2(B)<->2(T of BottomN)
+                                 // Wait, removeWalls logic:
+                                 // dc=-1 -> a[0], b[1].
+                                 // dc=1 -> a[1], b[0].
+                                 // dr!=0 -> a[2], b[2].
+                                 let dc = bestN.c - targetCell.c;
+                                 let dr = bestN.r - targetCell.r;
+                                 if (dc === -1) bestN.walls[1] = targetCell.walls[0];
+                                 if (dc === 1) bestN.walls[0] = targetCell.walls[1];
+                                 if (dr !== 0) bestN.walls[2] = targetCell.walls[2];
+                                 break;
+                             }
+                         }
+                     }
+                }
+            }
+            
+            draw();
+            return;
+        }
+
+        if (config.mode !== 'play' || isGameOver) return;
+        
+        let targetCell = maze.getCellAt(lastMousePos.x, lastMousePos.y);
+        if (targetCell) {
+            let neighbors = maze.getNeighbors(player1);
+            if (neighbors.includes(targetCell)) {
+                player1 = targetCell;
+                checkWin();
+                // draw(); // GameLoop handles draw
+            } else {
+                let path = instantPath(player1, targetCell);
+                if (path && path.length > 0) {
+                    player1 = path[0];
+                    checkWin();
+                    // draw(); // GameLoop handles draw
+                }
+            }
+        }
+    }
+    
+    canvas.addEventListener('mousedown', e => {
+        isMouseDown = true;
+        lastMousePos = getMousePos(e);
+        handleMouseInput();
+        if (config.mode === 'play') {
+            if (moveInterval) clearInterval(moveInterval);
+            moveInterval = setInterval(handleMouseInput, 100);
+        }
+    });
+
+    window.addEventListener('mousemove', e => {
+        lastMousePos = getMousePos(e);
+    });
+
+    window.addEventListener('mouseup', () => {
+        isMouseDown = false;
+        if (moveInterval) clearInterval(moveInterval);
+    });
+
+    // Joystick Interaction
+    const joystickBase = document.querySelector('.joystick-base');
+    
+    function handleJoystickStart(e) {
+        if (config.mode !== 'play' || isGameOver) return;
+        joystickActive = true;
+        // Start timer if not started
+        startGameTimer();
+        handleJoystickMove(e);
+    }
+    
+    function handleJoystickMove(e) {
+        if (!joystickActive) return;
+        e.preventDefault(); // Prevent scrolling
+        let touch = e.touches ? e.touches[0] : e;
+        let rect = joystickBase.getBoundingClientRect();
+        let centerX = rect.left + rect.width / 2;
+        let centerY = rect.top + rect.height / 2;
+        
+        let dx = touch.clientX - centerX;
+        let dy = touch.clientY - centerY;
+        
+        // Clamp to radius
+        let maxDist = rect.width / 2 - 25; // 25 is half stick size
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        
+        if (dist > maxDist) {
+            dx = (dx / dist) * maxDist;
+            dy = (dy / dist) * maxDist;
+        }
+        
+        joystickStick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        
+        // Normalize -1 to 1
+        joystickData.x = dx / maxDist;
+        joystickData.y = dy / maxDist;
+    }
+    
+    function handleJoystickEnd() {
+        joystickActive = false;
+        joystickStick.style.transform = `translate(-50%, -50%)`;
+        joystickData.x = 0;
+        joystickData.y = 0;
+    }
+    
+    joystickZone.addEventListener('mousedown', handleJoystickStart);
+    window.addEventListener('mousemove', handleJoystickMove);
+    window.addEventListener('mouseup', handleJoystickEnd);
+    
+    joystickZone.addEventListener('touchstart', handleJoystickStart);
+    window.addEventListener('touchmove', handleJoystickMove, {passive: false});
+    window.addEventListener('touchend', handleJoystickEnd);
+
+    let lastMoveTime = 0;
+    
+    function checkWin() {
+        if (isGameOver) return;
+        
+        let p1Win = (player1 === goal);
+        let p2Win = (config.twoPlayer && player2 === goal);
+        
+        if (p1Win || p2Win) {
+            clearInterval(gameTimerInterval); // Stop timer
+        }
+
+        if (p1Win && p2Win) {
+            isGameOver = true;
+            winnerText.innerText = "平局! 同时到达!";
+            winnerText.style.color = '#fff';
+            winnerOverlay.style.display = 'flex';
+        } else if (p1Win) {
+            isGameOver = true;
+            winnerText.innerText = config.twoPlayer ? "玩家 1 (蓝) 获胜!" : "挑战成功!";
+            winnerText.style.color = '#3498db';
+            winnerOverlay.style.display = 'flex';
+        } else if (p2Win) {
+            isGameOver = true;
+            winnerText.innerText = "玩家 2 (橙) 获胜!";
+            winnerText.style.color = '#e67e22';
+            winnerOverlay.style.display = 'flex';
+        }
+    }
+
+    function gameLoop(timestamp) {
+        // Dynamic Mode
+        if (config.mode === 'play' && isDynamic && !isGameOver) {
+            if (timestamp - lastDynamicUpdate > DYNAMIC_INTERVAL) {
+                mutateMaze();
+                draw(); // Redraw maze structure
+                lastDynamicUpdate = timestamp;
+            }
+        }
+
+        // Animation Interpolation
+        if (config.mode === 'play') {
+            // Update Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            if (player1) {
+                let targetP1 = maze.getCenter(player1);
+                
+                // Check if moving significantly to spawn trail
+                let dx = targetP1.x - p1RenderPos.x;
+                let dy = targetP1.y - p1RenderPos.y;
+                let distSq = dx*dx + dy*dy;
+                if (distSq > 1) { // Moving
+                    // Spawn particle
+                    if (Math.random() < 0.5) { // Limit spawn rate
+                        particles.push(new Particle(p1RenderPos.x, p1RenderPos.y, '#3498db'));
+                    }
+                }
+                
+                p1RenderPos.x = lerp(p1RenderPos.x, targetP1.x, ANIM_SPEED);
+                p1RenderPos.y = lerp(p1RenderPos.y, targetP1.y, ANIM_SPEED);
+            }
+            if (config.twoPlayer && player2) {
+                let targetP2 = maze.getCenter(player2);
+                
+                let dx = targetP2.x - p2RenderPos.x;
+                let dy = targetP2.y - p2RenderPos.y;
+                if (dx*dx + dy*dy > 1) {
+                     if (Math.random() < 0.5) {
+                         particles.push(new Particle(p2RenderPos.x, p2RenderPos.y, '#e67e22'));
+                     }
+                }
+
+                p2RenderPos.x = lerp(p2RenderPos.x, targetP2.x, ANIM_SPEED);
+                p2RenderPos.y = lerp(p2RenderPos.y, targetP2.y, ANIM_SPEED);
+            }
+            
+            // Draw every frame for smooth animation
+            // Optimization: Only draw if position changed significantly?
+            // For now, always draw.
+            draw();
+        }
+
+        if (config.mode === 'play' && !isGameOver) {
+            if (timestamp - lastMoveTime > 80) { // Slightly faster movement
+                let moved = false;
+                
+                // Player 1 (WASD)
+                let d1 = {x:0, y:0};
+                if (keys.has('w')) d1.y -= 1;
+                if (keys.has('s')) d1.y += 1;
+                if (keys.has('a')) d1.x -= 1;
+                if (keys.has('d')) d1.x += 1;
+                
+                if (joystickActive) {
+                    if (joystickData.y < -0.3) d1.y -= 1;
+                    if (joystickData.y > 0.3) d1.y += 1;
+                    if (joystickData.x < -0.3) d1.x -= 1;
+                    if (joystickData.x > 0.3) d1.x += 1;
+                }
+                
+                if (d1.x !== 0 || d1.y !== 0) {
+                    let next = getBestNeighbor(player1, d1.x, d1.y);
+                    if (next) { 
+                        player1 = next; 
+                        moved = true; 
+                        // Update fog instantly logic is inside draw() via isCellVisible(player1)
+                        // But we want to trigger discovered update:
+                        if (config.visibility !== 'none') {
+                             if (isInLineOfSight(player1)) player1.discovered = true; // Simplified, actual logic is in updateVisibility or draw
+                             // Actually isCellVisible checks isInLineOfSight which uses player1 (logical).
+                             // So it is already handled.
+                        }
+                    }
+                }
+
+                // Player 2 (Arrows)
+                if (config.twoPlayer && player2) {
+                    let d2 = {x:0, y:0};
+                    if (keys.has('arrowup')) d2.y -= 1;
+                    if (keys.has('arrowdown')) d2.y += 1;
+                    if (keys.has('arrowleft')) d2.x -= 1;
+                    if (keys.has('arrowright')) d2.x += 1;
+                    
+                    if (d2.x !== 0 || d2.y !== 0) {
+                        let next = getBestNeighbor(player2, d2.x, d2.y);
+                        if (next) { player2 = next; moved = true; }
+                    }
+                }
+                
+                if (moved) {
+                    checkWin();
+                    // draw(); // Removed, we draw every frame now
+                    lastMoveTime = timestamp;
+                }
+            }
+        }
+        requestAnimationFrame(gameLoop);
+    }
+    
+    function getBestNeighbor(curr, dx, dy) {
+        let angle = Math.atan2(dy, dx);
+        let neighbors = maze.getNeighbors(curr);
+        let pPos = maze.getCenter(curr);
+        let bestN = null;
+        let bestDot = -1;
+        
+        neighbors.forEach(n => {
+            let nPos = maze.getCenter(n);
+            let nx = nPos.x - pPos.x;
+            let ny = nPos.y - pPos.y;
+            let len = Math.sqrt(nx*nx + ny*ny);
+            nx /= len; ny /= len;
+            let dot = nx * Math.cos(angle) + ny * Math.sin(angle);
+            if (dot > bestDot) { bestDot = dot; bestN = n; }
+        });
+        
+        if (bestN && bestDot > 0.5) return bestN;
+        return null;
+    }
+    
+    requestAnimationFrame(gameLoop);
+
+    // Init
+    initGame();
+
+</script>
+</body>
+</html>

@@ -44,10 +44,21 @@
                     
                     dropdowns.forEach(dd => {
                         const title = dd.querySelector('.dropdown-toggle').innerText.trim();
-                        html += `<div style="margin-bottom:10px;"><strong>${title}</strong><div style="display:flex; flex-direction:column; gap:5px; margin-top:5px;">`;
-                        dd.querySelectorAll('.dropdown-content .tab-btn').forEach(btn => {
-                            html += `<button class="btn-action btn-outline" style="font-size:0.8rem; padding:5px 10px;" onclick="parent.switchTab('${btn.dataset.src}')">${btn.innerText}</button>`;
-                        });
+                        html += `<div style="margin-bottom:15px; break-inside: avoid;">
+                                    <div style="font-size:1.1rem; color:var(--primary); margin-bottom:8px; font-weight:bold;">${title}</div>
+                                    <div style="display:flex; flex-direction:column; gap:5px;">`;
+                        
+                        const content = dd.querySelector('.dropdown-content');
+                        if (content) {
+                            Array.from(content.children).forEach(child => {
+                                if (child.classList.contains('tab-btn')) {
+                                    html += `<button class="btn-action btn-outline" style="font-size:0.8rem; padding:6px 12px; justify-content:flex-start; text-align:left;" onclick="parent.switchTab('${child.dataset.src}')">${child.innerText}</button>`;
+                                } else if (child.classList.contains('dropdown-header')) {
+                                    html += `<div style="font-size:0.75rem; color:var(--text-dim); margin:8px 0 4px 0; font-weight:600; text-transform:uppercase;">${child.innerText}</div>`;
+                                }
+                            });
+                        }
+                        
                         html += '</div></div>';
                     });
                     html += '</div>';

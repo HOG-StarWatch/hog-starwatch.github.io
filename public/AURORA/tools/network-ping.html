@@ -429,6 +429,30 @@
         .porn-mode body {
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23ff69b4"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'), auto;
         }
+
+        /* Adult Mode Classes */
+        .adult-tag {
+            color: white; padding: 4px 10px; border-radius: 15px; font-size: 0.75rem; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .adult-tag:hover { transform: scale(1.1); }
+        .tag-pink { background: rgba(255, 20, 147, 0.8); }
+        .tag-purple { background: rgba(148, 0, 211, 0.8); }
+        .tag-red { background: rgba(220, 20, 60, 0.8); }
+        .tag-dark { background: rgba(139, 0, 0, 0.8); }
+        .tag-hot { background: rgba(255, 105, 180, 0.8); }
+        
+        .whore-feed { background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid #ff1493; padding: 15px; margin-bottom: 15px; }
+        .whore-item { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,105,180,0.2); padding-bottom: 4px; }
+        .whore-title { color: #fff0f5; }
+        .whore-meta { color: #ff1493; font-weight: bold; }
+        
+        .secret-btn { border: none; transition: 0.2s; }
+        .secret-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        
+        .trending-box { background: rgba(255,105,180,0.1); border-radius: 10px; border: 1px solid #ff69b4; padding: 15px; }
+        .trending-header { color: #ffb6c1; margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; }
+        .trending-grid { display: flex; flex-wrap: wrap; gap: 8px; max-height: 300px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -929,6 +953,7 @@ const siteDB = {
             category: "成人内容 (Adult Content)",
             items: [
                 { name: "Pornhub", url: "https://www.pornhub.com", icon: "fas fa-video" },
+                { name: "Iamsissy", url: "https://iamsissy.com/", icon: "fas fa-venus-double" },
                 { name: "Xvideos", url: "https://www.xvideos.com", icon: "fas fa-film" },
                 { name: "XNXX", url: "https://www.xnxx.com", icon: "fas fa-play" },
                 { name: "Jable", url: "https://jable.tv", icon: "fas fa-tv" },
@@ -992,6 +1017,7 @@ const siteDB = {
                 { name: "Hanime.tv", url: "https://hanime.tv", icon: "fas fa-tv" },
                 { name: "HentaiHaven", url: "https://hentaihaven.xxx", icon: "fas fa-h-square" },
                 { name: "HentaiMama", url: "https://hentaimama.io", icon: "fas fa-baby" },
+                { name: "Hentai", url: "https://www.hentai.com", icon: "fas fa-venus-double" },
                 { name: "AnimeIDHentai", url: "https://animeidhentai.com", icon: "fas fa-id-card" },
                 { name: "HentaiStream", url: "https://hentaistream.moe", icon: "fas fa-stream" },
                 { name: "HentaiPulse", url: "https://hentaipulse.com", icon: "fas fa-heartbeat" },
@@ -1446,6 +1472,412 @@ function updateHist() {
     `).join('');
 }
 
+// Porn Mode Toggle Logic
+function togglePornMode(enable) {
+    const adultTab = document.querySelector('.tab[onclick*="adult"]');
+    const otherTabs = document.querySelectorAll('.tab:not([onclick*="adult"])');
+    const resBox = document.getElementById('customResult');
+    
+    if (enable) {
+        // Unlock Porn Mode
+        document.body.classList.add('porn-mode');
+        
+        // Change Header Title & Slogan
+        document.querySelector('header h1').innerText = 'SECRET MODE';
+        const slogan = document.querySelector('header p');
+        if (!slogan.getAttribute('data-original')) slogan.setAttribute('data-original', slogan.innerText);
+        slogan.innerText = '海量资源 · 极度色情 · 无法自拔';
+        
+        // Hide normal tabs, show adult tab
+        otherTabs.forEach(t => t.style.display = 'none');
+        adultTab.style.display = 'block';
+        adultTab.click(); // Auto switch
+        
+        if (resBox) resBox.innerHTML = '<span style="color:#ff69b4; font-weight:bold; text-shadow: 0 0 10px #ff69b4;">♥ Porn Mode Unlocked ♥ <br><small style="color:#ffb6c1">Submit to the Porn...</small></span>';
+        
+        // Activate Theme Colors (Pink/Purple/Magenta)
+        document.documentElement.style.setProperty('--primary', '#ff1493'); // DeepPink
+        document.documentElement.style.setProperty('--text-main', '#fff0f5'); // LavenderBlush
+        document.documentElement.style.setProperty('--bg-deep', '#2a002a'); 
+
+        // Modify History Panel (Live Lust Stream)
+        const historyPanel = document.querySelector('#historyList').parentElement;
+        const historyTitle = historyPanel.querySelector('h2');
+        const historyList = document.getElementById('historyList');
+        
+        if (!historyTitle.getAttribute('data-original')) historyTitle.setAttribute('data-original', historyTitle.innerHTML);
+        if (!historyList.getAttribute('data-original')) historyList.setAttribute('data-original', historyList.innerHTML);
+        
+        historyTitle.innerHTML = '<i class="fas fa-globe"></i> 全球同好 (Global Lust Network)';
+        historyList.innerHTML = `
+            <div style="font-size:0.8rem; color:#ffb6c1; margin-bottom:10px; display:flex; justify-content:space-between;">
+                <span><i class="fas fa-circle" style="color:#00ff00; font-size:0.6rem;"></i> <span id="pornOnlineCount">24,932</span> Online</span>
+                <span>Activity Feed</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; height:200px; overflow:hidden; position:relative;">
+                <div id="fakeLogContainer" style="display:flex; flex-direction:column; gap:8px;">
+                    <!-- JS populated logs -->
+                </div>
+                <div style="position:absolute; bottom:0; left:0; width:100%; height:40px; background:linear-gradient(to top, #2a002a, transparent);"></div>
+            </div>
+        `;
+        
+        // Start Fake Log Generation
+        startFakeLogs();
+        
+        // Add a surprise button if not exists
+        if (!document.getElementById('surpriseBtn')) {
+            const sidePanel = document.querySelector('.side .panel');
+            const surpriseBtn = document.createElement('button');
+            surpriseBtn.id = 'surpriseBtn';
+            surpriseBtn.className = 'btn-main';
+            surpriseBtn.style.width = '100%';
+            surpriseBtn.style.marginTop = '15px';
+            surpriseBtn.style.background = 'linear-gradient(135deg, #ff1493, #9400d3)';
+            surpriseBtn.innerHTML = '<i class="fas fa-venus-mars"></i> 随机浏览 (Lucky Roulette)';
+            surpriseBtn.onclick = () => {
+                const items = siteDB.adult[0].items;
+                const randomItem = items[Math.floor(Math.random() * items.length)];
+                window.open(randomItem.url, '_blank');
+            };
+            sidePanel.appendChild(surpriseBtn);
+        }
+
+        // Replace Speed Test Module with Adult Elements
+        const speedPanel = document.querySelector('.speed-dashboard');
+        if (speedPanel) {
+            if (!speedPanel.getAttribute('data-original')) {
+                speedPanel.setAttribute('data-original', speedPanel.innerHTML);
+            }
+            speedPanel.innerHTML = `
+                <h2 style="color:#ff69b4"><i class="fas fa-heart"></i> Secret Zone</h2>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <button class="btn-main secret-btn" style="background:#ff1493;" onclick="window.open('https://www.pornhub.com/random', '_blank')"><i class="fas fa-random"></i> Random (随机爽片)</button>
+                        <button class="btn-main secret-btn" style="background:#9400d3;" onclick="window.open('https://chaturbate.com', '_blank')"><i class="fas fa-video"></i> Live Cams (真人直播)</button>
+                        <button class="btn-main secret-btn" style="background:#c71585;" onclick="window.open('https://nhentai.net/random/', '_blank')"><i class="fas fa-book"></i> Hentai (随机本子)</button>
+                        <button class="btn-main secret-btn" style="background:#db7093;" onclick="window.open('https://www.reddit.com/r/nsfw/top/?t=day', '_blank')"><i class="fab fa-reddit"></i> Reddit Top (网民精选)</button>
+                </div>
+
+                <!-- Explicit Text Content (Replaced Fake Live Cams) -->
+                <div class="whore-feed">
+                    <h4 style="color:#ff69b4; margin-bottom:10px; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-fire" style="animation:pulse 1.5s infinite"></i> 
+                        WHORE FEED
+                    </h4>
+                    <div style="display:flex; flex-direction:column; gap:8px; font-size:0.8rem;">
+                        <div class="whore-item">
+                            <span class="whore-title">[LIVE] 巨乳雌堕sissy被扶她邻居狂暴内射失禁喷射</span>
+                            <span class="whore-meta">12.5k watching</span>
+                        </div>
+                        <div class="whore-item">
+                            <span class="whore-title">[NEW] 扶她大屌无套操翻清纯JK </span>
+                            <span class="whore-meta">Just Uploaded</span>
+                        </div>
+                        <div class="whore-item">
+                            <span class="whore-title">[HOT] 淫荡母狗戴着项圈在公园露出求操</span>
+                            <span class="whore-meta">98% Rated</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span class="whore-title">[VIRAL] 巨乳母狗公园露出陌生扶她轮奸录像流出</span>
+                            <span class="whore-meta">Viral</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span class="whore-title">[LEAK] 女大学生被催眠调教成公共肉便器日记</span>
+                            <span class="whore-meta">Viral</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="trending-box">
+                    <h4 class="trending-header">
+                        <span><i class="fas fa-tags"></i> Trending Tags (热门标签)</span>
+                        <span style="font-size:0.7rem; cursor:pointer;" onclick="togglePornMode(true)"><i class="fas fa-sync"></i> Refresh</span>
+                    </h4>
+                    <div class="trending-grid">
+                        <!-- Popular -->
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=milf')">#MILF (熟女)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://hanime1.me/search?query=%E8%A3%8F%E7%95%AA')">#Hentai (里番)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=asian')">#Asian (亚洲)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/vr')">#VR (虚拟现实)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=cosplay')">#Cosplay (角色扮演)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=student')">#Student (学生)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=lesbian')">#Lesbian (女同)</span>
+                        
+                        <!-- Fetish / Hardcore -->
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=anal')">#Anal (肛交)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=public')">#Public (公共场所)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=bdsm')">#BDSM (调教)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=creampie')">#Creampie (内射)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=squirt')">#Squirt (潮吹)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=gangbang')">#Gangbang (群交)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=ahegao')">#Ahegao (阿黑颜)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=bukkake')">#Bukkake (颜射)</span>
+
+                        <!-- Intersex / Futanari (Purple Theme) -->
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=futanari', '_blank')">#Futanari (扶她)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=futa+on+female', '_blank')">#FutaOnFemale (扶她攻女)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://hanime1.me/search?query=%E6%89%B6%E5%A5%B9', '_blank')">#FutaOnMale (扶她攻男)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=futa+on+futa', '_blank')">#FutaOnFuta (双扶互插)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=big+penis+futanari', '_blank')">#BigDickFutanari (巨屌扶她)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=futanari+domination', '_blank')">#FutanariDom (扶她调教)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://hanime1.me/search?query=%E6%89%B6%E5%A5%B9%E5%B7%A8%E4%B9%B3', '_blank')">#FutaBigBreasts (巨乳扶她)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=futanari+self+suck', '_blank')">#FutaSelfSuck (扶她自口)</span>
+
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=yuri', '_blank')">#Yuri (百合)</span>
+                        
+                        <!-- Sissy / Feminization (Pink/Purple) -->
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=feminization', '_blank')">#Feminization (娘化)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=sissy', '_blank')">#Sissy (雌堕)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=forced+feminization', '_blank')">#ForcedFem (强制雌堕)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://hanime1.me/search?query=%E9%9B%8C%E5%A0%95', '_blank')">#SissyTraining (雌堕调教)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=sissy+hypno', '_blank')">#SissyHypno (雌堕催眠)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=chastity', '_blank')">#Chastity (贞操锁)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=pegging', '_blank')">#Pegging (反攻)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://hanime1.me/search?query=%E9%9B%8C%E5%8C%96', '_blank')">#Sissyfication (彻底雌化)</span>
+
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=trap', '_blank')">#Trap (伪娘)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=femboy', '_blank')">#Femboy (男娘)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://hanime1.me/search?query=%E7%94%B7%E5%A8%98', '_blank')">#Otokonoko (男の娘)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=trap+futanari', '_blank')">#TrapFutanari (带把伪娘)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=femboy+anal', '_blank')">#FemboyAnal (伪娘菊花)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://hanime1.me/search?query=%E8%94%BD%E5%A8%98', '_blank')">#Crossdressing (女装)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=shemale')">#Shemale (人妖)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=dickgirl')">#Dickgirl (大丁丁妹)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=newhalf')">#Newhalf (人妖/半变性)</span>
+                        <span class="adult-tag tag-purple" onclick="window.open('https://www.pornhub.com/video/search?search=hermaphrodite')">#Hermaphrodite (双性人)</span>
+
+                        <!-- NTR / Cuckold (Dark Theme) -->
+                        <span class="adult-tag tag-dark" onclick="window.open('https://www.pornhub.com/video/search?search=cuckold')">#Cuckold (淫妻/绿帽)</span>
+                        <span class="adult-tag tag-dark" onclick="window.open('https://www.pornhub.com/video/search?search=hotwife')">#Hotwife (辣妻)</span>
+                        <span class="adult-tag tag-dark" onclick="window.open('https://www.pornhub.com/video/search?search=netorare')">#NTR (被睡/寝取)</span>
+                        <span class="adult-tag tag-dark" onclick="window.open('https://www.pornhub.com/video/search?search=netorase')">#Netorase (睡取)</span>
+                        <span class="adult-tag tag-dark" onclick="window.open('https://www.pornhub.com/video/search?search=queen+of+spades')">#QueenOfSpades (黑桃皇后)</span>
+                        <span class="adult-tag tag-dark" onclick="window.open('https://www.pornhub.com/video/search?search=femdom')">#Femdom (女S)</span>
+
+                        <!-- Breasts (Pink Theme) -->
+                        <span class="adult-tag tag-hot" onclick="window.open('https://www.pornhub.com/video/search?search=big+tits')">#BigTits (巨乳)</span>
+                        <span class="adult-tag tag-hot" onclick="window.open('https://www.pornhub.com/video/search?search=huge+boobs')">#HugeBoobs (爆乳)</span>
+                        <span class="adult-tag tag-hot" onclick="window.open('https://www.pornhub.com/video/search?search=titty+fuck')">#TittyFuck (乳交/Paizuri)</span>
+                        <span class="adult-tag tag-hot" onclick="window.open('https://www.pornhub.com/video/search?search=saggy+tits')">#SaggyTits (下垂/熟女乳)</span>
+                        <span class="adult-tag tag-hot" onclick="window.open('https://www.pornhub.com/video/search?search=nipple+play')">#NipplePlay (乳头玩法)</span>
+
+                        <!-- Lesbian & Active (女同/主动) -->
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=tribbing')">#Tribbing (磨豆腐)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=scissoring')">#Scissoring (磨穴)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=strap+on')">#StrapOn (穿戴式/假屌)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=cowgirl')">#Cowgirl (女上位/骑乘)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=reverse+cowgirl')">#ReverseCowgirl (反向骑乘)</span>
+                        <span class="adult-tag tag-pink" onclick="window.open('https://www.pornhub.com/video/search?search=facesitting')">#Facesitting (坐脸)</span>
+
+                        <!-- Slutty & Submission (淫乱/自愿) -->
+                        <span class="adult-tag tag-red" onclick="window.open('https://www.pornhub.com/video/search?search=slut')">#Slut (荡妇)</span>
+                        <span class="adult-tag tag-red" onclick="window.open('https://www.pornhub.com/video/search?search=nympho')">#Nympho (色情狂)</span>
+                        <span class="adult-tag tag-red" onclick="window.open('https://www.pornhub.com/video/search?search=cum+dump')">#CumDump (精液便器)</span>
+                        <span class="adult-tag tag-red" onclick="window.open('https://www.pornhub.com/video/search?search=submission')">#Submission (顺从/自愿)</span>
+                        <span class="adult-tag tag-red" onclick="window.open('https://www.pornhub.com/video/search?search=slave')">#Slave (性奴)</span>
+                        <span class="adult-tag tag-red" onclick="window.open('https://www.pornhub.com/video/search?search=training')">#Training (调教)</span>
+                        <span class="adult-tag tag-red" onclick="window.open('https://www.pornhub.com/video/search?search=public+disgrace')">#PublicDisgrace (公开羞辱)</span>
+                        <span class="adult-tag tag-red" onclick="window.open('https://www.pornhub.com/video/search?search=double+penetration')">#DoublePenetration (双龙入洞)</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; text-align:center; opacity:0.8;">
+                        <!-- Futanari Symbol (Ref: favicon.svg) -->
+                        <svg width="80" height="80" viewBox="0 0 64 64" fill="none" style="animation: pulse 2s infinite;">
+                            <defs>
+                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="1" result="blur"/>
+                                <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                                </filter>
+                            </defs>
+                            
+                            <!-- Aesthetic Futa Symbol (Stylized Venus + Mars) - Pale Purple -->
+                            <g stroke="#e0c3fc" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+                                <!-- Central Ring (Venus Body) -->
+                                <circle cx="32" cy="32" r="9"/>
+                                
+                                <!-- Venus Cross (Bottom) -->
+                                <path d="M32 41 L32 60"/>
+                                <path d="M28 46 L36 46"/>
+
+                                <!-- Mars Arrow (Top Right) -->
+                                <path d="M38.5 25.5 L44 20"/>
+                                <path d="M44 20 L44 25"/>
+                                <path d="M44 20 L39 20"/>
+
+                                <!-- Mars Arrow 2 / Trans Element (Top-Left) -->
+                                <path d="M25.5 25.5 L20 20"/>
+                                <path d="M20 20 L20 25"/>
+                                <path d="M20 20 L25 20"/>
+                                <path d="M21 26 L26 21"/>
+                            </g>
+
+                            <!-- Heart in Center (No H) -->
+                            <g transform="translate(32, 32)">
+                                <!-- Heart Symbol (Pink, Enlarged to 1.3) -->
+                                <path d="M 0 1.5 C -1.5 -1.5 -3.5 -0.5 -3.5 1.5 C -3.5 3.5 0 6 0 6 C 0 6 3.5 3.5 3.5 1.5 C 3.5 -0.5 1.5 -1.5 0 1.5 Z" fill="#ff69b4" stroke="none" transform="translate(0, -3) scale(1.3)"/>
+                            </g>
+                        </svg>
+                        <p style="color:#ffb6c1; font-size:0.9rem; margin-top:10px; font-weight:bold; letter-spacing:1px;">FUTANARI & INTERSEX PARADISE</p>
+                </div>
+            `;
+        }
+        
+        // Show Boss Key
+        showBossKey(true);
+
+    } else {
+        // Lock Porn Mode
+        document.body.classList.remove('porn-mode');
+        
+        // Revert Header Title
+        document.querySelector('header h1').innerText = 'Network Tester';
+        const slogan = document.querySelector('header p');
+        if (slogan.getAttribute('data-original')) slogan.innerText = slogan.getAttribute('data-original');
+        
+        // Revert History Panel
+        const historyPanel = document.querySelector('#historyList').parentElement;
+        const historyTitle = historyPanel.querySelector('h2');
+        const historyList = document.getElementById('historyList');
+        if (historyTitle.getAttribute('data-original')) historyTitle.innerHTML = historyTitle.getAttribute('data-original');
+        if (historyList.getAttribute('data-original')) historyList.innerHTML = historyList.getAttribute('data-original');
+
+        // Show normal tabs, hide adult tab
+        otherTabs.forEach(t => t.style.display = 'block');
+        document.querySelector('.tab[onclick*="domestic"]').click(); // Switch back to domestic
+        
+        adultTab.style.display = 'none';
+        if (resBox) resBox.innerHTML = '<span style="color:var(--text-dim)">就这？</span>';
+        
+        // Restore Theme
+        document.documentElement.style.removeProperty('--primary');
+        document.documentElement.style.removeProperty('--text-main');
+        document.documentElement.style.removeProperty('--bg-deep');
+        
+        const sBtn = document.getElementById('surpriseBtn');
+        if(sBtn) sBtn.remove();
+        
+        const dash = document.getElementById('adultDashboard');
+        if (dash) dash.style.display = 'none';
+
+        // Clear Fake Log Interval
+        if (window.fakeLogInterval) {
+            clearInterval(window.fakeLogInterval);
+            window.fakeLogInterval = null;
+        }
+
+        // Restore Speed Test Module
+        const speedPanel = document.querySelector('.speed-dashboard');
+        if (speedPanel && speedPanel.getAttribute('data-original')) {
+            speedPanel.innerHTML = speedPanel.getAttribute('data-original');
+            
+            // Re-populate engine select
+            const select = document.getElementById('engineSelect');
+            if (select) {
+                engineList.forEach(eng => {
+                    const opt = document.createElement('option');
+                    opt.value = eng.id;
+                    opt.innerText = eng.name;
+                    select.appendChild(opt);
+                });
+                // Reset default
+                changeUnit('MBps');
+            }
+        }
+        
+        // Hide Boss Key
+        showBossKey(false);
+    }
+}
+
+function startFakeLogs() {
+    if (window.fakeLogInterval) return;
+    
+    const actions = ['is watching', 'is searching for', 'just came to', 'bookmarked', 'rated 5 stars', 'shared', 'uploaded', 'is streaming', 'requested'];
+    const contents = [
+        'Step-mom stuck in washing machine', 'Japanese Bukkake Party', 'Ebony Teen First Time', 'Hentai Tentacle Rape', 
+        'Public Flashing in Subway', 'Amateur Couple Home Video', 'Massage Happy Ending', 'Schoolgirl Uniform',
+        'Futanari Giantess', 'Yuri Scissoring', 'Sissy Hypno Training', 'Cuckold Cleaning', 'Trap Gangbang', 
+        'Femboy Maid Service', 'Milf Teaching Son', 'Bondage & Discipline', 'Anal Gape', 'Creampie Compilation',
+        'Deepthroat Challenge', 'Squirt Fest', 'Group Sex Orgy', 'Lesbian Strapon', 'Shemale Fuck', 'Glory Hole Surprise',
+        'Latex Gimp Suit', 'Piss Drinking', 'Feet Worship', 'Nylon Stockings Job', 'NTR Blacked', 'Incest Family Dinner',
+        'Public Exhibitionism', 'Sleeping Sister', 'Chloroform Kidnap', 'Gangbang Bus', 'Nurse Examination',
+        'Futa Fucks Trap', 'Sissy Hypno Complete',' Solo Cumshot','Trap Double Penetration','Chastity Sissy Orgasm','Futa x Futa 69'
+    ];
+    const users = [
+        'Guest_9527', 'Tokyo_User', 'NY_Lover', 'BigD**k_69', 'Lonely_Boy', 'Master_X', 
+        'Hentai_King', 'Sissy_Slave', 'Alpha_Male', 'Cuck_Lover', 'Yuri_Fan', 'Trap_Queen',
+        'Horny_Teen', 'Milf_Hunter', 'Anal_Destroyer', 'Cum_Dumpster', 'Pussy_Slayer', 'Dick_Rider',
+        'Foot_Licker', 'Piss_Drinker', 'Latex_Lover', 'Bondage_Master', 'NTR_Victim', 'Incest_Bro'
+    ];
+    
+    const addLog = () => {
+        const container = document.getElementById('fakeLogContainer');
+        const countEl = document.getElementById('pornOnlineCount');
+        
+        if (!container) return;
+        
+        // Fluctuate Online Count Logic: Increase by 6~9 OR Decrease by 4
+        if (countEl) {
+            let current = parseInt(countEl.innerText.replace(/,/g, '')) || 24932;
+            if (Math.random() > 0.4) {
+                // Increase by 6~9
+                current += (Math.floor(Math.random() * 4) + 6);
+            } else {
+                // Decrease by 4
+                current -= 4;
+            }
+            countEl.innerText = current.toLocaleString();
+        }
+        
+        const user = users[Math.floor(Math.random() * users.length)];
+        const action = actions[Math.floor(Math.random() * actions.length)];
+        const content = contents[Math.floor(Math.random() * contents.length)];
+        const ip = Math.floor(Math.random()*255) + '.' + Math.floor(Math.random()*255) + '.x.x';
+        
+        const div = document.createElement('div');
+        div.style.cssText = 'font-size:0.8rem; color:var(--text-dim); border-bottom:1px solid rgba(255,105,180,0.1); padding-bottom:4px; transition:0.3s; opacity:0; transform:translateX(-10px);';
+        div.innerHTML = `<span style="color:#ff69b4;">[${ip}]</span> <b>${user}</b> ${action} <span style="color:#fff;">${content}</span>`;
+        
+        container.prepend(div);
+        // Animation
+        setTimeout(() => { div.style.opacity = 1; div.style.transform = 'translateX(0)'; }, 50);
+        
+        if (container.children.length > 8) container.lastChild.remove();
+    };
+    
+    addLog(); addLog(); addLog(); // Initial population
+    window.fakeLogInterval = setInterval(addLog, 1500);
+}
+
+function showBossKey(show) {
+    let btn = document.getElementById('bossKeyBtn');
+    if (show) {
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.id = 'bossKeyBtn';
+            btn.innerHTML = '<i class="fas fa-user-tie"></i> BOSS KEY (ESC)';
+            btn.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999; padding:15px 30px; background:#dc3545; color:white; font-weight:bold; border:none; border-radius:50px; box-shadow:0 5px 20px rgba(0,0,0,0.5); cursor:pointer; font-size:1rem; transition:0.3s;';
+            btn.onclick = () => togglePornMode(false);
+            btn.onmouseover = () => btn.style.transform = 'scale(1.1)';
+            btn.onmouseout = () => btn.style.transform = 'scale(1)';
+            document.body.appendChild(btn);
+            
+            // Add keyboard listener
+            window.addEventListener('keydown', bossKeyHandler);
+        }
+    } else {
+        if (btn) btn.remove();
+        window.removeEventListener('keydown', bossKeyHandler);
+    }
+}
+
+function bossKeyHandler(e) {
+    if (e.key === 'Escape') {
+        togglePornMode(false);
+    }
+}
+
 // Custom Ping
 async function runCustomPing() {
     let input = document.getElementById('customTarget').value.trim();
@@ -1457,105 +1889,12 @@ async function runCustomPing() {
     // Adult content unlock trigger
     if (input.toLowerCase() === 'porn') {
         const adultTab = document.querySelector('.tab[onclick*="adult"]');
-        const otherTabs = document.querySelectorAll('.tab:not([onclick*="adult"])');
         const isHidden = adultTab.style.display === 'none';
         
         if (isHidden) {
-            // Unlock Porn Mode
-            document.body.classList.add('porn-mode');
-            
-            // Change Header Title
-            document.querySelector('header h1').innerText = 'SECRET MODE';
-            
-            // Hide normal tabs, show adult tab
-            otherTabs.forEach(t => t.style.display = 'none');
-            adultTab.style.display = 'block';
-            adultTab.click(); // Auto switch
-            
-            resBox.innerHTML = '<span style="color:#ff69b4; font-weight:bold; text-shadow: 0 0 10px #ff69b4;">♥ Porn Mode Unlocked ♥ <br><small style="color:#ffb6c1">Submit to the Porn...</small></span>';
-            
-            // Activate Theme Colors (Pink/Purple/Magenta)
-            document.documentElement.style.setProperty('--primary', '#ff1493'); // DeepPink
-            document.documentElement.style.setProperty('--text-main', '#fff0f5'); // LavenderBlush
-            document.documentElement.style.setProperty('--bg-deep', '#2a002a'); 
-            
-            // Add a surprise button if not exists
-            if (!document.getElementById('surpriseBtn')) {
-                const sidePanel = document.querySelector('.side .panel');
-                const surpriseBtn = document.createElement('button');
-                surpriseBtn.id = 'surpriseBtn';
-                surpriseBtn.className = 'btn-main';
-                surpriseBtn.style.width = '100%';
-                surpriseBtn.style.marginTop = '15px';
-                surpriseBtn.style.background = 'linear-gradient(135deg, #ff1493, #9400d3)';
-                surpriseBtn.innerHTML = '<i class="fas fa-venus-mars"></i> 随机浏览 (Lucky Roulette)';
-                surpriseBtn.onclick = () => {
-                    const items = siteDB.adult[0].items;
-                    const randomItem = items[Math.floor(Math.random() * items.length)];
-                    window.open(randomItem.url, '_blank');
-                };
-                sidePanel.appendChild(surpriseBtn);
-            }
-            
-            // Show Adult Dashboard with Pink Theme
-            const dash = document.getElementById('adultDashboard');
-            if (dash) {
-                dash.style.display = 'block';
-                dash.innerHTML = `
-                    <h3 style="color: #ff69b4; margin-bottom: 15px; text-align:center; font-family:'Comic Sans MS', cursive, sans-serif;">
-                        <i class="fas fa-spinner fa-spin"></i> 热门网站 <i class="fas fa-spinner fa-spin"></i>
-                    </h3>
-                    <div class="category-grid" id="adultQuickAccessInner"></div>
-                `;
-                
-                const qaInner = document.getElementById('adultQuickAccessInner');
-                
-                // Hardcoded Hot List (User Request)
-                const hotSites = [
-                    { name: "Pornhub", url: "https://www.pornhub.com", icon: "fas fa-video" },
-                    { name: "Xvideos", url: "https://www.xvideos.com", icon: "fas fa-film" },
-                    { name: "XNXX", url: "https://www.xnxx.com", icon: "fas fa-play" },
-                    { name: "Jable", url: "https://jable.tv", icon: "fas fa-tv" },
-                    { name: "MissAV", url: "https://missav.com", icon: "fas fa-heart" },
-                    { name: "SpankBang", url: "https://spankbang.com", icon: "fas fa-bolt" },
-                    { name: "Hanime1", url: "https://hanime1.me", icon: "fas fa-play-circle" },
-                    { name: "E-Hentai", url: "https://e-hentai.org", icon: "fas fa-images" }
-                ];
-
-                qaInner.innerHTML = hotSites.map(s => `
-                    <div class="test-item" onclick="window.open('${s.url}', '_blank')" style="border-color: #ff69b4; background: rgba(255, 20, 147, 0.05);">
-                        <div class="item-info">
-                            <div class="item-top">
-                                <i class="${s.icon || 'fas fa-video'} item-icon" style="color: #ff69b4;"></i>
-                                <span class="item-name" style="color: #ffb6c1; font-size:0.9rem;">${s.name}</span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            }
+            togglePornMode(true);
         } else {
-            // Lock Porn Mode
-            document.body.classList.remove('porn-mode');
-            
-            // Revert Header Title
-            document.querySelector('header h1').innerText = 'Network Tester';
-            
-            // Show normal tabs, hide adult tab
-            otherTabs.forEach(t => t.style.display = 'block');
-            document.querySelector('.tab[onclick*="domestic"]').click(); // Switch back to domestic
-            
-            adultTab.style.display = 'none';
-            resBox.innerHTML = '<span style="color:var(--text-dim)">就这？</span>';
-            // Restore Theme (Empty string reverts to CSS file defaults)
-            document.documentElement.style.removeProperty('--primary');
-            document.documentElement.style.removeProperty('--text-main');
-            document.documentElement.style.removeProperty('--bg-deep');
-            
-            const sBtn = document.getElementById('surpriseBtn');
-            if(sBtn) sBtn.remove();
-            
-            const dash = document.getElementById('adultDashboard');
-            if (dash) dash.style.display = 'none';
+            togglePornMode(false);
         }
         return;
     }

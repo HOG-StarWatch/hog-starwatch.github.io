@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>2048</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            background: #121212;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px;
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .game-title {
+            font-size: 36px;
+            color: #f0f0f0;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .game-desc {
+            color: #a0a0a0;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        .diff-select {
+            display: flex;
+            gap: 10px;
+        }
+        .diff-btn {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #333;
+            color: #ccc;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .diff-btn.active {
+            background: #f65e3b;
+            color: #fff;
+        }
+        .battle-box {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            touch-action: none; /* 防止手机端滑动时滚动页面 */
+        }
+        .chess-board {
+            width: 300px;
+            height: 300px;
+            background: #2a2a2a;
+            border-radius: 6px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 10px;
+            position: relative;
+            transition: opacity 0.3s;
+        }
+        .player-title {
+            text-align: center;
+            color: #a0a0a0;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .cell {
+            background: #3a3a3a;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            transition: all 0.15s ease-in-out;
+            z-index: 10;
+        }
+        /* 数字颜色区分 - 暗夜模式适配 */
+        .cell-2 { background: #4a4a4a; color: #fff; }
+        .cell-4 { background: #5a5a5a; color: #fff; }
+        .cell-8 { background: #f2b179; color: #fff; }
+        .cell-16 { background: #f59563; color: #fff; }
+        .cell-32 { background: #f67c5f; color: #fff; }
+        .cell-64 { background: #f65e3b; color: #fff; }
+        .cell-128 { background: #edcf72; color: #fff; font-size: 20px; box-shadow: 0 0 10px rgba(237, 207, 114, 0.3); }
+        .cell-256 { background: #edcc61; color: #fff; font-size: 20px; box-shadow: 0 0 10px rgba(237, 204, 97, 0.4); }
+        .cell-512 { background: #edc850; color: #fff; font-size: 20px; box-shadow: 0 0 10px rgba(237, 200, 80, 0.5); }
+        .cell-1024 { background: #edc53f; color: #fff; font-size: 16px; box-shadow: 0 0 15px rgba(237, 197, 63, 0.6); }
+        .cell-2048 { background: #edc22e; color: #fff; font-size: 16px; box-shadow: 0 0 20px rgba(237, 194, 46, 0.8); }
+        /* 统计面板 */
+        .stat-panel {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-label {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .stat-num {
+            color: #f0f0f0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        /* 控制按钮 */
+        .control-btn {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 6px;
+            background: #8f7a66;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .control-btn:hover {
+            background: #776e65;
+        }
+        /* 胜负弹窗 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .modal-title {
+            font-size: 28px;
+            color: #f65e3b;
+            margin-bottom: 15px;
+        }
+        .modal-desc {
+            color: #776e65;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        /* 手机端操作提示 */
+        .touch-tip {
+            display: none;
+            color: #888;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        @media (max-width: 768px) {
+            .chess-board {
+                width: 240px;
+                height: 240px;
+            }
+            .cell {
+                font-size: 20px;
+            }
+            .cell-128, .cell-256, .cell-512 {
+                font-size: 16px;
+            }
+            .cell-1024, .cell-2048 {
+                font-size: 12px;
+            }
+            .touch-tip {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="game-title">2048</h1>
+    <div class="game-desc">
+        <div>难度：</div>
+        <div class="diff-select">
+            <button class="diff-btn active" data-level="1">简单</button>
+            <button class="diff-btn" data-level="2">中等</button>
+            <button class="diff-btn" data-level="3">困难</button>
+        </div>
+    </div>
+
+    <!-- 双棋盘对战区 -->
+    <div class="battle-box">
+        <div>
+            <div class="player-title">玩家</div>
+            <div class="chess-board" id="playerBoard"></div>
+        </div>
+        <div>
+            <div class="player-title">AI</div>
+            <div class="chess-board" id="aiBoard"></div>
+        </div>
+    </div>
+
+    <!-- 数据统计 -->
+    <div class="stat-panel">
+        <div class="stat-item">
+            <div class="stat-label">玩家分数</div>
+            <div class="stat-num" id="playerScore">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">AI分数</div>
+            <div class="stat-num" id="aiScore">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">玩家步数</div>
+            <div class="stat-num" id="playerStep">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">AI步数</div>
+            <div class="stat-num" id="aiStep">0</div>
+        </div>
+    </div>
+
+    <!-- 控制按钮 -->
+    <button class="control-btn" id="restartBtn">重新开战</button>
+    <p class="touch-tip">手机端请在棋盘内上下左右滑动操作</p>
+
+    <!-- 胜负弹窗 -->
+    <div class="modal" id="resultModal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="resultTitle">你赢了！</h2>
+            <div class="modal-desc" id="resultDesc">恭喜合成2048，AI被你吊打！</div>
+            <button class="control-btn" id="modalRestartBtn">再来一局</button>
+        </div>
+    </div>
+
+    <script>
+        // 核心游戏类
+        class Game2048 {
+            constructor(playerBoardEl, aiBoardEl) {
+                this.playerBoardEl = playerBoardEl;
+                this.aiBoardEl = aiBoardEl;
+                
+                // 初始化DOM结构（DOM回收优化）
+                this.initBoardDOM(this.playerBoardEl);
+                this.initBoardDOM(this.aiBoardEl);
+
+                this.playerGrid = this.createEmptyGrid();
+                this.aiGrid = this.createEmptyGrid();
+                this.playerScore = 0;
+                this.aiScore = 0;
+                this.playerStep = 0;
+                this.aiStep = 0;
+                this.aiLevel = 1; // 1-简单 2-中等 3-困难
+                this.isGameOver = false;
+                this.isAiDead = false;
+                // 初始化棋盘
+                this.addRandomTile(this.playerGrid);
+                this.addRandomTile(this.playerGrid);
+                this.addRandomTile(this.aiGrid);
+                this.addRandomTile(this.aiGrid);
+                this.renderBoard();
+                this.bindEvents();
+            }
+
+            // 初始化棋盘DOM（创建16个格子）
+            initBoardDOM(el) {
+                el.innerHTML = '';
+                for (let i = 0; i < 16; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    el.appendChild(cell);
+                }
+            }
+
+            // 高效克隆网格
+            cloneGrid(grid) {
+                return grid.map(row => [...row]);
+            }
+
+            // 创建空棋盘
+            createEmptyGrid() {
+                return Array(4).fill().map(() => Array(4).fill(0));
+            }
+
+            // 随机生成数字（2/4，4的概率10%）
+            addRandomTile(grid) {
+                const emptyCells = [];
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (grid[i][j] === 0) emptyCells.push({x: i, y: j});
+                    }
+                }
+                if (emptyCells.length === 0) return false;
+                const {x, y} = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                grid[x][y] = Math.random() < 0.9 ? 2 : 4;
+                return true;
+            }
+
+            // 渲染棋盘
+            renderBoard() {
+                this.renderSingleBoard(this.playerGrid, this.playerBoardEl);
+                this.renderSingleBoard(this.aiGrid, this.aiBoardEl);
+                // 更新统计
+                document.getElementById('playerScore').textContent = this.playerScore;
+                document.getElementById('aiScore').textContent = this.aiScore;
+                document.getElementById('playerStep').textContent = this.playerStep;
+                document.getElementById('aiStep').textContent = this.aiStep;
+            }
+
+            // 渲染单个棋盘（DOM回收优化）
+            renderSingleBoard(grid, el) {
+                const cells = el.children;
+                // 如果DOM未初始化（预防性检查），重新初始化
+                if (cells.length !== 16) {
+                    this.initBoardDOM(el);
+                }
+                
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        const cell = cells[i * 4 + j];
+                        const val = grid[i][j];
+                        // 仅当类名或内容变化时才操作DOM
+                        const newClass = 'cell' + (val ? ` cell-${val}` : '');
+                        if (cell.className !== newClass) cell.className = newClass;
+                        
+                        const newText = val || '';
+                        if (cell.textContent != newText) cell.textContent = newText;
+                    }
+                }
+            }
+
+            // 移动核心逻辑（上/下/左/右）
+            move(grid, direction) {
+                let newGrid = this.cloneGrid(grid);
+                let scoreAdd = 0;
+                let moved = false;
+
+                // 处理左移
+                const moveLeft = (row) => {
+                    let newRow = row.filter(n => n !== 0);
+                    for (let i = 0; i < newRow.length - 1; i++) {
+                        if (newRow[i] === newRow[i+1]) {
+                            newRow[i] *= 2;
+                            scoreAdd += newRow[i];
+                            newRow[i+1] = 0;
+                            // moved = true; // 不需要在这里设置，由后面比较决定
+                        }
+                    }
+                    newRow = newRow.filter(n => n !== 0);
+                    while (newRow.length < 4) newRow.push(0);
+                    return newRow;
+                };
+
+                switch (direction) {
+                    case 'left':
+                        newGrid = newGrid.map(row => {
+                            const oldRow = [...row];
+                            const newRow = moveLeft(row);
+                            if (!this.arraysEqual(oldRow, newRow)) moved = true;
+                            return newRow;
+                        });
+                        break;
+                    case 'right':
+                        newGrid = newGrid.map(row => {
+                            const oldRow = [...row];
+                            const newRow = moveLeft(row.reverse()).reverse();
+                            if (!this.arraysEqual(oldRow, newRow)) moved = true;
+                            return newRow;
+                        });
+                        break;
+                    case 'up':
+                        for (let j = 0; j < 4; j++) {
+                            const col = newGrid.map(row => row[j]);
+                            const oldCol = [...col];
+                            const newCol = moveLeft(col);
+                            if (!this.arraysEqual(oldCol, newCol)) moved = true;
+                            for (let i = 0; i < 4; i++) newGrid[i][j] = newCol[i];
+                        }
+                        break;
+                    case 'down':
+                        for (let j = 0; j < 4; j++) {
+                            const col = newGrid.map(row => row[j]);
+                            const oldCol = [...col];
+                            const newCol = moveLeft(col.reverse()).reverse();
+                            if (!this.arraysEqual(oldCol, newCol)) moved = true;
+                            for (let i = 0; i < 4; i++) newGrid[i][j] = newCol[i];
+                        }
+                        break;
+                }
+
+                return {newGrid, scoreAdd, moved};
+            }
+
+            // AI移动策略
+            aiMove() {
+                if (this.isGameOver || this.isAiDead) return;
+                const directions = ['up', 'down', 'left', 'right'];
+                let bestDir = directions[Math.floor(Math.random() * 4)];
+                
+                // 中等难度：优先选能加分的方向
+                if (this.aiLevel === 2) {
+                    let bestScore = -1;
+                    directions.forEach(dir => {
+                        const {newGrid, scoreAdd, moved} = this.move(this.aiGrid, dir);
+                        if (!moved) return;
+                        if (scoreAdd > bestScore) {
+                            bestScore = scoreAdd;
+                            bestDir = dir;
+                        }
+                    });
+                }
+
+                // 困难难度：使用评估函数（预判+位置权重）
+                if (this.aiLevel === 3) {
+                    let bestScore = -Infinity;
+                    directions.forEach(dir => {
+                        const {newGrid, scoreAdd, moved} = this.move(this.aiGrid, dir);
+                        if (!moved) return;
+                        
+                        // 评分 = 本步得分 + 棋盘盘面评估
+                        const evalScore = scoreAdd + this.evaluateGrid(newGrid);
+                        
+                        if (evalScore > bestScore) {
+                            bestScore = evalScore;
+                            bestDir = dir;
+                        }
+                    });
+                }
+
+                // 执行AI移动
+                const {newGrid, scoreAdd, moved} = this.move(this.aiGrid, bestDir);
+                if (moved) {
+                    this.aiGrid = newGrid;
+                    this.aiScore += scoreAdd;
+                    this.aiStep++;
+                    this.addRandomTile(this.aiGrid);
+                }
+                // 检查AI是否合成2048
+                this.checkWinner();
+            }
+
+            // 检查胜负（合成2048赢 / 无空位输）
+            checkWinner() {
+                // 检查是否合成2048
+                const playerHas2048 = this.playerGrid.flat().includes(2048);
+                const aiHas2048 = this.aiGrid.flat().includes(2048);
+                // 检查是否无空位可移动
+                const playerNoMove = !this.canMove(this.playerGrid);
+                const aiNoMove = !this.canMove(this.aiGrid);
+
+                if (playerHas2048) {
+                    this.showResult(true, '合成2048获胜！');
+                    return;
+                }
+                
+                if (aiHas2048) {
+                    this.showResult(false, 'AI合成2048，你失败了');
+                    return;
+                }
+
+                if (playerNoMove) {
+                    this.showResult(false, '你棋盘满，游戏结束');
+                    return;
+                }
+
+                // AI失败处理（玩家可以继续）
+                if (aiNoMove && !this.isAiDead) {
+                    this.isAiDead = true;
+                    this.aiBoardEl.style.opacity = '0.3';
+                    const titleEl = this.aiBoardEl.previousElementSibling;
+                    titleEl.textContent = 'AI (已阵亡)';
+                    titleEl.style.color = '#ff4444';
+                    // 不结束游戏，玩家继续
+                }
+            }
+
+            // 判断是否还能移动
+            canMove(grid) {
+                // 有空位直接能移
+                if (grid.flat().includes(0)) return true;
+                // 检查相邻是否有相同数字
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        const val = grid[i][j];
+                        if (j < 3 && val === grid[i][j+1]) return true;
+                        if (i < 3 && val === grid[i+1][j]) return true;
+                    }
+                }
+                return false;
+            }
+
+            // 显示胜负弹窗
+            showResult(isWin, desc) {
+                this.isGameOver = true;
+                const modal = document.getElementById('resultModal');
+                const title = document.getElementById('resultTitle');
+                const resultDesc = document.getElementById('resultDesc');
+                title.textContent = isWin ? '你赢了！' : '你输了...';
+                resultDesc.textContent = desc;
+                modal.style.display = 'flex';
+            }
+
+            // 重置游戏
+            restart() {
+                this.playerGrid = this.createEmptyGrid();
+                this.aiGrid = this.createEmptyGrid();
+                this.playerScore = 0;
+                this.aiScore = 0;
+                this.playerStep = 0;
+                this.aiStep = 0;
+                this.isGameOver = false;
+                
+                // 重置AI状态
+                this.isAiDead = false;
+                this.aiBoardEl.style.opacity = '1';
+                const aiTitle = this.aiBoardEl.previousElementSibling;
+                aiTitle.textContent = 'AI';
+                aiTitle.style.color = '#a0a0a0'; // 恢复原来的颜色
+
+                this.addRandomTile(this.playerGrid);
+                this.addRandomTile(this.playerGrid);
+                this.addRandomTile(this.aiGrid);
+                this.addRandomTile(this.aiGrid);
+                this.renderBoard();
+                document.getElementById('resultModal').style.display = 'none';
+            }
+
+            // 数组比较
+            arraysEqual(a, b) {
+                for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+                return true;
+            }
+
+            // 评估函数（蛇形权重矩阵，鼓励大数在左上角）
+            evaluateGrid(grid) {
+                const weights = [
+                    [65536, 32768, 16384, 8192],
+                    [512,   1024,  2048,  4096],
+                    [256,   128,   64,    32],
+                    [2,     4,     8,     16]
+                ];
+                let score = 0;
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        score += grid[i][j] * weights[i][j];
+                    }
+                }
+                return score;
+            }
+
+            // 绑定事件（方向键/触屏滑动/难度切换/重启）
+            bindEvents() {
+                // 电脑端方向键
+                document.addEventListener('keydown', (e) => {
+                    if (this.isGameOver) return;
+                    let dir = '';
+                    switch (e.key) {
+                        case 'ArrowUp': dir = 'up'; break;
+                        case 'ArrowDown': dir = 'down'; break;
+                        case 'ArrowLeft': dir = 'left'; break;
+                        case 'ArrowRight': dir = 'right'; break;
+                        default: return;
+                    }
+                    e.preventDefault();
+                    const {newGrid, scoreAdd, moved} = this.move(this.playerGrid, dir);
+                    if (moved) {
+                        this.playerGrid = newGrid;
+                        this.playerScore += scoreAdd;
+                        this.playerStep++;
+                        this.addRandomTile(this.playerGrid);
+                        this.renderBoard();
+                        this.checkWinner();
+                        // 玩家移动后，AI立即移动
+                        setTimeout(() => this.aiMove(), 300);
+                    }
+                });
+
+                // 手机端触屏滑动
+                let startX, startY;
+                const board = document.querySelector('.battle-box');
+                board.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                });
+                board.addEventListener('touchend', (e) => {
+                    if (this.isGameOver) return;
+                    const endX = e.changedTouches[0].clientX;
+                    const endY = e.changedTouches[0].clientY;
+                    const dx = endX - startX;
+                    const dy = endY - startY;
+                    let dir = '';
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        dir = dx > 0 ? 'right' : 'left';
+                    } else {
+                        dir = dy > 0 ? 'down' : 'up';
+                    }
+                    const {newGrid, scoreAdd, moved} = this.move(this.playerGrid, dir);
+                    if (moved) {
+                        this.playerGrid = newGrid;
+                        this.playerScore += scoreAdd;
+                        this.playerStep++;
+                        this.addRandomTile(this.playerGrid);
+                        this.renderBoard();
+                        this.checkWinner();
+                        setTimeout(() => this.aiMove(), 300);
+                    }
+                });
+
+                // 难度切换
+                document.querySelectorAll('.diff-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.aiLevel = parseInt(btn.dataset.level);
+                    });
+                });
+
+                // 重启按钮
+                document.getElementById('restartBtn').addEventListener('click', () => this.restart());
+                document.getElementById('modalRestartBtn').addEventListener('click', () => this.restart());
+            }
+        }
+
+        // 初始化游戏
+        window.onload = () => {
+            new Game2048(
+                document.getElementById('playerBoard'),
+                document.getElementById('aiBoard')
+            );
+        };
+    </script>
+</body>
+</html>

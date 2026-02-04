@@ -6,60 +6,7 @@
     <title>SVG 画板</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/app.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-        /* Override style.css .controls if needed, but style.css .controls is actually what we want for sidebar */
-        /* Local overrides */
-        .controls {
-            /* Ensure it uses column layout from style.css or force it here */
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: stretch; /* Stretch to fill width */
-            max-width: 100%; /* Let grid handle width */
-            height: 100%; /* Fill sidebar height */
-        }
-        
-        .canvas-container {
-            display: grid;
-            place-items: center;
-            background: rgba(0,0,0,0.2);
-            border-radius: var(--radius-md);
-            overflow: auto;
-            border: 1px dashed var(--border);
-            height: 100%; /* Fill remaining height */
-            width: 100%;
-        }
-        #svg-canvas {
-            background: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            cursor: crosshair;
-            min-width: 512px;
-            min-height: 512px;
-        }
-        .color-picker-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 5px;
-        }
-        .tool-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-        .tool-btn.active {
-            background: var(--secondary);
-            color: var(--bg-deep);
-        }
-    </style>
+    <style> body{margin:0;padding:0;display:flex;flex-direction:column;height:100vh;overflow:hidden} .controls{display:flex;flex-direction:column;gap:15px;align-items:stretch;max-width:100%;height:100%} .canvas-container{display:grid;place-items:center;background:rgba(0,0,0,0.2);border-radius:var(--radius-md);overflow:auto;border:1px dashed var(--border);height:100%;width:100%} #svg-canvas{background:white;box-shadow:0 0 20px rgba(0,0,0,0.3);cursor:crosshair;min-width:512px;min-height:512px} .color-picker-wrapper{display:flex;align-items:center;justify-content:space-between;gap:5px} .tool-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px} .tool-btn.active{background:var(--secondary);color:var(--bg-deep)} </style>
 </head>
 <body>
     <div class="panel-header">
@@ -106,6 +53,15 @@
             </div>
             
             <div style="width:100%; height:1px; background:var(--border); margin:5px 0;"></div>
+
+            <div class="color-picker-wrapper">
+                <span>辅助:</span>
+                <div style="display:flex; align-items:center; gap:5px; flex:1; justify-content:flex-end;">
+                    <label style="font-size:0.8rem; display:flex; align-items:center;"><input type="checkbox" id="show-grid" onchange="toggleGrid()"> 网格</label>
+                    <label style="font-size:0.8rem; display:flex; align-items:center;"><input type="checkbox" id="snap-grid"> 吸附</label>
+                    <input type="number" id="grid-size" value="20" min="5" max="100" style="width:35px; font-size:0.8rem; padding:0;" onchange="updateGrid()" title="网格大小">
+                </div>
+            </div>
             
             <div class="tool-grid">
                 <button class="btn btn-primary tool-btn active" onclick="setMode('path', this)">✏️ 自由笔</button>
@@ -163,6 +119,13 @@
 
     <div id="toast"></div>
     <script>
+        const ns = 'http://www.w3.org/2000/svg';
+        const create = (t, a={}) => {
+            const el = document.createElementNS(ns, t);
+            Object.entries(a).forEach(([k,v]) => el.setAttribute(k, v));
+            return el;
+        };
+
         const svg = document.getElementById('svg-canvas');
         let isDrawing = false;
         let startX, startY;
@@ -221,15 +184,36 @@
             app.showToast(`切换模式: ${m}`);
         }
 
+        function toggleGrid() {
+            const show = document.getElementById('show-grid').checked;
+            const size = document.getElementById('grid-size').value;
+            const canvas = document.getElementById('svg-canvas');
+            if (show) {
+                canvas.style.backgroundImage = `linear-gradient(to right, #ddd 1px, transparent 1px), linear-gradient(to bottom, #ddd 1px, transparent 1px)`;
+                canvas.style.backgroundSize = `${size}px ${size}px`;
+            } else {
+                canvas.style.backgroundImage = 'none';
+            }
+        }
+
+        function updateGrid() {
+            if(document.getElementById('show-grid').checked) toggleGrid();
+        }
+
         function getMousePos(evt) {
             const rect = svg.getBoundingClientRect();
             // Calculate scale if svg is resized by css
             const scaleX = 512 / rect.width;
             const scaleY = 512 / rect.height;
-            return {
-                x: (evt.clientX - rect.left) * scaleX,
-                y: (evt.clientY - rect.top) * scaleY
-            };
+            let x = (evt.clientX - rect.left) * scaleX;
+            let y = (evt.clientY - rect.top) * scaleY;
+
+            if (document.getElementById('snap-grid').checked) {
+                const size = parseInt(document.getElementById('grid-size').value) || 20;
+                x = Math.round(x / size) * size;
+                y = Math.round(y / size) * size;
+            }
+            return { x, y };
         }
 
         function getStyles() {
@@ -248,13 +232,7 @@
                 if(text) {
                     const pos = getMousePos(e);
                     const styles = getStyles();
-                    const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    el.setAttribute('x', pos.x);
-                    el.setAttribute('y', pos.y);
-                    el.setAttribute('fill', styles.stroke); // Text uses fill as color usually
-                    el.setAttribute('font-size', styles.width * 5); // Scale font size with stroke width
-                    el.setAttribute('font-family', 'Arial, sans-serif');
-                    el.setAttribute('opacity', styles.opacity);
+                    const el = create('text', {'x': pos.x, 'y': pos.y, 'fill': styles.stroke, 'font-size': styles.width * 5, 'font-family': 'Arial, sans-serif', 'opacity': styles.opacity});
                     el.textContent = text;
                     svg.appendChild(el);
                     history.push(el);
@@ -270,8 +248,7 @@
             const styles = getStyles();
 
             if (mode === 'spray') {
-                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                currentElement.setAttribute('class', 'spray-group');
+                currentElement = create('g', {'class': 'spray-group'});
                 svg.appendChild(currentElement);
                 
                 // Start spraying
@@ -285,9 +262,7 @@
             }
 
             if (mode === 'calligraphy') {
-                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                currentElement.setAttribute('fill', styles.stroke);
-                currentElement.setAttribute('opacity', styles.opacity);
+                currentElement = create('g', {'fill': styles.stroke, 'opacity': styles.opacity});
                 svg.appendChild(currentElement);
                 // Initial dab
                 drawCalligraphy(pos.x, pos.y, styles);
@@ -295,40 +270,15 @@
             }
 
             if (mode === 'path') {
-                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                currentElement.setAttribute('d', `M ${startX} ${startY}`);
-                currentElement.setAttribute('fill', 'none'); 
-                currentElement.setAttribute('stroke-linecap', styles.lineCap); // Use selected lineCap
-                currentElement.setAttribute('stroke-linejoin', 'round');
+                currentElement = create('path', {'d': `M ${startX} ${startY}`, 'fill': 'none', 'stroke-linecap': styles.lineCap, 'stroke-linejoin': 'round'});
             } else if (mode === 'line') {
-                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                currentElement.setAttribute('x1', startX);
-                currentElement.setAttribute('y1', startY);
-                currentElement.setAttribute('x2', startX);
-                currentElement.setAttribute('y2', startY);
-                currentElement.setAttribute('fill', 'none');
-                currentElement.setAttribute('stroke-linecap', styles.lineCap);
+                currentElement = create('line', {'x1': startX, 'y1': startY, 'x2': startX, 'y2': startY, 'fill': 'none', 'stroke-linecap': styles.lineCap});
             } else if (mode === 'rect') {
-                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                currentElement.setAttribute('x', startX);
-                currentElement.setAttribute('y', startY);
-                currentElement.setAttribute('width', 0);
-                currentElement.setAttribute('height', 0);
-                currentElement.setAttribute('fill', styles.fill);
-                currentElement.setAttribute('stroke-linejoin', 'round'); // Rect corners
+                currentElement = create('rect', {'x': startX, 'y': startY, 'width': 0, 'height': 0, 'fill': styles.fill, 'stroke-linejoin': 'round'});
             } else if (mode === 'circle') {
-                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                currentElement.setAttribute('cx', startX);
-                currentElement.setAttribute('cy', startY);
-                currentElement.setAttribute('r', 0);
-                currentElement.setAttribute('fill', styles.fill);
+                currentElement = create('circle', {'cx': startX, 'cy': startY, 'r': 0, 'fill': styles.fill});
             } else if (mode === 'ellipse') {
-                currentElement = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-                currentElement.setAttribute('cx', startX);
-                currentElement.setAttribute('cy', startY);
-                currentElement.setAttribute('rx', 0);
-                currentElement.setAttribute('ry', 0);
-                currentElement.setAttribute('fill', styles.fill);
+                currentElement = create('ellipse', {'cx': startX, 'cy': startY, 'rx': 0, 'ry': 0, 'fill': styles.fill});
             }
 
             if(currentElement) {
@@ -349,13 +299,7 @@
             const dx = Math.cos(angle) * size;
             const dy = Math.sin(angle) * size;
             
-            const segment = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            segment.setAttribute('x1', x - dx);
-            segment.setAttribute('y1', y + dy);
-            segment.setAttribute('x2', x + dx);
-            segment.setAttribute('y2', y - dy);
-            segment.setAttribute('stroke', styles.stroke);
-            segment.setAttribute('stroke-width', 2); // Thin stroke for the nib edge
+            const segment = create('line', {'x1': x - dx, 'y1': y + dy, 'x2': x + dx, 'y2': y - dy, 'stroke': styles.stroke, 'stroke-width': 2});
             
             currentElement.appendChild(segment);
         }
@@ -371,12 +315,7 @@
                 const dotX = x + r * Math.cos(angle);
                 const dotY = y + r * Math.sin(angle);
                 
-                const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                dot.setAttribute('cx', dotX);
-                dot.setAttribute('cy', dotY);
-                dot.setAttribute('r', Math.random() * 1.5);
-                dot.setAttribute('fill', styles.stroke);
-                dot.setAttribute('opacity', styles.opacity);
+                const dot = create('circle', {'cx': dotX, 'cy': dotY, 'r': Math.random() * 1.5, 'fill': styles.stroke, 'opacity': styles.opacity});
                 currentElement.appendChild(dot);
             }
         }
@@ -399,25 +338,54 @@
 
             if (!isDrawing || !currentElement) return;
 
+            let targetX = pos.x;
+            let targetY = pos.y;
+
+            // Shift Constraints
+            if (e.shiftKey) {
+                if (mode === 'line') {
+                    const dx = targetX - startX;
+                    const dy = targetY - startY;
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    const snapAngle = Math.round(angle / 45) * 45;
+                    const rad = snapAngle * Math.PI / 180;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    targetX = startX + Math.cos(rad) * dist;
+                    targetY = startY + Math.sin(rad) * dist;
+                } else if (mode === 'rect') {
+                    const w = Math.abs(targetX - startX);
+                    const h = Math.abs(targetY - startY);
+                    const size = Math.max(w, h);
+                    targetX = startX + (targetX > startX ? size : -size);
+                    targetY = startY + (targetY > startY ? size : -size);
+                } else if (mode === 'ellipse') {
+                    const rx = Math.abs(targetX - startX);
+                    const ry = Math.abs(targetY - startY);
+                    const r = Math.max(rx, ry);
+                    targetX = startX + (targetX > startX ? r : -r);
+                    targetY = startY + (targetY > startY ? r : -r);
+                }
+            }
+
             if (mode === 'path') {
                 const d = currentElement.getAttribute('d');
                 currentElement.setAttribute('d', `${d} L ${pos.x} ${pos.y}`);
             } else if (mode === 'line') {
-                currentElement.setAttribute('x2', pos.x);
-                currentElement.setAttribute('y2', pos.y);
+                currentElement.setAttribute('x2', targetX);
+                currentElement.setAttribute('y2', targetY);
             } else if (mode === 'rect') {
-                const w = pos.x - startX;
-                const h = pos.y - startY;
-                currentElement.setAttribute('x', w < 0 ? pos.x : startX);
-                currentElement.setAttribute('y', h < 0 ? pos.y : startY);
+                const w = targetX - startX;
+                const h = targetY - startY;
+                currentElement.setAttribute('x', w < 0 ? targetX : startX);
+                currentElement.setAttribute('y', h < 0 ? targetY : startY);
                 currentElement.setAttribute('width', Math.abs(w));
                 currentElement.setAttribute('height', Math.abs(h));
             } else if (mode === 'circle') {
                 const r = Math.sqrt(Math.pow(pos.x - startX, 2) + Math.pow(pos.y - startY, 2));
                 currentElement.setAttribute('r', r);
             } else if (mode === 'ellipse') {
-                currentElement.setAttribute('rx', Math.abs(pos.x - startX));
-                currentElement.setAttribute('ry', Math.abs(pos.y - startY));
+                currentElement.setAttribute('rx', Math.abs(targetX - startX));
+                currentElement.setAttribute('ry', Math.abs(targetY - startY));
             }
         });
 
@@ -589,35 +557,21 @@
                     const maxDepth = 4;
                     
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#f0f0f0');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#f0f0f0'});
                         svg.appendChild(bg);
                     }
 
                     const drawRect = (x, y, w, h, depth) => {
                         if (depth >= maxDepth || (chance(0.3) && depth > 1)) {
                             const color = randChoice(palette);
-                            const el = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                            el.setAttribute('x', x);
-                            el.setAttribute('y', y);
-                            el.setAttribute('width', w);
-                            el.setAttribute('height', h);
-                            el.setAttribute('fill', color);
-                            el.setAttribute('stroke', '#333');
-                            el.setAttribute('stroke-width', 2);
+                            const el = create('rect', {'x': x, 'y': y, 'width': w, 'height': h, 'fill': color, 'stroke': '#333', 'stroke-width': 2});
                             svg.appendChild(el);
                             
                             // Add detail?
                             if (chance(0.3) && w > 40 && h > 40) {
                                 const type = randChoice(['circle', 'lines']);
                                 if (type === 'circle') {
-                                    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                                    c.setAttribute('cx', x + w/2);
-                                    c.setAttribute('cy', y + h/2);
-                                    c.setAttribute('r', Math.min(w, h)/3);
-                                    c.setAttribute('fill', randChoice(palette));
+                                    const c = create('circle', {'cx': x + w/2, 'cy': y + h/2, 'r': Math.min(w, h)/3, 'fill': randChoice(palette)});
                                     svg.appendChild(c);
                                 }
                             }
@@ -647,10 +601,7 @@
                     const rings = randInt(5, 12);
                     
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', palette[palette.length-1]);
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': palette[palette.length-1]});
                         svg.appendChild(bg);
                     }
 
@@ -660,7 +611,7 @@
                         const shape = randChoice(['circle', 'petal', 'triangle']);
                         const color = palette[r % palette.length];
                         
-                        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        const g = create('g');
                         svg.appendChild(g);
 
                         for (let i = 0; i < points; i++) {
@@ -670,24 +621,16 @@
                             
                             let el;
                             if (shape === 'circle') {
-                                el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                                el.setAttribute('cx', x);
-                                el.setAttribute('cy', y);
-                                el.setAttribute('r', radius * 0.2);
+                                el = create('circle', {'cx': x, 'cy': y, 'r': radius * 0.2});
                             } else if (shape === 'triangle') {
-                                el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                                el = create('polygon');
                                 const s = radius * 0.2;
                                 const pts = `${x},${y-s} ${x-s},${y+s} ${x+s},${y+s}`;
                                 el.setAttribute('points', pts);
                                 el.setAttribute('transform', `rotate(${(angle * 180 / Math.PI) + 90}, ${x}, ${y})`);
                             } else {
                                 // Petal (Ellipse)
-                                el = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-                                el.setAttribute('cx', x);
-                                el.setAttribute('cy', y);
-                                el.setAttribute('rx', radius * 0.1);
-                                el.setAttribute('ry', radius * 0.3);
-                                el.setAttribute('transform', `rotate(${(angle * 180 / Math.PI) + 90}, ${x}, ${y})`);
+                                el = create('ellipse', {'cx': x, 'cy': y, 'rx': radius * 0.1, 'ry': radius * 0.3, 'transform': `rotate(${(angle * 180 / Math.PI) + 90}, ${x}, ${y})`});
                             }
                             
                             el.setAttribute('fill', color);
@@ -700,10 +643,7 @@
                 flow: () => {
                     // Flowing lines
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#111');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#111'});
                         svg.appendChild(bg);
                     }
 
@@ -711,7 +651,7 @@
                     const steps = 20;
                     
                     for(let i=0; i<lines; i++) {
-                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        const path = create('path');
                         let d = `M ${randRange(0, width)} ${randRange(0, height)}`;
                         let x = randRange(0, width);
                         let y = randRange(0, height);
@@ -736,10 +676,7 @@
                 circuit: () => {
                     // Circuit board style
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#002');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#002'});
                         svg.appendChild(bg);
                     }
                     
@@ -768,29 +705,14 @@
                             points.push([cx, cy]);
                         }
                         
-                        const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-                        polyline.setAttribute('points', points.map(p => p.join(',')).join(' '));
-                        polyline.setAttribute('fill', 'none');
-                        polyline.setAttribute('stroke', randChoice(palette));
-                        polyline.setAttribute('stroke-width', 2);
-                        polyline.setAttribute('stroke-linecap', 'round');
-                        polyline.setAttribute('stroke-linejoin', 'round');
-                        polyline.setAttribute('opacity', 0.8);
+                        const polyline = create('polyline', {'points': points.map(p => p.join(',')).join(' '), 'fill': 'none', 'stroke': randChoice(palette), 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'opacity': 0.8});
                         svg.appendChild(polyline);
                         
                         // Terminals
-                        const start = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        start.setAttribute('cx', points[0][0]);
-                        start.setAttribute('cy', points[0][1]);
-                        start.setAttribute('r', 3);
-                        start.setAttribute('fill', '#fff');
+                        const start = create('circle', {'cx': points[0][0], 'cy': points[0][1], 'r': 3, 'fill': '#fff'});
                         svg.appendChild(start);
                         
-                        const end = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        end.setAttribute('cx', points[points.length-1][0]);
-                        end.setAttribute('cy', points[points.length-1][1]);
-                        end.setAttribute('r', 3);
-                        end.setAttribute('fill', '#fff');
+                        const end = create('circle', {'cx': points[points.length-1][0], 'cy': points[points.length-1][1], 'r': 3, 'fill': '#fff'});
                         svg.appendChild(end);
                     }
                 },
@@ -802,10 +724,7 @@
                     const rows = Math.ceil(height / pSize);
                     
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#000');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#000'});
                         svg.appendChild(bg);
                     }
                     
@@ -824,13 +743,7 @@
                             const noise = (Math.sin(srcX*0.5) + Math.cos(srcY*0.5)) * 0.5 + 0.5;
                             
                             if (random() > 0.4) { // Sparsity
-                                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                                rect.setAttribute('x', x * pSize);
-                                rect.setAttribute('y', y * pSize);
-                                rect.setAttribute('width', pSize);
-                                rect.setAttribute('height', pSize);
-                                rect.setAttribute('fill', randChoice(palette));
-                                rect.setAttribute('opacity', 0.8 + random()*0.2);
+                                const rect = create('rect', {'x': x * pSize, 'y': y * pSize, 'width': pSize, 'height': pSize, 'fill': randChoice(palette), 'opacity': 0.8 + random()*0.2});
                                 svg.appendChild(rect);
                             }
                         }
@@ -840,10 +753,7 @@
                 starfield: () => {
                     // Constellation / Starfield
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#0a0a1a');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#0a0a1a'});
                         svg.appendChild(bg);
                     }
                     
@@ -859,12 +769,7 @@
                         };
                         stars.push(s);
                         
-                        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        c.setAttribute('cx', s.x);
-                        c.setAttribute('cy', s.y);
-                        c.setAttribute('r', s.r);
-                        c.setAttribute('fill', '#fff');
-                        c.setAttribute('opacity', randRange(0.5, 1));
+                        const c = create('circle', {'cx': s.x, 'cy': s.y, 'r': s.r, 'fill': '#fff', 'opacity': randRange(0.5, 1)});
                         svg.appendChild(c);
                     }
                     
@@ -877,14 +782,7 @@
                             const dist = Math.sqrt(dx*dx + dy*dy);
                             
                             if (dist < maxDist) {
-                                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                                line.setAttribute('x1', stars[i].x);
-                                line.setAttribute('y1', stars[i].y);
-                                line.setAttribute('x2', stars[j].x);
-                                line.setAttribute('y2', stars[j].y);
-                                line.setAttribute('stroke', randChoice(palette));
-                                line.setAttribute('stroke-width', (1 - dist/maxDist) * 2);
-                                line.setAttribute('opacity', (1 - dist/maxDist) * 0.5);
+                                const line = create('line', {'x1': stars[i].x, 'y1': stars[i].y, 'x2': stars[j].x, 'y2': stars[j].y, 'stroke': randChoice(palette), 'stroke-width': (1 - dist/maxDist) * 2, 'opacity': (1 - dist/maxDist) * 0.5});
                                 svg.appendChild(line);
                             }
                         }
@@ -893,10 +791,7 @@
 
                 bubbles: () => {
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', palette[palette.length-1]);
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': palette[palette.length-1]});
                         svg.appendChild(bg);
                     }
                     const count = randInt(20, 50);
@@ -904,12 +799,7 @@
                         const r = randRange(10, 80);
                         const cx = randRange(0, width);
                         const cy = randRange(0, height);
-                        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        c.setAttribute('cx', cx);
-                        c.setAttribute('cy', cy);
-                        c.setAttribute('r', r);
-                        c.setAttribute('fill', randChoice(palette));
-                        c.setAttribute('opacity', randRange(0.2, 0.6));
+                        const c = create('circle', {'cx': cx, 'cy': cy, 'r': r, 'fill': randChoice(palette), 'opacity': randRange(0.2, 0.6)});
                         // Add some gradient-like stroke
                         if(chance(0.5)) {
                             c.setAttribute('stroke', '#fff');
@@ -922,10 +812,7 @@
 
                 waves: () => {
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', palette[palette.length-1]);
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': palette[palette.length-1]});
                         svg.appendChild(bg);
                     }
                     const layers = randInt(5, 10);
@@ -944,20 +831,14 @@
                         }
                         d += ` L ${width} ${height} L 0 ${height} Z`;
                         
-                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        path.setAttribute('d', d);
-                        path.setAttribute('fill', palette[i % palette.length]);
-                        path.setAttribute('opacity', 0.7);
+                        const path = create('path', {'d': d, 'fill': palette[i % palette.length], 'opacity': 0.7});
                         svg.appendChild(path);
                     }
                 },
 
                 memphis: () => {
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#fff'); // 80s style usually white/pastel bg
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#fff'});
                         svg.appendChild(bg);
                     }
                     const count = randInt(30, 60);
@@ -970,32 +851,15 @@
                         
                         let el;
                         if(type === 'rect') {
-                            el = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                            el.setAttribute('x', x);
-                            el.setAttribute('y', y);
-                            el.setAttribute('width', randRange(20, 60));
-                            el.setAttribute('height', randRange(20, 60));
+                            el = create('rect', {'x': x, 'y': y, 'width': randRange(20, 60), 'height': randRange(20, 60)});
                         } else if (type === 'circle') {
-                            el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                            el.setAttribute('cx', x);
-                            el.setAttribute('cy', y);
-                            el.setAttribute('r', randRange(10, 30));
+                            el = create('circle', {'cx': x, 'cy': y, 'r': randRange(10, 30)});
                         } else if (type === 'triangle') {
-                            el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                            el.setAttribute('points', '0,-20 -20,20 20,20');
+                            el = create('polygon', {'points': '0,-20 -20,20 20,20'});
                         } else if (type === 'line') {
-                            el = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                            el.setAttribute('width', randRange(40, 80));
-                            el.setAttribute('height', 5);
-                            el.setAttribute('x', x);
-                            el.setAttribute('y', y);
+                            el = create('rect', {'width': randRange(40, 80), 'height': 5, 'x': x, 'y': y});
                         } else { // squiggle
-                            el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                            el.setAttribute('d', 'M0,0 Q10,-20 20,0 T40,0');
-                            el.setAttribute('fill', 'none');
-                            el.setAttribute('stroke', color);
-                            el.setAttribute('stroke-width', 4);
-                            el.setAttribute('transform', `translate(${x},${y}) rotate(${rot}) scale(${randRange(1,2)})`);
+                            el = create('path', {'d': 'M0,0 Q10,-20 20,0 T40,0', 'fill': 'none', 'stroke': color, 'stroke-width': 4, 'transform': `translate(${x},${y}) rotate(${rot}) scale(${randRange(1,2)})`});
                             svg.appendChild(el);
                             continue; // Special handling for path
                         }
@@ -1015,10 +879,7 @@
                 fractal: () => {
                     // Recursive Tree
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#111');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#111'});
                         svg.appendChild(bg);
                     }
                     
@@ -1028,14 +889,7 @@
                         const x2 = x + Math.cos(angle) * len;
                         const y2 = y + Math.sin(angle) * len;
                         
-                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line.setAttribute('x1', x);
-                        line.setAttribute('y1', y);
-                        line.setAttribute('x2', x2);
-                        line.setAttribute('y2', y2);
-                        line.setAttribute('stroke', palette[depth % palette.length]);
-                        line.setAttribute('stroke-width', depth);
-                        line.setAttribute('stroke-linecap', 'round');
+                        const line = create('line', {'x1': x, 'y1': y, 'x2': x2, 'y2': y2, 'stroke': palette[depth % palette.length], 'stroke-width': depth, 'stroke-linecap': 'round'});
                         svg.appendChild(line);
                         
                         // Recursive calls
@@ -1050,10 +904,7 @@
 
                 maze: () => {
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#fff');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#fff'});
                         svg.appendChild(bg);
                     }
                     const cellSize = 20;
@@ -1065,10 +916,7 @@
                             const px = x * cellSize;
                             const py = y * cellSize;
                             
-                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                            line.setAttribute('stroke', '#000');
-                            line.setAttribute('stroke-width', 2);
-                            line.setAttribute('stroke-linecap', 'round');
+                            const line = create('line', {'stroke': '#000', 'stroke-width': 2, 'stroke-linecap': 'round'});
                             
                             if (chance(0.5)) {
                                 // Forward slash
@@ -1093,10 +941,7 @@
 
                 hexagons: () => {
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#222');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#222'});
                         svg.appendChild(bg);
                     }
                     const r = 30;
@@ -1110,7 +955,7 @@
                             const cy = y * h + (x % 2 === 0 ? 0 : h/2);
                             
                             if (chance(0.8)) {
-                                const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                                const poly = create('polygon');
                                 let pts = "";
                                 for(let i=0; i<6; i++) {
                                     const ang = i * Math.PI / 3;
@@ -1130,10 +975,7 @@
                 rain: () => {
                     // Digital Rain
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#000');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#000'});
                         svg.appendChild(bg);
                     }
                     const cols = 40;
@@ -1146,13 +988,7 @@
                         for(let j=0; j<drops; j++) {
                             const y = randRange(0, height);
                             const len = randRange(10, 50);
-                            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                            text.setAttribute('x', x);
-                            text.setAttribute('y', y);
-                            text.setAttribute('fill', i%2===0 ? '#0f0' : randChoice(palette));
-                            text.setAttribute('font-family', 'monospace');
-                            text.setAttribute('font-size', randRange(10, 20));
-                            text.setAttribute('opacity', randRange(0.2, 0.9));
+                            const text = create('text', {'x': x, 'y': y, 'fill': i%2===0 ? '#0f0' : randChoice(palette), 'font-family': 'monospace', 'font-size': randRange(10, 20), 'opacity': randRange(0.2, 0.9)});
                             // Random char
                             text.textContent = String.fromCharCode(0x30A0 + randInt(0, 96));
                             svg.appendChild(text);
@@ -1162,10 +998,7 @@
 
                 spirals: () => {
                     if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', palette[0]);
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': palette[0]});
                         svg.appendChild(bg);
                     }
                     const cx = width/2;
@@ -1182,21 +1015,14 @@
                         const x = cx + r * Math.cos(angle);
                         const y = cy + r * Math.sin(angle);
                         
-                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        circle.setAttribute('cx', x);
-                        circle.setAttribute('cy', y);
-                        circle.setAttribute('r', i/10);
-                        circle.setAttribute('fill', randChoice(palette));
+                        const circle = create('circle', {'cx': x, 'cy': y, 'r': i/10, 'fill': randChoice(palette)});
                         svg.appendChild(circle);
                     }
                 },
 
                 crossstitch: () => {
                      if (shouldClear) {
-                        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        bg.setAttribute('width', width);
-                        bg.setAttribute('height', height);
-                        bg.setAttribute('fill', '#fff');
+                        const bg = create('rect', {'width': width, 'height': height, 'fill': '#fff'});
                         svg.appendChild(bg);
                     }
                     const gridSize = 10;
@@ -1213,21 +1039,11 @@
                                 const py = y * gridSize;
                                 const color = randChoice(palette);
                                 
-                                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                                g.setAttribute('stroke', color);
-                                g.setAttribute('stroke-width', 2);
+                                const g = create('g', {'stroke': color, 'stroke-width': 2});
                                 
-                                const l1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                                l1.setAttribute('x1', px + 2);
-                                l1.setAttribute('y1', py + 2);
-                                l1.setAttribute('x2', px + gridSize - 2);
-                                l1.setAttribute('y2', py + gridSize - 2);
+                                const l1 = create('line', {'x1': px + 2, 'y1': py + 2, 'x2': px + gridSize - 2, 'y2': py + gridSize - 2});
                                 
-                                const l2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                                l2.setAttribute('x1', px + gridSize - 2);
-                                l2.setAttribute('y1', py + 2);
-                                l2.setAttribute('x2', px + 2);
-                                l2.setAttribute('y2', py + gridSize - 2);
+                                const l2 = create('line', {'x1': px + gridSize - 2, 'y1': py + 2, 'x2': px + 2, 'y2': py + gridSize - 2});
                                 
                                 g.appendChild(l1);
                                 g.appendChild(l2);

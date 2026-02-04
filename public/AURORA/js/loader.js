@@ -7,6 +7,13 @@
 const ResourceLoader = {
     // Library Registry with Multi-Source Support
     registry: {
+        'svgo': [
+            'https://unpkg.com/svgo@2.8.0/dist/svgo.browser.js',
+            'https://cdn.jsdelivr.net/npm/svgo@2.8.0/dist/svgo.browser.js',
+            'https://npm.elemecdn.com/svgo@2.8.0/dist/svgo.browser.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/svgo/2.8.0/svgo.browser.min.js',
+            'https://lib.baomitu.com/svgo/2.8.0/svgo.browser.min.js'
+        ],
         'crypto-js': [
             'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js',
             'https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js',
@@ -198,6 +205,13 @@ const ResourceLoader = {
             'https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js',
             'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
             'https://unpkg.com/marked@9.1.2/marked.min.js'
+        ],
+        'font-awesome': [
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+            'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css',
+            'https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css',
+            'https://npm.elemecdn.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css',
+            'https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css'
         ]
     },
 
@@ -302,25 +316,32 @@ const ResourceLoader = {
                 }
 
                 // Browser Environment
-                const script = document.createElement('script');
-                script.type = 'text/javascript';
-                script.async = true;
+                const isCss = url.endsWith('.css');
+                const element = isCss ? document.createElement('link') : document.createElement('script');
 
-                script.onload = () => {
+                if (isCss) {
+                    element.rel = 'stylesheet';
+                    element.href = url;
+                } else {
+                    element.type = 'text/javascript';
+                    element.async = true;
+                    element.src = url;
+                }
+
+                element.onload = () => {
                     console.log(`[ResourceLoader] Successfully loaded ${libName} from ${url}`);
                     this.loaded.add(libName);
                     resolve();
                 };
 
-                script.onerror = () => {
+                element.onerror = () => {
                     console.warn(`[ResourceLoader] Failed to load ${libName} from ${url}, trying next source...`);
                     index++;
-                    script.remove(); // Clean up failed script tag
+                    element.remove(); // Clean up failed element
                     tryLoad();
                 };
 
-                script.src = url;
-                document.head.appendChild(script);
+                document.head.appendChild(element);
             };
 
             tryLoad();

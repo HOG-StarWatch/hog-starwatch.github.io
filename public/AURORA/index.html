@@ -39,59 +39,78 @@
                     </button>   
                     <button class="tab-btn active" data-src="tools/home.html">工具箱主页</button>
         
+                    <!-- Image Dropdown -->
+                    <div class="dropdown">
+                        <button class="tab-btn dropdown-toggle">图形图像</button>
+                        <div class="dropdown-content">
+                            <div class="dropdown-header">基础编辑</div>
+                            <button class="tab-btn" data-src="tools/image-convert.html">格式转换</button>
+                            <button class="tab-btn" data-src="tools/image-gif.html">GIF 制作</button>
+                            <button class="tab-btn" data-src="tools/image-svg-painter.html">SVG 画板</button>
+                            <button class="tab-btn" data-src="tools/image-svg-optimizer.html">SVG 优化器</button>
+                            <button class="tab-btn" data-src="tools/image-drawing.html">简易绘图</button>
+                            <button class="tab-btn" data-src="tools/image-overlay.html">图片叠加</button>
+                            
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-header">特效滤镜</div>
+                            <button class="tab-btn" data-src="tools/image-photon.html">专业滤镜</button>
+                            <button class="tab-btn" data-src="tools/image-pixel.html">像素化</button>
+                            <button class="tab-btn" data-src="tools/image-glitch.html">故障艺术</button>
+                            <button class="tab-btn" data-src="tools/image-ascii.html">字符画</button>
+                            <button class="tab-btn" data-src="tools/image-visual.html">视觉特效</button>
+
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-header">加密与生成</div>
+                            <button class="tab-btn" data-src="tools/image-crypto.html">视觉加密</button>
+                            <button class="tab-btn" data-src="tools/image-phantom.html">幻影坦克</button>
+                            <button class="tab-btn" data-src="tools/image-hybrid.html">混合图像</button>
+                            <button class="tab-btn" data-src="tools/image-seeder.html">图种生成</button>
+                            <button class="tab-btn" data-src="tools/image-fun.html">趣味生成</button>
+                        </div>
+                    </div>
+
                     <!-- Text Dropdown -->
                     <div class="dropdown">
-                        <button class="tab-btn dropdown-toggle">文本工具</button>
+                        <button class="tab-btn dropdown-toggle">文本代码</button>
                         <div class="dropdown-content">
                             <button class="tab-btn" data-src="tools/text.html">文本处理</button>
-                            <button class="tab-btn" data-src="tools/format.html">文本格式化</button>
-                            <button class="tab-btn" data-src="tools/diff.html">文本对比</button>
                             <button class="tab-btn" data-src="tools/transcode.html">文本转码</button>
+                            <button class="tab-btn" data-src="tools/format.html">代码格式化</button>
+                            <button class="tab-btn" data-src="tools/diff.html">文本对比</button>
+                            <button class="tab-btn" data-src="tools/markdown.html">Markdown</button>
+                            <div class="dropdown-divider"></div>
                             <button class="tab-btn" data-src="tools/encrypt.html">加密解密</button>
-                            <button class="tab-btn" data-src="tools/obfuscator.html">HTML混淆</button>
-                            <button class="tab-btn" data-src="tools/markdown.html">MD/WD/HTML</button>
+                            <button class="tab-btn" data-src="tools/obfuscator.html">HTML 混淆</button>
                         </div>
                     </div>
         
                     <!-- File Dropdown -->
                     <div class="dropdown">
-                        <button class="tab-btn dropdown-toggle">文件工具</button>
+                        <button class="tab-btn dropdown-toggle">文件数据</button>
                         <div class="dropdown-content">
                             <button class="tab-btn" data-src="tools/file.html">文件处理</button>
                             <button class="tab-btn" data-src="tools/file-encoding.html">文件编码</button>
-                        </div>
-                    </div>
-        
-                    <!-- Image Dropdown -->
-                    <div class="dropdown">
-                        <button class="tab-btn dropdown-toggle">图片工具</button>
-                        <div class="dropdown-content">
-                            <button class="tab-btn" data-src="tools/image-visual.html">视觉变换</button>
-                            <button class="tab-btn" data-src="tools/image-convert.html">编码转换</button>
-                            <button class="tab-btn" data-src="tools/image-gif.html">GIF 制作</button>
-                            <button class="tab-btn" data-src="tools/image-svg-painter.html">SVG 画板</button>
+                            <button class="tab-btn" data-src="tools/file-qrcode.html">文件二维码</button>
+                            <div class="dropdown-divider"></div>
+                            <button class="tab-btn" data-src="tools/datetime.html">时间工具箱</button>
+                            <button class="tab-btn" data-src="tools/unit.html">单位换算</button>
+                            <div class="dropdown-divider"></div>
+                            <button class="tab-btn" data-src="tools/hash.html">哈希计算</button>
+                            <button class="tab-btn" data-src="tools/generator.html">数据生成</button>
+                            <button class="tab-btn" data-src="tools/qrcode.html">二维码</button>
                         </div>
                     </div>
         
                     <!-- Network Dropdown -->
                     <div class="dropdown">
-                        <button class="tab-btn dropdown-toggle">网络工具</button>
+                        <button class="tab-btn dropdown-toggle">网络相关</button>
                         <div class="dropdown-content">
-                            <button class="tab-btn" data-src="tools/network-epic.html">Epic 免费游戏</button>
-                            <button class="tab-btn" data-src="tools/network-github.html">GitHub 搜索</button>
-                            <button class="tab-btn" data-src="tools/network-ip.html">IP 信息查询</button>
-                            <button class="tab-btn" data-src="tools/network-rdap.html">RDAP / WHOIS</button>
-                            <button class="tab-btn" data-src="tools/network-ping.html">网络连通性测试</button>
-                        </div>
-                    </div>
-
-                    <!-- Other Dropdown -->
-                    <div class="dropdown">
-                        <button class="tab-btn dropdown-toggle">其他工具</button>
-                        <div class="dropdown-content">
-                            <button class="tab-btn" data-src="tools/hash.html">哈希计算</button>
-                            <button class="tab-btn" data-src="tools/generator.html">生成器</button>
-                            <button class="tab-btn" data-src="tools/qrcode.html">二维码</button>
+                            <button class="tab-btn" data-src="tools/network-ip.html">IP 信息</button>
+                            <button class="tab-btn" data-src="tools/url.html">URL 解析</button>
+                            <button class="tab-btn" data-src="tools/network-ping.html">网络测试</button>
+                            <button class="tab-btn" data-src="tools/network-rdap.html">RDAP Whois查询</button>
+                            <button class="tab-btn" data-src="tools/network-github.html">GitHub API搜索</button>
+                            <button class="tab-btn" data-src="tools/network-epic.html">Epic Free Games</button>
                         </div>
                     </div>
                 </nav>
@@ -1409,13 +1428,38 @@
                 const groupTitle = document.createElement('div');
                 groupTitle.className = 'group-title';
                 groupTitle.innerText = title;
+                // Inline styles for group title
+                groupTitle.style.marginTop = '15px';
+                groupTitle.style.marginBottom = '8px';
+                groupTitle.style.color = 'var(--primary)';
+                groupTitle.style.fontWeight = 'bold';
+                groupTitle.style.fontSize = '1.1rem';
                 mobileDrawer.appendChild(groupTitle);
 
-                dd.querySelectorAll('.dropdown-content .tab-btn').forEach(btn => {
-                    const clone = btn.cloneNode(true);
-                    attachMobileClick(clone);
-                    mobileDrawer.appendChild(clone);
-                });
+                const content = dd.querySelector('.dropdown-content');
+                if (content) {
+                    Array.from(content.children).forEach(child => {
+                        if (child.classList.contains('tab-btn')) {
+                            const clone = child.cloneNode(true);
+                            clone.style.width = '100%'; // Ensure full width
+                            clone.style.justifyContent = 'flex-start';
+                            clone.style.padding = '10px';
+                            attachMobileClick(clone);
+                            mobileDrawer.appendChild(clone);
+                        } else if (child.classList.contains('dropdown-header')) {
+                            const header = document.createElement('div');
+                            header.style.padding = '12px 0 4px 5px';
+                            header.style.fontSize = '0.8rem';
+                            header.style.color = 'var(--text-dim)';
+                            header.style.fontWeight = '600';
+                            header.style.textTransform = 'uppercase';
+                            header.style.letterSpacing = '1px';
+                            header.innerText = child.innerText;
+                            mobileDrawer.appendChild(header);
+                        }
+                        // We skip dividers in mobile view to save space or just let headers act as dividers
+                    });
+                }
             });
         }
 
