@@ -39,7 +39,7 @@
 
 # 原项目Readme汉化
 
-![Space Huggers - Frank Force 制作的 JS13k 游戏](/screenshot.png)
+![Space Huggers - Frank Force 制作的 JS13k 游戏](./screenshot.png)
 
 帝国像瘟疫一样在银河系蔓延，并在偏远星球上建立前哨基地。
 作为一名精英反叛军士兵，你的任务是消灭这些基地。
@@ -136,7 +136,7 @@
 - 由于 roadroller 的随机性，zip 大小可能会有 20 字节左右的差异
 
 # 原项目Readme
-![Space Huggers - A JS13k Game by Frank Force](/screenshot.png)
+![Space Huggers - A JS13k Game by Frank Force](./screenshot.png)
 
 The empire is spreading like a plague across the galaxy and building outposts on remote planets.
 You are an elite rebel soldier tasked with wiping out those bases.
