@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片转 SVG (Vectorize)</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .tracer-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            min-height: 180px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(192, 132, 252, 0.05);
+            color: var(--text-main);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .upload-area.drag-over {
+            border-color: var(--secondary);
+            background: rgba(45, 212, 191, 0.1);
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .thumb {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            background: #1e293b;
+            border: 1px solid var(--border);
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .filename {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-main);
+            margin-bottom: 0.2rem;
+        }
+
+        .file-status {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+        .file-status.processing { color: var(--primary); }
+        .file-status.done { color: var(--secondary); }
+        .file-status.error { color: var(--accent); }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Modal specific overrides */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal.show { display: flex; }
+        
+        .modal-content {
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 1200px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: var(--shadow);
+        }
+
+        .compare-view {
+            flex: 1;
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .view-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .view-pane h4 {
+            text-align: center;
+            margin: 0;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        .img-container {
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Checkerboard */
+            background-image: 
+                linear-gradient(45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #2a2a2a 75%), 
+                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            background-color: #1a1a1a;
+            padding: 1rem;
+        }
+
+        .img-container img, .img-container svg {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body style="padding: 1rem;">
+    
+    <div class="panel" style="padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div>
+                <h2 style="margin: 0; color: var(--primary);">SVG 矢量化工具</h2>
+                <p style="margin: 0.5rem 0 0 0; color: var(--text-dim);">将位图 (PNG, JPG) 转换为矢量 SVG，支持批量处理与实时预览</p>
+            </div>
+            <div style="text-align: right;">
+                <button class="btn" onclick="tracerTool.downloadAll()" id="btn-download-all" disabled>
+                    下载全部 (ZIP)
+                </button>
+            </div>
+        </div>
+
+        <div class="tracer-container">
+            <!-- Settings -->
+            <div class="panel" style="background: rgba(0,0,0,0.2);">
+                <div class="settings-grid">
+                    <div class="input-row">
+                        <label>色彩数量 (Colors)</label>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <input type="range" id="color-count" min="2" max="64" value="16" style="flex: 1;" oninput="document.getElementById('color-val').innerText = this.value">
+                            <span id="color-val" style="width: 30px; text-align: right; color: var(--primary);">16</span>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <label>限制最大宽度 (Resize)</label>
+                        <select id="max-width" style="width: 100%; background: var(--input-bg); border: 1px solid var(--border); padding: 0.5rem; color: var(--text-main); border-radius: var(--radius-sm);">
+                            <option value="0">原始尺寸 (不缩放)</option>
+                            <option value="640">640px</option>
+                            <option value="1024" selected>1024px</option>
+                            <option value="2048">2048px</option>
+                        </select>
+                    </div>
+
+                    <div class="input-row">
+                        <label>路径精度 (LTres)</label>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <input type="range" id="ltres" min="0" max="10" step="0.1" value="1" style="flex: 1;" oninput="document.getElementById('ltres-val').innerText = this.value">
+                            <span id="ltres-val" style="width: 30px; text-align: right; color: var(--primary);">1</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">值越小精度越高</div>
+                    </div>
+
+                    <div class="input-row">
+                        <label>曲线精度 (QTres)</label>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <input type="range" id="qtres" min="0" max="10" step="0.1" value="1" style="flex: 1;" oninput="document.getElementById('qtres-val').innerText = this.value">
+                            <span id="qtres-val" style="width: 30px; text-align: right; color: var(--primary);">1</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label>模糊预处理</label>
+                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-top: 0.5rem;">
+                            <input type="checkbox" id="blur-check" onchange="document.getElementById('blur-control').style.display = this.checked ? 'block' : 'none'">
+                            启用高斯模糊
+                        </label>
+                        <div id="blur-control" style="display: none; margin-top: 0.5rem;">
+                            <input type="range" id="blur-radius" min="1" max="20" value="5" style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div class="input-row" style="display: flex; align-items: flex-end;">
+                         <button class="btn btn-primary" onclick="tracerTool.processAll()" style="width: 100%;">应用设置并重新转换</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload -->
+            <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary);">🎨</div>
+                <div style="font-size: 1.1rem; font-weight: 500;">点击或拖拽图片到此处</div>
+                <div style="font-size: 0.9rem; color: var(--text-dim); margin-top: 0.5rem;">支持 JPG, PNG (推荐透明背景)</div>
+                <input type="file" id="file-input" accept="image/*" multiple style="display: none;">
+            </div>
+
+            <!-- List -->
+            <div class="panel-title" style="margin-top: 1rem; display: flex; justify-content: space-between;">
+                <span>文件列表 (<span id="file-count">0</span>)</span>
+                <button class="btn btn-sm" onclick="tracerTool.clearAll()" style="color: var(--accent);">清空列表</button>
+            </div>
+            <div id="file-list" class="file-list">
+                <!-- Items -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 style="margin: 0;">预览对比</h3>
+                <span onclick="document.getElementById('preview-modal').classList.remove('show')" style="cursor: pointer; font-size: 1.5rem;">&times;</span>
+            </div>
+            <div class="compare-view">
+                <div class="view-pane">
+                    <h4>原图</h4>
+                    <div class="img-container" id="preview-original"></div>
+                </div>
+                <div class="view-pane">
+                    <h4>SVG 矢量图 (<span id="svg-size">-</span> KB)</h4>
+                    <div class="img-container" id="preview-svg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/loader.js"></script>
+    <script>
+        const tracerTool = {
+            files: [],
+            worker: null,
+
+            init: function() {
+                // Initialize Worker
+                this.worker = new Worker('../js/workers/svg-tracer.worker.js');
+                this.worker.onmessage = this.handleWorkerMessage.bind(this);
+
+                // Load libraries
+                ResourceLoader.load(['jszip', 'file-saver'])
+                    .then(() => {
+                        console.log('Libraries loaded');
+                    });
+
+                // Events
+                this.setupEvents();
+            },
+
+            setupEvents: function() {
+                const dropZone = document.getElementById('drop-zone');
+                const fileInput = document.getElementById('file-input');
+
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('drag-over');
+                });
+                dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('drag-over');
+                    this.handleFiles(e.dataTransfer.files);
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    this.handleFiles(e.target.files);
+                    fileInput.value = '';
+                });
+
+                // Modal close on outside click
+                window.addEventListener('click', (e) => {
+                    const modal = document.getElementById('preview-modal');
+                    if (e.target === modal) modal.classList.remove('show');
+                });
+            },
+
+            handleFiles: function(fileList) {
+                if (!fileList.length) return;
+                
+                Array.from(fileList).forEach(file => {
+                    if (!file.type.startsWith('image/')) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const fileItem = {
+                            id: Date.now() + Math.random().toString(36).substr(2, 9),
+                            file: file,
+                            status: 'pending', // pending, processing, done, error
+                            svgContent: null,
+                            thumbnail: e.target.result,
+                            originalSize: file.size
+                        };
+                        this.files.push(fileItem);
+                        this.renderList();
+                        
+                        // Auto process
+                        setTimeout(() => this.processFile(fileItem), 100);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            },
+
+            getOptions: function() {
+                const blurCheck = document.getElementById('blur-check').checked;
+                return {
+                    numberofcolors: parseInt(document.getElementById('color-count').value),
+                    ltres: parseFloat(document.getElementById('ltres').value),
+                    qtres: parseFloat(document.getElementById('qtres').value),
+                    pathomit: 8, // Fixed or add control if needed
+                    blurradius: blurCheck ? parseInt(document.getElementById('blur-radius').value) : 0,
+                    blurdelta: 20,
+                    scale: 1, // We handle resizing via canvas before, so scale 1 usually
+                    viewbox: true
+                };
+            },
+
+            processAll: function() {
+                this.files.forEach(f => {
+                    f.status = 'pending';
+                    this.processFile(f);
+                });
+                this.renderList();
+            },
+
+            processFile: function(fileItem) {
+                if (fileItem.status === 'processing') return;
+                fileItem.status = 'processing';
+                this.renderList();
+
+                const maxWidth = parseInt(document.getElementById('max-width').value);
+                const options = this.getOptions();
+
+                // Load image to canvas to get ImageData (and resize)
+                const img = new Image();
+                img.src = fileItem.thumbnail;
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (maxWidth > 0 && width > maxWidth) {
+                        const ratio = maxWidth / width;
+                        width = maxWidth;
+                        height = Math.round(height * ratio);
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const imageData = ctx.getImageData(0, 0, width, height);
+
+                    // Send to worker
+                    this.worker.postMessage({
+                        id: fileItem.id,
+                        imageData: imageData,
+                        options: options
+                    });
+                };
+            },
+
+            handleWorkerMessage: function(e) {
+                const { id, status, svgContent, error } = e.data;
+                const fileItem = this.files.find(f => f.id === id);
+                if (!fileItem) return;
+
+                if (status === 'success') {
+                    fileItem.status = 'done';
+                    fileItem.svgContent = svgContent;
+                } else {
+                    fileItem.status = 'error';
+                    console.error('Worker error:', error);
+                }
+                
+                this.renderList();
+            },
+
+            renderList: function() {
+                const listEl = document.getElementById('file-list');
+                const countEl = document.getElementById('file-count');
+                const dlBtn = document.getElementById('btn-download-all');
+                
+                listEl.innerHTML = '';
+                countEl.textContent = this.files.length;
+                
+                const hasDone = this.files.some(f => f.status === 'done');
+                dlBtn.disabled = !hasDone;
+
+                this.files.forEach(f => {
+                    const el = document.createElement('div');
+                    el.className = 'file-item';
+                    
+                    let statusHtml = '';
+                    if (f.status === 'pending') statusHtml = '<span class="file-status">等待中</span>';
+                    else if (f.status === 'processing') statusHtml = '<span class="file-status processing">处理中...</span>';
+                    else if (f.status === 'done') statusHtml = '<span class="file-status done">完成</span>';
+                    else statusHtml = '<span class="file-status error">失败</span>';
+
+                    el.innerHTML = `
+                        <img src="${f.thumbnail}" class="thumb">
+                        <div class="file-info">
+                            <div class="filename">${f.file.name}</div>
+                            ${statusHtml}
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn" style="padding: 0.3rem 0.6rem;" onclick="tracerTool.preview('${f.id}')" ${f.status !== 'done' ? 'disabled' : ''}>预览</button>
+                            <button class="btn" style="padding: 0.3rem 0.6rem;" onclick="tracerTool.download('${f.id}')" ${f.status !== 'done' ? 'disabled' : ''}>⬇</button>
+                            <button class="btn" style="padding: 0.3rem 0.6rem; color: var(--accent);" onclick="tracerTool.remove('${f.id}')">×</button>
+                        </div>
+                    `;
+                    listEl.appendChild(el);
+                });
+            },
+
+            preview: function(id) {
+                const f = this.files.find(f => f.id === id);
+                if (!f || !f.svgContent) return;
+
+                document.getElementById('preview-original').innerHTML = `<img src="${f.thumbnail}">`;
+                document.getElementById('preview-svg').innerHTML = f.svgContent;
+                
+                const sizeKB = (new Blob([f.svgContent]).size / 1024).toFixed(2);
+                document.getElementById('svg-size').textContent = sizeKB;
+
+                document.getElementById('preview-modal').classList.add('show');
+            },
+
+            download: function(id) {
+                const f = this.files.find(f => f.id === id);
+                if (!f || !f.svgContent) return;
+                
+                const blob = new Blob([f.svgContent], {type: "image/svg+xml;charset=utf-8"});
+                const fileName = f.file.name.replace(/\.[^/.]+$/, "") + ".svg";
+                saveAs(blob, fileName);
+            },
+
+            downloadAll: function() {
+                const zip = new JSZip();
+                let count = 0;
+                
+                this.files.forEach(f => {
+                    if (f.status === 'done' && f.svgContent) {
+                        const fileName = f.file.name.replace(/\.[^/.]+$/, "") + ".svg";
+                        zip.file(fileName, f.svgContent);
+                        count++;
+                    }
+                });
+                
+                if (count === 0) return;
+                
+                zip.generateAsync({type:"blob"})
+                .then(function(content) {
+                    saveAs(content, "svg-vectors.zip");
+                });
+            },
+
+            remove: function(id) {
+                this.files = this.files.filter(f => f.id !== id);
+                this.renderList();
+            },
+
+            clearAll: function() {
+                this.files = [];
+                this.renderList();
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            tracerTool.init();
+        });
+    </script>
+</body>
+</html>

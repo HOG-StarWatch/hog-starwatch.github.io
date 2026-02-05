@@ -201,6 +201,11 @@ const ResourceLoader = {
             'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js',
             'https://unpkg.com/gif.js@0.2.0/dist/gif.js'
         ],
+        'imagetracerjs': [
+            'https://unpkg.com/imagetracerjs@1.2.6/imagetracer_v1.2.6.js',
+            'https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.min.js'
+        ]
+    },],
         'marked': [
             'https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js',
             'https://cdn.jsdelivr.net/npm/marked/marked.min.js',

@@ -57,6 +57,7 @@ export default [
         { text: '2048', link: '../../../2048.html', target: '_self', },
         { text: '俄罗斯方块', link: '../../../tetris.html', target: '_self', },
         { text: '21SpaceHuggers', link: '../../../21SpaceHuggers.html', target: '_self', },
+        { text: '21SpaceHuggers', link: '../../../SpaceHuggers-SWC/index.html', target: '_self', },
         { text: '24dr1v3n-wild', link: '../../../24dr1v3n-wild.html', target: '_self', },
         { text: '24escape-from-planet-xiii', link: '../../../24escape-from-planet-xiii.html', target: '_self', },
         { text: '25clawstrike', link: '../../../25clawstrike.html', target: '_self', },
