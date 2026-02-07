@@ -74,7 +74,8 @@ engineInit(
             e.angle = -PI;
         }
 
-        if (window.CheatMenuLoaded && !document.getElementById('chk-zoom').checked) {
+        const zoomToggle = window.CheatMenuLoaded ? document.getElementById('chk-zoom') : null;
+        if (zoomToggle && !zoomToggle.checked) {
              // Zoom disabled via cheat menu
         } else if (mouseWheel) // mouse zoom
             cameraScale = clamp(cameraScale*(1-mouseWheel/10), defaultTileSize.x*16, defaultTileSize.x/16);
@@ -202,6 +203,9 @@ engineInit(
     mainContext.font = '.5in impact';
     p > 0 && mainContext.fillText('A JS13K Game by Frank Force',mainCanvas.width/2, 210);
 
+    mainContext.font = '.3in impact';
+    p > 0 && mainContext.fillText('Menu made with ❤love❤ by StarWatch',mainCanvas.width/2, 250);
+
     // check if any enemies left
     let enemiesCount = 0;
     for (const o of engineCollideObjects)
@@ -218,7 +222,7 @@ engineInit(
         levelEndTimer.set();
 
     mainContext.fillStyle = new Color(0,0,0).rgba();
-    mainContext.fillText('Level ' + level + '      Lives ' + playerLives + '      Enemies ' + enemiesCount, mainCanvas.width/2, mainCanvas.height-40);
+    mainContext.fillText('Level 当前关卡:' + level + '      Lives 剩余生命:' + playerLives + '      Enemies 剩余敌人:' + enemiesCount, mainCanvas.width/2, mainCanvas.height-40);
 
     // fade in level transition
     const fade = levelEndTimer.isSet() ? percent(levelEndTimer.get(), 3, 1) : percent(levelTimer.get(), .5, 2);
