@@ -3,7 +3,7 @@
 本仓库是在原作 Space Huggers 基础上添加与强化“作弊菜单”的学习型改造版本。仅供学习与试玩，不建议再分发。
 
 ## 快速开始
-- 打开项目目录，直接用浏览器打开 [index.html](./index.html) 即可游玩。
+- 打开项目目录，直接用浏览器打开 `index.html` 即可游玩。
 - 在游戏中按下 Tab 键呼出作弊菜单；再次按下 Tab 隐藏。
 
 ## 作弊菜单概览
@@ -35,7 +35,6 @@
 ## 与原作的关系
 - 原作调试菜单使用 ~ 键（本改造版默认使用 Tab 键开启作弊菜单，互不冲突）
 - 原项目地址：[SpaceHuggers](https://github.com/KilledByAPixel/SpaceHuggers)
-- 版权与许可详见仓库 [LICENSE](./LICENSE)
 
 ## 构建 13k Zip（可选）
 - 运行 `engine\build\setupBuild.bat` 安装依赖（需要 npm）
