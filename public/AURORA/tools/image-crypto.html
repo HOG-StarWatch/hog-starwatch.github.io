@@ -598,11 +598,12 @@
 
 </div>
 
+<script src="../js/app.js"></script>
 <script>
 // --- Worker Manager ---
 class CryptoWorker {
     constructor() {
-        this.worker = new Worker('../js/workers/crypto.worker.js');
+        this.worker = (window.app && app.getWorker) ? app.getWorker('../js/workers/crypto.worker.js') : new Worker('../js/workers/crypto.worker.js');
         this.callbacks = new Map();
         this.worker.onmessage = (e) => {
             const { id, success, error, progress, ...data } = e.data;

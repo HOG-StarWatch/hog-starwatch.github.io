@@ -90,7 +90,8 @@ body {
     background-attachment: fixed; /* Ensure gradient doesn't scroll if possible */
     background-size: cover;
     color: var(--text-main);
-    height: 100vh;
+    height: auto;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -109,7 +110,8 @@ header {
     border-bottom: 1px solid var(--border);
     background: var(--bg-header);
     backdrop-filter: var(--glass);
-    z-index: 10;
+    position: relative;
+    z-index: 1000;
 }
 
 .logo {
@@ -252,6 +254,20 @@ header {
     to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255,255,255,0.1);
+    border-top: 4px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
 /* 主内容区域 - 桌面应用布局 */
 main {
     flex: 1;
@@ -261,11 +277,11 @@ main {
 
 .tab-pane {
     width: 100%;
-    height: 100%;
+    height: auto;
     display: flex;
     flex-direction: column;
     padding: 1rem;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* 响应式布局容器 */
@@ -273,8 +289,10 @@ main {
     display: flex;
     flex-direction: row;
     gap: 1rem;
-    flex: 1;
-    min-height: 0;
+    flex: 1 1 auto;
+    min-height: auto;
+    height: auto;
+    overflow: visible;
     width: 100%;
     max-width: 1800px;
     margin: 0 auto;
@@ -288,7 +306,7 @@ main {
     }
     .tab-pane {
         padding: 1rem;
-        overflow-y: auto;
+        overflow: visible;
         display: block;
     }
     header {
@@ -326,6 +344,10 @@ main {
         text-transform: uppercase;
         border-bottom: 1px solid rgba(255,255,255,0.05);
     }
+    :root {
+        --shadow: 0 2px 8px rgba(0,0,0,0.2);
+        --glass: blur(8px);
+    }
 }
 
 /* 输入/输出面板 */
@@ -336,8 +358,8 @@ main {
     background: var(--bg-panel);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    overflow: hidden;
-    min-height: 0;
+    overflow: visible;
+    min-height: auto;
     backdrop-filter: blur(10px);
 }
 
@@ -357,6 +379,34 @@ main {
     border-bottom: 1px solid var(--border);
     background: rgba(255,255,255,0.03);
     flex-shrink: 0;
+}
+
+.color-input-wrapper {
+    display:flex;
+    align-items:center;
+    background:rgba(0,0,0,0.1);
+    padding:5px 10px;
+    border-radius:var(--radius-sm);
+    border:1px solid var(--border);
+    transition: border-color 0.3s;
+}
+.color-input-wrapper:focus-within {
+    border-color: var(--primary);
+}
+.color-input-wrapper input[type="color"] {
+    background:none;
+    border:none;
+    width:24px;
+    height:24px;
+    padding:0;
+    cursor:pointer;
+}
+.color-input-wrapper span {
+    font-size:0.8rem;
+    margin-left:10px;
+    font-family:var(--font-mono);
+    color:var(--text-main);
+    opacity: 0.8;
 }
 
 .panel-title {
@@ -418,8 +468,9 @@ textarea {
     flex: 1;
     width: 100%;
     line-height: 1.6;
-    resize: none;
-    min-height: 0;
+    resize: vertical;
+    min-height: 120px;
+    height: auto;
 }
 
 /* Range Input Styling */
@@ -484,8 +535,8 @@ select option {
 /* 内部滚动容器 */
 .scroll-content {
     flex: 1;
-    overflow-y: auto;
-    min-height: 0;
+    overflow: visible;
+    min-height: auto;
     padding: 1rem;
     display: flex;
     flex-direction: column;
@@ -498,7 +549,7 @@ select option {
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
-    overflow-y: auto;
+    overflow: visible;
     padding-right: 4px;
     flex-shrink: 0;
 }
@@ -821,15 +872,15 @@ del {
     display: grid;
     grid-template-columns: 350px 1fr;
     gap: 20px;
-    height: 100%;
-    overflow: hidden;
+    height: auto;
+    overflow: visible;
     padding: 1rem;
 }
 
 @media (max-width: 768px) {
     .layout-sidebar {
         grid-template-columns: 1fr;
-        overflow-y: auto;
+        overflow: visible;
     }
 }
 
@@ -927,7 +978,7 @@ del {
     display: flex;
     gap: 20px;
     flex: 1;
-    min-height: 0;
+    min-height: auto;
 }
 @media (max-width: 768px) {
     .layout-split {
@@ -940,8 +991,8 @@ del {
 .layout-vertical {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow: hidden;
+    height: auto;
+    overflow: visible;
 }
 
 /* Text Tool Stats Row */
@@ -989,8 +1040,8 @@ del {
 /* Output Box / Log View */
 .output-box {
     min-height: 100px;
-    max-height: 200px;
-    overflow-y: auto;
+    max-height: none;
+    overflow: visible;
     padding: 10px;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -1215,8 +1266,8 @@ del {
     border: 1px solid var(--border);
     border-radius: 8px;
     background: rgba(0,0,0,0.2);
-    max-height: 200px;
-    overflow-y: auto;
+    max-height: none;
+    overflow: visible;
     display: none;
 }
 .file-list-item {

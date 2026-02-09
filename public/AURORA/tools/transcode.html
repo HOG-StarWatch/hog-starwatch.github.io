@@ -112,7 +112,7 @@
                         }
                     } else if (this.mode === 'punycode') {
                         app.showToast('正在加载组件...', 'info');
-                        ResourceLoader.load('punycode').then(() => {
+                        ResourceLoader.loadDeps('punycode').then(() => {
                             try {
                                 if (action === 'encode') {
                                      res = punycode.toASCII(input);

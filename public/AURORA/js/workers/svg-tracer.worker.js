@@ -6,15 +6,16 @@
 // Polyfill window for ImageTracerJS
 self.window = self;
 
-// Load ImageTracerJS
-importScripts('https://unpkg.com/imagetracerjs@1.2.6/imagetracer_v1.2.6.js');
+importScripts('../loader.js');
+const ready = ResourceLoader.load('imagetracerjs');
 
-self.onmessage = function(e) {
+self.onmessage = async function(e) {
     const { id, imageData, options } = e.data;
 
     if (!id || !imageData) return;
 
     try {
+        await ready;
         // Ensure options has viewbox enabled if not set, for better responsiveness
         // But respect user's choice if passed.
         // options.viewbox = true; // This is usually handled in main thread options preparation

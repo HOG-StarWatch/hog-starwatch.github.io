@@ -12,6 +12,24 @@
             flex-direction: column;
             gap: 1.5rem;
         }
+        .tracer-shell {
+            display: grid;
+            grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+            gap: 1.5rem;
+            align-items: start;
+        }
+        .tracer-left {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-width: 0;
+        }
+        .tracer-right {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-width: 0;
+        }
 
         .settings-grid {
             display: grid;
@@ -62,7 +80,7 @@
             border-radius: var(--radius-md);
             padding: 0.8rem;
             display: flex;
-            align-items: center;
+            align-items: stretch;
             gap: 1rem;
             transition: background 0.2s;
         }
@@ -83,6 +101,9 @@
         .file-info {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
         }
 
         .filename {
@@ -105,6 +126,59 @@
         .file-actions {
             display: flex;
             gap: 0.5rem;
+            align-items: center;
+        }
+        .file-meta {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        .file-progress {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .file-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.2s ease;
+        }
+        .file-progress-bar.error {
+            background: var(--accent);
+        }
+        .file-progress-text {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-align: right;
+        }
+        .list-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .list-meta {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        .list-meta b {
+            color: var(--text-main);
+        }
+        @media (max-width: 980px) {
+            .tracer-shell {
+                grid-template-columns: 1fr;
+            }
+            .file-item {
+                flex-direction: column;
+            }
+            .file-actions {
+                justify-content: flex-end;
+            }
         }
 
         /* Modal specific overrides */
@@ -205,76 +279,83 @@
         </div>
 
         <div class="tracer-container">
-            <!-- Settings -->
-            <div class="panel" style="background: rgba(0,0,0,0.2);">
-                <div class="settings-grid">
-                    <div class="input-row">
-                        <label>色彩数量 (Colors)</label>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <input type="range" id="color-count" min="2" max="64" value="16" style="flex: 1;" oninput="document.getElementById('color-val').innerText = this.value">
-                            <span id="color-val" style="width: 30px; text-align: right; color: var(--primary);">16</span>
+            <div class="tracer-shell">
+                <div class="tracer-left">
+                    <div class="panel" style="background: rgba(0,0,0,0.2);">
+                        <div class="settings-grid">
+                            <div class="input-row">
+                                <label>色彩数量 (Colors)</label>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <input type="range" id="color-count" min="2" max="64" value="16" style="flex: 1;" oninput="document.getElementById('color-val').innerText = this.value">
+                                    <span id="color-val" style="width: 30px; text-align: right; color: var(--primary);">16</span>
+                                </div>
+                            </div>
+
+                            <div class="input-row">
+                                <label>限制最大宽度 (Resize)</label>
+                                <select id="max-width" style="width: 100%; background: var(--input-bg); border: 1px solid var(--border); padding: 0.5rem; color: var(--text-main); border-radius: var(--radius-sm);">
+                                    <option value="0">原始尺寸 (不缩放)</option>
+                                    <option value="640">640px</option>
+                                    <option value="1024" selected>1024px</option>
+                                    <option value="2048">2048px</option>
+                                </select>
+                            </div>
+
+                            <div class="input-row">
+                                <label>路径精度 (LTres)</label>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <input type="range" id="ltres" min="0" max="10" step="0.1" value="1" style="flex: 1;" oninput="document.getElementById('ltres-val').innerText = this.value">
+                                    <span id="ltres-val" style="width: 30px; text-align: right; color: var(--primary);">1</span>
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">值越小精度越高</div>
+                            </div>
+
+                            <div class="input-row">
+                                <label>曲线精度 (QTres)</label>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <input type="range" id="qtres" min="0" max="10" step="0.1" value="1" style="flex: 1;" oninput="document.getElementById('qtres-val').innerText = this.value">
+                                    <span id="qtres-val" style="width: 30px; text-align: right; color: var(--primary);">1</span>
+                                </div>
+                            </div>
+                            
+                            <div class="input-row">
+                                <label>模糊预处理</label>
+                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-top: 0.5rem;">
+                                    <input type="checkbox" id="blur-check" onchange="document.getElementById('blur-control').style.display = this.checked ? 'block' : 'none'">
+                                    启用高斯模糊
+                                </label>
+                                <div id="blur-control" style="display: none; margin-top: 0.5rem;">
+                                    <input type="range" id="blur-radius" min="1" max="20" value="5" style="width: 100%;">
+                                </div>
+                            </div>
+
+                            <div class="input-row" style="display: flex; align-items: flex-end;">
+                                 <button class="btn btn-primary" onclick="tracerTool.processAll()" style="width: 100%;">应用设置并重新转换</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="input-row">
-                        <label>限制最大宽度 (Resize)</label>
-                        <select id="max-width" style="width: 100%; background: var(--input-bg); border: 1px solid var(--border); padding: 0.5rem; color: var(--text-main); border-radius: var(--radius-sm);">
-                            <option value="0">原始尺寸 (不缩放)</option>
-                            <option value="640">640px</option>
-                            <option value="1024" selected>1024px</option>
-                            <option value="2048">2048px</option>
-                        </select>
-                    </div>
-
-                    <div class="input-row">
-                        <label>路径精度 (LTres)</label>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <input type="range" id="ltres" min="0" max="10" step="0.1" value="1" style="flex: 1;" oninput="document.getElementById('ltres-val').innerText = this.value">
-                            <span id="ltres-val" style="width: 30px; text-align: right; color: var(--primary);">1</span>
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">值越小精度越高</div>
-                    </div>
-
-                    <div class="input-row">
-                        <label>曲线精度 (QTres)</label>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <input type="range" id="qtres" min="0" max="10" step="0.1" value="1" style="flex: 1;" oninput="document.getElementById('qtres-val').innerText = this.value">
-                            <span id="qtres-val" style="width: 30px; text-align: right; color: var(--primary);">1</span>
-                        </div>
-                    </div>
-                    
-                    <div class="input-row">
-                        <label>模糊预处理</label>
-                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-top: 0.5rem;">
-                            <input type="checkbox" id="blur-check" onchange="document.getElementById('blur-control').style.display = this.checked ? 'block' : 'none'">
-                            启用高斯模糊
-                        </label>
-                        <div id="blur-control" style="display: none; margin-top: 0.5rem;">
-                            <input type="range" id="blur-radius" min="1" max="20" value="5" style="width: 100%;">
-                        </div>
-                    </div>
-
-                    <div class="input-row" style="display: flex; align-items: flex-end;">
-                         <button class="btn btn-primary" onclick="tracerTool.processAll()" style="width: 100%;">应用设置并重新转换</button>
+                    <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                        <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary);">🎨</div>
+                        <div style="font-size: 1.1rem; font-weight: 500;">点击或拖拽图片到此处</div>
+                        <div style="font-size: 0.9rem; color: var(--text-dim); margin-top: 0.5rem;">支持 JPG, PNG (推荐透明背景)</div>
+                        <input type="file" id="file-input" accept="image/*" multiple style="display: none;">
                     </div>
                 </div>
-            </div>
 
-            <!-- Upload -->
-            <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
-                <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary);">🎨</div>
-                <div style="font-size: 1.1rem; font-weight: 500;">点击或拖拽图片到此处</div>
-                <div style="font-size: 0.9rem; color: var(--text-dim); margin-top: 0.5rem;">支持 JPG, PNG (推荐透明背景)</div>
-                <input type="file" id="file-input" accept="image/*" multiple style="display: none;">
-            </div>
-
-            <!-- List -->
-            <div class="panel-title" style="margin-top: 1rem; display: flex; justify-content: space-between;">
-                <span>文件列表 (<span id="file-count">0</span>)</span>
-                <button class="btn btn-sm" onclick="tracerTool.clearAll()" style="color: var(--accent);">清空列表</button>
-            </div>
-            <div id="file-list" class="file-list">
-                <!-- Items -->
+                <div class="tracer-right">
+                    <div class="panel-title list-header" style="margin-top: 0;">
+                        <span>文件列表 (<span id="file-count">0</span>)</span>
+                        <div class="list-meta">
+                            <span>处理中 <b id="file-processing">0</b></span>
+                            <span>完成 <b id="file-done">0</b></span>
+                            <span>失败 <b id="file-error">0</b></span>
+                        </div>
+                        <button class="btn btn-sm" onclick="tracerTool.clearAll()" style="color: var(--accent);">清空列表</button>
+                    </div>
+                    <div id="file-list" class="file-list">
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -300,6 +381,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="../js/app.js"></script>
     <script src="../js/loader.js"></script>
     <script>
         const tracerTool = {
@@ -308,11 +390,11 @@
 
             init: function() {
                 // Initialize Worker
-                this.worker = new Worker('../js/workers/svg-tracer.worker.js');
+                this.worker = (window.app && app.getWorker) ? app.getWorker('../js/workers/svg-tracer.worker.js') : new Worker('../js/workers/svg-tracer.worker.js');
                 this.worker.onmessage = this.handleWorkerMessage.bind(this);
 
                 // Load libraries
-                ResourceLoader.load(['jszip', 'file-saver'])
+                ResourceLoader.loadDeps('@file-export')
                     .then(() => {
                         console.log('Libraries loaded');
                     });
@@ -362,7 +444,9 @@
                             status: 'pending', // pending, processing, done, error
                             svgContent: null,
                             thumbnail: e.target.result,
-                            originalSize: file.size
+                            originalSize: file.size,
+                            progress: 5,
+                            statusText: '等待中'
                         };
                         this.files.push(fileItem);
                         this.renderList();
@@ -399,6 +483,8 @@
             processFile: function(fileItem) {
                 if (fileItem.status === 'processing') return;
                 fileItem.status = 'processing';
+                fileItem.progress = 12;
+                fileItem.statusText = '准备中';
                 this.renderList();
 
                 const maxWidth = parseInt(document.getElementById('max-width').value);
@@ -408,6 +494,9 @@
                 const img = new Image();
                 img.src = fileItem.thumbnail;
                 img.onload = () => {
+                    fileItem.progress = 35;
+                    fileItem.statusText = '读取图像';
+                    this.renderList();
                     let width = img.width;
                     let height = img.height;
                     
@@ -426,6 +515,9 @@
                     const imageData = ctx.getImageData(0, 0, width, height);
 
                     // Send to worker
+                    fileItem.progress = 60;
+                    fileItem.statusText = '矢量化中';
+                    this.renderList();
                     this.worker.postMessage({
                         id: fileItem.id,
                         imageData: imageData,
@@ -442,8 +534,12 @@
                 if (status === 'success') {
                     fileItem.status = 'done';
                     fileItem.svgContent = svgContent;
+                    fileItem.progress = 100;
+                    fileItem.statusText = '完成';
                 } else {
                     fileItem.status = 'error';
+                    fileItem.progress = 100;
+                    fileItem.statusText = '失败';
                     console.error('Worker error:', error);
                 }
                 
@@ -454,35 +550,94 @@
                 const listEl = document.getElementById('file-list');
                 const countEl = document.getElementById('file-count');
                 const dlBtn = document.getElementById('btn-download-all');
+                const processingEl = document.getElementById('file-processing');
+                const doneEl = document.getElementById('file-done');
+                const errorEl = document.getElementById('file-error');
                 
                 listEl.innerHTML = '';
                 countEl.textContent = this.files.length;
                 
+                const processingCount = this.files.filter(f => f.status === 'processing').length;
+                const doneCount = this.files.filter(f => f.status === 'done').length;
+                const errorCount = this.files.filter(f => f.status === 'error').length;
+                if (processingEl) processingEl.textContent = processingCount;
+                if (doneEl) doneEl.textContent = doneCount;
+                if (errorEl) errorEl.textContent = errorCount;
+
                 const hasDone = this.files.some(f => f.status === 'done');
                 dlBtn.disabled = !hasDone;
 
                 this.files.forEach(f => {
                     const el = document.createElement('div');
                     el.className = 'file-item';
-                    
-                    let statusHtml = '';
-                    if (f.status === 'pending') statusHtml = '<span class="file-status">等待中</span>';
-                    else if (f.status === 'processing') statusHtml = '<span class="file-status processing">处理中...</span>';
-                    else if (f.status === 'done') statusHtml = '<span class="file-status done">完成</span>';
-                    else statusHtml = '<span class="file-status error">失败</span>';
+                    const thumb = document.createElement('img');
+                    thumb.src = f.thumbnail;
+                    thumb.className = 'thumb';
 
-                    el.innerHTML = `
-                        <img src="${f.thumbnail}" class="thumb">
-                        <div class="file-info">
-                            <div class="filename">${f.file.name}</div>
-                            ${statusHtml}
-                        </div>
-                        <div class="file-actions">
-                            <button class="btn" style="padding: 0.3rem 0.6rem;" onclick="tracerTool.preview('${f.id}')" ${f.status !== 'done' ? 'disabled' : ''}>预览</button>
-                            <button class="btn" style="padding: 0.3rem 0.6rem;" onclick="tracerTool.download('${f.id}')" ${f.status !== 'done' ? 'disabled' : ''}>⬇</button>
-                            <button class="btn" style="padding: 0.3rem 0.6rem; color: var(--accent);" onclick="tracerTool.remove('${f.id}')">×</button>
-                        </div>
-                    `;
+                    const info = document.createElement('div');
+                    info.className = 'file-info';
+                    const name = document.createElement('div');
+                    name.className = 'filename';
+                    name.textContent = f.file.name;
+                    const status = document.createElement('span');
+                    status.className = 'file-status';
+                    if (f.status === 'processing') status.classList.add('processing');
+                    if (f.status === 'done') status.classList.add('done');
+                    if (f.status !== 'pending' && f.status !== 'processing' && f.status !== 'done') status.classList.add('error');
+                    status.textContent = f.statusText || (f.status === 'pending' ? '等待中' : (f.status === 'processing' ? '处理中...' : (f.status === 'done' ? '完成' : '失败')));
+                    const meta = document.createElement('div');
+                    meta.className = 'file-meta';
+                    const sizeKb = (f.originalSize / 1024).toFixed(1);
+                    let metaText = `原始 ${sizeKb} KB`;
+                    if (f.status === 'done' && f.svgContent) {
+                        const outKb = (new Blob([f.svgContent]).size / 1024).toFixed(1);
+                        metaText = `原始 ${sizeKb} KB · 输出 ${outKb} KB`;
+                    }
+                    meta.textContent = metaText;
+                    const progressWrap = document.createElement('div');
+                    progressWrap.className = 'file-progress';
+                    const progressBar = document.createElement('div');
+                    progressBar.className = 'file-progress-bar';
+                    if (f.status === 'error') progressBar.classList.add('error');
+                    const progressVal = Math.max(0, Math.min(100, f.progress || 0));
+                    progressBar.style.width = `${progressVal}%`;
+                    progressWrap.appendChild(progressBar);
+                    const progressText = document.createElement('div');
+                    progressText.className = 'file-progress-text';
+                    progressText.textContent = f.status === 'error' ? '失败' : `${progressVal}%`;
+                    info.appendChild(name);
+                    info.appendChild(status);
+                    info.appendChild(meta);
+                    info.appendChild(progressWrap);
+                    info.appendChild(progressText);
+
+                    const actions = document.createElement('div');
+                    actions.className = 'file-actions';
+                    const btnPreview = document.createElement('button');
+                    btnPreview.className = 'btn';
+                    btnPreview.style.padding = '0.3rem 0.6rem';
+                    btnPreview.textContent = '预览';
+                    btnPreview.disabled = f.status !== 'done';
+                    btnPreview.addEventListener('click', () => this.preview(f.id));
+                    const btnDownload = document.createElement('button');
+                    btnDownload.className = 'btn';
+                    btnDownload.style.padding = '0.3rem 0.6rem';
+                    btnDownload.textContent = '⬇';
+                    btnDownload.disabled = f.status !== 'done';
+                    btnDownload.addEventListener('click', () => this.download(f.id));
+                    const btnRemove = document.createElement('button');
+                    btnRemove.className = 'btn';
+                    btnRemove.style.padding = '0.3rem 0.6rem';
+                    btnRemove.style.color = 'var(--accent)';
+                    btnRemove.textContent = '×';
+                    btnRemove.addEventListener('click', () => this.remove(f.id));
+                    actions.appendChild(btnPreview);
+                    actions.appendChild(btnDownload);
+                    actions.appendChild(btnRemove);
+
+                    el.appendChild(thumb);
+                    el.appendChild(info);
+                    el.appendChild(actions);
                     listEl.appendChild(el);
                 });
             },
@@ -491,8 +646,14 @@
                 const f = this.files.find(f => f.id === id);
                 if (!f || !f.svgContent) return;
 
-                document.getElementById('preview-original').innerHTML = `<img src="${f.thumbnail}">`;
-                document.getElementById('preview-svg').innerHTML = f.svgContent;
+                const previewOriginal = document.getElementById('preview-original');
+                previewOriginal.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = f.thumbnail;
+                previewOriginal.appendChild(img);
+                const previewSvg = document.getElementById('preview-svg');
+                const safeSvg = (window.app && app.sanitizeSvg) ? app.sanitizeSvg(f.svgContent) : f.svgContent;
+                previewSvg.innerHTML = safeSvg;
                 
                 const sizeKB = (new Blob([f.svgContent]).size / 1024).toFixed(2);
                 document.getElementById('svg-size').textContent = sizeKB;

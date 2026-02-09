@@ -151,7 +151,7 @@
                     <!-- Content Input -->
                     <div class="input-group" style="margin-bottom: 1.5rem;">
                         <label style="display:block; margin-bottom: 0.5rem; color: var(--text-dim);">二维码内容</label>
-                        <textarea id="qr-text" placeholder="输入网址、文本或任何内容..." style="width: 100%; height: 80px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.8rem; resize: vertical;">https://www.example.com</textarea>
+                        <textarea id="qr-text" placeholder="输入网址、文本或任何内容..." style="width: 100%; min-height: 80px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.8rem;">https://www.example.com</textarea>
                     </div>
 
                     <!-- Options -->
@@ -287,7 +287,7 @@
 
             if (typeof QRCode === 'undefined') {
                 app.showToast('正在加载组件...', 'info');
-                ResourceLoader.load('easyqrcodejs').then(() => {
+                ResourceLoader.loadDeps('easyqrcodejs').then(() => {
                     generateQR(); // Retry after load
                 });
                 return;

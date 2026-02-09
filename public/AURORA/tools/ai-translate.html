@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能翻译</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        html, body {
+            height: auto;
+            min-height: 100%;
+        }
+        body {
+            overflow-y: scroll;
+        }
+        .translate-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow: visible;
+            min-height: calc(100vh - 2rem);
+            height: auto;
+            flex: 0 0 auto;
+        }
+        .translate-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            padding: 1rem;
+            align-items: start;
+        }
+        .translate-top {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 16px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+        .input-group label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.2;
+        }
+        .input-group select,
+        .input-group textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            font-size: 0.95rem;
+        }
+        .translate-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 0 1rem 1rem;
+        }
+        .translate-container textarea {
+            box-sizing: border-box;
+            width: 100%;
+        }
+        #translate-output {
+            min-height: 220px;
+            margin: 0 1rem 1rem;
+            width: calc(100% - 2rem);
+        }
+        .ms-translate-wrap {
+            position: relative;
+            height: 960px;
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-deep);
+        }
+        #ms-translate-frame {
+            width: 100%;
+            height: 2000px;
+            border: 0;
+            transform: translateY(-140px);
+            transform-origin: top left;
+        }
+        .ms-translate-wrap.dark #ms-translate-frame {
+            filter: invert(1) hue-rotate(180deg) contrast(0.9) brightness(0.9);
+        }
+        .ms-translate-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.35);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            z-index: 2;
+        }
+        .stats-row {
+            padding: 0 1rem 1rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+        .api-note {
+            padding: 0 1rem 1rem;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        @media (max-width: 980px) {
+            .translate-top {
+                grid-template-columns: 1fr;
+            }
+            .ms-translate-wrap {
+                height: 760px;
+            }
+            #ms-translate-frame {
+                height: 1600px;
+            }
+        }
+    </style>
+</head>
+<body style="padding: 1rem;">
+    <div class="workspace translate-container">
+        <div class="translate-top">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">智能翻译</div>
+                    <div class="panel-actions">
+                        <button class="btn btn-icon" onclick="translateTool.clear()">清空</button>
+                    </div>
+                </div>
+                <textarea id="translate-input" placeholder="输入需要翻译的文本..." style="min-height: 220px;"></textarea>
+                <div class="stats-row">字符: <b id="translate-count">0</b></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">翻译设置</div>
+                </div>
+                <div class="translate-grid">
+                    <div class="input-group">
+                        <label for="translate-from">源语言</label>
+                        <select id="translate-from">
+                            <option value="auto">自动检测</option>
+                            <option value="zh-CN">中文</option>
+                            <option value="en">English</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="es">Español</option>
+                            <option value="ru">Русский</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="translate-to">目标语言</label>
+                        <select id="translate-to">
+                            <option value="zh-CN">中文</option>
+                            <option value="en">English</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="es">Español</option>
+                            <option value="ru">Русский</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>快捷操作</label>
+                        <button class="btn" onclick="translateTool.swap()">交换语言</button>
+                    </div>
+                </div>
+                <div class="translate-actions">
+                    <button class="btn btn-primary" onclick="translateTool.translate()">开始翻译</button>
+                    <button class="btn btn-secondary" onclick="app.copy('translate-output')">复制结果</button>
+                    <button class="btn btn-secondary" onclick="translateTool.openMicrosoftTranslator()">微软翻译</button>
+                </div>
+                <div class="api-note">翻译接口：MyMemory (api.mymemory.translated.net)；网页同步：Bing Translator</div>
+                <textarea id="translate-output" placeholder="翻译结果将在这里显示..." readonly></textarea>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">微软翻译</div>
+                <div class="panel-actions">
+                    <button class="btn btn-icon" onclick="translateTool.openMicrosoftTranslator()">同步</button>
+                    <button class="btn btn-icon" onclick="translateTool.openMicrosoftTranslator(true)">打开网页</button>
+                </div>
+            </div>
+            <div style="padding: 0 1rem 1rem;">
+                <div class="ms-translate-wrap">
+                    <div class="ms-translate-loading" id="ms-translate-loading">
+                        <div class="spinner"></div>
+                        <div>微软翻译加载中...</div>
+                    </div>
+                    <iframe id="ms-translate-frame" loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        const applyFrameThemeFilter = () => {
+            const wrap = document.querySelector('.ms-translate-wrap');
+            if (!wrap) return;
+            const styles = getComputedStyle(document.documentElement);
+            const bg = styles.getPropertyValue('--bg-deep').trim();
+            const parsed = parseColor(bg) || parseColor(getComputedStyle(document.body).backgroundColor);
+            const dark = parsed ? getLuminance(parsed) < 0.5 : false;
+            wrap.classList.toggle('dark', dark);
+        };
+        const parseColor = (value) => {
+            if (!value) return null;
+            const v = value.trim();
+            if (v.startsWith('#')) {
+                const hex = v.slice(1);
+                if (hex.length === 3) {
+                    const r = parseInt(hex[0] + hex[0], 16);
+                    const g = parseInt(hex[1] + hex[1], 16);
+                    const b = parseInt(hex[2] + hex[2], 16);
+                    return { r, g, b };
+                }
+                if (hex.length >= 6) {
+                    const r = parseInt(hex.slice(0, 2), 16);
+                    const g = parseInt(hex.slice(2, 4), 16);
+                    const b = parseInt(hex.slice(4, 6), 16);
+                    return { r, g, b };
+                }
+                return null;
+            }
+            if (v.startsWith('rgb')) {
+                const nums = v.replace(/rgba?\(|\)/g, '').split(',').map(n => Number(n.trim()));
+                if (nums.length >= 3 && nums.every(n => !Number.isNaN(n))) {
+                    return { r: nums[0], g: nums[1], b: nums[2] };
+                }
+            }
+            return null;
+        };
+        const getLuminance = ({ r, g, b }) => {
+            const srgb = [r, g, b].map(v => {
+                const c = v / 255;
+                return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+        };
+        const watchThemeChanges = () => {
+            applyFrameThemeFilter();
+            const obs = new MutationObserver(() => applyFrameThemeFilter());
+            obs.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
+        };
+        const adjustFrameHeight = () => {
+            const wrap = document.querySelector('.ms-translate-wrap');
+            if (!wrap) return;
+            const baseWrap = Math.max(700, Math.floor(window.innerHeight - 220));
+            wrap.style.height = baseWrap + 'px';
+            const frame = document.getElementById('ms-translate-frame');
+            if (!frame) return;
+            const text = document.getElementById('translate-input');
+            const len = text ? (text.value || '').length : 0;
+            const baseFrame = window.innerWidth < 980 ? 1600 : 2000;
+            const extra = Math.min(9000, Math.ceil(len / 180) * 360);
+            frame.style.height = (baseFrame + extra) + 'px';
+        };
+        const translateTool = {
+            init: function() {
+                document.getElementById('translate-input').addEventListener('input', this.updateCount);
+                const frame = document.getElementById('ms-translate-frame');
+                if (frame) {
+                    frame.addEventListener('load', () => this.setMicrosoftLoading(false));
+                }
+                this.updateCount();
+                this.openMicrosoftTranslator();
+                watchThemeChanges();
+                adjustFrameHeight();
+                window.addEventListener('resize', adjustFrameHeight);
+            },
+            updateCount: function() {
+                const val = document.getElementById('translate-input').value || '';
+                document.getElementById('translate-count').innerText = val.length;
+                adjustFrameHeight();
+            },
+            swap: function() {
+                const from = document.getElementById('translate-from');
+                const to = document.getElementById('translate-to');
+                if (from.value === 'auto') return;
+                const temp = from.value;
+                from.value = to.value;
+                to.value = temp;
+            },
+            translate: async function() {
+                const text = (document.getElementById('translate-input').value || '').trim();
+                if (!text) {
+                    app.showToast('请输入文本', 'error');
+                    return;
+                }
+                const from = document.getElementById('translate-from').value;
+                const to = document.getElementById('translate-to').value;
+                if (from === to) {
+                    document.getElementById('translate-output').value = text;
+                    return;
+                }
+                const langpair = `${from}|${to}`;
+                try {
+                    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(langpair)}`;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('请求失败');
+                    const data = await res.json();
+                    const translated = data && data.responseData && data.responseData.translatedText;
+                    if (!translated) throw new Error('未获取到翻译结果');
+                    document.getElementById('translate-output').value = translated;
+                    this.openMicrosoftTranslator();
+                } catch (e) {
+                    app.showToast('翻译失败', 'error');
+                }
+            },
+            normalizeForMicrosoft: function(lang) {
+                if (lang === 'auto') return 'auto';
+                const map = { 'zh-CN': 'zh-Hans', 'en': 'en', 'ja': 'ja', 'ko': 'ko', 'fr': 'fr', 'de': 'de', 'es': 'es', 'ru': 'ru' };
+                return map[lang] || lang;
+            },
+            openMicrosoftTranslator: function(openNewTab) {
+                const text = (document.getElementById('translate-input').value || '').trim();
+                const from = this.normalizeForMicrosoft(document.getElementById('translate-from').value);
+                const to = this.normalizeForMicrosoft(document.getElementById('translate-to').value);
+                const url = `https://www.bing.com/translator?text=${encodeURIComponent(text)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+                const frame = document.getElementById('ms-translate-frame');
+                if (frame) {
+                    this.setMicrosoftLoading(true);
+                    frame.src = url;
+                }
+                adjustFrameHeight();
+                if (openNewTab) {
+                    window.open(url, '_blank', 'noopener');
+                }
+            },
+            setMicrosoftLoading: function(loading) {
+                const overlay = document.getElementById('ms-translate-loading');
+                if (!overlay) return;
+                overlay.style.display = loading ? 'flex' : 'none';
+            },
+            clear: function() {
+                document.getElementById('translate-input').value = '';
+                document.getElementById('translate-output').value = '';
+                this.updateCount();
+            }
+        };
+        translateTool.init();
+    </script>
+</body>
+</html>

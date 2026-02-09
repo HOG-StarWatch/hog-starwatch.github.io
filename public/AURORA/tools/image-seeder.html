@@ -469,7 +469,7 @@
                     
                     // Use ResourceLoader instead of assuming global JSZip
                     if(window.app && app.showToast) app.showToast('正在加载组件...', 'info');
-                    await ResourceLoader.load('jszip');
+                    await ResourceLoader.loadDeps('jszip');
                     
                     const zip = new JSZip();
                     hiddenFiles.forEach(f => zip.file(f.name, f));

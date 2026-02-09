@@ -80,6 +80,7 @@
             margin-bottom: 8px;
             color: var(--text-main);
             display: -webkit-box;
+            line-clamp: 2;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -99,6 +100,7 @@
             color: var(--text-dim);
             margin-bottom: 15px;
             display: -webkit-box;
+            line-clamp: 3;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -164,27 +166,10 @@
         
         // 代理列表（按顺序尝试）
         const PROXIES = [
-            {
-                name: "Direct Connection (No Proxy)",
-                url: (target) => target
-            },
-            { 
-                name: "AllOrigins", 
-                url: (target) => `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`,
-                isWrapper: true // 需要解包 contents
-            },
-            {
-                name: "CodeTabs",
-                url: (target) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`
-            },
-            {
-                name: "ThingProxy",
-                url: (target) => `https://thingproxy.freeboard.io/fetch/${target}`
-            },
-            {
-                name: "CorsAnywhere (Heroku)",
-                url: (target) => `https://cors-anywhere.herokuapp.com/${target}`
-            }
+            { name: "Direct", url: (t) => t },
+            { name: "AllOriginsRaw", url: (t) => `https://api.allorigins.win/raw?url=${encodeURIComponent(t)}` },
+            { name: "AllOrigins", url: (t) => `https://api.allorigins.win/get?url=${encodeURIComponent(t)}`, isWrapper: true },
+            { name: "ThingProxy", url: (t) => `https://thingproxy.freeboard.io/fetch/${t}` }
         ];
 
         // 启动时直接获取
@@ -204,71 +189,84 @@
             container.innerHTML = ''; // 清空列表，杜绝“看起来像缓存”的错觉
             btn.disabled = true;
             
-            // 彻底禁用缓存：不读 localStorage，只写
             let success = false;
-
-            // 顺序尝试代理
-            for (const proxy of PROXIES) {
-                if (success) break;
-                
-                try {
-                    msg.textContent = `尝试连接节点: ${proxy.name}...`;
-                    status.textContent = `正在连接 ${proxy.name}`;
-                    console.log(`[Epic] Trying proxy: ${proxy.name}`);
-
-                    // 添加时间戳防止浏览器/CDN缓存
-                    const timestamp = Date.now();
-                    const targetUrlWithTs = `${EPIC_API}&_t=${timestamp}`;
-                    const finalUrl = proxy.url(targetUrlWithTs);
-
-                    const response = await fetch(finalUrl, {
-                        method: 'GET',
-                        cache: 'no-store', // 强制网络
-                        headers: {
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                    const text = await response.text();
-                    
-                    // 简单的 HTML 错误页检查
-                    if (text.trim().startsWith('<')) throw new Error('Proxy returned HTML error page');
-
-                    let data;
+            const timestamp = Date.now();
+            const targetUrlWithTs = `${EPIC_API}&_t=${timestamp}`;
+            const tasks = PROXIES.map(p => {
+                const finalUrl = p.url(targetUrlWithTs);
+                return fetchWithTimeout(finalUrl, 12000).then(async res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const text = await res.text();
+                    if (text.trim().startsWith('<')) throw new Error('HTML error');
                     const json = JSON.parse(text);
-
-                    // AllOrigins 特殊处理
-                    if (proxy.isWrapper) {
-                        data = JSON.parse(json.contents);
-                    } else {
-                        data = json;
-                    }
-
-                    // 验证数据结构
-                    if (!data?.data?.Catalog) throw new Error('Invalid Epic data structure');
-
-                    // 成功！
-                    success = true;
-                    status.textContent = `✅ 已更新 (源: ${proxy.name})`;
-                    renderGames(data.data.Catalog.searchStore.elements);
-                    
-                } catch (err) {
-                    console.warn(`[Epic] Proxy ${proxy.name} failed:`, err);
-                }
+                    const data = p.isWrapper ? JSON.parse(json.contents) : json;
+                    if (!data?.data?.Catalog) throw new Error('Invalid data');
+                    return { data, name: p.name };
+                });
+            });
+            try {
+                msg.textContent = `尝试并行连接...`;
+                status.textContent = `正在并行连接`;
+                const first = await Promise.any(tasks);
+                success = true;
+                status.textContent = `✅ 已更新 (源: ${first.name})`;
+                renderGames(first.data.data.Catalog.searchStore.elements);
+                writeCache(first.data);
+            } catch (err) {
+                console.warn(`[Epic] 所有并行代理失败`, err);
             }
 
             if (!success) {
-                msg.innerHTML = `<span style="color: #ff4d4f">所有线路连接失败</span><br>
-                    <span style="font-size:0.8rem;color:#999">直连失败通常是因为 CORS 跨域限制，<br>请尝试安装浏览器 CORS 插件或检查网络。</span>
-                    <br><button class="btn btn-secondary" onclick="startFetch()" style="margin-top:10px">重试</button>`;
-                status.textContent = "❌ 更新失败";
+                const cached = readCache();
+                if (cached?.data?.data?.Catalog) {
+                    renderGames(cached.data.data.Catalog.searchStore.elements);
+                    status.textContent = `⚠️ 使用缓存 (${formatTime(cached.ts)})`;
+                    msg.innerHTML = `<span style="color: #ffb300">实时请求失败，已回退到缓存</span><br>
+                        <span style="font-size:0.8rem;color:#999">你可以稍后重试获取最新信息。</span>
+                        <br><button class="btn btn-secondary" onclick="startFetch()" style="margin-top:10px">重试</button>`;
+                    loading.style.display = 'none';
+                } else {
+                    msg.innerHTML = `<span style="color: #ff4d4f">所有线路连接失败</span><br>
+                        <span style="font-size:0.8rem;color:#999">直连失败通常是因为 CORS 跨域限制，<br>请尝试安装浏览器 CORS 插件或检查网络。</span>
+                        <br><button class="btn btn-secondary" onclick="startFetch()" style="margin-top:10px">重试</button>`;
+                    status.textContent = "❌ 更新失败";
+                }
             } else {
                 loading.style.display = 'none';
             }
             
             btn.disabled = false;
+        }
+
+        function fetchWithTimeout(url, ms) {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), ms);
+            return fetch(url, { method: 'GET', cache: 'no-store', signal: ctrl.signal })
+                .finally(() => clearTimeout(t));
+        }
+
+        function writeCache(data) {
+            try {
+                localStorage.setItem('EPIC_CACHE_V1', JSON.stringify({ ts: Date.now(), data }));
+            } catch (e) {}
+        }
+
+        function readCache() {
+            try {
+                const raw = localStorage.getItem('EPIC_CACHE_V1');
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function formatTime(ts) {
+            try {
+                return new Date(ts).toLocaleString();
+            } catch (e) {
+                return '未知时间';
+            }
         }
 
         function renderGames(elements) {

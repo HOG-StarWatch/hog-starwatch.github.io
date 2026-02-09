@@ -140,13 +140,6 @@
         <div class="sub-tab-group">
             <div class="sub-tab active" onclick="fileEncTool.switchSubTab('b64enc', this)">文件转 Base64/JSON</div>
             <div class="sub-tab" onclick="fileEncTool.switchSubTab('b64dec', this)">Base64 还原下载</div>
-            <div class="sub-tab" onclick="fileEncTool.switchSubTab('seeder', this)">图种生成</div>
-            <div class="sub-tab" onclick="fileEncTool.switchSubTab('qrcode', this)">文件转二维码</div>
-        </div>
-
-        <!-- External Tool Container (Iframe) -->
-        <div id="external-tool-container" style="display:none; flex:1; width:100%; height:100%; overflow:hidden; border-radius: var(--radius-lg); background: var(--bg-panel); border: 1px solid var(--border);">
-            <iframe id="tool-frame" style="width:100%; height:100%; border:none; background: transparent;"></iframe>
         </div>
 
         <div class="workspace" id="inline-workspace">
@@ -231,7 +224,7 @@
                             <input type="file" id="file-restore-input" accept=".json,.txt" style="display:none;" onchange="fileEncTool.loadJsonFile(this)">
                         </div>
                         
-                         <textarea id="b64-in" placeholder="在此粘贴 Base64 字符串 或 之前生成的 JSON..." style="height:150px; flex:none; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); padding:1rem;"></textarea>
+                         <textarea id="b64-in" placeholder="在此粘贴 Base64 字符串 或 之前生成的 JSON..." style="min-height:150px; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); padding:1rem;"></textarea>
                          
                          <!-- Manual Base64 Restore Options -->
                          <div id="manual-b64-opts" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; border-top:1px solid var(--border); padding-top:1rem;">
@@ -265,7 +258,7 @@
     <script src="../js/loader.js"></script>
     <script>
         // Initialize dependencies
-        ResourceLoader.load('file-saver').catch(e => console.error("Failed to load FileSaver", e));
+        ResourceLoader.loadDeps('file-saver').catch(e => console.error("Failed to load FileSaver", e));
 
         const fileEncTool = {
             b64Files: [], // Array of File objects
@@ -274,7 +267,7 @@
             
             initWorker: function() {
                 if(this.worker) return;
-                this.worker = new Worker('../js/workers/file-enc.worker.js');
+                this.worker = (window.app && app.getWorker) ? app.getWorker('../js/workers/file-enc.worker.js') : new Worker('../js/workers/file-enc.worker.js');
                 this.worker.onmessage = (e) => {
                     const { id, status, result, error, type, msg, data } = e.data;
                     
@@ -323,26 +316,14 @@
                 el.classList.add('active');
                 
                 const inlineWs = document.getElementById('inline-workspace');
-                const extWs = document.getElementById('external-tool-container');
-                const frame = document.getElementById('tool-frame');
+                inlineWs.style.display = 'flex';
 
-                if (id === 'seeder' || id === 'qrcode') {
-                    inlineWs.style.display = 'none';
-                    extWs.style.display = 'block';
-                    
-                    if (id === 'seeder') frame.src = 'image-seeder.html';
-                    if (id === 'qrcode') frame.src = 'file-qrcode.html';
-                } else {
-                    inlineWs.style.display = 'flex';
-                    extWs.style.display = 'none';
-
-                    document.getElementById('file-b64enc-view').style.display = 'none';
-                    document.getElementById('file-b64dec-view').style.display = 'none';
-                    
-                    const view = document.getElementById(`file-${id}-view`);
-                    if (view) {
-                        view.style.display = 'flex';
-                    }
+                document.getElementById('file-b64enc-view').style.display = 'none';
+                document.getElementById('file-b64dec-view').style.display = 'none';
+                
+                const view = document.getElementById(`file-${id}-view`);
+                if (view) {
+                    view.style.display = 'flex';
                 }
             },
             
@@ -434,15 +415,15 @@
                 
                 if(status === 'loading') {
                     badge.classList.add('loading');
-                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: Loading...`;
+                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: 加载中...`;
                 } else if (status === 'ready') {
                     badge.classList.add('ready');
-                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: Ready`;
+                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: 就绪`;
                 } else if (status === 'error') {
                     badge.classList.add('error');
-                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: Error`;
+                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: 错误`;
                 } else {
-                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: Idle`;
+                    badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: 空闲`;
                 }
             },
 

@@ -199,7 +199,7 @@
         let isWorkerBusy = false;
         
         if (window.Worker) {
-            asciiWorker = new Worker('../js/workers/ascii.worker.js');
+            asciiWorker = (window.app && app.getWorker) ? app.getWorker('../js/workers/ascii.worker.js') : new Worker('../js/workers/ascii.worker.js');
             asciiWorker.onmessage = (e) => {
                 const { type, html, text, error } = e.data;
                 isWorkerBusy = false;

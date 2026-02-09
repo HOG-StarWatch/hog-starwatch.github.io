@@ -214,7 +214,7 @@
                 else libs.push('lz-string'); // custom and zerowidth both use compression
 
                 app.showToast('正在加载组件...', 'info');
-                ResourceLoader.load(libs).then(() => {
+                ResourceLoader.loadDeps(libs).then(() => {
                     let res = '';
                     
                     try {

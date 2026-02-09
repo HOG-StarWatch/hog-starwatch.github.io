@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音合成 (TTS)</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .tts-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .tts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px;
+            padding: 1rem;
+            align-items: start;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+        .input-group label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.2;
+        }
+        .input-group input[type="text"],
+        .input-group select,
+        .input-group textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            font-size: 0.95rem;
+        }
+        .input-group input[type="range"] {
+            width: 100%;
+        }
+        .voice-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 8px;
+        }
+        .voice-row input,
+        .voice-row select {
+            min-height: 42px;
+        }
+        .custom-engine {
+            grid-column: 1 / -1;
+            display: none;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        .tts-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 1rem;
+        }
+        .audio-preview {
+            padding: 0 1rem 1rem;
+            display: none;
+        }
+        .audio-preview audio {
+            width: 100%;
+        }
+        .engine-note {
+            padding: 0 1rem 1rem;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+        .status-row {
+            padding: 0 1rem 1rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+        .support-warning {
+            padding: 1rem;
+            color: #f43f5e;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body style="padding: 1rem;">
+    <div class="workspace tts-container">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">语音合成 (TTS)</div>
+                <div class="panel-actions">
+                    <button class="btn btn-icon" onclick="ttsTool.clear()">清空</button>
+                </div>
+            </div>
+            <textarea id="tts-input" placeholder="输入要朗读的文本..." style="min-height: 180px;"></textarea>
+            <div class="stats-row">
+                <span>字符: <b id="tts-count">0</b></span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">引擎与声音设置</div>
+                <div class="panel-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="ttsTool.refreshVoices()">刷新声线</button>
+                </div>
+            </div>
+            <div class="tts-grid">
+                <div class="input-group">
+                    <label for="engine-select">TTS 引擎</label>
+                    <select id="engine-select" onchange="ttsTool.onEngineChange()">
+                        <option value="webspeech">浏览器内置 (Web Speech)</option>
+                        <option value="streamelements">StreamElements (免费)</option>
+                        <option value="voicerss">VoiceRSS (需 Key)</option>
+                        <option value="custom">自定义引擎</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="voice-select">语音</label>
+                    <div class="voice-row">
+                        <input type="text" id="voice-filter" placeholder="筛选语音，例如 zh、en-US、中文" oninput="ttsTool.filterVoices()">
+                        <select id="voice-select"></select>
+                    </div>
+                </div>
+                <div class="input-group" id="voicerss-key-group" style="display:none;">
+                    <label for="voicerss-key">VoiceRSS Key</label>
+                    <input type="text" id="voicerss-key" placeholder="输入 VoiceRSS API Key">
+                </div>
+                <div class="custom-engine" id="custom-engine">
+                    <div class="input-group" id="custom-url-group">
+                        <label for="custom-url">自定义 URL 模板</label>
+                        <input type="text" id="custom-url" placeholder="https://example.com/tts?text={text}&voice={voice}">
+                    </div>
+                    <div class="input-group" id="custom-voice-group">
+                        <label for="custom-voice">自定义 Voice</label>
+                        <input type="text" id="custom-voice" placeholder="例如 zh-CN 或 voice-id">
+                    </div>
+                    <div class="input-group" id="custom-ext-group">
+                        <label for="custom-ext">导出格式</label>
+                        <select id="custom-ext">
+                            <option value="mp3">mp3</option>
+                            <option value="wav">wav</option>
+                            <option value="ogg">ogg</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="tts-rate">语速 <span id="rate-val">1.0</span></label>
+                    <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="1">
+                </div>
+                <div class="input-group">
+                    <label for="tts-pitch">音高 <span id="pitch-val">1.0</span></label>
+                    <input type="range" id="tts-pitch" min="0" max="2" step="0.1" value="1">
+                </div>
+                <div class="input-group">
+                    <label for="tts-volume">音量 <span id="volume-val">1.0</span></label>
+                    <input type="range" id="tts-volume" min="0" max="1" step="0.05" value="1">
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">控制</div>
+            </div>
+            <div class="tts-actions">
+                <button class="btn btn-primary" onclick="ttsTool.speak()">播放</button>
+                <button class="btn" onclick="ttsTool.pause()">暂停</button>
+                <button class="btn" onclick="ttsTool.resume()">继续</button>
+                <button class="btn btn-secondary" onclick="ttsTool.stop()">停止</button>
+                <button class="btn" id="tts-record-webspeech" onclick="ttsTool.recordWebSpeech()">录制 Web Speech</button>
+                <button class="btn" onclick="ttsTool.generate()">生成音频</button>
+                <button class="btn btn-secondary" onclick="ttsTool.download()">导出音频</button>
+            </div>
+            <div class="status-row" id="tts-status">状态：就绪</div>
+            <div class="audio-preview" id="audio-preview">
+                <audio id="audio-player" controls></audio>
+            </div>
+            <div class="engine-note" id="engine-note"></div>
+        </div>
+
+        <div class="panel" id="tts-support" style="display:none;">
+            <div class="support-warning">当前浏览器不支持 Web Speech API，请使用最新版本的 Chrome、Edge 或 Safari。</div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script src="../js/loader.js"></script>
+    <script>
+        const ttsTool = {
+            voices: [],
+            filteredVoices: [],
+            utterance: null,
+            lastAudioUrl: '',
+            lastAudioBlob: null,
+            recordStream: null,
+            recorder: null,
+            recordChunks: [],
+            recordingActive: false,
+            engine: 'webspeech',
+            engineVoices: {
+                streamelements: [
+                    'Brian','Amy','Emma','Geraint','Ivy','Joanna','Kendra','Kimberly','Matthew','Salli','Justin','Nicole','Russell'
+                ],
+                voicerss: [
+                    'en-us','en-gb','zh-cn','zh-hk','ja-jp','ko-kr','de-de','fr-fr','es-es','it-it','ru-ru'
+                ]
+            },
+            init: function() {
+                if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+                    document.getElementById('tts-support').style.display = 'block';
+                    this.setStatus('不支持');
+                }
+                document.getElementById('tts-input').addEventListener('input', this.updateCount);
+                document.getElementById('tts-rate').addEventListener('input', this.updateSliders);
+                document.getElementById('tts-pitch').addEventListener('input', this.updateSliders);
+                document.getElementById('tts-volume').addEventListener('input', this.updateSliders);
+                this.updateSliders();
+                this.loadVoices();
+                if ('speechSynthesis' in window && speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = () => this.loadVoices();
+                }
+                this.onEngineChange();
+            },
+            updateCount: function() {
+                const val = document.getElementById('tts-input').value || '';
+                document.getElementById('tts-count').innerText = val.length;
+            },
+            updateSliders: function() {
+                document.getElementById('rate-val').innerText = Number(document.getElementById('tts-rate').value).toFixed(1);
+                document.getElementById('pitch-val').innerText = Number(document.getElementById('tts-pitch').value).toFixed(1);
+                document.getElementById('volume-val').innerText = Number(document.getElementById('tts-volume').value).toFixed(2);
+            },
+            setStatus: function(text) {
+                document.getElementById('tts-status').innerText = `状态：${text}`;
+            },
+            loadVoices: function() {
+                if ('speechSynthesis' in window) {
+                    this.voices = speechSynthesis.getVoices() || [];
+                } else {
+                    this.voices = [];
+                }
+                this.filterVoices();
+            },
+            refreshVoices: function() {
+                this.loadVoices();
+                app.showToast('声线已刷新');
+            },
+            filterVoices: function() {
+                const keyword = (document.getElementById('voice-filter').value || '').trim().toLowerCase();
+                if (this.engine === 'webspeech') {
+                    if (!keyword) {
+                        this.filteredVoices = this.voices.slice();
+                    } else {
+                        this.filteredVoices = this.voices.filter(v => {
+                            const name = (v.name || '').toLowerCase();
+                            const lang = (v.lang || '').toLowerCase();
+                            return name.includes(keyword) || lang.includes(keyword);
+                        });
+                    }
+                } else if (this.engine === 'streamelements') {
+                    this.filteredVoices = this.engineVoices.streamelements.filter(v => v.toLowerCase().includes(keyword || ''));
+                } else if (this.engine === 'voicerss') {
+                    this.filteredVoices = this.engineVoices.voicerss.filter(v => v.toLowerCase().includes(keyword || ''));
+                } else {
+                    this.filteredVoices = [];
+                }
+                this.renderVoiceOptions();
+            },
+            renderVoiceOptions: function() {
+                const select = document.getElementById('voice-select');
+                select.innerHTML = '';
+                if (this.engine === 'webspeech') {
+                    const list = this.filteredVoices.length ? this.filteredVoices : this.voices;
+                    list.forEach((voice, idx) => {
+                        const opt = document.createElement('option');
+                        opt.value = voice.name;
+                        opt.textContent = `${voice.name} (${voice.lang || 'unknown'})`;
+                        if (idx === 0) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                } else {
+                    const list = this.filteredVoices.length ? this.filteredVoices : [];
+                    list.forEach((voice, idx) => {
+                        const opt = document.createElement('option');
+                        opt.value = voice;
+                        opt.textContent = voice;
+                        if (idx === 0) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                }
+            },
+            getSelectedVoice: function() {
+                const select = document.getElementById('voice-select');
+                const name = select.value;
+                if (this.engine === 'webspeech') {
+                    return this.voices.find(v => v.name === name) || null;
+                }
+                if (this.engine === 'custom') {
+                    return document.getElementById('custom-voice').value.trim();
+                }
+                return name || '';
+            },
+            onEngineChange: function() {
+                this.engine = document.getElementById('engine-select').value;
+                document.getElementById('voicerss-key-group').style.display = this.engine === 'voicerss' ? 'flex' : 'none';
+                document.getElementById('custom-engine').style.display = this.engine === 'custom' ? 'grid' : 'none';
+                document.getElementById('voice-select').disabled = this.engine === 'custom';
+                document.getElementById('voice-filter').disabled = this.engine === 'custom';
+                document.getElementById('tts-record-webspeech').disabled = this.engine !== 'webspeech';
+                const note = document.getElementById('engine-note');
+                if (this.engine === 'webspeech') {
+                    note.innerText = '本地合成，可通过录制浏览器标签页音频导出';
+                } else if (this.engine === 'streamelements') {
+                    note.innerText = '免费引擎，返回 mp3';
+                } else if (this.engine === 'voicerss') {
+                    note.innerText = '需要 API Key，可导出 mp3';
+                } else {
+                    note.innerText = '自定义引擎需支持跨域与音频返回';
+                }
+                this.filterVoices();
+            },
+            speak: function() {
+                const text = (document.getElementById('tts-input').value || '').trim();
+                if (!text) {
+                    app.showToast('请输入要朗读的文本', 'error');
+                    return;
+                }
+                if (this.engine === 'webspeech') {
+                    if (!('speechSynthesis' in window)) return;
+                    speechSynthesis.cancel();
+                    const utter = new SpeechSynthesisUtterance(text);
+                    utter.rate = Number(document.getElementById('tts-rate').value);
+                    utter.pitch = Number(document.getElementById('tts-pitch').value);
+                    utter.volume = Number(document.getElementById('tts-volume').value);
+                    const voice = this.getSelectedVoice();
+                    if (voice) utter.voice = voice;
+                    utter.onstart = () => this.setStatus('播放中');
+                    utter.onend = () => {
+                        this.setStatus('完成');
+                        if (this.recordingActive) {
+                            this.stopWebSpeechRecord();
+                        }
+                    };
+                    utter.onerror = () => {
+                        this.setStatus('错误');
+                        if (this.recordingActive) {
+                            this.stopWebSpeechRecord();
+                        }
+                    };
+                    this.utterance = utter;
+                    speechSynthesis.speak(utter);
+                    return;
+                }
+                this.generate(true);
+            },
+            pause: function() {
+                if (this.engine === 'webspeech') {
+                    if (!('speechSynthesis' in window)) return;
+                    if (speechSynthesis.speaking) {
+                        speechSynthesis.pause();
+                        this.setStatus('已暂停');
+                    }
+                }
+            },
+            resume: function() {
+                if (this.engine === 'webspeech') {
+                    if (!('speechSynthesis' in window)) return;
+                    if (speechSynthesis.paused) {
+                        speechSynthesis.resume();
+                        this.setStatus('播放中');
+                    }
+                }
+            },
+            stop: function() {
+                if (this.engine === 'webspeech') {
+                    if (!('speechSynthesis' in window)) return;
+                    speechSynthesis.cancel();
+                    this.setStatus('停止');
+                    if (this.recordingActive) {
+                        this.stopWebSpeechRecord();
+                    }
+                } else {
+                    const audio = document.getElementById('audio-player');
+                    audio.pause();
+                    audio.currentTime = 0;
+                    this.setStatus('停止');
+                }
+            },
+            recordWebSpeech: async function() {
+                if (this.engine !== 'webspeech') {
+                    app.showToast('仅支持 Web Speech 录制', 'error');
+                    return;
+                }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia || typeof MediaRecorder === 'undefined') {
+                    app.showToast('当前浏览器不支持录制标签页音频', 'error');
+                    return;
+                }
+                if (this.recordingActive) {
+                    this.stopWebSpeechRecord();
+                    return;
+                }
+                try {
+                    const stream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
+                    let mimeType = '';
+                    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                        mimeType = 'audio/webm;codecs=opus';
+                    } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                        mimeType = 'audio/webm';
+                    }
+                    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+                    this.recordStream = stream;
+                    this.recorder = recorder;
+                    this.recordChunks = [];
+                    this.recordingActive = true;
+                    recorder.ondataavailable = (e) => {
+                        if (e.data && e.data.size > 0) this.recordChunks.push(e.data);
+                    };
+                    recorder.onstop = () => {
+                        const blob = new Blob(this.recordChunks, { type: recorder.mimeType || 'audio/webm' });
+                        if (this.lastAudioUrl) URL.revokeObjectURL(this.lastAudioUrl);
+                        this.lastAudioBlob = blob;
+                        this.lastAudioUrl = URL.createObjectURL(blob);
+                        const audio = document.getElementById('audio-player');
+                        audio.src = this.lastAudioUrl;
+                        document.getElementById('audio-preview').style.display = 'block';
+                        this.setStatus('录制完成');
+                        this.recordingActive = false;
+                        this.recordChunks = [];
+                        if (this.recordStream) {
+                            this.recordStream.getTracks().forEach(t => t.stop());
+                            this.recordStream = null;
+                        }
+                        this.recorder = null;
+                    };
+                    recorder.start();
+                    this.setStatus('录制中');
+                    this.speak();
+                } catch (e) {
+                    this.recordingActive = false;
+                    if (this.recordStream) {
+                        this.recordStream.getTracks().forEach(t => t.stop());
+                        this.recordStream = null;
+                    }
+                    this.recorder = null;
+                    app.showToast('录制启动失败', 'error');
+                }
+            },
+            stopWebSpeechRecord: function() {
+                if (!this.recordingActive) return;
+                if (this.recorder && this.recorder.state !== 'inactive') {
+                    this.recorder.stop();
+                } else {
+                    this.recordingActive = false;
+                }
+            },
+            buildUrl: function(text, voice) {
+                const rate = document.getElementById('tts-rate').value;
+                const pitch = document.getElementById('tts-pitch').value;
+                if (this.engine === 'streamelements') {
+                    const url = new URL('https://api.streamelements.com/kappa/v2/speech');
+                    url.searchParams.set('voice', voice || 'Brian');
+                    url.searchParams.set('text', text);
+                    return url.toString();
+                }
+                if (this.engine === 'voicerss') {
+                    const key = document.getElementById('voicerss-key').value.trim();
+                    const url = new URL('https://api.voicerss.org/');
+                    url.searchParams.set('key', key);
+                    url.searchParams.set('hl', voice || 'en-us');
+                    url.searchParams.set('src', text);
+                    url.searchParams.set('r', Math.round((rate - 1) * 5));
+                    return url.toString();
+                }
+                const template = document.getElementById('custom-url').value.trim();
+                return template
+                    .replaceAll('{text}', encodeURIComponent(text))
+                    .replaceAll('{voice}', encodeURIComponent(voice || ''))
+                    .replaceAll('{rate}', encodeURIComponent(rate))
+                    .replaceAll('{pitch}', encodeURIComponent(pitch));
+            },
+            generate: async function(autoPlay = false) {
+                if (this.engine === 'webspeech') {
+                    this.speak();
+                    return;
+                }
+                const text = (document.getElementById('tts-input').value || '').trim();
+                if (!text) {
+                    app.showToast('请输入要朗读的文本', 'error');
+                    return;
+                }
+                if (this.engine === 'voicerss' && !document.getElementById('voicerss-key').value.trim()) {
+                    app.showToast('请先填写 VoiceRSS Key', 'error');
+                    return;
+                }
+                const voice = this.getSelectedVoice();
+                const url = this.buildUrl(text, voice);
+                if (!url) {
+                    app.showToast('请配置引擎地址或 Key', 'error');
+                    return;
+                }
+                this.setStatus('生成中');
+                this.lastAudioUrl = url;
+                this.lastAudioBlob = null;
+                const audio = document.getElementById('audio-player');
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('请求失败');
+                    const blob = await res.blob();
+                    this.lastAudioBlob = blob;
+                    const objectUrl = URL.createObjectURL(blob);
+                    audio.src = objectUrl;
+                    document.getElementById('audio-preview').style.display = 'block';
+                    this.setStatus('就绪');
+                    if (autoPlay) {
+                        audio.play();
+                    }
+                } catch (e) {
+                    audio.src = url;
+                    document.getElementById('audio-preview').style.display = 'block';
+                    this.setStatus('链接就绪');
+                }
+            },
+            download: async function() {
+                let blob = this.lastAudioBlob;
+                if (!blob && this.lastAudioUrl) {
+                    try {
+                        const res = await fetch(this.lastAudioUrl);
+                        if (res.ok) blob = await res.blob();
+                    } catch (e) {}
+                }
+                if (!blob) {
+                    app.showToast('无法获取音频数据', 'error');
+                    return;
+                }
+                let ext = 'mp3';
+                if (this.engine === 'custom') {
+                    ext = document.getElementById('custom-ext').value || 'mp3';
+                } else if (this.engine === 'webspeech') {
+                    ext = (blob.type || '').includes('webm') ? 'webm' : 'wav';
+                }
+                const name = `tts-${Date.now()}.${ext}`;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = name;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            },
+            clear: function() {
+                document.getElementById('tts-input').value = '';
+                this.updateCount();
+                this.stop();
+            }
+        };
+        ttsTool.init();
+    </script>
+</body>
+</html>

@@ -6,6 +6,13 @@
     <title>极光工具箱 (Aurora Toolbox)</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="//unpkg.com">
+    <script src="js/loader.js"></script>
     <style>
         body { overflow: hidden; }
         iframe {
@@ -26,39 +33,38 @@
         <div style="display:flex; align-items:center; width: 100%; justify-content: space-between; height: 100%;">
             <div style="display:flex; align-items:center; height: 100%;">
                 <!-- Mobile Menu Button -->
-                <button id="mobile-menu-btn" onclick="toggleMobileMenu()" style="display:none; background:none; border:none; color:var(--text-main); font-size:1.5rem; margin-right:15px; cursor:pointer;">
+                <button id="mobile-menu-btn" style="display:none; background:none; border:none; color:var(--text-main); font-size:1.5rem; margin-right:15px; cursor:pointer;">
                     ☰
                 </button>
-                <div class="logo" style="cursor: pointer;" onclick="switchToHome()">AURORA <span style="font-weight:300; opacity:0.7">TOOLBOX</span></div>
+                <div class="logo" id="logo-home" style="cursor: pointer;">AURORA <span style="font-weight:300; opacity:0.7">TOOLBOX</span></div>
             </div>
             
             <div style="display:flex; align-items:center; height: 100%;">
                 <nav class="nav-tabs" id="main-nav">
-                    <button class="btn" onclick="window.location.href = window.location.origin">
-                    <span>↩❤↩</span>
+                    <button class="btn" id="back-home-btn">
+                    <span>❤</span>
                     </button>   
-                    <button class="tab-btn active" data-src="tools/home.html">工具箱主页</button>
+                    <button class="tab-btn active" data-src="tools/home.html">主页</button>
         
                     <!-- Image Dropdown -->
                     <div class="dropdown">
-                        <button class="tab-btn dropdown-toggle">图形图像</button>
+                        <button class="tab-btn dropdown-toggle">图像与视觉</button>
                         <div class="dropdown-content">
-                            <div class="dropdown-header">基础编辑</div>
+                            <div class="dropdown-header">基础处理</div>
                             <button class="tab-btn" data-src="tools/image-convert.html">格式转换</button>
                             <button class="tab-btn" data-src="tools/image-svg-tracer.html">SVG 矢量化</button>
-                            <button class="tab-btn" data-src="tools/image-gif.html">GIF 制作</button>
+                            <button class="tab-btn" data-src="tools/image-gif.html">GIF 合成</button>
                             <button class="tab-btn" data-src="tools/image-svg-painter.html">SVG 画板</button>
-                            <button class="tab-btn" data-src="tools/image-svg-optimizer.html">SVG 优化器</button>
-                            <button class="tab-btn" data-src="tools/image-drawing.html">简易绘图</button>
+                            <button class="tab-btn" data-src="tools/image-svg-optimizer.html">SVG 优化</button>
+                            <button class="tab-btn" data-src="tools/image-drawing.html">简易画板</button>
                             <button class="tab-btn" data-src="tools/image-overlay.html">图片叠加</button>
                             
                             <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">特效滤镜</div>
-                            <button class="tab-btn" data-src="tools/image-photon.html">专业滤镜</button>
+                            <div class="dropdown-header">特效与滤镜</div>
+                            <button class="tab-btn" data-src="tools/image-photon.html">专业滤镜 (Photon)</button>
                             <button class="tab-btn" data-src="tools/image-pixel.html">像素化</button>
                             <button class="tab-btn" data-src="tools/image-glitch.html">故障艺术</button>
                             <button class="tab-btn" data-src="tools/image-ascii.html">字符画</button>
-                            <button class="tab-btn" data-src="tools/image-visual.html">视觉特效</button>
 
                             <div class="dropdown-divider"></div>
                             <div class="dropdown-header">加密与生成</div>
@@ -72,51 +78,63 @@
 
                     <!-- Text Dropdown -->
                     <div class="dropdown">
-                        <button class="tab-btn dropdown-toggle">文本代码</button>
+                        <button class="tab-btn dropdown-toggle">文本与编码</button>
                         <div class="dropdown-content">
                             <button class="tab-btn" data-src="tools/text.html">文本处理</button>
+                            <button class="tab-btn" data-src="tools/regex.html">正则实验室</button>
                             <button class="tab-btn" data-src="tools/transcode.html">文本转码</button>
                             <button class="tab-btn" data-src="tools/format.html">代码格式化</button>
-                            <button class="tab-btn" data-src="tools/diff.html">文本对比</button>
+                            <button class="tab-btn" data-src="tools/diff.html">文本对比 (Diff)</button>
                             <button class="tab-btn" data-src="tools/markdown.html">Markdown</button>
                             <div class="dropdown-divider"></div>
-                            <button class="tab-btn" data-src="tools/encrypt.html">加密解密</button>
+                            <button class="tab-btn" data-src="tools/encrypt.html">对称加密</button>
                             <button class="tab-btn" data-src="tools/obfuscator.html">HTML 混淆</button>
                         </div>
                     </div>
         
                     <!-- File Dropdown -->
                     <div class="dropdown">
-                        <button class="tab-btn dropdown-toggle">文件数据</button>
+                        <button class="tab-btn dropdown-toggle">文件与数据</button>
                         <div class="dropdown-content">
-                            <button class="tab-btn" data-src="tools/file.html">文件处理</button>
+                            <button class="tab-btn" data-src="tools/file.html">文件管理</button>
                             <button class="tab-btn" data-src="tools/file-encoding.html">文件编码</button>
-                            <button class="tab-btn" data-src="tools/file-qrcode.html">文件二维码</button>
+                            <button class="tab-btn" data-src="tools/file-qrcode.html">文件二维码序列</button>
                             <div class="dropdown-divider"></div>
-                            <button class="tab-btn" data-src="tools/datetime.html">时间工具箱</button>
+                            <button class="tab-btn" data-src="tools/datetime.html">时间工具</button>
                             <button class="tab-btn" data-src="tools/unit.html">单位换算</button>
                             <div class="dropdown-divider"></div>
                             <button class="tab-btn" data-src="tools/hash.html">哈希计算</button>
-                            <button class="tab-btn" data-src="tools/generator.html">数据生成</button>
-                            <button class="tab-btn" data-src="tools/qrcode.html">二维码</button>
+                            <button class="tab-btn" data-src="tools/generator.html">数据生成器</button>
+                            <button class="tab-btn" data-src="tools/qrcode.html">二维码生成</button>
                         </div>
                     </div>
         
                     <!-- Network Dropdown -->
                     <div class="dropdown">
-                        <button class="tab-btn dropdown-toggle">网络相关</button>
+                        <button class="tab-btn dropdown-toggle">网络与查询</button>
                         <div class="dropdown-content">
-                            <button class="tab-btn" data-src="tools/network-ip.html">IP 信息</button>
-                            <button class="tab-btn" data-src="tools/url.html">URL 解析</button>
+                            <button class="tab-btn" data-src="tools/network-ip.html">IP 信息查询</button>
+                            <button class="tab-btn" data-src="tools/url.html">URL 解析器</button>
                             <button class="tab-btn" data-src="tools/network-ping.html">网络测试</button>
-                            <button class="tab-btn" data-src="tools/network-rdap.html">RDAP Whois查询</button>
-                            <button class="tab-btn" data-src="tools/network-github.html">GitHub API搜索</button>
-                            <button class="tab-btn" data-src="tools/network-epic.html">Epic Free Games</button>
+                            <button class="tab-btn" data-src="tools/network-rdap.html">RDAP/Whois 查询</button>
+                            <button class="tab-btn" data-src="tools/network-github.html">GitHub 搜索</button>
+                            <button class="tab-btn" data-src="tools/network-epic.html">Epic 免费游戏</button>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="tab-btn dropdown-toggle">AI 与智能</button>
+                        <div class="dropdown-content">
+                            <button class="tab-btn" data-src="tools/ai-tts.html">语音合成 (TTS)</button>
+                            <button class="tab-btn" data-src="tools/ai-stt.html">语音转文本 (STT)</button>
+                            <button class="tab-btn" data-src="tools/ai-translate.html">智能翻译</button>
                         </div>
                     </div>
                 </nav>
 
-                <button id="theme-btn" title="切换主题" style="margin-left: 15px; background:rgba(255,255,255,0.1); border:none; color:var(--text-main); cursor:pointer; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:0.2s;" onclick="toggleThemeModal()">
+                <button id="offline-btn" title="离线可用性" style="margin-left: 15px; background:rgba(255,255,255,0.1); border:none; color:var(--text-main); cursor:pointer; height:32px; padding:0 10px; border-radius:16px; display:flex; align-items:center; justify-content:center; transition:0.2s; font-size:0.8rem;">
+                    ⊗
+                </button>
+                <button id="theme-btn" title="切换主题" style="margin-left: 10px; background:rgba(255,255,255,0.1); border:none; color:var(--text-main); cursor:pointer; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:0.2s;">
                     ❤
                 </button>
             </div>
@@ -127,16 +145,13 @@
     <div id="mobile-drawer" style="position:fixed; top:60px; left:-100%; width:260px; height:calc(100% - 60px); background:var(--bg-deep); border-right:1px solid var(--border); transition:left 0.3s ease; z-index:100; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.5rem; box-shadow: 2px 0 10px rgba(0,0,0,0.5);">
         <!-- Content will be injected by JS or cloned -->
     </div>
-    <div id="mobile-overlay" onclick="toggleMobileMenu()" style="display:none; position:fixed; top:60px; left:0; width:100%; height:calc(100% - 60px); background:rgba(0,0,0,0.5); z-index:90; backdrop-filter:blur(3px);"></div>
+    <div id="mobile-overlay" style="display:none; position:fixed; top:60px; left:0; width:100%; height:calc(100% - 60px); background:rgba(0,0,0,0.5); z-index:90; backdrop-filter:blur(3px);"></div>
     
     <main style="position:relative;">
         <div id="loading-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg-deep); z-index:50; justify-content:center; align-items:center; flex-direction:column;">
-            <div class="spinner" style="width:40px; height:40px; border:4px solid rgba(255,255,255,0.1); border-top:4px solid var(--primary); border-radius:50%; animation:spin 1s linear infinite;"></div>
-            <div style="margin-top:10px; color:var(--text-dim); font-size:0.9rem;">Loading...</div>
+            <div class="spinner"></div>
+            <div style="margin-top:10px; color:var(--text-dim); font-size:0.9rem;">加载中...</div>
         </div>
-        <style>
-            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        </style>
         <iframe id="app-frame" src="tools/home.html"></iframe>
     </main>
 
@@ -148,7 +163,7 @@
                     <h3 style="margin:0; color:var(--text-main); font-size:1.2rem;">主题设置</h3>
                     <div style="font-size:0.8rem; color:var(--text-dim); margin-top:4px;">选择您喜欢的界面风格</div>
                 </div>
-                <button onclick="toggleThemeModal()" style="background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer; padding:5px; border-radius:50%; display:flex; align-items:center; justify-content:center; width:32px; height:32px;">×</button>
+                <button id="theme-modal-close" style="background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer; padding:5px; border-radius:50%; display:flex; align-items:center; justify-content:center; width:32px; height:32px;">×</button>
             </div>
             
             <div style="margin-bottom:30px;">
@@ -169,9 +184,9 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <h4 style="color:var(--text-dim); margin:0; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; font-weight:600;">自定义 (Custom)</h4>
                     <div style="display:flex; gap:8px;">
-                        <button class="btn btn-sm btn-secondary" onclick="randomizeCustomTheme()" style="font-size:0.75rem; padding:2px 8px;">🎲 随机</button>
-                        <button id="chaos-btn" class="btn btn-sm btn-secondary" onclick="toggleChaosMode()" style="font-size:0.75rem; padding:2px 8px;">🔥 全随机</button>
-                        <button id="meltdown-btn" class="btn btn-sm btn-secondary" onclick="toggleMeltdownMode()" style="font-size:0.75rem; padding:2px 8px;">🌀 崩坏</button>
+                        <button id="randomize-btn" class="btn btn-sm btn-secondary" style="font-size:0.75rem; padding:2px 8px;">🎲 随机</button>
+                        <button id="chaos-btn" class="btn btn-sm btn-secondary" style="font-size:0.75rem; padding:2px 8px;">🔥 全随机</button>
+                        <button id="meltdown-btn" class="btn btn-sm btn-secondary" style="font-size:0.75rem; padding:2px 8px;">🌀 崩坏</button>
                     </div>
                 </div>
                 <div style="background:var(--bg-panel); padding:20px; border-radius:var(--radius-md); border:1px solid var(--border);">
@@ -179,28 +194,28 @@
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <label style="font-size:0.8rem; color:var(--text-dim);">主色 (Primary)</label>
                             <div class="color-input-wrapper">
-                                <input type="color" id="custom-primary" oninput="updateCustomTheme()">
+                                <input type="color" id="custom-primary">
                                 <span id="val-primary">#000000</span>
                             </div>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <label style="font-size:0.8rem; color:var(--text-dim);">辅色 (Secondary)</label>
                             <div class="color-input-wrapper">
-                                <input type="color" id="custom-secondary" oninput="updateCustomTheme()">
+                                <input type="color" id="custom-secondary">
                                 <span id="val-secondary">#000000</span>
                             </div>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <label style="font-size:0.8rem; color:var(--text-dim);">背景 (Background)</label>
                             <div class="color-input-wrapper">
-                                <input type="color" id="custom-bg" oninput="updateCustomTheme()">
+                                <input type="color" id="custom-bg">
                                 <span id="val-bg">#000000</span>
                             </div>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <label style="font-size:0.8rem; color:var(--text-dim);">文本 (Text)</label>
                             <div class="color-input-wrapper">
-                                <input type="color" id="custom-text-main" oninput="updateCustomTheme()">
+                                <input type="color" id="custom-text-main">
                                 <span id="val-text">#000000</span>
                             </div>
                         </div>
@@ -210,6 +225,57 @@
                     <input type="hidden" id="custom-text-dim">
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="offline-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:2000; align-items:center; justify-content:center; opacity:0; transition: opacity 0.3s;">
+        <div style="background:var(--bg-deep); width:640px; max-height:85vh; overflow-y:auto; padding:24px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow); transform: scale(0.95); transition: transform 0.3s;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; position:sticky; top:0; background:var(--bg-deep); padding-bottom:10px; border-bottom:1px solid var(--border); z-index:10; gap:12px;">
+                <div style="min-width:0;">
+                    <h3 style="margin:0; color:var(--text-main); font-size:1.2rem;">离线可用性</h3>
+                    <div style="font-size:0.8rem; color:var(--text-dim); margin-top:4px;">选择需要离线缓存的工具页</div>
+                    <div id="offline-cache-summary" style="font-size:0.75rem; color:var(--text-dim); margin-top:6px;">暂无统计</div>
+                    <div style="font-size:0.7rem; color:var(--text-dim); margin-top:4px;">浏览器占用可能需要刷新才会清除</div>
+                    <div style="font-size:0.7rem; color:var(--text-dim); margin-top:2px;">跨域资源可能显示 0B，但仍计入浏览器占用</div>
+                </div>
+                <button id="offline-modal-close" style="background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer; padding:5px; border-radius:50%; display:flex; align-items:center; justify-content:center; width:32px; height:32px;">×</button>
+            </div>
+            <div id="offline-status" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:12px;"></div>
+            <div style="display:flex; flex-direction:column; gap:14px;" id="offline-layout">
+                <div id="offline-list" style="display:flex; flex-direction:column; gap:14px;"></div>
+                <div style="padding:12px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--bg-panel);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <div style="font-size:0.85rem; color:var(--text-main);">缓存明细</div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button id="offline-stats-refresh" class="btn btn-sm btn-secondary">刷新统计</button>
+                        </div>
+                    </div>
+                    <div id="offline-cache-details" style="margin-top:10px; max-height:200px; overflow:auto; border-top:1px solid var(--border); padding-top:10px; font-size:0.75rem; color:var(--text-dim); display:grid; gap:6px;"></div>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; gap:10px; flex-wrap:wrap;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button id="offline-select-all" class="btn btn-sm btn-secondary">全选</button>
+                    <button id="offline-clear" class="btn btn-sm btn-secondary">清空</button>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button id="offline-advanced-toggle" class="btn btn-secondary">高级依赖设置</button>
+                    <button id="offline-apply" class="btn btn-primary">应用选择</button>
+                    <button id="offline-clear-site" class="btn btn-secondary">清除网站数据</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="offline-advanced-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:2100; align-items:center; justify-content:center; opacity:0; transition: opacity 0.3s;">
+        <div style="background:var(--bg-deep); max-height:85vh; overflow-y:auto; padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow); transform: scale(0.95); transition: transform 0.3s;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; position:sticky; top:0; background:var(--bg-deep); padding-bottom:10px; border-bottom:1px solid var(--border); z-index:10;">
+                <div>
+                    <h3 style="margin:0; color:var(--text-main); font-size:1.1rem;">高级依赖设置</h3>
+                    <div style="font-size:0.8rem; color:var(--text-dim); margin-top:4px;">按工具细化依赖，自动同步共享依赖</div>
+                </div>
+                <button id="offline-advanced-close" style="background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer; padding:5px; border-radius:50%; display:flex; align-items:center; justify-content:center; width:32px; height:32px;">×</button>
+            </div>
+            <div id="offline-advanced-list" style="display:flex; flex-direction:column; gap:10px;"></div>
         </div>
     </div>
 
@@ -270,15 +336,31 @@
             position: relative;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        #offline-layout {
+            grid-template-columns: 2fr 1fr;
+        }
+        #offline-advanced-modal > div {
+            width: min(720px, 92vw);
+        }
+        @media (max-width: 900px) {
+            #offline-layout {
+                grid-template-columns: 1fr;
+            }
+            #offline-cache-details {
+                max-height: 160px;
+            }
+        }
     </style>
 
     <script>
         // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
+                navigator.serviceWorker.register('./sw.js?v=15')
                     .then(registration => {
                         console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        try { registration.update(); } catch (e) {}
+                        syncOfflinePrefs();
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
@@ -291,7 +373,6 @@
         
         // Only select tab buttons that have a data-src attribute (exclude dropdown toggles)
         const buttons = document.querySelectorAll('.tab-btn[data-src]');
-
         function showLoading() {
             loadingOverlay.style.display = 'flex';
         }
@@ -302,17 +383,24 @@
 
         frame.addEventListener('load', () => {
              hideLoading();
-             if (isChaosMode) {
-                 randomizeCustomTheme();
-             } else if(currentThemeData) {
+             const frameSrc = frame.getAttribute('src') || '';
+             if (currentThemeData && (lastAppliedFrameSrc !== frameSrc || lastAppliedFrameSignature !== themeSignature)) {
                  applyThemeVariables(currentThemeData);
+                 lastAppliedFrameSrc = frameSrc;
+                 lastAppliedFrameSignature = themeSignature;
              }
-             
-             // Re-apply meltdown if active (since iframe reloaded)
-             if (isMeltdownMode) {
-                 setTimeout(applyMeltdownEffect, 100);
+             if (isMeltdownMode && (!lastMeltdownAppliedState || lastMeltdownAppliedSrc !== frameSrc)) {
+                 applyMeltdownEffect();
+                 lastMeltdownAppliedState = true;
+                 lastMeltdownAppliedSrc = frameSrc;
              }
         });
+
+        let themeSignature = '';
+        let lastAppliedFrameSrc = '';
+        let lastAppliedFrameSignature = '';
+        let lastMeltdownAppliedState = false;
+        let lastMeltdownAppliedSrc = '';
 
         function switchToHome() {
             const homeBtn = document.querySelector('.tab-btn[data-src="tools/home.html"]');
@@ -353,701 +441,95 @@
                     if (toggle) toggle.classList.add('active');
                 }
 
-                // Avoid reloading if clicking same tab
-                if (frame.contentWindow.location.pathname.endsWith(target)) return;
-                
-                showLoading();
-                frame.src = target;
+                const current = new URL(frame.src, window.location.href);
+                const next = new URL(target, window.location.href);
+                if (current.href === next.href) return;
+                if (window.app && typeof app.releaseAllWorkers === 'function') {
+                    try { app.releaseAllWorkers(); } catch (e) {}
+                }
+                if (window.ResourceLoader) {
+                    ResourceLoader.loadToolDeps(target).finally(() => {
+                        showLoading();
+                        frame.src = target;
+                    });
+                } else {
+                    showLoading();
+                    frame.src = target;
+                }
             });
         });
 
         // Theme Logic
-        let currentThemeData = null; 
+        let currentThemeData = null;
+        let presetThemes = null;
+        let famousThemes = null;
+        let allThemes = null;
+        let themeDataLoaded = false;
+        let themeDataLoading = null;
 
-        const presetThemes = {
-            aurora: {
-                name: '极光 (Aurora)',
-                desc: '默认暗色风格，霓虹点缀',
-                vars: {
-                    '--bg-deep': '#0b0f19',
-                    '--bg-panel': 'rgba(20, 25, 40, 0.65)',
-                    '--bg-header': 'rgba(11, 15, 25, 0.8)',
-                    '--primary': '#c084fc',
-                    '--secondary': '#2dd4bf',
-                    '--accent': '#f472b6',
-                    '--text-main': '#f1f5f9',
-                    '--text-dim': '#94a3b8',
-                    '--bg-image': 'radial-gradient(circle at 10% 20%, rgba(192, 132, 252, 0.12) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(45, 212, 191, 0.12) 0%, transparent 40%)',
-                    '--font-main': "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                    '--font-mono': "'JetBrains Mono', Consolas, monospace",
-                    '--radius-lg': '16px',
-                    '--radius-md': '8px',
-                    '--radius-sm': '4px',
-                    '--shadow': '0 8px 32px rgba(0, 0, 0, 0.4)',
-                    '--border': 'rgba(255, 255, 255, 0.1)',
-                    '--input-bg': 'rgba(0, 0, 0, 0.3)',
-                    '--btn-bg': 'rgba(255, 255, 255, 0.05)',
-                    '--btn-hover-bg': 'rgba(255, 255, 255, 0.1)'
-                }
-            },
-            business: {
-                name: '商务 (Business)',
-                desc: '清爽蓝白，专业稳重',
-                vars: {
-                    '--bg-deep': '#f0f2f5',
-                    '--bg-panel': '#ffffff',
-                    '--bg-header': 'rgba(255, 255, 255, 0.9)',
-                    '--primary': '#0052cc',
-                    '--secondary': '#172b4d',
-                    '--accent': '#0065ff',
-                    '--text-main': '#172b4d',
-                    '--text-dim': '#5e6c84',
-                    '--bg-image': 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-                    '--font-mono': "SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace",
-                    '--radius-lg': '6px',
-                    '--radius-md': '4px',
-                    '--radius-sm': '2px',
-                    '--shadow': '0 2px 8px rgba(0, 0, 0, 0.1)',
-                    '--border': 'rgba(0, 0, 0, 0.1)',
-                    '--input-bg': 'rgba(0, 0, 0, 0.05)',
-                    '--btn-bg': 'rgba(0, 0, 0, 0.05)',
-                    '--btn-hover-bg': 'rgba(0, 0, 0, 0.1)'
-                }
-            },
-            creative: {
-                name: '创意 (Creative)',
-                desc: '活泼配色，圆润亲和',
-                vars: {
-                    '--bg-deep': '#fff0f5',
-                    '--bg-panel': 'rgba(255, 255, 255, 0.9)',
-                    '--bg-header': 'rgba(255, 255, 255, 0.8)',
-                    '--primary': '#ff6b6b',
-                    '--secondary': '#4ecdc4',
-                    '--accent': '#ffe66d',
-                    '--text-main': '#2f3542',
-                    '--text-dim': '#57606f',
-                    '--bg-image': 'linear-gradient(120deg, #f6d365 0%, #fda085 100%)',
-                    '--font-main': "'Quicksand', 'Comic Sans MS', sans-serif",
-                    '--font-mono': "'Fira Code', monospace",
-                    '--radius-lg': '24px',
-                    '--radius-md': '16px',
-                    '--radius-sm': '8px',
-                    '--shadow': '0 10px 25px rgba(255, 107, 107, 0.2)',
-                    '--border': 'rgba(0, 0, 0, 0.1)',
-                    '--input-bg': 'rgba(255, 255, 255, 0.5)',
-                    '--btn-bg': 'rgba(255, 107, 107, 0.1)',
-                    '--btn-hover-bg': 'rgba(255, 107, 107, 0.2)'
-                }
-            },
-            cyberpunk: {
-                name: '赛博 (Cyberpunk)',
-                desc: '高对比度，硬朗线条',
-                vars: {
-                    '--bg-deep': '#050505',
-                    '--bg-panel': 'rgba(20, 10, 30, 0.9)',
-                    '--bg-header': 'rgba(5, 5, 5, 0.9)',
-                    '--primary': '#ff00ff',
-                    '--secondary': '#00ffff',
-                    '--accent': '#ffff00',
-                    '--text-main': '#e0e0e0',
-                    '--text-dim': '#808080',
-                    '--bg-image': 'repeating-linear-gradient(0deg, transparent, transparent 1px, #200 1px, #200 2px), linear-gradient(to bottom, #100, #000)',
-                    '--font-main': "'Orbitron', 'Segoe UI', sans-serif",
-                    '--font-mono': "'Share Tech Mono', monospace",
-                    '--radius-lg': '0px',
-                    '--radius-md': '0px',
-                    '--radius-sm': '0px',
-                    '--shadow': '0 0 15px rgba(255, 0, 255, 0.3)',
-                    '--border': '#ff00ff',
-                    '--input-bg': 'rgba(0, 0, 0, 0.8)',
-                    '--btn-bg': 'rgba(255, 0, 255, 0.2)',
-                    '--btn-hover-bg': 'rgba(255, 0, 255, 0.4)'
-                }
-            },
-            ocean: {
-                name: '深海 (Ocean)',
-                desc: '静谧深蓝，沉浸体验',
-                vars: {
-                    '--bg-deep': '#001e2b',
-                    '--bg-panel': 'rgba(0, 40, 60, 0.7)',
-                    '--bg-header': 'rgba(0, 30, 43, 0.8)',
-                    '--primary': '#00a8ff',
-                    '--secondary': '#00ffcc',
-                    '--accent': '#ffaa00',
-                    '--text-main': '#e6f7ff',
-                    '--text-dim': '#8ab6d6',
-                    '--bg-image': 'linear-gradient(to top, #001e2b 0%, #00334e 100%)',
-                    '--font-main': "'Inter', sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '12px',
-                    '--radius-md': '6px',
-                    '--radius-sm': '3px',
-                    '--shadow': '0 8px 32px rgba(0, 20, 40, 0.5)',
-                    '--border': 'rgba(0, 168, 255, 0.2)',
-                    '--input-bg': 'rgba(0, 0, 0, 0.3)',
-                    '--btn-bg': 'rgba(0, 168, 255, 0.1)',
-                    '--btn-hover-bg': 'rgba(0, 168, 255, 0.2)'
-                }
-            },
-            forest: {
-                name: '森林 (Forest)',
-                desc: '自然暗绿，舒适护眼',
-                vars: {
-                    '--bg-deep': '#0a1a0a',
-                    '--bg-panel': 'rgba(20, 40, 20, 0.7)',
-                    '--bg-header': 'rgba(10, 26, 10, 0.8)',
-                    '--primary': '#4ade80',
-                    '--secondary': '#facc15',
-                    '--accent': '#f87171',
-                    '--text-main': '#f0fdf4',
-                    '--text-dim': '#86efac',
-                    '--bg-image': 'radial-gradient(circle at 50% 50%, #1a2e1a 0%, #0a1a0a 100%)',
-                    '--font-main': "'Inter', sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '16px',
-                    '--radius-md': '8px',
-                    '--radius-sm': '4px',
-                    '--shadow': '0 8px 24px rgba(0, 20, 0, 0.5)',
-                    '--border': 'rgba(74, 222, 128, 0.2)',
-                    '--input-bg': 'rgba(0, 0, 0, 0.3)',
-                    '--btn-bg': 'rgba(74, 222, 128, 0.1)',
-                    '--btn-hover-bg': 'rgba(74, 222, 128, 0.2)'
-                }
-            },
-            monochrome: {
-                name: '黑白 (Mono)',
-                desc: '极致简约，无色干扰',
-                vars: {
-                    '--bg-deep': '#000000',
-                    '--bg-panel': 'rgba(25, 25, 25, 0.9)',
-                    '--bg-header': 'rgba(0, 0, 0, 0.9)',
-                    '--primary': '#ffffff',
-                    '--secondary': '#888888',
-                    '--accent': '#aaaaaa',
-                    '--text-main': '#ffffff',
-                    '--text-dim': '#666666',
-                    '--bg-image': 'linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111), linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111)',
-                    '--font-main': "'Courier New', monospace",
-                    '--font-mono': "'Courier New', monospace",
-                    '--radius-lg': '0px',
-                    '--radius-md': '0px',
-                    '--radius-sm': '0px',
-                    '--shadow': 'none',
-                    '--border': '#333333',
-                    '--input-bg': '#111111',
-                    '--btn-bg': '#222222',
-                    '--btn-hover-bg': '#333333'
-                }
-            },
-            sunset: {
-                name: '日落 (Sunset)',
-                desc: '温暖渐变，柔和舒适',
-                vars: {
-                    '--bg-deep': '#2d1b2e',
-                    '--bg-panel': 'rgba(69, 39, 60, 0.7)',
-                    '--bg-header': 'rgba(45, 27, 46, 0.9)',
-                    '--primary': '#ff9a9e',
-                    '--secondary': '#fad0c4',
-                    '--accent': '#ffecd2',
-                    '--text-main': '#fff1eb',
-                    '--text-dim': '#d4a5a5',
-                    '--bg-image': 'linear-gradient(to top, #30cfd0 0%, #330867 100%)',
-                    '--font-main': "'Inter', sans-serif",
-                    '--font-mono': "'Fira Code', monospace",
-                    '--radius-lg': '12px',
-                    '--radius-md': '8px',
-                    '--radius-sm': '4px',
-                    '--shadow': '0 8px 32px rgba(0, 0, 0, 0.3)',
-                    '--border': 'rgba(255, 154, 158, 0.2)',
-                    '--input-bg': 'rgba(0, 0, 0, 0.2)',
-                    '--btn-bg': 'rgba(255, 154, 158, 0.1)',
-                    '--btn-hover-bg': 'rgba(255, 154, 158, 0.2)'
-                }
-            },
-            mint: {
-                name: '薄荷 (Mint)',
-                desc: '清新淡雅，清爽体验',
-                vars: {
-                    '--bg-deep': '#e0f2f1',
-                    '--bg-panel': 'rgba(255, 255, 255, 0.85)',
-                    '--bg-header': 'rgba(224, 242, 241, 0.9)',
-                    '--primary': '#009688',
-                    '--secondary': '#4db6ac',
-                    '--accent': '#80cbc4',
-                    '--text-main': '#004d40',
-                    '--text-dim': '#00796b',
-                    '--bg-image': 'radial-gradient(circle at 10% 20%, rgba(128, 203, 196, 0.2) 0%, transparent 50%), radial-gradient(circle at 90% 80%, rgba(38, 166, 154, 0.2) 0%, transparent 50%)',
-                    '--font-main': "'Inter', sans-serif",
-                    '--font-mono': "'JetBrains Mono', monospace",
-                    '--radius-lg': '16px',
-                    '--radius-md': '8px',
-                    '--radius-sm': '4px',
-                    '--shadow': '0 4px 12px rgba(0, 150, 136, 0.15)',
-                    '--border': 'rgba(0, 150, 136, 0.2)',
-                    '--input-bg': 'rgba(255, 255, 255, 0.6)',
-                    '--btn-bg': 'rgba(0, 150, 136, 0.1)',
-                    '--btn-hover-bg': 'rgba(0, 150, 136, 0.2)'
-                }
-            }
-        };
+        function captureCurrentThemeData() {
+            const styles = getComputedStyle(document.documentElement);
+            const keys = ['--bg-deep', '--bg-panel', '--bg-header', '--primary', '--secondary', '--accent', '--text-main', '--text-dim', '--bg-image', '--font-main', '--font-mono', '--radius-lg', '--radius-md', '--radius-sm', '--shadow', '--border', '--input-bg', '--btn-bg', '--btn-hover-bg'];
+            const theme = {};
+            keys.forEach((key) => {
+                const value = styles.getPropertyValue(key).trim();
+                if (value) theme[key] = value;
+            });
+            return theme;
+        }
 
-        const famousThemes = {
-            github: {
-                name: 'GitHub Dark',
-                desc: '沉浸式代码体验',
-                vars: {
-                    '--bg-deep': '#0d1117',
-                    '--bg-panel': '#161b22',
-                    '--bg-header': 'rgba(22, 27, 34, 0.95)',
-                    '--primary': '#58a6ff',
-                    '--secondary': '#238636',
-                    '--accent': '#f85149',
-                    '--text-main': '#c9d1d9',
-                    '--text-dim': '#8b949e',
-                    '--bg-image': 'none',
-                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
-                    '--font-mono': "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace",
-                    '--radius-lg': '6px',
-                    '--radius-md': '6px',
-                    '--radius-sm': '6px',
-                    '--shadow': '0 0 15px rgba(0,0,0,0.5)',
-                    '--border': '#30363d',
-                    '--input-bg': '#0d1117',
-                    '--btn-bg': '#21262d',
-                    '--btn-hover-bg': '#30363d'
-                }
-            },
-            discord: {
-                name: 'Discord',
-                desc: '游戏玩家首选',
-                vars: {
-                    '--bg-deep': '#36393f',
-                    '--bg-panel': '#2f3136',
-                    '--bg-header': '#202225',
-                    '--primary': '#5865f2',
-                    '--secondary': '#3ba55c',
-                    '--accent': '#ed4245',
-                    '--text-main': '#dcddde',
-                    '--text-dim': '#72767d',
-                    '--bg-image': 'none',
-                    '--font-main': "'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                    '--font-mono': "Consolas, monospace",
-                    '--radius-lg': '8px',
-                    '--radius-md': '4px',
-                    '--radius-sm': '3px',
-                    '--shadow': '0 2px 10px rgba(0,0,0,0.2)',
-                    '--border': '#202225',
-                    '--input-bg': '#40444b',
-                    '--btn-bg': '#4f545c',
-                    '--btn-hover-bg': '#686d73'
-                }
-            },
-            youtube: {
-                name: 'YouTube Dark',
-                desc: '专注视频内容',
-                vars: {
-                    '--bg-deep': '#0f0f0f',
-                    '--bg-panel': '#272727',
-                    '--bg-header': 'rgba(15, 15, 15, 0.98)',
-                    '--primary': '#ff0000',
-                    '--secondary': '#3ea6ff',
-                    '--accent': '#ff0000',
-                    '--text-main': '#f1f1f1',
-                    '--text-dim': '#aaaaaa',
-                    '--bg-image': 'none',
-                    '--font-main': "Roboto, Arial, sans-serif",
-                    '--font-mono': "Roboto Mono, monospace",
-                    '--radius-lg': '12px',
-                    '--radius-md': '8px',
-                    '--radius-sm': '4px',
-                    '--shadow': '0 4px 10px rgba(0,0,0,0.3)',
-                    '--border': 'rgba(255,255,255,0.1)',
-                    '--input-bg': '#121212',
-                    '--btn-bg': 'rgba(255,255,255,0.1)',
-                    '--btn-hover-bg': 'rgba(255,255,255,0.2)'
-                }
-            },
-            vscode: {
-                name: 'VS Code Dark',
-                desc: '开发者最爱',
-                vars: {
-                    '--bg-deep': '#1e1e1e',
-                    '--bg-panel': '#252526',
-                    '--bg-header': '#333333',
-                    '--primary': '#007acc',
-                    '--secondary': '#0e639c',
-                    '--accent': '#f14c4c',
-                    '--text-main': '#cccccc',
-                    '--text-dim': '#858585',
-                    '--bg-image': 'none',
-                    '--font-main': "'Segoe WPC', 'Segoe UI', sans-serif",
-                    '--font-mono': "Consolas, 'Courier New', monospace",
-                    '--radius-lg': '0px',
-                    '--radius-md': '0px',
-                    '--radius-sm': '0px',
-                    '--shadow': '0 2px 8px rgba(0,0,0,0.3)',
-                    '--border': '#3e3e42',
-                    '--input-bg': '#3c3c3c',
-                    '--btn-bg': '#3c3c3c',
-                    '--btn-hover-bg': '#4a4a4a'
-                }
-            },
-            bilibili: {
-                name: 'Bilibili Pink',
-                desc: '干杯 ( •̀ ω •́ )y',
-                vars: {
-                    '--bg-deep': '#f6f7f8',
-                    '--bg-panel': '#ffffff',
-                    '--bg-header': '#ffffff',
-                    '--primary': '#fb7299',
-                    '--secondary': '#00a1d6',
-                    '--accent': '#fb7299',
-                    '--text-main': '#18191c',
-                    '--text-dim': '#9499a0',
-                    '--bg-image': 'none',
-                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '8px',
-                    '--radius-md': '6px',
-                    '--radius-sm': '4px',
-                    '--shadow': '0 2px 10px rgba(0,0,0,0.05)',
-                    '--border': '#e3e5e7',
-                    '--input-bg': '#f1f2f3',
-                    '--btn-bg': '#f6f7f8',
-                    '--btn-hover-bg': '#e3e5e7'
-                }
-            },
-            pornhub: {
-                name: 'PH Dark',
-                desc: '黑橙经典，夜间首选',
-                vars: {
-                    '--bg-deep': '#000000',
-                    '--bg-panel': '#1b1b1b',
-                    '--bg-header': '#000000',
-                    '--primary': '#ff9900',
-                    '--secondary': '#ffffff',
-                    '--accent': '#ff9900',
-                    '--text-main': '#ffffff',
-                    '--text-dim': '#999999',
-                    '--bg-image': 'none',
-                    '--font-main': "Arial, Helvetica, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '4px',
-                    '--radius-md': '3px',
-                    '--radius-sm': '2px',
-                    '--shadow': '0 2px 5px rgba(0,0,0,0.5)',
-                    '--border': '#333333',
-                    '--input-bg': '#333333',
-                    '--btn-bg': '#333333',
-                    '--btn-hover-bg': '#444444'
-                }
-            },
-            xvideos: {
-                name: 'XV Red',
-                desc: '黑红配色，热情奔放',
-                vars: {
-                    '--bg-deep': '#141414',
-                    '--bg-panel': '#232323',
-                    '--bg-header': '#141414',
-                    '--primary': '#de2b1e',
-                    '--secondary': '#000000',
-                    '--accent': '#de2b1e',
-                    '--text-main': '#f2f2f2',
-                    '--text-dim': '#888888',
-                    '--bg-image': 'none',
-                    '--font-main': "Arial, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '4px',
-                    '--radius-md': '2px',
-                    '--radius-sm': '0px',
-                    '--shadow': '0 1px 3px rgba(0,0,0,0.5)',
-                    '--border': '#2f2f2f',
-                    '--input-bg': '#000000',
-                    '--btn-bg': '#2f2f2f',
-                    '--btn-hover-bg': '#3f3f3f'
-                }
-            },
-            pixiv: {
-                name: 'Pixiv Blue',
-                desc: '二次元插画风格',
-                vars: {
-                    '--bg-deep': '#f5f5f5',
-                    '--bg-panel': '#ffffff',
-                    '--bg-header': '#ffffff',
-                    '--primary': '#0096fa',
-                    '--secondary': '#333333',
-                    '--accent': '#ff5e5e',
-                    '--text-main': '#333333',
-                    '--text-dim': '#adadad',
-                    '--bg-image': 'none',
-                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '16px',
-                    '--radius-md': '8px',
-                    '--radius-sm': '4px',
-                    '--shadow': '0 2px 10px rgba(0,0,0,0.05)',
-                    '--border': '#e0e0e0',
-                    '--input-bg': '#f5f5f5',
-                    '--btn-bg': '#f5f5f5',
-                    '--btn-hover-bg': '#e0e0e0'
-                }
-            },
-            ehentai: {
-                name: 'EH Panda',
-                desc: 'Sad Panda 经典灰',
-                vars: {
-                    '--bg-deep': '#34353b',
-                    '--bg-panel': '#4f535b',
-                    '--bg-header': '#34353b',
-                    '--primary': '#dddddd',
-                    '--secondary': '#5c0d12',
-                    '--accent': '#ff0000',
-                    '--text-main': '#dddddd',
-                    '--text-dim': '#b3b3b3',
-                    '--bg-image': 'none',
-                    '--font-main': "Arial, Helvetica, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '0px',
-                    '--radius-md': '0px',
-                    '--radius-sm': '0px',
-                    '--shadow': '0 1px 2px rgba(0,0,0,0.5)',
-                    '--border': '#5c0d12',
-                    '--input-bg': '#34353b',
-                    '--btn-bg': '#34353b',
-                    '--btn-hover-bg': '#43464e'
-                }
-            },
-            twitter: {
-                name: 'X (Twitter)',
-                desc: '极简黑，信息流',
-                vars: {
-                    '--bg-deep': '#000000',
-                    '--bg-panel': '#16181c',
-                    '--bg-header': 'rgba(0, 0, 0, 0.85)',
-                    '--primary': '#1d9bf0',
-                    '--secondary': '#eff3f4',
-                    '--accent': '#1d9bf0',
-                    '--text-main': '#e7e9ea',
-                    '--text-dim': '#71767b',
-                    '--bg-image': 'none',
-                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '16px',
-                    '--radius-md': '16px',
-                    '--radius-sm': '8px',
-                    '--shadow': '0 0 10px rgba(255,255,255,0.05)',
-                    '--border': '#2f3336',
-                    '--input-bg': '#202327',
-                    '--btn-bg': '#eff3f41a',
-                    '--btn-hover-bg': '#eff3f42a'
-                }
-            },
-            reddit: {
-                name: 'Reddit Dark',
-                desc: '社区讨论，橙色活力',
-                vars: {
-                    '--bg-deep': '#0b1416',
-                    '--bg-panel': '#1a282d',
-                    '--bg-header': '#1a282d',
-                    '--primary': '#ff4500',
-                    '--secondary': '#0079d3',
-                    '--accent': '#ff4500',
-                    '--text-main': '#d7dadc',
-                    '--text-dim': '#818384',
-                    '--bg-image': 'none',
-                    '--font-main': "'IBM Plex Sans', sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '4px',
-                    '--radius-md': '4px',
-                    '--radius-sm': '2px',
-                    '--shadow': '0 2px 4px rgba(0,0,0,0.2)',
-                    '--border': '#343536',
-                    '--input-bg': '#272729',
-                    '--btn-bg': '#272729',
-                    '--btn-hover-bg': '#343536'
-                }
-            },
-            spotify: {
-                name: 'Spotify',
-                desc: '音乐律动，经典黑绿',
-                vars: {
-                    '--bg-deep': '#121212',
-                    '--bg-panel': '#181818',
-                    '--bg-header': '#000000',
-                    '--primary': '#1db954',
-                    '--secondary': '#ffffff',
-                    '--accent': '#1ed760',
-                    '--text-main': '#ffffff',
-                    '--text-dim': '#b3b3b3',
-                    '--bg-image': 'linear-gradient(to bottom, #121212, #121212)',
-                    '--font-main': "'Circular', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '8px',
-                    '--radius-md': '4px',
-                    '--radius-sm': '2px',
-                    '--shadow': '0 4px 60px rgba(0,0,0,0.5)',
-                    '--border': '#282828',
-                    '--input-bg': '#2a2a2a',
-                    '--btn-bg': '#2a2a2a',
-                    '--btn-hover-bg': '#3e3e3e'
-                }
-            },
-            netflix: {
-                name: 'Netflix',
-                desc: '家庭影院，红黑视觉',
-                vars: {
-                    '--bg-deep': '#141414',
-                    '--bg-panel': '#181818',
-                    '--bg-header': 'rgba(20, 20, 20, 0.9)',
-                    '--primary': '#e50914',
-                    '--secondary': '#ffffff',
-                    '--accent': '#b20710',
-                    '--text-main': '#ffffff',
-                    '--text-dim': '#808080',
-                    '--bg-image': 'none',
-                    '--font-main': "'Netflix Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '4px',
-                    '--radius-md': '2px',
-                    '--radius-sm': '0px',
-                    '--shadow': '0 2px 10px rgba(0,0,0,0.7)',
-                    '--border': '#333333',
-                    '--input-bg': '#333333',
-                    '--btn-bg': 'rgba(255,255,255,0.1)',
-                    '--btn-hover-bg': 'rgba(255,255,255,0.2)'
-                }
-            },
-            twitch: {
-                name: 'Twitch',
-                desc: '直播互动，基佬紫',
-                vars: {
-                    '--bg-deep': '#0e0e10',
-                    '--bg-panel': '#18181b',
-                    '--bg-header': '#18181b',
-                    '--primary': '#9146ff',
-                    '--secondary': '#bf94ff',
-                    '--accent': '#9146ff',
-                    '--text-main': '#efeff1',
-                    '--text-dim': '#adadb8',
-                    '--bg-image': 'none',
-                    '--font-main': "'Inter', 'Roobert', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '6px',
-                    '--radius-md': '4px',
-                    '--radius-sm': '2px',
-                    '--shadow': '0 1px 2px rgba(0,0,0,0.15)',
-                    '--border': '#303032',
-                    '--input-bg': '#303032',
-                    '--btn-bg': '#303032',
-                    '--btn-hover-bg': '#464649'
-                }
-            },
-            steam: {
-                name: 'Steam',
-                desc: '硬核游戏，深蓝工业',
-                vars: {
-                    '--bg-deep': '#1b2838',
-                    '--bg-panel': 'rgba(23, 26, 33, 0.8)',
-                    '--bg-header': '#171a21',
-                    '--primary': '#66c0f4',
-                    '--secondary': '#c7d5e0',
-                    '--accent': '#a4d007',
-                    '--text-main': '#c7d5e0',
-                    '--text-dim': '#626366',
-                    '--bg-image': 'linear-gradient(to bottom, #171a21 0%, #1b2838 100%)',
-                    '--font-main': "'Motiva Sans', Sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '2px',
-                    '--radius-md': '2px',
-                    '--radius-sm': '0px',
-                    '--shadow': '0 0 12px rgba(0,0,0,0.5)',
-                    '--border': '#2a475e',
-                    '--input-bg': '#0f1216',
-                    '--btn-bg': 'linear-gradient( to bottom, #47bfff 5%, #1a44c2 60%)',
-                    '--btn-hover-bg': 'linear-gradient( to bottom, #5bc6ff 5%, #1d4ecf 60%)'
-                }
-            },
-            stackoverflow: {
-                name: 'Stack Overflow',
-                desc: '知识问答，清爽白橙',
-                vars: {
-                    '--bg-deep': '#f1f2f3',
-                    '--bg-panel': '#ffffff',
-                    '--bg-header': '#f8f9f9',
-                    '--primary': '#f48024',
-                    '--secondary': '#0074cc',
-                    '--accent': '#f48024',
-                    '--text-main': '#232629',
-                    '--text-dim': '#6a737c',
-                    '--bg-image': 'none',
-                    '--font-main': "-apple-system, BlinkMacSystemFont, 'Segoe UI Adjusted', 'Segoe UI', 'Liberation Sans', sans-serif",
-                    '--font-mono': "ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', 'Liberation Mono', Menlo, Monaco, Consolas, monospace",
-                    '--radius-lg': '3px',
-                    '--radius-md': '3px',
-                    '--radius-sm': '2px',
-                    '--shadow': '0 1px 4px rgba(0,0,0,0.05)',
-                    '--border': '#babfc4',
-                    '--input-bg': '#ffffff',
-                    '--btn-bg': '#e1ecf4',
-                    '--btn-hover-bg': '#b3d3ea'
-                }
-            },
-            telegram: {
-                name: 'Telegram',
-                desc: '安全通讯，经典蓝',
-                vars: {
-                    '--bg-deep': '#17212b',
-                    '--bg-panel': '#242f3d',
-                    '--bg-header': '#17212b',
-                    '--primary': '#5288c1',
-                    '--secondary': '#6499cc',
-                    '--accent': '#2f6ea5',
-                    '--text-main': '#f5f5f5',
-                    '--text-dim': '#7f91a4',
-                    '--bg-image': 'none',
-                    '--font-main': "Roboto, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '10px',
-                    '--radius-md': '6px',
-                    '--radius-sm': '4px',
-                    '--shadow': '0 1px 2px rgba(0,0,0,0.15)',
-                    '--border': '#13181d',
-                    '--input-bg': '#17212b',
-                    '--btn-bg': '#2b5278',
-                    '--btn-hover-bg': '#336290'
-                }
-            },
-            chatgpt: {
-                name: 'ChatGPT',
-                desc: 'AI 助手，灰绿极简',
-                vars: {
-                    '--bg-deep': '#343541',
-                    '--bg-panel': '#444654',
-                    '--bg-header': '#343541',
-                    '--primary': '#10a37f',
-                    '--secondary': '#c5c5d2',
-                    '--accent': '#1a7f64',
-                    '--text-main': '#ececf1',
-                    '--text-dim': '#c5c5d2',
-                    '--bg-image': 'none',
-                    '--font-main': "'Söhne', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-                    '--font-mono': "monospace",
-                    '--radius-lg': '6px',
-                    '--radius-md': '4px',
-                    '--radius-sm': '2px',
-                    '--shadow': '0 0 15px rgba(0,0,0,0.1)',
-                    '--border': 'rgba(255,255,255,0.1)',
-                    '--input-bg': '#40414f',
-                    '--btn-bg': '#40414f',
-                    '--btn-hover-bg': '#505263'
-                }
-            }
-        };
+        currentThemeData = captureCurrentThemeData();
 
-        const allThemes = { ...presetThemes, ...famousThemes };
+        function loadThemeData() {
+            if (themeDataLoaded) return Promise.resolve();
+            if (themeDataLoading) return themeDataLoading;
+            themeDataLoading = new Promise((resolve, reject) => {
+                const finish = () => {
+                    const data = window.__themeData;
+                    if (!data || !data.presetThemes || !data.famousThemes) {
+                        themeDataLoading = null;
+                        reject(new Error('theme data missing'));
+                        return;
+                    }
+                    presetThemes = data.presetThemes;
+                    famousThemes = data.famousThemes;
+                    allThemes = { ...presetThemes, ...famousThemes };
+                    if (!currentThemeData && presetThemes.aurora) {
+                        currentThemeData = presetThemes.aurora.vars;
+                    }
+                    themeDataLoaded = true;
+                    resolve();
+                };
+                const existing = document.getElementById('theme-data-script');
+                if (existing) {
+                    if (themeDataLoaded) {
+                        resolve();
+                    } else {
+                        existing.addEventListener('load', finish, { once: true });
+                        existing.addEventListener('error', () => {
+                            themeDataLoading = null;
+                            reject(new Error('theme data load failed'));
+                        }, { once: true });
+                    }
+                    return;
+                }
+                const script = document.createElement('script');
+                script.id = 'theme-data-script';
+                script.src = 'js/theme-data.js';
+                script.onload = finish;
+                script.onerror = () => {
+                    themeDataLoading = null;
+                    reject(new Error('theme data load failed'));
+                };
+                document.head.appendChild(script);
+            });
+            return themeDataLoading;
+        }
+
+
 
         function renderThemeList() {
+            if (!presetThemes || !famousThemes) return;
             const renderGrid = (containerId, themesObj) => {
                 const grid = document.getElementById(containerId);
                 if(!grid) return;
@@ -1110,21 +592,609 @@
                 modal.querySelector('div').style.transform = 'scale(0.95)';
                 setTimeout(() => modal.style.display = 'none', 300);
             } else {
-                renderThemeList(); // Re-render to ensure current theme highlight if I add that logic
+                loadThemeData().then(() => {
+                    renderThemeList();
+                    modal.style.display = 'flex';
+                    modal.offsetHeight;
+                    modal.style.opacity = '1';
+                    modal.querySelector('div').style.transform = 'scale(1)';
+                }).catch(() => {
+                    modal.style.display = 'flex';
+                    modal.offsetHeight;
+                    modal.style.opacity = '1';
+                    modal.querySelector('div').style.transform = 'scale(1)';
+                    if (window.app && app.showToast) app.showToast('主题数据加载失败', 'error');
+                });
+            }
+        }
+
+        const OFFLINE_PREF_KEY = 'aurora_offline_optional_v1';
+        const OFFLINE_DEP_PREF_KEY = 'aurora_offline_dep_prefs_v1';
+        const OFFLINE_REQUIRED = new Set(['./tools/home.html']);
+
+        function normalizeToolUrl(url) {
+            if (!url) return '';
+            if (url.startsWith('./')) return url;
+            if (url.startsWith('/')) return '.' + url;
+            return './' + url;
+        }
+
+        function collectOfflineGroups() {
+            const groups = [];
+            const map = new Map();
+            const seen = new Set();
+            document.querySelectorAll('.tab-btn[data-src]').forEach(btn => {
+                const raw = btn.dataset.src;
+                const url = normalizeToolUrl(raw);
+                if (!url || !url.endsWith('.html')) return;
+                if (seen.has(url)) return;
+                seen.add(url);
+                let group = '基础';
+                const dropdown = btn.closest('.dropdown');
+                if (dropdown) {
+                    const toggle = dropdown.querySelector('.dropdown-toggle');
+                    if (toggle && toggle.innerText.trim()) group = toggle.innerText.trim();
+                }
+                if (!map.has(group)) {
+                    const entry = { group, items: [] };
+                    map.set(group, entry);
+                    groups.push(entry);
+                }
+                map.get(group).items.push({ url, label: btn.innerText.trim() || url });
+            });
+            return groups;
+        }
+
+        function getToolMetaMap() {
+            const meta = new Map();
+            const groups = collectOfflineGroups();
+            groups.forEach(group => {
+                group.items.forEach(item => {
+                    meta.set(item.url, { label: item.label, group: group.group });
+                });
+            });
+            return meta;
+        }
+
+        function getAvailableOfflineUrls(groups) {
+            const list = [];
+            groups.forEach(g => g.items.forEach(item => list.push(item.url)));
+            return list;
+        }
+
+        function getDepPrefs() {
+            try {
+                const raw = localStorage.getItem(OFFLINE_DEP_PREF_KEY);
+                const data = JSON.parse(raw || '{}');
+                return data && typeof data === 'object' ? data : {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function setDepPrefs(prefs) {
+            try {
+                localStorage.setItem(OFFLINE_DEP_PREF_KEY, JSON.stringify(prefs || {}));
+            } catch (e) {}
+        }
+
+        function buildToolDepsMap() {
+            if (!window.ResourceLoader) return { toolDeps: new Map(), depUsage: new Map() };
+            const loader = ResourceLoader;
+            const toolDeps = new Map();
+            const depUsage = new Map();
+            const groups = collectOfflineGroups();
+            const tools = [];
+            groups.forEach(g => g.items.forEach(item => tools.push(item.url)));
+            tools.forEach(toolUrl => {
+                const key = loader.getToolId ? loader.getToolId(toolUrl) : toolUrl;
+                const deps = (loader.toolDeps && loader.toolDeps[key]) ? loader.toolDeps[key] : [];
+                const resolved = loader._resolveDeps ? loader._resolveDeps(deps) : deps;
+                if (!resolved || !resolved.length) return;
+                toolDeps.set(toolUrl, resolved);
+                resolved.forEach(lib => {
+                    if (!depUsage.has(lib)) depUsage.set(lib, new Set());
+                    depUsage.get(lib).add(toolUrl);
+                });
+            });
+            return { toolDeps, depUsage };
+        }
+
+        function collectOfflineDeps(toolUrls) {
+            if (!window.ResourceLoader) return [];
+            const loader = ResourceLoader;
+            const prefs = getDepPrefs();
+            const map = buildToolDepsMap();
+            const libs = [];
+            toolUrls.forEach(toolUrl => {
+                const deps = map.toolDeps.get(toolUrl) || [];
+                deps.forEach(lib => {
+                    if (prefs[toolUrl] && prefs[toolUrl][lib] === false) return;
+                    libs.push(lib);
+                });
+            });
+            const seen = new Set();
+            const uniqueLibs = libs.filter(lib => {
+                if (seen.has(lib)) return false;
+                seen.add(lib);
+                return true;
+            });
+            const urls = [];
+            uniqueLibs.forEach(lib => {
+                const sources = loader.registry ? loader.registry[lib] : null;
+                if (!sources) return;
+                let arr = Array.isArray(sources) ? sources : (sources.url ? [sources.url].concat(sources.fallback ? [sources.fallback] : []) : [sources]);
+                arr = arr.filter(Boolean);
+                if (loader._prioritizeUrls) arr = loader._prioritizeUrls(arr);
+                if (loader._reorderUrls) arr = loader._reorderUrls(lib, arr);
+                const first = arr[0];
+                if (first && !urls.includes(first)) urls.push(first);
+            });
+            return urls;
+        }
+
+        function getOfflinePrefs() {
+            try {
+                const raw = localStorage.getItem(OFFLINE_PREF_KEY);
+                const list = JSON.parse(raw || '[]');
+                return Array.isArray(list) ? list : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function setOfflinePrefs(urls) {
+            try {
+                localStorage.setItem(OFFLINE_PREF_KEY, JSON.stringify(urls || []));
+            } catch (e) {}
+        }
+
+        function toggleOfflineModal() {
+            const modal = document.getElementById('offline-modal');
+            if (modal.style.display === 'flex') {
+                modal.style.opacity = '0';
+                modal.querySelector('div').style.transform = 'scale(0.95)';
+                setTimeout(() => modal.style.display = 'none', 300);
+                closeAdvancedModal();
+            } else {
+                renderOfflineList();
+                refreshOfflineStatus();
                 modal.style.display = 'flex';
-                // Trigger reflow
-                modal.offsetHeight; 
+                modal.offsetHeight;
                 modal.style.opacity = '1';
                 modal.querySelector('div').style.transform = 'scale(1)';
+                console.log('[Offline] modal opened');
             }
+        }
+
+        function renderOfflineList() {
+            const container = document.getElementById('offline-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const groups = collectOfflineGroups();
+            const available = new Set(getAvailableOfflineUrls(groups));
+            const saved = getOfflinePrefs().filter(u => available.has(u));
+            if (saved.length !== getOfflinePrefs().length) setOfflinePrefs(saved);
+            const selected = new Set(saved);
+            groups.forEach(group => {
+                const wrap = document.createElement('div');
+                const title = document.createElement('div');
+                title.style.cssText = 'font-size:0.75rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-weight:600; margin-bottom:8px;';
+                title.innerText = group.group;
+                const grid = document.createElement('div');
+                grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px;';
+                group.items.forEach(item => {
+                    const label = document.createElement('label');
+                    label.style.cssText = 'display:flex; flex-direction:column; gap:6px; background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; cursor:pointer;';
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.dataset.url = item.url;
+                    cb.checked = selected.has(item.url) || OFFLINE_REQUIRED.has(item.url);
+                    if (OFFLINE_REQUIRED.has(item.url)) cb.disabled = true;
+                    const text = document.createElement('span');
+                    text.style.cssText = 'font-size:0.85rem; color:var(--text-main);';
+                    text.innerText = item.label;
+                    const badge = document.createElement('span');
+                    badge.dataset.url = item.url;
+                    badge.dataset.role = 'offline-badge';
+                    badge.style.cssText = 'font-size:0.7rem; color:var(--text-dim);';
+                    const info = document.createElement('span');
+                    info.style.cssText = 'font-size:0.7rem; color:var(--text-dim);';
+                    const deps = (buildToolDepsMap().toolDeps.get(item.url) || []).length;
+                    info.innerText = deps ? `依赖: ${deps}` : '';
+                    const adv = document.createElement('button');
+                    adv.type = 'button';
+                    adv.dataset.tool = item.url;
+                    adv.style.cssText = 'margin-left:auto; font-size:0.85rem; line-height:1; padding:2px 6px; border:1px solid var(--border); border-radius:4px; background:var(--bg-deep); color:var(--text-dim); cursor:pointer;';
+                    adv.innerText = '⚙';
+                    adv.title = '高级设置';
+                    adv.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openAdvancedModal([item.url]);
+                    });
+                    const row = document.createElement('div');
+                    row.style.cssText = 'display:flex; align-items:center; gap:8px;';
+                    row.appendChild(cb);
+                    row.appendChild(text);
+                    row.appendChild(adv);
+                    const meta = document.createElement('div');
+                    meta.style.cssText = 'display:flex; align-items:center; gap:10px;';
+                    meta.appendChild(badge);
+                    if (info.innerText) meta.appendChild(info);
+                    label.appendChild(row);
+                    label.appendChild(meta);
+                    grid.appendChild(label);
+                });
+                wrap.appendChild(title);
+                wrap.appendChild(grid);
+                container.appendChild(wrap);
+            });
+            if (!container.dataset.bound) {
+                container.addEventListener('change', () => {
+                    const urls = getSelectedOfflineUrls(false);
+                    setOfflinePrefs(urls);
+                    const advModal = document.getElementById('offline-advanced-modal');
+                    if (advModal && advModal.style.display === 'flex') renderAdvancedDeps();
+                });
+                container.dataset.bound = '1';
+            }
+        }
+
+        function getOfflineCheckboxes() {
+            return Array.from(document.querySelectorAll('#offline-list input[type="checkbox"][data-url]'));
+        }
+
+        function getSelectedOfflineUrls(usePrefsFallback = true) {
+            const selected = getOfflineCheckboxes().filter(cb => cb.checked && !cb.disabled).map(cb => cb.dataset.url);
+            if (selected.length) return selected;
+            if (!usePrefsFallback) return [];
+            const prefs = getOfflinePrefs();
+            return Array.isArray(prefs) ? prefs : [];
+        }
+
+        function setAllOfflineCheckboxes(checked) {
+            getOfflineCheckboxes().forEach(cb => { if (!cb.disabled) cb.checked = checked; });
+            const urls = getSelectedOfflineUrls(false);
+            setOfflinePrefs(urls);
+        }
+
+        async function refreshOfflineStatus() {
+            const status = document.getElementById('offline-status');
+            if (!('caches' in window)) {
+                if (status) status.innerText = '当前浏览器不支持缓存接口';
+                return;
+            }
+            const badges = Array.from(document.querySelectorAll('#offline-list [data-role="offline-badge"]'));
+            let cachedCount = 0;
+            for (const badge of badges) {
+                const url = badge.dataset.url;
+                try {
+                    const abs = new URL(url, window.location.href).href;
+                    const match = await caches.match(abs);
+                    if (match) {
+                        badge.innerText = '已缓存';
+                        badge.style.color = 'var(--primary)';
+                        cachedCount++;
+                    } else {
+                        badge.innerText = '未缓存';
+                        badge.style.color = 'var(--text-dim)';
+                    }
+                } catch (e) {
+                    badge.innerText = '未知';
+                    badge.style.color = 'var(--text-dim)';
+                }
+            }
+            if (status) status.innerText = `已缓存 ${cachedCount} / ${badges.length}`;
+            showCacheStats();
+        }
+
+        async function getCacheName() {
+            try {
+                const names = await caches.keys();
+                if (!names || !names.length) return '';
+                const preferred = names.find(n => n.includes('aurora-toolbox'));
+                return preferred || names[0];
+            } catch (e) {
+                return '';
+            }
+        }
+
+        async function showCacheStats() {
+            const summary = document.getElementById('offline-cache-summary');
+            const details = document.getElementById('offline-cache-details');
+            if (!('caches' in window)) {
+                if (summary) summary.innerText = '缓存接口不可用';
+                return;
+            }
+            try {
+                const formatBytes = (value) => {
+                    if (value === 0) return '0 B';
+                    if (!value || Number.isNaN(value)) return '未知';
+                    const units = ['B', 'KB', 'MB', 'GB'];
+                    let v = value;
+                    let i = 0;
+                    while (v >= 1024 && i < units.length - 1) {
+                        v /= 1024;
+                        i++;
+                    }
+                    return `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+                };
+                let storageUsage = null;
+                let storageQuota = null;
+                if (navigator.storage && navigator.storage.estimate) {
+                    try {
+                        const estimate = await navigator.storage.estimate();
+                        storageUsage = estimate.usage;
+                        storageQuota = estimate.quota;
+                    } catch (e) {}
+                }
+                const name = await getCacheName();
+                if (!name) {
+                    if (summary) {
+                        const usageText = storageUsage != null ? ` • 浏览器占用 ${formatBytes(storageUsage)}${storageQuota ? ` / ${formatBytes(storageQuota)}` : ''}` : '';
+                        summary.innerText = `暂无缓存${usageText}`;
+                    }
+                    if (details) details.innerHTML = '';
+                    return;
+                }
+                const cache = await caches.open(name);
+                const keys = await cache.keys();
+                let total = 0;
+                let unknownCount = 0;
+                const group = {
+                    required: { count: 0, size: 0 },
+                    optional: { count: 0, size: 0 },
+                    cdn: { count: 0, size: 0 }
+                };
+                const requiredRel = [
+                    './',
+                    './index.html',
+                    './css/style.css',
+                    './js/app.js',
+                    './js/loader.js',
+                    './js/perf-monitor.js',
+                    './favicon.svg',
+                    './tools/home.html'
+                ];
+                const requiredAbs = new Set(requiredRel.map(p => new URL(p, window.location.href).href));
+                const items = [];
+                for (const req of keys) {
+                    try {
+                        const res = await cache.match(req);
+                        let size = 0;
+                        let known = false;
+                        if (res && res.headers && res.headers.get('content-length')) {
+                            const len = Number(res.headers.get('content-length'));
+                            if (!Number.isNaN(len)) {
+                                size = len;
+                                total += len;
+                                known = true;
+                            }
+                        }
+                        if (!known && res && res.body && res.type !== 'opaque') {
+                            const reader = res.body.getReader();
+                            while (true) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
+                                total += value.byteLength;
+                                size += value.byteLength;
+                            }
+                            known = true;
+                        }
+                        if (!known) unknownCount++;
+                        const u = new URL(req.url);
+                        const isSame = u.origin === window.location.origin;
+                        const isRequired = isSame && requiredAbs.has(req.url);
+                        if (isSame) {
+                            if (isRequired) {
+                                group.required.count++;
+                                group.required.size += size;
+                            } else {
+                                group.optional.count++;
+                                group.optional.size += size;
+                                items.push({ url: req.url, size });
+                            }
+                        } else {
+                            group.cdn.count++;
+                            group.cdn.size += size;
+                            items.push({ url: req.url, size });
+                        }
+                    } catch (e) {}
+                }
+                if (summary) {
+                    const usageText = storageUsage != null ? ` • 浏览器占用 ${formatBytes(storageUsage)}${storageQuota ? ` / ${formatBytes(storageQuota)}` : ''}` : '';
+                    summary.innerText = `必需项 ${group.required.count}（${formatBytes(group.required.size)}） • 可选项 ${group.optional.count}（${formatBytes(group.optional.size)}） • 依赖 ${group.cdn.count}（${formatBytes(group.cdn.size)}） • 可读总计 ${formatBytes(total)}${usageText}`;
+                }
+                if (details) {
+                    details.innerHTML = '';
+                    const reqLine = document.createElement('div');
+                    reqLine.innerText = `必须项：${group.required.count} 条 — ${formatBytes(group.required.size)}`;
+                    details.appendChild(reqLine);
+                    if (unknownCount) {
+                        const unknownLine = document.createElement('div');
+                        unknownLine.innerText = `未知大小：${unknownCount} 条`;
+                        details.appendChild(unknownLine);
+                    }
+                    items.sort((a, b) => b.size - a.size);
+                    items.slice(0, 50).forEach(item => {
+                        const div = document.createElement('div');
+                        div.innerText = `${item.url}  —  ${formatBytes(item.size)}`;
+                        details.appendChild(div);
+                    });
+                }
+            } catch (e) {
+                if (summary) summary.innerText = '统计失败';
+            }
+        }
+
+        function postOfflinePrefs(urls) {
+            if (!('serviceWorker' in navigator)) return;
+            const payload = { type: 'OFFLINE_PREFS', urls: urls || [], cdnUrls: collectOfflineDeps(urls || []) };
+            navigator.serviceWorker.ready.then(reg => {
+                const sw = navigator.serviceWorker.controller || reg.active;
+                if (sw) sw.postMessage(payload);
+            }).catch(() => {});
+        }
+
+        function syncOfflinePrefs() {
+            const groups = collectOfflineGroups();
+            const available = new Set(getAvailableOfflineUrls(groups));
+            const prefs = getOfflinePrefs().filter(u => available.has(u));
+            if (prefs.length !== getOfflinePrefs().length) setOfflinePrefs(prefs);
+            postOfflinePrefs(prefs);
+        }
+
+        function applyOfflinePrefs() {
+            const urls = getSelectedOfflineUrls(false);
+            setOfflinePrefs(urls);
+            postOfflinePrefs(urls);
+            refreshOfflineStatus();
+            const status = document.getElementById('offline-status');
+            if (status) status.innerText = '正在应用选择并缓存...';
+            if (window.app && app.showToast) app.showToast('已开始缓存选中工具与依赖');
+        }
+
+        function renderAdvancedDeps(targetTools) {
+            const container = document.getElementById('offline-advanced-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const prefs = getDepPrefs();
+            const { toolDeps, depUsage } = buildToolDepsMap();
+            const selectedTools = new Set(Array.isArray(targetTools) && targetTools.length ? targetTools : getSelectedOfflineUrls());
+            const meta = getToolMetaMap();
+            const tools = Array.from(toolDeps.keys()).filter(u => selectedTools.has(u));
+            if (!tools.length) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'font-size:0.8rem; color:var(--text-dim);';
+                empty.innerText = '当前工具无依赖或未选择';
+                container.appendChild(empty);
+                return;
+            }
+            tools.forEach(toolUrl => {
+                const box = document.createElement('div');
+                box.style.cssText = 'border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px;';
+                const header = document.createElement('div');
+                header.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;';
+                const name = document.createElement('div');
+                name.style.cssText = 'font-size:0.85rem; color:var(--text-main);';
+                name.innerText = (meta.get(toolUrl) && meta.get(toolUrl).label) ? meta.get(toolUrl).label : toolUrl;
+                const usage = document.createElement('div');
+                usage.style.cssText = 'font-size:0.75rem; color:var(--text-dim);';
+                const deps = toolDeps.get(toolUrl) || [];
+                usage.innerText = `依赖数: ${deps.length}`;
+                header.appendChild(name);
+                header.appendChild(usage);
+                const grid = document.createElement('div');
+                grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px;';
+                deps.forEach(lib => {
+                    const label = document.createElement('label');
+                    label.style.cssText = 'display:flex; align-items:center; gap:8px;';
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.dataset.tool = toolUrl;
+                    cb.dataset.lib = lib;
+                    cb.checked = !(prefs[toolUrl] && prefs[toolUrl][lib] === false);
+                    const span = document.createElement('span');
+                    span.style.cssText = 'font-size:0.8rem; color:var(--text-main);';
+                    span.innerText = lib;
+                    const shared = document.createElement('span');
+                    shared.style.cssText = 'margin-left:auto; font-size:0.7rem; color:var(--text-dim);';
+                    const users = (depUsage.get(lib) || new Set()).size;
+                    shared.innerText = users > 1 ? `共享: ${users}` : '';
+                    cb.addEventListener('change', () => {
+                        const prefsNow = getDepPrefs();
+                        const linkedTools = Array.from(depUsage.get(lib) || []);
+                        linkedTools.forEach(t => {
+                            if (!prefsNow[t]) prefsNow[t] = {};
+                            prefsNow[t][lib] = cb.checked ? true : false;
+                        });
+                        setDepPrefs(prefsNow);
+                        const all = container.querySelectorAll(`input[type="checkbox"][data-lib="${lib}"]`);
+                        all.forEach(i => { i.checked = cb.checked; });
+                    });
+                    label.appendChild(cb);
+                    label.appendChild(span);
+                    label.appendChild(shared);
+                    grid.appendChild(label);
+                });
+                box.appendChild(header);
+                box.appendChild(grid);
+                container.appendChild(box);
+            });
+        }
+        function openAdvancedModal(targetTools) {
+            const modal = document.getElementById('offline-advanced-modal');
+            if (!modal) return;
+            renderAdvancedDeps(targetTools);
+            modal.style.display = 'flex';
+            modal.offsetHeight;
+            modal.style.opacity = '1';
+            modal.querySelector('div').style.transform = 'scale(1)';
+        }
+        function closeAdvancedModal() {
+            const modal = document.getElementById('offline-advanced-modal');
+            if (!modal) return;
+            modal.style.opacity = '0';
+            modal.querySelector('div').style.transform = 'scale(0.95)';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        async function clearSiteData() {
+            const status = document.getElementById('offline-status');
+            if (status) status.innerText = '正在清除网站数据...';
+            try {
+                const names = await caches.keys();
+                await Promise.all(names.map(n => caches.delete(n)));
+            } catch (e) {}
+            try {
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map(r => r.unregister()));
+                }
+            } catch (e) {}
+            try {
+                if (window.indexedDB && indexedDB.databases) {
+                    const dbs = await indexedDB.databases();
+                    await Promise.all((dbs || []).map(db => new Promise(resolve => {
+                        try {
+                            const req = indexedDB.deleteDatabase(db.name || '');
+                            req.onsuccess = req.onerror = req.onblocked = () => resolve();
+                        } catch (e) {
+                            resolve();
+                        }
+                    })));
+                }
+            } catch (e) {}
+            try { localStorage.clear(); } catch (e) {}
+            try { sessionStorage.clear(); } catch (e) {}
+            if (status) status.innerText = '网站数据已清除';
+            if (window.app && app.showToast) app.showToast('网站数据已清除');
+            setTimeout(() => location.reload(), 200);
         }
 
         // Close modal when clicking outside
         document.getElementById('theme-modal').addEventListener('click', function(e) {
             if (e.target === this) toggleThemeModal();
         });
+        document.getElementById('offline-modal').addEventListener('click', function(e) {
+            if (e.target === this) toggleOfflineModal();
+        });
+        document.getElementById('offline-advanced-toggle').addEventListener('click', function() {
+            const urls = getSelectedOfflineUrls();
+            openAdvancedModal(urls);
+        });
+        document.getElementById('offline-advanced-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeAdvancedModal();
+        });
+        document.getElementById('offline-advanced-close').addEventListener('click', function() {
+            closeAdvancedModal();
+        });
+        document.getElementById('offline-stats-refresh').addEventListener('click', function() {
+            showCacheStats();
+        });
 
         function setTheme(name) {
+            if (!allThemes) return;
             const theme = allThemes[name];
             if(!theme) return;
             
@@ -1323,8 +1393,19 @@
             return (yiq >= 128) ? '#000000' : '#ffffff';
         }
 
+        function getThemeSignature(theme) {
+            if (!theme) return '';
+            const keys = Object.keys(theme).sort();
+            let out = '';
+            for (const key of keys) {
+                out += key + ':' + String(theme[key]) + ';';
+            }
+            return out;
+        }
+
         function applyThemeVariables(theme) {
             const root = document.documentElement;
+            themeSignature = getThemeSignature(theme);
             
             // Calculate contrast colors
             if(theme['--primary']) {
@@ -1375,7 +1456,9 @@
 
         // Initialize with Aurora but don't persist
         // Pre-fill inputs with default aurora values
-        syncCustomInputs(presetThemes['aurora']);
+        if (currentThemeData) {
+            syncCustomInputs(currentThemeData);
+        }
         
         // Also listen for iframe load to re-apply theme
         // (Handled above in frame.load)
@@ -1403,6 +1486,50 @@
                 mobileDrawer.style.left = '-100%';
                 mobileOverlay.style.display = 'none';
             }
+        }
+
+        function bindShellEvents() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            const logoHome = document.getElementById('logo-home');
+            if (logoHome) logoHome.addEventListener('click', switchToHome);
+            const backHome = document.getElementById('back-home-btn');
+            if (backHome) backHome.addEventListener('click', () => {
+                window.location.href = window.location.origin;
+            });
+            const offlineBtn = document.getElementById('offline-btn');
+            if (offlineBtn) offlineBtn.addEventListener('click', toggleOfflineModal);
+            const themeBtn = document.getElementById('theme-btn');
+            if (themeBtn) themeBtn.addEventListener('click', toggleThemeModal);
+            const themeClose = document.getElementById('theme-modal-close');
+            if (themeClose) themeClose.addEventListener('click', toggleThemeModal);
+            const offlineClose = document.getElementById('offline-modal-close');
+            if (offlineClose) offlineClose.addEventListener('click', toggleOfflineModal);
+            if (mobileOverlay) mobileOverlay.addEventListener('click', toggleMobileMenu);
+            const randomizeBtn = document.getElementById('randomize-btn');
+            if (randomizeBtn) randomizeBtn.addEventListener('click', randomizeCustomTheme);
+            const chaosBtn = document.getElementById('chaos-btn');
+            if (chaosBtn) chaosBtn.addEventListener('click', toggleChaosMode);
+            const meltdownBtn = document.getElementById('meltdown-btn');
+            if (meltdownBtn) meltdownBtn.addEventListener('click', toggleMeltdownMode);
+            const offlineSelectAll = document.getElementById('offline-select-all');
+            if (offlineSelectAll) offlineSelectAll.addEventListener('click', () => setAllOfflineCheckboxes(true));
+            const offlineClear = document.getElementById('offline-clear');
+            if (offlineClear) offlineClear.addEventListener('click', () => setAllOfflineCheckboxes(false));
+            const offlineApply = document.getElementById('offline-apply');
+            if (offlineApply) offlineApply.addEventListener('click', () => {
+                const status = document.getElementById('offline-status');
+                if (status) status.innerText = '正在应用选择并缓存...';
+                if (window.app && app.showToast) app.showToast('已开始缓存选中工具与依赖');
+                console.log('[Offline] apply click');
+                applyOfflinePrefs();
+            });
+            const offlineClearSite = document.getElementById('offline-clear-site');
+            if (offlineClearSite) offlineClearSite.addEventListener('click', clearSiteData);
+            ['custom-primary', 'custom-secondary', 'custom-bg', 'custom-text-main'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', updateCustomTheme);
+            });
         }
 
         function initMobileMenu() {
@@ -1484,6 +1611,8 @@
                 }
             });
         }
+
+        bindShellEvents();
 
     </script>
 </body>

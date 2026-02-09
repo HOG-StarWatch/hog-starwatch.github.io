@@ -14,10 +14,10 @@
         </div>
 
         <div class="action-buttons">
-            <button class="btn-action btn-outline" onclick="expandIndexNav()">
+            <button class="btn-action btn-outline" id="expand-nav-btn">
                 <span>📂 展开导航</span>
             </button>
-            <button class="btn-action btn-purple" onclick="alert('即将推出，敬请期待！')">
+            <button class="btn-action btn-purple" id="coming-soon-btn">
                 <span>❤</span>
             </button>
         </div>
@@ -25,7 +25,7 @@
         <!-- Text Tools -->
         
         <div class="features-grid">
-            <div class="feature-card" onclick="parent.switchTab('tools/home.html')">
+            <div class="feature-card" data-target="tools/home.html">
                 <span class="feature-icon"></span>
                 <div class="feature-title"></div>
                 <div class="feature-text"></div>
@@ -33,50 +33,79 @@
 
         </div>
     </div>
+    <script src="../js/app.js"></script>
     <script>
         function expandIndexNav() {
-            // Check if we are inside an iframe
             if (window.parent && window.parent.document) {
                 const nav = window.parent.document.querySelector('nav.nav-tabs');
                 if (nav) {
                     const dropdowns = window.parent.document.querySelectorAll('.dropdown');
-                    let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; text-align:left;">';
-                    
+                    const grid = document.createElement('div');
+                    grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; text-align:left;';
                     dropdowns.forEach(dd => {
                         const title = dd.querySelector('.dropdown-toggle').innerText.trim();
-                        html += `<div style="margin-bottom:15px; break-inside: avoid;">
-                                    <div style="font-size:1.1rem; color:var(--primary); margin-bottom:8px; font-weight:bold;">${title}</div>
-                                    <div style="display:flex; flex-direction:column; gap:5px;">`;
-                        
+                        const section = document.createElement('div');
+                        section.style.cssText = 'margin-bottom:15px; break-inside: avoid;';
+                        const titleEl = document.createElement('div');
+                        titleEl.style.cssText = 'font-size:1.1rem; color:var(--primary); margin-bottom:8px; font-weight:bold;';
+                        titleEl.innerText = title;
+                        section.appendChild(titleEl);
+                        const list = document.createElement('div');
+                        list.style.cssText = 'display:flex; flex-direction:column; gap:5px;';
                         const content = dd.querySelector('.dropdown-content');
                         if (content) {
                             Array.from(content.children).forEach(child => {
                                 if (child.classList.contains('tab-btn')) {
-                                    html += `<button class="btn-action btn-outline" style="font-size:0.8rem; padding:6px 12px; justify-content:flex-start; text-align:left;" onclick="parent.switchTab('${child.dataset.src}')">${child.innerText}</button>`;
+                                    const btn = document.createElement('button');
+                                    btn.className = 'btn-action btn-outline';
+                                    btn.style.cssText = 'font-size:0.8rem; padding:6px 12px; justify-content:flex-start; text-align:left;';
+                                    btn.innerText = child.innerText;
+                                    const target = child.dataset.src;
+                                    btn.addEventListener('click', () => {
+                                        if (window.parent && window.parent.switchTab) window.parent.switchTab(target);
+                                    });
+                                    list.appendChild(btn);
                                 } else if (child.classList.contains('dropdown-header')) {
-                                    html += `<div style="font-size:0.75rem; color:var(--text-dim); margin:8px 0 4px 0; font-weight:600; text-transform:uppercase;">${child.innerText}</div>`;
+                                    const header = document.createElement('div');
+                                    header.style.cssText = 'font-size:0.75rem; color:var(--text-dim); margin:8px 0 4px 0; font-weight:600; text-transform:uppercase;';
+                                    header.innerText = child.innerText;
+                                    list.appendChild(header);
                                 }
                             });
                         }
-                        
-                        html += '</div></div>';
+                        section.appendChild(list);
+                        grid.appendChild(section);
                     });
-                    html += '</div>';
-                    
-                    // Simple Modal
+
                     const modal = document.createElement('div');
                     modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000; backdrop-filter:blur(5px);';
-                    modal.innerHTML = `
-                        <div style="background:var(--bg-panel); padding:30px; border-radius:15px; border:1px solid var(--border); max-width:800px; width:90%; max-height:80vh; overflow-y:auto; position:relative;">
-                            <h3 style="margin-top:0; margin-bottom:20px; color:var(--primary);">所有工具导航</h3>
-                            <button onclick="this.closest('div').parentElement.remove()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer;">×</button>
-                            ${html}
-                        </div>
-                    `;
+                    const modalBody = document.createElement('div');
+                    modalBody.style.cssText = 'background:var(--bg-panel); padding:30px; border-radius:15px; border:1px solid var(--border); max-width:800px; width:90%; max-height:80vh; overflow-y:auto; position:relative;';
+                    const titleEl = document.createElement('h3');
+                    titleEl.style.cssText = 'margin-top:0; margin-bottom:20px; color:var(--primary);';
+                    titleEl.innerText = '所有工具导航';
+                    const closeBtn = document.createElement('button');
+                    closeBtn.style.cssText = 'position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer;';
+                    closeBtn.innerText = '×';
+                    closeBtn.addEventListener('click', () => modal.remove());
+                    modalBody.appendChild(titleEl);
+                    modalBody.appendChild(closeBtn);
+                    modalBody.appendChild(grid);
+                    modal.appendChild(modalBody);
                     document.body.appendChild(modal);
                 }
             }
         }
+        const expandBtn = document.getElementById('expand-nav-btn');
+        if (expandBtn) expandBtn.addEventListener('click', expandIndexNav);
+        const comingSoonBtn = document.getElementById('coming-soon-btn');
+        if (comingSoonBtn) comingSoonBtn.addEventListener('click', () => alert('即将推出，敬请期待！'));
+        document.querySelectorAll('.feature-card[data-target]').forEach(card => {
+            card.addEventListener('click', () => {
+                const target = card.dataset.target;
+                if (target && window.parent && window.parent.switchTab) window.parent.switchTab(target);
+            });
+        });
     </script>
 </body>
 </html>

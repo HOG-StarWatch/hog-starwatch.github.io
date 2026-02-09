@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正则实验室</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { padding: 1rem; }
+        .regex-page {
+            max-width: 1500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .regex-bar {
+            background: rgba(0,0,0,0.2);
+            padding: 0.8rem;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .regex-controls {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .regex-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .regex-input-group {
+            flex: 1;
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0 10px;
+            font-family: var(--font-mono);
+        }
+        .regex-input-group span { color: var(--text-dim); user-select: none; }
+        .regex-input {
+            border: none;
+            background: transparent;
+            color: var(--primary);
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            padding: 10px;
+            flex: 1;
+            outline: none;
+        }
+        .flags-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            padding: 0 8px;
+        }
+        .quick-ref { display: flex; gap: 8px; flex-wrap: wrap; }
+        .ref-chip {
+            background: rgba(255,255,255,0.05);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--text-dim);
+        }
+        .ref-chip:hover { background: var(--primary); color: #000; }
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            min-height: 560px;
+            padding: 1.5rem;
+            align-items: stretch;
+        }
+        .editor-box {
+            display: flex;
+            flex-direction: column;
+            background: rgba(0,0,0,0.2);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            min-height: 260px;
+        }
+        .box-header {
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .text-layer {
+            flex: 1;
+            padding: 15px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.6;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            position: relative;
+        }
+        textarea.text-layer { background: transparent; border: none; color: var(--text-main); resize: none; z-index: 2; min-height: 220px; }
+        .highlight-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            color: transparent;
+            pointer-events: none;
+        }
+        .match { background-color: rgba(45, 212, 191, 0.2); border-bottom: 2px solid var(--secondary); border-radius: 2px; }
+        .match-active { background-color: rgba(192, 132, 252, 0.22); border-bottom-color: var(--primary); }
+        .match-list { background: rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 12px; }
+        .match-item {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .match-item.active { border-color: var(--primary); box-shadow: 0 0 0 1px rgba(192,132,252,0.3) inset; }
+        .match-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .toolbar-split { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .mini-input {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            min-width: 160px;
+        }
+        .mini-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-dim); }
+        .match-actions { display: flex; gap: 6px; }
+        .match-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            border-radius: 6px;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        .match-btn:hover { color: var(--text-main); border-color: var(--primary); }
+        .match-header { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-dim); }
+        .match-title { color: var(--secondary); font-weight: 600; }
+        .match-meta { display: flex; gap: 10px; flex-wrap: wrap; color: var(--text-dim); font-size: 0.75rem; }
+        .match-text {
+            font-family: var(--font-mono);
+            color: var(--text-main);
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 6px;
+            word-break: break-all;
+        }
+        .group-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .group-chip {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            padding: 3px 6px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        .group-chip b { color: var(--primary); font-weight: 600; }
+        .empty-state { color: var(--text-dim); padding: 8px 2px; }
+        .error-state { color: #fb5454; padding: 6px 2px; font-weight: 600; }
+        @media (max-width: 900px) {
+            .editor-grid { grid-template-columns: 1fr; min-height: auto; }
+            .editor-box { height: 320px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="regex-page">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">正则实验室</div>
+                <div class="panel-actions">
+                    <button class="btn btn-icon" onclick="regexTool.clearAll()">清空</button>
+                </div>
+            </div>
+            <div class="regex-controls">
+                <div class="regex-bar regex-row">
+                    <div class="regex-input-group">
+                        <span>/</span>
+                        <input type="text" id="regex-input" class="regex-input" placeholder="expression" value="\b\w+\b">
+                        <span>/</span>
+                    </div>
+                    <div class="flags-group">
+                        <label><input type="checkbox" id="flag-g" checked> global (g)</label>
+                        <label><input type="checkbox" id="flag-m" checked> multiline (m)</label>
+                        <label><input type="checkbox" id="flag-i"> insensitive (i)</label>
+                    </div>
+                </div>
+                <div class="quick-ref">
+                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('\\d+')">数字 \\d</button>
+                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('\\w+')">单词 \\w</button>
+                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('[a-z]')">小写 [a-z]</button>
+                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('^...$')">整行 ^$</button>
+                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('(...)')">分组 ()</button>
+                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('[\\\\u4e00-\\\\u9fa5]')">中文</button>
+                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('((?=.*\\\\d)(?=.*[a-z]).{8,})')">强密码</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">测试与结果</div>
+                <div class="panel-actions match-toolbar">
+                    <div class="toolbar-split">
+                        <input id="match-filter" class="mini-input" placeholder="筛选匹配">
+                        <label class="mini-toggle"><input type="checkbox" id="only-groups">仅含分组</label>
+                        <button class="btn btn-icon" onclick="regexTool.copyMatches()">复制</button>
+                        <span id="match-count" style="color:var(--secondary)">0 matches</span>
+                    </div>
+                    <div class="toolbar-split">
+                        <label class="mini-toggle"><input type="checkbox" id="auto-height-toggle" checked>自动高度</label>
+                        <label class="mini-toggle"><input type="checkbox" id="highlight-toggle" checked>高亮</label>
+                    </div>
+                </div>
+            </div>
+            <div class="editor-grid">
+                <div class="editor-box">
+                    <div class="box-header">
+                        测试文本
+                        <button class="btn btn-sm btn-icon" onclick="regexTool.clearInput()">×</button>
+                    </div>
+                    <div style="position:relative; flex:1; overflow:hidden;">
+                        <div id="regex-highlight" class="text-layer highlight-layer"></div>
+                        <textarea id="regex-test-input" class="text-layer" spellcheck="false">
+English test: Hello World
+中文测试：你好世界</textarea>
+                    </div>
+                </div>
+
+                <div class="editor-box">
+                    <div class="box-header">
+                        匹配结果
+                    </div>
+                    <div id="match-list" class="text-layer match-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script src="../js/loader.js"></script>
+    <script>
+        const regexTool = {
+            _regexRaf: null,
+            _runDebounce: null,
+            activeMatchIndex: -1,
+            _lastMatches: [],
+            _filteredMatches: [],
+            _autoResizeRaf: null,
+            _maxHeight: 900,
+            _minHeight: 220,
+            autoResize: function() {
+                if (this._autoResizeRaf) cancelAnimationFrame(this._autoResizeRaf);
+                this._autoResizeRaf = requestAnimationFrame(() => {
+                    const textarea = document.getElementById('regex-test-input');
+                    const highlight = document.getElementById('regex-highlight');
+                    const container = textarea && textarea.parentElement;
+                    const autoToggle = document.getElementById('auto-height-toggle');
+                    if (!textarea || !highlight || !container) return;
+                    if (autoToggle && !autoToggle.checked) {
+                        textarea.style.height = this._minHeight + 'px';
+                        highlight.style.height = '100%';
+                        container.style.height = '';
+                        return;
+                    }
+                    textarea.style.height = 'auto';
+                    const h = Math.max(this._minHeight, Math.min(textarea.scrollHeight, this._maxHeight));
+                    textarea.style.height = h + 'px';
+                    highlight.style.height = h + 'px';
+                    container.style.height = h + 'px';
+                });
+            },
+            insertRegex: function(str) {
+                const input = document.getElementById('regex-input');
+                const start = input.selectionStart || 0;
+                const end = input.selectionEnd || 0;
+                const val = input.value;
+                input.value = val.substring(0, start) + str + val.substring(end);
+                input.focus();
+                input.selectionStart = input.selectionEnd = start + str.length;
+                this.run(true);
+            },
+            clearInput: function() {
+                const input = document.getElementById('regex-test-input');
+                input.value = '';
+                this.run(true);
+                this.autoResize();
+            },
+            clearAll: function() {
+                document.getElementById('regex-input').value = '';
+                document.getElementById('regex-test-input').value = '';
+                document.getElementById('flag-g').checked = true;
+                document.getElementById('flag-m').checked = true;
+                document.getElementById('flag-i').checked = false;
+                this.activeMatchIndex = -1;
+                this.run(true);
+                this.autoResize();
+            },
+            syncScroll: function() {
+                const textarea = document.getElementById('regex-test-input');
+                const highlight = document.getElementById('regex-highlight');
+                highlight.scrollTop = textarea.scrollTop;
+                highlight.scrollLeft = textarea.scrollLeft;
+            },
+            _copyText: function(text) {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        if (window.app && app.showToast) app.showToast('已复制到剪贴板');
+                    }).catch(() => {
+                        const temp = document.createElement('textarea');
+                        temp.value = text;
+                        document.body.appendChild(temp);
+                        temp.select();
+                        document.execCommand('copy');
+                        temp.remove();
+                        if (window.app && app.showToast) app.showToast('已复制到剪贴板');
+                    });
+                    return;
+                }
+                const temp = document.createElement('textarea');
+                temp.value = text;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                temp.remove();
+                if (window.app && app.showToast) app.showToast('已复制到剪贴板');
+            },
+            copyMatches: function() {
+                if (!this._filteredMatches.length) {
+                    if (window.app && app.showToast) app.showToast('没有可复制的匹配', 'error');
+                    return;
+                }
+                const text = this._filteredMatches.map(m => m.text).join('\n');
+                this._copyText(text);
+            },
+            copyMatchByIndex: function(matchIndex) {
+                const match = this._lastMatches.find(m => m.index === matchIndex);
+                if (!match) return;
+                this._copyText(match.text);
+            },
+            jumpToMatch: function(matchIndex) {
+                const match = this._lastMatches.find(m => m.index === matchIndex);
+                if (!match) return;
+                const textarea = document.getElementById('regex-test-input');
+                this.activeMatchIndex = matchIndex;
+                textarea.focus();
+                textarea.setSelectionRange(match.start, match.end);
+                const style = window.getComputedStyle(textarea);
+                const lineHeight = parseFloat(style.lineHeight) || 20;
+                const line = textarea.value.slice(0, match.start).split('\n').length;
+                textarea.scrollTop = Math.max(0, (line - 3) * lineHeight);
+                this.run(true);
+            },
+            run: function(immediate) {
+                if (immediate) {
+                    this._runNow();
+                    return;
+                }
+                if (this._regexRaf) cancelAnimationFrame(this._regexRaf);
+                if (this._runDebounce) clearTimeout(this._runDebounce);
+                this._runDebounce = setTimeout(() => {
+                    this._regexRaf = requestAnimationFrame(() => {
+                        this._regexRaf = null;
+                        this._runNow();
+                    });
+                }, 120);
+            },
+            _runNow: function() {
+                const pattern = document.getElementById('regex-input').value;
+                const text = document.getElementById('regex-test-input').value;
+                const highlight = document.getElementById('regex-highlight');
+                const list = document.getElementById('match-list');
+                const countLabel = document.getElementById('match-count');
+                const filterInput = document.getElementById('match-filter');
+                const onlyGroupsInput = document.getElementById('only-groups');
+                const highlightToggle = document.getElementById('highlight-toggle');
+                const maxHighlightChars = 60000;
+                const maxMatches = 1000;
+                const maxListMatches = 200;
+                const escapeHtml = (val) => {
+                    if (window.app && app.escapeHtml) return app.escapeHtml(val);
+                    return String(val).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                };
+
+                if (!pattern) {
+                    highlight.innerHTML = '';
+                    list.innerHTML = '';
+                    countLabel.innerText = '0 matches';
+                    this._lastMatches = [];
+                    this._filteredMatches = [];
+                    this.activeMatchIndex = -1;
+                    return;
+                }
+
+                let flags = '';
+                if (document.getElementById('flag-g').checked) flags += 'g';
+                if (document.getElementById('flag-i').checked) flags += 'i';
+                if (document.getElementById('flag-m').checked) flags += 'm';
+
+                try {
+                    const regex = new RegExp(pattern, flags);
+                    let matches = [];
+                    let match;
+                    if (regex.global) {
+                        regex.lastIndex = 0;
+                        while ((match = regex.exec(text)) !== null) {
+                            matches.push(match);
+                            if (match.index === regex.lastIndex) regex.lastIndex++;
+                            if (matches.length >= maxMatches) break;
+                        }
+                    } else {
+                        match = regex.exec(text);
+                        if (match) matches.push(match);
+                    }
+                    this._lastMatches = matches.map((m, i) => {
+                        const textValue = m[0] || '';
+                        const groups = m.slice(1).map(g => g === undefined ? '' : g);
+                        const start = m.index;
+                        const end = start + textValue.length;
+                        return { index: i, start, end, text: textValue, groups: groups };
+                    });
+                    if (this.activeMatchIndex >= this._lastMatches.length) {
+                        this.activeMatchIndex = -1;
+                    }
+
+                    const filterText = (filterInput ? filterInput.value.trim() : '');
+                    const filterLower = filterText.toLowerCase();
+                    const onlyGroups = !!(onlyGroupsInput && onlyGroupsInput.checked);
+                    const filtered = this._lastMatches.filter(m => {
+                        if (onlyGroups && !m.groups.length) return false;
+                        if (!filterText) return true;
+                        const haystack = [m.text].concat(m.groups).join('\n').toLowerCase();
+                        return haystack.includes(filterLower);
+                    });
+                    this._filteredMatches = filtered;
+
+                    const safeText = escapeHtml(text);
+                    const highlightEnabled = !highlightToggle || highlightToggle.checked;
+                    if (!highlightEnabled) {
+                        highlight.innerHTML = safeText.replace(/\n/g, '<br>');
+                    } else if (text.length > maxHighlightChars) {
+                        highlight.textContent = text;
+                    } else {
+                        let matchIndex = 0;
+                        let highlightedHtml = safeText.replace(regex, (match) => {
+                            if (!match) return '';
+                            const idx = matchIndex++;
+                            const cls = idx === this.activeMatchIndex ? 'match match-active' : 'match';
+                            return `<span class="${cls}" data-idx="${idx}">${match}</span>`;
+                        });
+                        highlightedHtml = highlightedHtml.replace(/\n/g, '<br>');
+                        highlight.innerHTML = highlightedHtml;
+                    }
+
+                    if (filterText || onlyGroups) {
+                        countLabel.innerText = `${filtered.length}/${matches.length} matches`;
+                    } else {
+                        countLabel.innerText = `${matches.length} matches`;
+                    }
+                    if (filtered.length > 0) {
+                        let listHtml = '';
+                        const getLineCol = (src, idx) => {
+                            const prefix = src.slice(0, idx);
+                            const line = prefix.split('\n').length;
+                            const lastNl = prefix.lastIndexOf('\n');
+                            const col = idx - (lastNl + 1) + 1;
+                            return { line, col };
+                        };
+                        filtered.slice(0, maxListMatches).forEach((m, i) => {
+                            const safeMatch = escapeHtml(m.text);
+                            const groupHtml = m.groups.length
+                                ? m.groups.map((g, gi) => `<div class="group-chip"><b>G${gi + 1}</b><span>${escapeHtml(g)}</span></div>`).join('')
+                                : `<div class="group-chip"><b>无</b><span>无捕获组</span></div>`;
+                            const pos = getLineCol(text, m.start);
+                            const activeClass = m.index === this.activeMatchIndex ? 'match-item active' : 'match-item';
+                            listHtml += `<div class="${activeClass}" data-match-index="${m.index}">
+                                <div class="match-header">
+                                    <div class="match-title">Match ${m.index + 1}</div>
+                                    <div class="match-actions">
+                                        <button class="match-btn" data-action="jump">定位</button>
+                                        <button class="match-btn" data-action="copy">复制</button>
+                                    </div>
+                                </div>
+                                <div class="match-text">${safeMatch}</div>
+                                <div class="match-meta">
+                                    <span>Index ${m.start}-${m.end}</span>
+                                    <span>行 ${pos.line} 列 ${pos.col}</span>
+                                    <span>长度 ${m.text.length}</span>
+                                    <span>分组 ${m.groups.length}</span>
+                                </div>
+                                <div class="group-list">${groupHtml}</div>
+                            </div>`;
+                        });
+                        if (filtered.length > maxListMatches) {
+                            listHtml += `<div class="empty-state">仅展示前 ${maxListMatches} 条匹配</div>`;
+                        }
+                        if (text.length > maxHighlightChars) {
+                            listHtml = `<div class="empty-state">文本过大，高亮已简化以提升性能</div>` + listHtml;
+                        }
+                        list.innerHTML = listHtml;
+                    } else {
+                        list.innerHTML = '<div class="empty-state">未找到匹配</div>';
+                    }
+                    this.autoResize();
+                } catch (e) {
+                    countLabel.innerText = 'Error';
+                    const safeMsg = escapeHtml(e.message);
+                    list.innerHTML = `<div class="error-state">Invalid Regex: ${safeMsg}</div>`;
+                    highlight.innerHTML = '';
+                    this._lastMatches = [];
+                    this._filteredMatches = [];
+                    this.activeMatchIndex = -1;
+                    this.autoResize();
+                }
+            }
+        };
+
+        const bindRegexEvents = () => {
+            const input = document.getElementById('regex-input');
+            const testInput = document.getElementById('regex-test-input');
+            const list = document.getElementById('match-list');
+            const filterInput = document.getElementById('match-filter');
+            const onlyGroupsInput = document.getElementById('only-groups');
+            const autoHeightToggle = document.getElementById('auto-height-toggle');
+            const highlightToggle = document.getElementById('highlight-toggle');
+            const flags = ['flag-g', 'flag-m', 'flag-i'].map(id => document.getElementById(id));
+            input.addEventListener('input', () => regexTool.run());
+            testInput.addEventListener('input', () => { regexTool.run(); regexTool.autoResize(); });
+            testInput.addEventListener('scroll', () => regexTool.syncScroll());
+            flags.forEach(el => el.addEventListener('change', () => regexTool.run(true)));
+            if (filterInput) filterInput.addEventListener('input', () => regexTool.run());
+            if (onlyGroupsInput) onlyGroupsInput.addEventListener('change', () => regexTool.run(true));
+            if (autoHeightToggle) autoHeightToggle.addEventListener('change', () => regexTool.autoResize());
+            if (highlightToggle) highlightToggle.addEventListener('change', () => regexTool.run(true));
+            if (list) {
+                list.addEventListener('click', (e) => {
+                    const item = e.target.closest('.match-item');
+                    if (!item) return;
+                    const idx = parseInt(item.getAttribute('data-match-index'), 10);
+                    if (Number.isNaN(idx)) return;
+                    const action = e.target && e.target.getAttribute('data-action');
+                    if (action === 'copy') {
+                        regexTool.copyMatchByIndex(idx);
+                        return;
+                    }
+                    regexTool.jumpToMatch(idx);
+                });
+            }
+            regexTool.run(true);
+            regexTool.autoResize();
+            window.addEventListener('resize', () => regexTool.autoResize());
+        };
+
+        bindRegexEvents();
+    </script>
+</body>
+</html>

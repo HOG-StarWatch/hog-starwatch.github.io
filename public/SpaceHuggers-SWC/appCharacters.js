@@ -766,8 +766,8 @@ class Player extends Character
 
         this.moveInput.y = isUsingGamepad || this.playerIndex ? gamepadStick(0, this.playerIndex).y : keyIsDown(38) - keyIsDown(40);
         
-        // jump +Space
-        this.holdingJump = (!this.playerIndex && (keyIsDown(38) || keyIsDown(32))) || gamepadIsDown(0, this.playerIndex);
+        // jump
+        this.holdingJump = (!this.playerIndex && keyIsDown(38)) || gamepadIsDown(0, this.playerIndex);
         if (!this.holdingJump)
             this.pressedJumpTimer.unset();
         else if (!this.wasHoldingJump || this.climbingWall)

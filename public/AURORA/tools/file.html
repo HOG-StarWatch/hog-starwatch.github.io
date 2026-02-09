@@ -170,7 +170,7 @@
                 if (this.files.length === 0) return;
                 
                 app.showToast('正在加载组件...', 'info');
-                ResourceLoader.load(['jszip', 'file-saver']).then(async () => {
+                ResourceLoader.loadDeps('@file-export').then(async () => {
                     const btnText = document.getElementById('zip-btn-text');
                     const originalText = btnText.innerText;
                     btnText.innerText = "正在打包...";
@@ -241,7 +241,7 @@
                 
                 app.showToast('正在加载组件...', 'info');
                 try {
-                    await ResourceLoader.load('file-saver');
+                    await ResourceLoader.loadDeps('file-saver');
                 } catch (e) {
                     app.showToast('组件加载失败', 'error');
                     return;

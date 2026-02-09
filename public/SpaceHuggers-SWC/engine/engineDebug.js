@@ -234,27 +234,27 @@ const debugRender = ()=>
         if (debugOverlay)
         {
             mainContext.fillText(engineName, x, y += h);
-            mainContext.fillText('Objects 物体: ' + engineObjects.length, x, y += h);
-            mainContext.fillText('Time 时间: ' + formatTime(time), x, y += h);
+            mainContext.fillText('Objects: ' + engineObjects.length, x, y += h);
+            mainContext.fillText('Time: ' + formatTime(time), x, y += h);
             mainContext.fillText('---------', x, y += h);
             mainContext.fillStyle = '#f00';
-            mainContext.fillText('~: Debug Overlay 渲染调试层', x, y += h);
+            mainContext.fillText('~: Debug Overlay', x, y += h);
             mainContext.fillStyle = debugPhysics ? '#f00' : '#fff';
-            mainContext.fillText('1: Debug Physics 调试物理', x, y += h);
+            mainContext.fillText('1: Debug Physics', x, y += h);
             mainContext.fillStyle = debugParticles ? '#f00' : '#fff';
-            mainContext.fillText('2: Debug Particles 调试粒子', x, y += h);
+            mainContext.fillText('2: Debug Particles', x, y += h);
             mainContext.fillStyle = godMode ? '#f00' : '#fff';
-            mainContext.fillText('3: God Mode 上帝模式', x, y += h);
+            mainContext.fillText('3: God Mode', x, y += h);
             mainContext.fillStyle = '#fff';
-            mainContext.fillText('5: Save Screenshot 保存截图', x, y += h);
+            mainContext.fillText('5: Save Screenshot', x, y += h);
             //mainContext.fillStyle = debugParticleEditor ? '#f00' : '#fff';
-            //mainContext.fillText('6: Particle Editor 粒子编辑器', x, y += h);
+            //mainContext.fillText('6: Particle Editor', x, y += h);
         }
         else
         {
-            mainContext.fillText(debugPhysics ? 'Debug Physics 调试物理' : '', x, y += h);
-            mainContext.fillText(debugParticles ? 'Debug Particles 调试粒子' : '', x, y += h);
-            mainContext.fillText(godMode ? 'God Mode 上帝模式' : '', x, y += h);
+            mainContext.fillText(debugPhysics ? 'Debug Physics' : '', x, y += h);
+            mainContext.fillText(debugParticles ? 'Debug Particles' : '', x, y += h);
+            mainContext.fillText(godMode ? 'God Mode' : '', x, y += h);
         }
     
         mainContext.shadowBlur = 0;

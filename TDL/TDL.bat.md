@@ -1,4 +1,4 @@
-请使用网页小工具栏[Base64储存文件](../Base64.html)工具解码获取TDL.bat
+请使用网页小工具栏[Base64储存文件](../File64.html)工具解码获取TDL.bat
 ```json
 {
   "version": "1.1",

@@ -386,7 +386,7 @@
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
         }
-        .modal-content textarea { height: 150px; background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+        .modal-content textarea { min-height: 150px; background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 
         /* File Input Hidden */
         #file-input, #batch-file-input { display: none; }
@@ -627,6 +627,7 @@
         </div>
     </div>
 
+    <script src="../js/app.js"></script>
     <script>
         // DOM Elements
         const codeInput = document.getElementById('code-input');
@@ -666,15 +667,15 @@
         // Wait for ResourceLoader
         window.addEventListener('load', async () => {
             try {
-                // Load non-module scripts
-                await ResourceLoader.load(['jszip', 'file-saver']);
-                
-                // Load SVGO as module (ESM) to avoid "Unexpected token 'export'" error
+                await ResourceLoader.loadDeps(['@file-export']);
+                let svgoModule = null;
                 try {
-                    const svgoModule = await ResourceLoader.import('svgo');
-                    window.svgo = svgoModule;
-                } catch (e) {
-                    console.warn('SVGO module loading failed, some features may be unavailable', e);
+                    svgoModule = await ResourceLoader.import('svgo');
+                } catch (e) {}
+                if (svgoModule && !window.svgo) {
+                    window.svgo = svgoModule.default || svgoModule;
+                }
+                if (!window.svgo) {
                     showNotification('SVGO 加载失败，压缩功能不可用', 'warning');
                 }
 
@@ -1098,7 +1099,6 @@
         }
 
         function optimizeSVG() {
-             // svgo is loaded globally via loader.js
              if (typeof svgo === 'undefined' && typeof window.svgo === 'undefined') { showNotification('SVGO 未加载，请检查网络', 'error'); return; }
              const svgoLib = window.svgo || svgo;
              

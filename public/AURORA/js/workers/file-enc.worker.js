@@ -258,7 +258,7 @@ const bytesToBase64 = (bytes) => {
     /**
      * Decode JSON/Base64 to file blobs (returned as Buffers)
      */
-    decode: async ({ jsonStr }) => {
+    handlers.decode = async ({ jsonStr }) => {
         let dataObj;
         try {
             dataObj = JSON.parse(jsonStr);
@@ -325,8 +325,8 @@ const bytesToBase64 = (bytes) => {
         }
         
         return results;
-    }
-};
+    };
+
 
 self.onmessage = async (e) => {
     const { id, action, payload } = e.data;

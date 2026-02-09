@@ -28,7 +28,7 @@
                     <input type="text" id="pwd-result" readonly placeholder="生成的密码...">
                     <button class="btn btn-icon" onclick="app.copy('pwd-result')">复制</button>
                 </div>
-                <textarea id="pwd-batch" readonly placeholder="批量生成结果 (10个)..." style="height: 150px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top:10px;"></textarea>
+                <textarea id="pwd-batch" readonly placeholder="批量生成结果 (10个)..." style="min-height: 150px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top:10px;"></textarea>
                 <button class="btn btn-secondary" style="justify-content:center" onclick="genTool.passwordBatch()">批量生成 (10个)</button>
             </div>
         </div>
@@ -155,7 +155,7 @@
                 const ver = document.getElementById('uuid-version').value;
                 
                 app.showToast('正在加载组件...', 'info');
-                ResourceLoader.load('uuid').then(() => {
+                ResourceLoader.loadDeps('uuid').then(() => {
                     try {
                         let res = '';
                         // Extract generation logic to reuse or just call directly
@@ -198,7 +198,7 @@
 
             uuidBatch: function() {
                 app.showToast('正在批量生成...', 'info');
-                ResourceLoader.load('uuid').then(() => {
+                ResourceLoader.loadDeps('uuid').then(() => {
                     try {
                         let res = [];
                         const ver = document.getElementById('uuid-version').value;

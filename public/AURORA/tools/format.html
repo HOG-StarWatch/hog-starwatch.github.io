@@ -79,7 +79,7 @@
 
                 if (['html', 'css', 'js'].includes(type)) {
                     app.showToast('正在加载资源...', 'info');
-                    ResourceLoader.load(['js-beautify', 'js-beautify-css', 'js-beautify-html'])
+                    ResourceLoader.loadDeps('@beautify')
                         .then(() => runFormat())
                         .catch(err => app.showToast('资源加载失败: ' + err, 'error'));
                 } else {

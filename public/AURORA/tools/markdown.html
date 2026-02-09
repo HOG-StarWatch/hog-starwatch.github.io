@@ -471,7 +471,7 @@
                 }).catch(e => {
                     console.warn("Markdown ESM load failed, trying UMD...", e);
                     // Fallback to UMD
-                    ResourceLoader.load('markdown-wasm').then(() => {
+                    ResourceLoader.loadDeps('markdown-wasm').then(() => {
                         window.markdown.ready.then(() => {
                             this.onWasmReady();
                         }).catch(err => {
@@ -507,13 +507,15 @@
                 if (!body.hasChildNodes() || body.innerHTML.trim() === '<!-- Content will be injected by JS -->') {
                     let html = '';
                     ENTITY_DATA.forEach(section => {
+                        const safeCategory = (window.app && app.escapeHtml) ? app.escapeHtml(section.category) : section.category;
                         html += `<div class="entity-section">
-                            <div class="entity-section-title">${section.category}</div>
+                            <div class="entity-section-title">${safeCategory}</div>
                             <div class="entity-grid">`;
                         section.items.forEach(item => {
                             // Convert HTML entities in name to string to prevent rendering them
                             const safeName = item.name.replace(/&/g, '&amp;');
                             const safeCode = item.code.replace(/&/g, '&amp;');
+                            const safeDesc = (window.app && app.escapeHtml) ? app.escapeHtml(item.desc) : item.desc;
                             
                             html += `<div class="entity-item">
                                 <span class="entity-char">${item.char}</span>
@@ -522,7 +524,7 @@
                                         <span>${safeName}</span>
                                         <span>${safeCode}</span>
                                     </div>
-                                    <div class="entity-desc" title="${item.desc}">${item.desc}</div>
+                                    <div class="entity-desc" title="${safeDesc}">${safeDesc}</div>
                                 </div>
                             </div>`;
                         });
@@ -614,7 +616,7 @@
                 if (!file) return;
                 
                 app.showToast('正在加载组件...', 'info');
-                ResourceLoader.load('mammoth').then(() => {
+                ResourceLoader.loadDeps('mammoth').then(() => {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const arrayBuffer = e.target.result;
@@ -688,7 +690,8 @@
                     btnPreview.classList.replace('btn-secondary', 'btn-primary');
                     btnCode.classList.replace('btn-primary', 'btn-secondary');
                     // Sync content
-                    preview.innerHTML = output.value;
+                    const safeHtml = (window.app && app.sanitizeHtml) ? app.sanitizeHtml(output.value) : output.value;
+                    preview.innerHTML = safeHtml;
                 } else {
                     preview.style.display = 'none';
                     output.style.display = 'block';
@@ -712,7 +715,8 @@
             
             preview: function() {
                 // Legacy external preview
-                const html = document.getElementById('md-output').value;
+                const rawHtml = document.getElementById('md-output').value;
+                const html = (window.app && app.sanitizeHtml) ? app.sanitizeHtml(rawHtml) : rawHtml;
                 const win = window.open("", "Preview", "width=800,height=600");
                 win.document.write('<' + 'html><' + 'head><' + 'title>Preview</' + 'title>');
                 win.document.write('<' + 'style>body{font-family:sans-serif;padding:2rem;line-height:1.6;color:#333}</' + 'style>');

@@ -1,6 +1,6 @@
 
 (function() {
-    // 防止重复加载
+    // 防止重复加载 ⚧
     if (window.CheatMenuLoaded) return;
     window.CheatMenuLoaded = true;
 
@@ -9,500 +9,71 @@
         const style = document.createElement('style');
         style.id = 'cheat-menu-style';
         style.textContent = `
-        :root {
-            --panel-bg: rgba(15, 10, 25, 0.75);
-            --panel-border: rgba(167, 139, 250, 0.2);
-            --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            --panel-blur: 16px;
-            --panel-saturate: 120%;
-            --primary-color: #a78bfa;
-            --text-color: #e2e8f0;
-            --text-dim: #94a3b8;
-            --accent-hover: rgba(139, 92, 246, 0.3);
-            --accent-active: #7c3aed;
-        }
-
-        #cheat-menu-container[data-material="frosted"] {
-            --panel-bg: rgba(235, 244, 255, 0.18);
-            --panel-border: rgba(255, 255, 255, 0.35);
-            --panel-shadow: 0 10px 40px 0 rgba(15, 23, 42, 0.4);
-            --panel-blur: 22px;
-            --panel-saturate: 140%;
-            --text-color: #eef2ff;
-            --text-dim: #cbd5f5;
-        }
-
-        #cheat-menu-container[data-material="liquid"] {
-            --panel-bg: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(168, 85, 247, 0.12));
-            --panel-border: rgba(255, 255, 255, 0.18);
-            --panel-shadow: 0 12px 36px 0 rgba(30, 41, 59, 0.45);
-            --panel-blur: 14px;
-            --panel-saturate: 140%;
-            --text-color: #f8fafc;
-            --text-dim: #e2e8f0;
-        }
-
-        #cheat-menu-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: flex-start;
-            z-index: 10000;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            user-select: none;
-            gap: 15px;
-            font-size: 13px;
-            pointer-events: none; /* Let clicks pass through container area */
-        }
-
-        /* Enable pointer events for children */
-        #cheat-menu, #help-panel {
-            pointer-events: auto;
-        }
-
-        #cheat-menu {
-            width: 420px;
-            max-width: 90vw;
-            background: var(--panel-bg);
-            backdrop-filter: blur(var(--panel-blur)) saturate(var(--panel-saturate));
-            -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(var(--panel-saturate));
-            color: var(--text-color);
-            padding: 20px;
-            border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            box-shadow: var(--panel-shadow);
-            max-height: 85vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary-color) transparent;
-            will-change: transform;
-            contain: layout paint;
-            transform: translateZ(0);
-        }
-
-        #help-panel {
-            width: 240px;
-            max-width: 35vw;
-            background: var(--panel-bg);
-            backdrop-filter: blur(var(--panel-blur)) saturate(var(--panel-saturate));
-            -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(var(--panel-saturate));
-            color: var(--text-dim);
-            padding: 20px;
-            border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            box-shadow: var(--panel-shadow);
-            font-size: 12px;
-            display: none;
-            max-height: 85vh;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary-color) transparent;
-            contain: layout paint;
-        }
-
-        #shortcut-feedback {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            z-index: 10001;
-            background: rgba(15, 10, 25, 0.75);
-            color: #fff;
-            padding: 8px 12px;
-            border: 1px solid rgba(167, 139, 250, 0.35);
-            border-radius: 10px;
-            font-size: 13px;
-            letter-spacing: .3px;
-            pointer-events: none;
-            opacity: 0;
-            transform: translateY(-6px);
-            transition: opacity .15s ease, transform .15s ease;
-            white-space: nowrap;
-        }
-        #shortcut-feedback.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background-color: rgba(139, 92, 246, 0.3);
-            border-radius: 20px;
-        }
-
-        h2 {
-            margin: 0;
-            text-align: left;
-            font-size: 18px;
-            color: #fff;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
-        }
-
-        .menu-title {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin: 0 0 20px 0;
-            border-bottom: 1px solid var(--panel-border);
-            padding-bottom: 12px;
-        }
-
-        .menu-title-select {
-            min-width: 110px;
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-color);
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            outline: none;
-            cursor: pointer;
-        }
-
-        h3 {
-            margin: 20px 0 10px 0;
-            font-size: 12px;
-            color: var(--primary-color);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-        }
-        h3::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, var(--panel-border), transparent);
-            margin-left: 10px;
-        }
-
-        .cheat-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-            padding: 8px 10px;
-            border-radius: 8px;
-            transition: background 0.2s;
-            cursor: pointer;
-        }
-        .cheat-row:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Modern Toggle Switch - Purple Theme */
-        .cheat-toggle {
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            width: 100%;
-            justify-content: space-between;
-        }
-        .cheat-toggle span {
-            flex-grow: 1;
-        }
-        .toggle-switch {
-            width: 36px;
-            height: 20px;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 10px;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 14px;
-            height: 14px;
-            background: #94a3b8;
-            border-radius: 50%;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        input:checked + .toggle-switch {
-            background: rgba(124, 58, 237, 0.5);
-            border-color: var(--accent-active);
-        }
-        input:checked + .toggle-switch::after {
-            transform: translateX(16px);
-            background: #fff;
-            box-shadow: 0 0 8px var(--accent-active);
-        }
-        input[type="checkbox"] {
-            display: none;
-        }
-
-        /* Modern Button - Purple Theme */
-        .cheat-btn {
-            background: rgba(0, 0, 0, 0.3);
-            color: var(--text-color);
-            border: 1px solid var(--glass-border);
-            padding: 10px 14px;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 8px;
-            text-align: center;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 12px;
-            transition: all 0.2s;
-            font-family: inherit;
-            position: relative;
-            overflow: hidden;
-        }
-        .cheat-btn:hover {
-            background: var(--accent-hover);
-            border-color: var(--primary-color);
-            color: #fff;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
-        }
-        .cheat-btn:active {
-            transform: translateY(1px);
-            background: var(--accent-active);
-        }
-
-        /* Grid */
-        .spawn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        /* Radio Group */
-        .spawn-radio-group {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            max-height: none;
-            overflow-y: visible;
-            background: rgba(0,0,0,0.3);
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 10px;
-        }
-        .spawn-radio-label {
-            display: flex;
-            align-items: center;
-            font-size: 12px;
-            cursor: pointer;
-            padding: 6px 10px;
-            border-radius: 6px;
-            transition: background 0.2s;
-            color: var(--text-dim);
-        }
-        .spawn-radio-label:hover {
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-        }
-        .spawn-radio-label input {
-            display: block; 
-            margin-right: 10px;
-            accent-color: var(--accent-active);
-        }
-
-        .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-        .menu-section {
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 12px;
-        }
-        .menu-section h3 {
-            margin: 0 0 10px 0;
-        }
-        .cheat-field {
-            gap: 8px;
-        }
-        .cheat-select, .cheat-input {
-            background: rgba(0,0,0,0.4);
-            color: var(--text-color);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 6px;
-            padding: 6px 8px;
-            font-family: inherit;
-            font-size: 12px;
-        }
-        .cheat-select {
-            min-width: 120px;
-        }
-        .cheat-slider {
-            width: 140px;
-        }
-        .cheat-inline {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .cheat-btn.cheat-btn-mini {
-            padding: 6px 10px;
-            width: auto;
-            margin-bottom: 0;
-            font-size: 11px;
-        }
-        .layer-toggle {
-            position: relative;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            align-items: center;
-            width: 160px;
-            height: 30px;
-            background: rgba(0,0,0,0.35);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 999px;
-            overflow: hidden;
-        }
-        .layer-option {
-            position: relative;
-            z-index: 1;
-            border: none;
-            background: transparent;
-            color: var(--text-dim);
-            font-size: 12px;
-            cursor: pointer;
-            height: 100%;
-            transition: color 0.2s ease;
-            font-family: inherit;
-        }
-        .layer-option.is-active {
-            color: #fff;
-        }
-        .layer-indicator {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: calc(50% - 4px);
-            height: calc(100% - 4px);
-            background: rgba(124, 58, 237, 0.55);
-            border-radius: 999px;
-            transition: transform 0.25s ease;
-        }
-        .layer-toggle[data-layer="back"] .layer-indicator {
-            transform: translateX(100%);
-        }
-        .world-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-        }
-        .world-grid .cheat-row {
-            display: grid;
-            grid-template-columns: 110px 1fr;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 8px;
-            margin-bottom: 4px;
-        }
-        .world-grid .cheat-inline {
-            justify-content: flex-end;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .world-grid .cheat-slider {
-            width: 120px;
-        }
-        .world-grid .cheat-input {
-            width: 64px;
-            padding: 4px 6px;
-        }
-        .texture-preview {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 10px;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.25);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .texture-preview-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-        .texture-preview canvas {
-            width: 64px;
-            height: 64px;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.08);
-            image-rendering: pixelated;
-        }
-        .texture-preview-label {
-            color: var(--text-dim);
-            font-size: 12px;
-        }
-        @media (min-width: 900px) {
-            #cheat-menu {
-                width: 680px;
-            }
-            .menu-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        /* Help Keys */
-        .help-row {
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-        }
-        .help-keys {
-            display: flex;
-            gap: 4px;
-        }
-        .help-key {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 4px;
-            padding: 2px 8px;
-            color: #fff;
-            min-width: 20px;
-            text-align: center;
-            font-size: 11px;
-            box-shadow: 0 2px 0 rgba(0,0,0,0.5);
-            font-weight: bold;
-        }
-        .help-desc {
-            color: var(--text-dim);
-        }
-        b {
-            color: var(--primary-color);
-        }
-        
-        .footer-hint {
-            margin-top: 20px;
-            text-align: center;
-            color: rgba(255,255,255,0.2);
-            font-size: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-        }
+        :root { --panel-bg:rgba(15,10,25,0.75); --panel-border:rgba(167,139,250,0.2); --panel-shadow:0 8px 32px 0 rgba(0,0,0,0.5); --panel-blur:16px; --panel-saturate:120%; --primary-color:#a78bfa; --text-color:#e2e8f0; --text-dim:#94a3b8; --accent-hover:rgba(139,92,246,0.3); --accent-active:#7c3aed}
+        #cheat-menu-container[data-material="frosted"] { --panel-bg:rgba(235,244,255,0.18); --panel-border:rgba(255,255,255,0.35); --panel-shadow:0 10px 40px 0 rgba(15,23,42,0.4); --panel-blur:22px; --panel-saturate:140%; --text-color:#eef2ff; --text-dim:#cbd5f5}
+        #cheat-menu-container[data-material="liquid"] { --panel-bg:linear-gradient(135deg,rgba(56,189,248,0.12),rgba(168,85,247,0.12)); --panel-border:rgba(255,255,255,0.18); --panel-shadow:0 12px 36px 0 rgba(30,41,59,0.45); --panel-blur:14px; --panel-saturate:140%; --text-color:#f8fafc; --text-dim:#e2e8f0}
+        #cheat-menu-container { position:absolute; top:20px; right:20px; display:flex; align-items:flex-start; z-index:10000; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; user-select:none; gap:15px; font-size:13px; pointer-events:none}
+        #cheat-menu,#help-panel { pointer-events:auto}
+        #cheat-menu { width:420px; max-width:90vw; background:var(--panel-bg); backdrop-filter:blur(var(--panel-blur)) saturate(var(--panel-saturate)); -webkit-backdrop-filter:blur(var(--panel-blur)) saturate(var(--panel-saturate)); color:var(--text-color); padding:20px; border:1px solid var(--panel-border); border-radius:16px; box-shadow:var(--panel-shadow); max-height:85vh; overflow-y:auto; overflow-x:hidden; transition:transform 0.2s cubic-bezier(0.4,0,0.2,1),opacity 0.2s; scrollbar-width:thin; scrollbar-color:var(--primary-color) transparent; will-change:transform; contain:layout paint; transform:translateZ(0)}
+        #help-panel { width:240px; max-width:35vw; background:var(--panel-bg); backdrop-filter:blur(var(--panel-blur)) saturate(var(--panel-saturate)); -webkit-backdrop-filter:blur(var(--panel-blur)) saturate(var(--panel-saturate)); color:var(--text-dim); padding:20px; border:1px solid var(--panel-border); border-radius:16px; box-shadow:var(--panel-shadow); font-size:12px; display:none; max-height:85vh; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--primary-color) transparent; contain:layout paint}
+        #shortcut-feedback { position:absolute; top:16px; left:16px; z-index:10001; background:rgba(15,10,25,0.75); color:#fff; padding:8px 12px; border:1px solid rgba(167,139,250,0.35); border-radius:10px; font-size:13px; letter-spacing:.3px; pointer-events:none; opacity:0; transform:translateY(-6px); transition:opacity .15s ease,transform .15s ease; white-space:nowrap}
+        #shortcut-feedback.is-visible { opacity:1; transform:translateY(0)}
+        ::-webkit-scrollbar { width:6px}
+        ::-webkit-scrollbar-track { background:transparent}
+        ::-webkit-scrollbar-thumb { background-color:rgba(139,92,246,0.3); border-radius:20px}
+        h2 { margin:0; text-align:left; font-size:18px; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-shadow:0 0 10px rgba(167,139,250,0.5)}
+        .menu-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 20px 0; border-bottom:1px solid var(--panel-border); padding-bottom:12px}
+        .menu-title-select { min-width:110px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); color:var(--text-color); padding:6px 10px; border-radius:8px; font-size:12px; outline:none; cursor:pointer}
+        h3 { margin:20px 0 10px 0; font-size:12px; color:var(--primary-color); text-transform:uppercase; letter-spacing:1.5px; font-weight:700; display:flex; align-items:center}
+        h3::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,var(--panel-border),transparent); margin-left:10px}
+        .cheat-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:8px 10px; border-radius:8px; transition:background 0.2s; cursor:pointer}
+        .cheat-row:hover { background:rgba(255,255,255,0.05)}
+        .cheat-toggle { cursor:pointer; display:flex; align-items:center; width:100%; justify-content:space-between}
+        .cheat-toggle span { flex-grow:1}
+        .toggle-switch { width:36px; height:20px; background:rgba(0,0,0,0.4); border-radius:10px; position:relative; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); border:1px solid rgba(255,255,255,0.1)}
+        .toggle-switch::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; background:#94a3b8; border-radius:50%; transition:transform 0.3s cubic-bezier(0.4,0,0.2,1),background 0.3s; box-shadow:0 2px 4px rgba(0,0,0,0.2)}
+        input:checked + .toggle-switch { background:rgba(124,58,237,0.5); border-color:var(--accent-active)}
+        input:checked + .toggle-switch::after { transform:translateX(16px); background:#fff; box-shadow:0 0 8px var(--accent-active)}
+        input[type="checkbox"] { display:none}
+        .cheat-btn { background:rgba(0,0,0,0.3); color:var(--text-color); border:1px solid var(--glass-border); padding:10px 14px; cursor:pointer; width:100%; margin-bottom:8px; text-align:center; border-radius:8px; font-weight:600; font-size:12px; transition:all 0.2s; font-family:inherit; position:relative; overflow:hidden}
+        .cheat-btn:hover { background:var(--accent-hover); border-color:var(--primary-color); color:#fff; transform:translateY(-1px); box-shadow:0 4px 12px rgba(124,58,237,0.2)}
+        .cheat-btn:active { transform:translateY(1px); background:var(--accent-active)}
+        .spawn-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
+        .spawn-radio-group { display:flex; flex-direction:column; gap:2px; max-height:none; overflow-y:visible; background:rgba(0,0,0,0.3); padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.05); margin-bottom:10px}
+        .spawn-radio-label { display:flex; align-items:center; font-size:12px; cursor:pointer; padding:6px 10px; border-radius:6px; transition:background 0.2s; color:var(--text-dim)}
+        .spawn-radio-label:hover { background:rgba(255,255,255,0.05); color:#fff}
+        .spawn-radio-label input { display:block; margin-right:10px; accent-color:var(--accent-active)}
+        .menu-grid { display:grid; grid-template-columns:1fr; gap:12px}
+        .menu-section { background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:12px}
+        .menu-section h3 { margin:0 0 10px 0}
+        .cheat-field { gap:8px}
+        .cheat-select,.cheat-input { background:rgba(0,0,0,0.4); color:var(--text-color); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:12px}
+        .cheat-select { min-width:120px}
+        .cheat-slider { width:140px}
+        .cheat-inline { display:flex; align-items:center; gap:8px}
+        .cheat-btn.cheat-btn-mini { padding:6px 10px; width:auto; margin-bottom:0; font-size:11px}
+        .layer-toggle { position:relative; display:grid; grid-template-columns:1fr 1fr; align-items:center; width:160px; height:30px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.1); border-radius:999px; overflow:hidden}
+        .layer-option { position:relative; z-index:1; border:none; background:transparent; color:var(--text-dim); font-size:12px; cursor:pointer; height:100%; transition:color 0.2s ease; font-family:inherit}
+        .layer-option.is-active { color:#fff}
+        .layer-indicator { position:absolute; top:2px; left:2px; width:calc(50% - 4px); height:calc(100% - 4px); background:rgba(124,58,237,0.55); border-radius:999px; transition:transform 0.25s ease}
+        .layer-toggle[data-layer="back"] .layer-indicator { transform:translateX(100%)}
+        .world-grid { display:grid; grid-template-columns:1fr; gap:8px}
+        .world-grid .cheat-row { display:grid; grid-template-columns:110px 1fr; align-items:center; gap:8px; padding:6px 8px; margin-bottom:4px}
+        .world-grid .cheat-inline { justify-content:flex-end; flex-wrap:wrap; gap:6px}
+        .world-grid .cheat-slider { width:120px}
+        .world-grid .cheat-input { width:64px; padding:4px 6px}
+        .texture-preview { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.05)}
+        .texture-preview-item { display:flex; flex-direction:column; align-items:center; gap:6px}
+        .texture-preview canvas { width:64px; height:64px; border-radius:8px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); image-rendering:pixelated}
+        .texture-preview-label { color:var(--text-dim); font-size:12px}
+        @media (min-width:900px) { #cheat-menu { width:680px}
+        .menu-grid { grid-template-columns:1fr 1fr}
+        .help-row { margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.03)}
+        .help-keys { display:flex; gap:4px}
+        .help-key { background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:2px 8px; color:#fff; min-width:20px; text-align:center; font-size:11px; box-shadow:0 2px 0 rgba(0,0,0,0.5); font-weight:bold}
+        .help-desc { color:var(--text-dim)}
+        b { color:var(--primary-color)}
+        .footer-hint { margin-top:20px; text-align:center; color:rgba(255,255,255,0.2); font-size:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05)}
     `;
         document.head.appendChild(style);
     };
@@ -569,7 +140,7 @@
         const renderHelpRows = (rows) => rows.map((row) => `<div class="help-row"><span class="help-desc">${row.desc}</span><div class="help-keys">${renderHelpKeys(row.keys)}</div></div>`).join('');
         const renderHelpList = (items) => items.map((item) => `<div class="help-desc" style="margin-bottom: 5px;">${item}</div>`).join('');
         return `
-            <h2>基础操作&快捷键</h2>
+            <h2>基础操作&快捷键 / Controls & Shortcuts</h2>
             ${renderHelpRows(helpConfig.coreRows)}
             ${renderHelpRows(helpConfig.keysRows)}
             ${renderHelpRows(helpConfig.debugRows)}
@@ -617,17 +188,17 @@
         { id: 'chk-grenade-arc', label: '手雷抛物线预测 (Grenade Arc)' }
     ];
     const worldParams = [
-        { label: '移动速度 (Move Speed)', rangeId: 'rng-world-move', inputId: 'num-world-move', resetId: 'btn-world-move-reset', min: 0.2, max: 3, step: 0.05, value: 1 },
-        { label: '射击速度 (Fire Rate)', rangeId: 'rng-world-fire', inputId: 'num-world-fire', resetId: 'btn-world-fire-reset', min: 0.2, max: 3, step: 0.05, value: 1 },
-        { label: '重力倍率 (Gravity)', rangeId: 'rng-world-gravity', inputId: 'num-world-gravity', resetId: 'btn-world-gravity-reset', min: 0, max: 3, step: 0.05, value: 1 },
-        { label: '玩家受伤倍率 (Player Damage)', rangeId: 'rng-world-player-dmg', inputId: 'num-world-player-dmg', resetId: 'btn-world-player-dmg-reset', min: 0, max: 5, step: 0.1, value: 1 },
-        { label: '敌人受伤倍率 (Enemy Damage)', rangeId: 'rng-world-enemy-dmg', inputId: 'num-world-enemy-dmg', resetId: 'btn-world-enemy-dmg-reset', min: 0, max: 5, step: 0.1, value: 1 },
-        { label: '子弹射程 (Bullet Range)', rangeId: 'rng-world-range', inputId: 'num-world-range', resetId: 'btn-world-range-reset', min: 0.1, max: 3, step: 0.1, value: 1 },
-        { label: '爆炸半径 (Explosion Radius)', rangeId: 'rng-world-explosion', inputId: 'num-world-explosion', resetId: 'btn-world-explosion-reset', min: 0.2, max: 5, step: 0.1, value: 1 },
-        { label: '冲击波范围 (Shockwave Range)', rangeId: 'rng-world-explosion-shock', inputId: 'num-world-explosion-shock', resetId: 'btn-world-explosion-shock-reset', min: 0, max: 5, step: 0.1, value: 1 },
-        { label: '冲击波力度 (Shockwave Force)', rangeId: 'rng-world-explosion-force', inputId: 'num-world-explosion-force', resetId: 'btn-world-explosion-force-reset', min: 0, max: 5, step: 0.1, value: 1 },
-        { label: '引燃范围 (Ignite Range)', rangeId: 'rng-world-explosion-ignite', inputId: 'num-world-explosion-ignite', resetId: 'btn-world-explosion-ignite-reset', min: 0, max: 5, step: 0.1, value: 1 },
-        { label: '子弹速度 (Bullet Speed)', rangeId: 'rng-world-bullet-speed', inputId: 'num-world-bullet-speed', resetId: 'btn-world-bullet-speed-reset', min: 0.2, max: 3, step: 0.05, value: 1 }
+        { id: 'world-move', label: '移动速度 (Move Speed)', key: 'worldMoveMultiplier', minLimit: 0.01, min: 0.2, max: 3, step: 0.05 },
+        { id: 'world-fire', label: '射击速度 (Fire Rate)', key: 'worldFireRateMultiplier', minLimit: 0.01, min: 0.2, max: 3, step: 0.05 },
+        { id: 'world-gravity', label: '重力倍率 (Gravity)', key: 'worldGravityMultiplier', minLimit: 0, min: 0, max: 3, step: 0.05 },
+        { id: 'world-player-dmg', label: '玩家受伤倍率 (Player Damage)', key: 'worldPlayerDamageMultiplier', minLimit: 0, min: 0, max: 5, step: 0.1 },
+        { id: 'world-enemy-dmg', label: '敌人受伤倍率 (Enemy Damage)', key: 'worldEnemyDamageMultiplier', minLimit: 0, min: 0, max: 5, step: 0.1 },
+        { id: 'world-range', label: '子弹射程 (Bullet Range)', key: 'worldBulletRangeMultiplier', minLimit: 0.01, min: 0.1, max: 3, step: 0.1 },
+        { id: 'world-explosion', label: '爆炸半径 (Explosion Radius)', key: 'worldExplosionRadiusMultiplier', minLimit: 0, min: 0.2, max: 5, step: 0.1 },
+        { id: 'world-explosion-shock', label: '冲击波范围 (Shockwave Range)', key: 'worldExplosionShockwaveRangeMultiplier', minLimit: 0, min: 0, max: 5, step: 0.1 },
+        { id: 'world-explosion-force', label: '冲击波力度 (Shockwave Force)', key: 'worldExplosionShockwaveForceMultiplier', minLimit: 0, min: 0, max: 5, step: 0.1 },
+        { id: 'world-explosion-ignite', label: '引燃范围 (Ignite Range)', key: 'worldExplosionIgniteRangeMultiplier', minLimit: 0, min: 0, max: 5, step: 0.1 },
+        { id: 'world-bullet-speed', label: '子弹速度 (Bullet Speed)', key: 'worldBulletSpeedMultiplier', minLimit: 0.01, min: 0.2, max: 3, step: 0.05 }
     ];
 
     const renderToggleRows = (items) => items.map((item) => `<div class="cheat-row"><label class="cheat-toggle"><span>${item.label}</span><input type="checkbox" id="${item.id}"><div class="toggle-switch"></div></label></div>`).join('');
@@ -639,12 +210,11 @@
                 <div class="cheat-row cheat-field">
                     <span>${item.label}</span>
                     <div class="cheat-inline">
-                        <input type="range" id="${item.rangeId}" class="cheat-slider" min="${item.min}" max="${item.max}" step="${item.step}" value="${item.value}">
-                        <input type="number" id="${item.inputId}" class="cheat-input" min="0" step="${item.step}" value="${item.value}">
-                        <button class="cheat-btn cheat-btn-mini" id="${item.resetId}">重置 (Reset)</button>
+                        <input type="range" id="rng-${item.id}" class="cheat-slider" min="${item.min}" max="${item.max}" step="${item.step}" value="1">
+                        <input type="number" id="num-${item.id}" class="cheat-input" min="0" step="${item.step}" value="1">
+                        <button class="cheat-btn cheat-btn-mini" id="btn-${item.id}-reset">↺</button>
                     </div>
-                </div>
-            `).join('')}
+                </div>`).join('')}
         </div>
     `;
 
@@ -693,8 +263,7 @@
                 html: `
                     <div class="spawn-radio-group" id="spawn-selector"></div>
                     ${renderButtonGrid([
-                        { id: 'btn-spawn-selected', label: '生成选中项' },
-                        { id: 'btn-spawn-selected', label: 'Spawn Selected' },
+                        { id: 'btn-spawn-selected', label: '生成选中项 (Spawn Selected)' },
                         { id: 'btn-spawn-undo', label: '撤销生成 (Undo Spawn)' },
                         { id: 'btn-spawn-redo', label: '重做生成 (Redo Spawn)' }
                     ])}
@@ -731,7 +300,7 @@
         ];
         return `
             <div class="menu-title">
-                <h2>StarWatch 作弊菜单</h2>
+                <h2>StarWatch Cheat Menu / 作弊菜单</h2>
                 <select id="sel-ui-material" class="menu-title-select">
                     ${materialOptions}
                 </select>
@@ -739,7 +308,7 @@
             <div class="menu-grid">
                 ${sections.map((section) => `<div class="menu-section"><h3>${section.title}</h3>${section.html}</div>`).join('')}
             </div>
-            <div class="footer-hint">Powered by StarWatch</div>
+            <div class="footer-hint">Powered by StarWatch / StarWatch 驱动</div>
         `;
     };
 
@@ -794,17 +363,18 @@
     // Logic Implementation
     // ==========================================
     
+    const getGlobal = (name, def) => typeof window[name] !== 'undefined' ? window[name] : def;
     const safeTileTypes = {
-        empty: typeof tileType_empty !== 'undefined' ? tileType_empty : 0,
-        solid: typeof tileType_solid !== 'undefined' ? tileType_solid : 1,
-        dirt: typeof tileType_dirt !== 'undefined' ? tileType_dirt : 2,
-        base: typeof tileType_base !== 'undefined' ? tileType_base : 3,
-        pipeH: typeof tileType_pipeH !== 'undefined' ? tileType_pipeH : 4,
-        pipeV: typeof tileType_pipeV !== 'undefined' ? tileType_pipeV : 5,
-        glass: typeof tileType_glass !== 'undefined' ? tileType_glass : 6,
-        baseBack: typeof tileType_baseBack !== 'undefined' ? tileType_baseBack : 7,
-        window: typeof tileType_window !== 'undefined' ? tileType_window : 8,
-        ladder: typeof tileType_ladder !== 'undefined' ? tileType_ladder : -1
+        empty: getGlobal('tileType_empty', 0),
+        solid: getGlobal('tileType_solid', 1),
+        dirt: getGlobal('tileType_dirt', 2),
+        base: getGlobal('tileType_base', 3),
+        pipeH: getGlobal('tileType_pipeH', 4),
+        pipeV: getGlobal('tileType_pipeV', 5),
+        glass: getGlobal('tileType_glass', 6),
+        baseBack: getGlobal('tileType_baseBack', 7),
+        window: getGlobal('tileType_window', 8),
+        ladder: getGlobal('tileType_ladder', -1)
     };
 
     const state = {
@@ -845,6 +415,20 @@
         renderExplosionRadius: false,
         renderGrenadeArc: false
     };
+    let originalOnWheel = null;
+    const hookZoomWheel = () => {
+        if (window.__cheatZoomWheelHooked) return;
+        originalOnWheel = window.onwheel;
+        window.onwheel = (e) => {
+            if (!state.zoomEnabled) {
+                if (typeof mouseWheel !== 'undefined') mouseWheel = 0;
+                return;
+            }
+            if (typeof originalOnWheel === 'function') return originalOnWheel(e);
+        };
+        window.__cheatZoomWheelHooked = true;
+    };
+    hookZoomWheel();
 
     const getBlockTarget = (target) => target && target.closest ? target.closest('#cheat-menu, #help-panel') : null;
     const isUiBlocking = (target) => state.uiBlocking || !!getBlockTarget(target);
@@ -909,26 +493,31 @@
         updateUndoButtons();
     };
 
+    const spawnHandlers = {
+        enemy: (id, pos) => window.spawnEnemy(id, pos),
+        prop: (id, pos) => window.spawnProp(id, pos),
+        supply: (id, pos) => {
+            if (!players[0]) return;
+            players[0].grenadeCount += 3;
+            players[0].heal(1);
+            playSound(sound_checkpoint, pos);
+            let e = new ParticleEmitter(pos);
+            e.emitSize = 0.5;
+            e.particleTime = 0.5;
+            e.colorStartA = new Color(0,1,0,1);
+            e.colorEndA = new Color(0,1,0,0);
+            return true;
+        }
+    };
+
     // Spawn Logic (top-level so快捷键可访问)
     const performSpawn = (pos) => {
         if (!selectedSpawn || !pos) return;
-        if (selectedSpawn.type === 'enemy') {
-            const ref = window.spawnEnemy(selectedSpawn.id, pos);
-            recordSpawn({ kind: 'enemy', id: selectedSpawn.id, pos: clonePos(pos), ref });
-        } else if (selectedSpawn.type === 'prop') {
-            const ref = window.spawnProp(selectedSpawn.id, pos);
-            recordSpawn({ kind: 'prop', id: selectedSpawn.id, pos: clonePos(pos), ref });
-        } else if (selectedSpawn.type === 'supply') {
-            if (players[0]) {
-                players[0].grenadeCount += 3;
-                players[0].heal(1);
-                playSound(sound_checkpoint, pos);
-                let e = new ParticleEmitter(pos);
-                e.emitSize = 0.5;
-                e.particleTime = 0.5;
-                e.colorStartA = new Color(0,1,0,1);
-                e.colorEndA = new Color(0,1,0,0);
-                recordSpawn({ kind: 'supply', id: 0, pos: clonePos(pos) });
+        const handler = spawnHandlers[selectedSpawn.type];
+        if (handler) {
+            const result = handler(selectedSpawn.id, pos);
+            if (result) {
+                recordSpawn({ kind: selectedSpawn.type, id: selectedSpawn.id, pos: clonePos(pos), ref: result === true ? undefined : result });
             }
         }
     };
@@ -951,22 +540,11 @@
     const redoSpawn = () => {
         const record = spawnRedoStack.pop();
         if (!record) return;
+        const handler = spawnHandlers[record.kind];
         let ref = null;
-        if (record.kind === 'enemy') {
-            ref = window.spawnEnemy(record.id, record.pos);
-        } else if (record.kind === 'prop') {
-            ref = window.spawnProp(record.id, record.pos);
-        } else if (record.kind === 'supply') {
-            if (players[0]) {
-                players[0].grenadeCount += 3;
-                players[0].heal(1);
-                playSound(sound_checkpoint, record.pos);
-                let e = new ParticleEmitter(record.pos);
-                e.emitSize = 0.5;
-                e.particleTime = 0.5;
-                e.colorStartA = new Color(0,1,0,1);
-                e.colorEndA = new Color(0,1,0,0);
-            }
+        if (handler) {
+            const result = handler(record.id, record.pos);
+            if (result && result !== true) ref = result;
         }
         spawnUndoStack.push({ ...record, ref });
         updateUndoButtons();
@@ -1118,7 +696,7 @@
                     drawW,
                     drawH
                 );
-                if (bodyPreviewLabel) bodyPreviewLabel.textContent = `身体纹理 ${index}`;
+                if (bodyPreviewLabel) bodyPreviewLabel.textContent = `身体纹理 ${index} / Body ${index}`;
             }
         }
         if (headPreviewCanvas && headSelect && headPreviewContext) {
@@ -1144,7 +722,7 @@
                     drawW,
                     drawH
                 );
-                if (headPreviewLabel) headPreviewLabel.textContent = `头部纹理 ${index}`;
+                if (headPreviewLabel) headPreviewLabel.textContent = `头部纹理 ${index} / Head ${index}`;
             }
         }
     };
@@ -1164,7 +742,7 @@
     const buildTextureLabel = (index, cols) => {
         const row = (index / cols | 0) + 1;
         const col = (index % cols) + 1;
-        return `纹理 (行${row}列${col})`;
+        return `纹理 (行${row}列${col}) / Texture (Row ${row}, Col ${col})`;
     };
 
     const buildTextureOptions = () => {
@@ -1215,40 +793,6 @@
         if (buildTextureOptions()) clearInterval(waitForTiles);
     }, 200);
 
-    const moveRange = document.getElementById('rng-world-move');
-    const moveInput = document.getElementById('num-world-move');
-    const moveReset = document.getElementById('btn-world-move-reset');
-    const fireRange = document.getElementById('rng-world-fire');
-    const fireInput = document.getElementById('num-world-fire');
-    const fireReset = document.getElementById('btn-world-fire-reset');
-    const gravityRange = document.getElementById('rng-world-gravity');
-    const gravityInput = document.getElementById('num-world-gravity');
-    const gravityReset = document.getElementById('btn-world-gravity-reset');
-    const shockwaveForceRange = document.getElementById('rng-world-explosion-force');
-    const shockwaveForceInput = document.getElementById('num-world-explosion-force');
-    const shockwaveForceReset = document.getElementById('btn-world-explosion-force-reset');
-    const playerDamageRange = document.getElementById('rng-world-player-dmg');
-    const playerDamageInput = document.getElementById('num-world-player-dmg');
-    const playerDamageReset = document.getElementById('btn-world-player-dmg-reset');
-    const enemyDamageRange = document.getElementById('rng-world-enemy-dmg');
-    const enemyDamageInput = document.getElementById('num-world-enemy-dmg');
-    const enemyDamageReset = document.getElementById('btn-world-enemy-dmg-reset');
-    const rangeRange = document.getElementById('rng-world-range');
-    const rangeInput = document.getElementById('num-world-range');
-    const rangeReset = document.getElementById('btn-world-range-reset');
-    const explosionRange = document.getElementById('rng-world-explosion');
-    const explosionInput = document.getElementById('num-world-explosion');
-    const explosionReset = document.getElementById('btn-world-explosion-reset');
-    const explosionShockRange = document.getElementById('rng-world-explosion-shock');
-    const explosionShockInput = document.getElementById('num-world-explosion-shock');
-    const explosionShockReset = document.getElementById('btn-world-explosion-shock-reset');
-    const explosionIgniteRange = document.getElementById('rng-world-explosion-ignite');
-    const explosionIgniteInput = document.getElementById('num-world-explosion-ignite');
-    const explosionIgniteReset = document.getElementById('btn-world-explosion-ignite-reset');
-    const bulletSpeedRange = document.getElementById('rng-world-bullet-speed');
-    const bulletSpeedInput = document.getElementById('num-world-bullet-speed');
-    const bulletSpeedReset = document.getElementById('btn-world-bullet-speed-reset');
-
     const applyNumericValue = (value, { key, minValue, rangeEl, inputEl }) => {
         const parsed = parseFloat(value);
         if (!Number.isFinite(parsed)) return;
@@ -1270,17 +814,16 @@
         return apply;
     };
 
-    bindNumericControl({ key: 'worldMoveMultiplier', minValue: 0.01, rangeEl: moveRange, inputEl: moveInput, resetEl: moveReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldFireRateMultiplier', minValue: 0.01, rangeEl: fireRange, inputEl: fireInput, resetEl: fireReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldGravityMultiplier', minValue: 0, rangeEl: gravityRange, inputEl: gravityInput, resetEl: gravityReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldExplosionShockwaveForceMultiplier', minValue: 0, rangeEl: shockwaveForceRange, inputEl: shockwaveForceInput, resetEl: shockwaveForceReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldPlayerDamageMultiplier', minValue: 0, rangeEl: playerDamageRange, inputEl: playerDamageInput, resetEl: playerDamageReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldEnemyDamageMultiplier', minValue: 0, rangeEl: enemyDamageRange, inputEl: enemyDamageInput, resetEl: enemyDamageReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldBulletRangeMultiplier', minValue: 0.01, rangeEl: rangeRange, inputEl: rangeInput, resetEl: rangeReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldExplosionRadiusMultiplier', minValue: 0, rangeEl: explosionRange, inputEl: explosionInput, resetEl: explosionReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldExplosionShockwaveRangeMultiplier', minValue: 0, rangeEl: explosionShockRange, inputEl: explosionShockInput, resetEl: explosionShockReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldExplosionIgniteRangeMultiplier', minValue: 0, rangeEl: explosionIgniteRange, inputEl: explosionIgniteInput, resetEl: explosionIgniteReset, defaultValue: 1 });
-    bindNumericControl({ key: 'worldBulletSpeedMultiplier', minValue: 0.01, rangeEl: bulletSpeedRange, inputEl: bulletSpeedInput, resetEl: bulletSpeedReset, defaultValue: 1 });
+    worldParams.forEach(p => {
+        bindNumericControl({
+            key: p.key,
+            minValue: p.minLimit,
+            rangeEl: document.getElementById(`rng-${p.id}`),
+            inputEl: document.getElementById(`num-${p.id}`),
+            resetEl: document.getElementById(`btn-${p.id}-reset`),
+            defaultValue: 1
+        });
+    });
 
     // Closed World
     document.getElementById('btn-close-world').onclick = () => {
@@ -1337,16 +880,16 @@
     const terrainSizeInput = document.getElementById('rng-terrain-size');
 
     const terrainTypes = [
-        { label: '空', value: safeTileTypes.empty },
-        { label: '实心', value: safeTileTypes.solid },
-        { label: '泥土', value: safeTileTypes.dirt },
-        { label: '基地', value: safeTileTypes.base },
-        { label: '玻璃', value: safeTileTypes.glass },
-        { label: '横管', value: safeTileTypes.pipeH },
-        { label: '竖管', value: safeTileTypes.pipeV },
-        { label: '梯子', value: safeTileTypes.ladder },
-        { label: '基地背景', value: safeTileTypes.baseBack },
-        { label: '窗户', value: safeTileTypes.window }
+        { label: '空 (Empty)', value: safeTileTypes.empty },
+        { label: '实心 (Solid)', value: safeTileTypes.solid },
+        { label: '泥土 (Dirt)', value: safeTileTypes.dirt },
+        { label: '基地 (Base)', value: safeTileTypes.base },
+        { label: '玻璃 (Glass)', value: safeTileTypes.glass },
+        { label: '横管 (Pipe H)', value: safeTileTypes.pipeH },
+        { label: '竖管 (Pipe V)', value: safeTileTypes.pipeV },
+        { label: '梯子 (Ladder)', value: safeTileTypes.ladder },
+        { label: '基地背景 (Base Back)', value: safeTileTypes.baseBack },
+        { label: '窗户 (Window)', value: safeTileTypes.window }
     ];
 
     if (terrainTypeSelect) {
@@ -1394,13 +937,12 @@
             state.uiBlocking = false;
             terrainPainting = false;
         };
-        panel.addEventListener('mousedown', blockEvent, { capture: true, passive: true });
-        panel.addEventListener('mouseup', blockEvent, { capture: true, passive: true });
-        panel.addEventListener('mousemove', blockEvent, { capture: true, passive: true });
-        panel.addEventListener('mouseleave', unblockEvent, { capture: true, passive: true });
-        panel.addEventListener('mouseenter', blockEvent, { capture: true, passive: true });
-        panel.addEventListener('focusin', blockEvent, { capture: true, passive: true });
-        panel.addEventListener('focusout', unblockEvent, { capture: true, passive: true });
+        const events = [
+            ['mousedown', blockEvent], ['mouseup', blockEvent], ['mousemove', blockEvent], 
+            ['mouseenter', blockEvent], ['focusin', blockEvent],
+            ['mouseleave', unblockEvent], ['focusout', unblockEvent]
+        ];
+        events.forEach(([evt, handler]) => panel.addEventListener(evt, handler, { capture: true, passive: true }));
     };
     attachUiBlocker(menu);
     attachUiBlocker(helpPanel);
@@ -1425,28 +967,29 @@
         setElementVisible(container, nextVisible, 'flex');
         setElementVisible(helpPanel, nextVisible, 'block');
             if (isVisible) state.uiBlocking = false;
-            showShortcutFeedback(`菜单：${nextVisible ? '开' : '关'}`);
+            showShortcutFeedback(`Menu/菜单: ${nextVisible ? 'On/开' : 'Off/关'}`);
         }
         
         // Quick Actions
         if (typeof mousePosWorld !== 'undefined') {
             if (isUiBlocking(e.target)) return;
-            if (e.code === 'KeyQ') { new Enemy(mousePosWorld); showShortcutFeedback('快速生成敌人'); }
-            if (e.code === 'KeyT') { new Prop(mousePosWorld); showShortcutFeedback('快速生成物体'); }
-            if (e.code === 'KeyE') { explosion(mousePosWorld); showShortcutFeedback('爆炸'); }
-            if (e.code === 'KeyF') {  makeWater(mousePosWorld); showShortcutFeedback('水桶爆炸'); }
-            if (e.code === 'KeyG') { performSpawn(mousePosWorld); debugRect && debugRect(mousePosWorld, vec2(1), '#fff', 0.1); showShortcutFeedback(`生成：${selectedSpawn ? selectedSpawn.label : '未知'}`); }
+            if (e.code === 'KeyQ') { new Enemy(mousePosWorld); showShortcutFeedback('快速生成敌人 / Quick spawn enemy'); }
+            if (e.code === 'KeyT') { new Prop(mousePosWorld); showShortcutFeedback('快速生成物体 / Quick spawn prop'); }
+            if (e.code === 'KeyE') { explosion(mousePosWorld); showShortcutFeedback('爆炸 / Explosion'); }
+            if (e.code === 'KeyF') {  makeWater(mousePosWorld); showShortcutFeedback('水桶爆炸 / Water explosion'); }
+            if (e.code === 'KeyG') { performSpawn(mousePosWorld); debugRect && debugRect(mousePosWorld, vec2(1), '#fff', 0.1); showShortcutFeedback(`生成/Spawn: ${selectedSpawn ? selectedSpawn.label : '未知 / Unknown'}`); }
             if (e.code === 'KeyB') {
                 if (isUiBlocking(e.target)) return;
                 state.terrainEdit = !state.terrainEdit;
                 syncTerrainToggle();
-                showShortcutFeedback(`地形编辑：${state.terrainEdit ? '开' : '关'}`);
+                showShortcutFeedback(`Terrain Edit/地形编辑: ${state.terrainEdit ? 'On/开' : 'Off/关'}`);
             }
             if (e.code === 'KeyV') {
                 state.zoomEnabled = !state.zoomEnabled;
                 const zoomToggle = uiReady ? document.getElementById('chk-zoom') : null;
                 if (zoomToggle) zoomToggle.checked = state.zoomEnabled;
-                showShortcutFeedback(`鼠标缩放：${state.zoomEnabled ? '开' : '关'}`);
+                if (!state.zoomEnabled && typeof mouseWheel !== 'undefined') mouseWheel = 0;
+                showShortcutFeedback(`Mouse Zoom/鼠标缩放: ${state.zoomEnabled ? 'On/开' : 'Off/关'}`);
             }
         }
     });
@@ -1599,8 +1142,9 @@
 
     function applyTerrainEdit(worldPos) {
         if (!worldPos) return;
-        if (state.terrainLayer === 'front' && !tileLayer) return;
-        if (state.terrainLayer === 'back' && !tileBackgroundLayer) return;
+        const isBack = state.terrainLayer === 'back';
+        const layer = isBack ? tileBackgroundLayer : tileLayer;
+        if (!layer) return;
 
         const now = Date.now();
         if (now - lastTerrainPaintTime < 30) return;
@@ -1613,36 +1157,24 @@
 
         const radius = Math.max(1, state.terrainSize || 1);
         const editedPositions = [];
+        const getTile = isBack ? (typeof getTileBackgroundData !== 'undefined' ? getTileBackgroundData : () => 0) 
+                               : (typeof getTileCollisionData !== 'undefined' ? getTileCollisionData : () => 0);
+        const setTile = isBack ? setTileBackgroundData : setTileCollisionData;
+        const buildTile = isBack ? buildBackTileData : buildFrontTileData;
+
         for (let y = -radius + 1; y <= radius - 1; y++) {
             for (let x = -radius + 1; x <= radius - 1; x++) {
                 const pos = basePos.add(vec2(x, y));
-                if (state.terrainLayer === 'back') {
-                    const before = typeof getTileBackgroundData !== 'undefined' ? getTileBackgroundData(pos) : 0;
-                    setTileBackgroundData(pos, state.terrainType);
-                    tileBackgroundLayer.setData(pos, buildBackTileData(state.terrainType), false);
-                    if (activeTerrainEdit) {
-                        const entryKey = `${pos.x},${pos.y}`;
-                        if (!activeTerrainEdit.tiles.has(entryKey)) {
-                            activeTerrainEdit.tiles.set(entryKey, { pos, before, after: state.terrainType });
-                        } else {
-                            const entry = activeTerrainEdit.tiles.get(entryKey);
-                            entry.after = state.terrainType;
-                            activeTerrainEdit.tiles.set(entryKey, entry);
-                        }
-                    }
-                } else {
-                    const before = typeof getTileCollisionData !== 'undefined' ? getTileCollisionData(pos) : 0;
-                    setTileCollisionData(pos, state.terrainType);
-                    tileLayer.setData(pos, buildFrontTileData(state.terrainType), false);
-                    if (activeTerrainEdit) {
-                        const entryKey = `${pos.x},${pos.y}`;
-                        if (!activeTerrainEdit.tiles.has(entryKey)) {
-                            activeTerrainEdit.tiles.set(entryKey, { pos, before, after: state.terrainType });
-                        } else {
-                            const entry = activeTerrainEdit.tiles.get(entryKey);
-                            entry.after = state.terrainType;
-                            activeTerrainEdit.tiles.set(entryKey, entry);
-                        }
+                const before = getTile(pos);
+                setTile(pos, state.terrainType);
+                layer.setData(pos, buildTile(state.terrainType), false);
+
+                if (activeTerrainEdit) {
+                    const entryKey = `${pos.x},${pos.y}`;
+                    if (!activeTerrainEdit.tiles.has(entryKey)) {
+                        activeTerrainEdit.tiles.set(entryKey, { pos, before, after: state.terrainType });
+                    } else {
+                        activeTerrainEdit.tiles.get(entryKey).after = state.terrainType;
                     }
                 }
                 editedPositions.push(pos);
@@ -1691,6 +1223,32 @@
     }, 100);
 
     function applyHooks() {
+        // Helper: Count active enemies (handling Battle Royale teams and excluding players)
+        const getActiveEnemiesCount = () => {
+            let count = 0;
+            if (typeof engineCollideObjects !== 'undefined') {
+                const t_enemy = typeof team_enemy !== 'undefined' ? team_enemy : 2;
+                for (const o of engineCollideObjects) {
+                    // Check isCharacter, not dead, not player, and valid enemy team (standard or BR)
+                    if (o.isCharacter && !o.isDead() && !o.isPlayer && (o.team === t_enemy || (state.battleRoyale && o.team >= 100))) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        };
+
+        // Battle Royale Fix: Hook levelEndTimer to prevent early win when enemies are fighting
+        if (typeof levelEndTimer !== 'undefined') {
+             const originalTimerSet = levelEndTimer.set;
+             levelEndTimer.set = function() {
+                 if (state.battleRoyale) {
+                     if (getActiveEnemiesCount() > 0) return;
+                 }
+                 return originalTimerSet.apply(this, arguments);
+             };
+        }
+
         if (typeof EngineObject !== 'undefined') {
             const originalEngineObjectUpdate = EngineObject.prototype.update;
             EngineObject.prototype.update = function() {
@@ -1723,6 +1281,71 @@
                 if (state.disableAudio) return;
                 return originalPlayMusic.apply(this, arguments);
             };
+        }
+        if (!window.__cheatTextHooked) {
+            const tryHookText = () => {
+                if (typeof mainContext === 'undefined' || !mainContext || !mainContext.fillText) return false;
+                const originalFillText = mainContext.fillText.bind(mainContext);
+                mainContext.fillText = function(text, x, y, maxWidth) {
+                    let nextText = text;
+                    let addCredit = false;
+                    if (typeof nextText === 'string') {
+                        if (nextText === 'A JS13K Game by Frank Force') addCredit = true;
+                        
+                        const exactReplacements = {
+                            '~: Debug Overlay': '~: Debug Overlay / 渲染调试层',
+                            '1: Debug Physics': '1: Debug Physics / 调试物理',
+                            '2: Debug Particles': '2: Debug Particles / 调试粒子',
+                            '3: God Mode': '3: God Mode / 上帝模式',
+                            '5: Save Screenshot': '5: Save Screenshot / 保存截图',
+                            'Debug Physics': 'Debug Physics / 调试物理',
+                            'Debug Particles': 'Debug Particles / 调试粒子',
+                            'God Mode': 'God Mode / 上帝模式'
+                        };
+
+                        if (exactReplacements[nextText]) {
+                            nextText = exactReplacements[nextText];
+                        } else {
+                            const prefixReplacements = [
+                                ['Objects: ', ' / 物体: '],
+                                ['Time: ', ' / 时间: '],
+                                ['pos = ', 'pos/位置 = ', true],
+                                ['vel = ', 'vel/速度 = ', true],
+                                ['size = ', 'size/尺寸 = ', true],
+                                ['collision = ', 'collision/碰撞 = ', true]
+                            ];
+                            for (const [prefix, suffix, replace] of prefixReplacements) {
+                                if (nextText.startsWith(prefix)) {
+                                    const val = nextText.slice(prefix.length);
+                                    nextText = replace ? `${suffix}${val}` : `${prefix}${val}${suffix}${val}`;
+                                    break;
+                                }
+                            }
+                            const match = nextText.match(/^Level\s+(\d+)\s+Lives\s+(\d+)\s+Enemies\s+(\d+)/);
+                            if (match) {
+                                let count = match[3];
+                                if (state.battleRoyale) count = getActiveEnemiesCount();
+                                nextText = `Level ${match[1]} / 当前关卡 ${match[1]}      Lives ${match[2]} / 生命 ${match[2]}      Enemies ${count} / 敌人 ${count}`;
+                            }
+                        }
+                    }
+                    const result = originalFillText(nextText, x, y, maxWidth);
+                    if (addCredit) {
+                        const prevFont = this.font;
+                        this.font = '.3in impact';
+                        originalFillText('Menu made with ❤love❤ by StarWatch', x, 250, maxWidth);
+                        this.font = prevFont;
+                    }
+                    return result;
+                };
+                window.__cheatTextHooked = true;
+                return true;
+            };
+            if (!tryHookText()) {
+                const textHookInterval = setInterval(() => {
+                    if (tryHookText()) clearInterval(textHookInterval);
+                }, 100);
+            }
         }
         
         if (!window.__cheatExplosionHooked && typeof explosion === 'function') {
@@ -1827,6 +1450,12 @@
         };
         const originalPlayerUpdate = Player.prototype.update;
         Player.prototype.update = function() {
+            let jumpOverride = null;
+            if (!this.playerIndex && typeof inputData !== 'undefined' && typeof keyIsDown === 'function' && keyIsDown(32) && !keyIsDown(38)) {
+                if (!inputData[0]) inputData[0] = [];
+                jumpOverride = inputData[0][38];
+                inputData[0][38] = { d: 1 };
+            }
             if (state.god && typeof godMode !== 'undefined') godMode = 1;
 
             // Fly Mode Fix: No inertia, stop when no input
@@ -1871,6 +1500,12 @@
             
             // Call Original
             originalPlayerUpdate.apply(this, arguments);
+            if (jumpOverride !== null) {
+                if (inputData[0]) {
+                    if (jumpOverride) inputData[0][38] = jumpOverride;
+                    else delete inputData[0][38];
+                }
+            }
 
             // Super Speed Fix: Directly modify position to bypass max speed clamp
             if (state.superSpeed) {

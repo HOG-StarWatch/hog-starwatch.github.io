@@ -5,88 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文本处理</title>
     <link rel="stylesheet" href="../css/style.css">
-    <style>
-        /* Regex Specific Styles */
-        .regex-bar {
-            background: rgba(0,0,0,0.2);
-            padding: 0.8rem;
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .regex-input-group {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 0 10px;
-            font-family: var(--font-mono);
-        }
-
-        .regex-input-group span { color: var(--text-dim); user-select: none; }
-        .regex-input {
-            border: none; background: transparent; color: var(--primary);
-            font-family: var(--font-mono); font-size: 1.1rem; padding: 10px; flex: 1; outline: none;
-        }
-
-        .flags-group { display: flex; gap: 10px; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-dim); }
-        
-        .regex-editor-area {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; height: 500px;
-        }
-
-        .editor-box {
-            display: flex; flex-direction: column; background: rgba(0,0,0,0.2);
-            border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border);
-        }
-
-        .box-header {
-            padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);
-            font-size: 0.85rem; font-weight: 600; color: var(--text-dim);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .text-layer {
-            flex: 1; padding: 15px; font-family: var(--font-mono); font-size: 14px;
-            line-height: 1.6; overflow: auto; white-space: pre-wrap; word-break: break-all;
-            position: relative;
-        }
-        
-        textarea.text-layer { background: transparent; border: none; color: var(--text-main); resize: none; z-index: 2; }
-        
-        .highlight-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
-            color: transparent; pointer-events: none;
-        }
-
-        .match { background-color: rgba(45, 212, 191, 0.2); border-bottom: 2px solid var(--secondary); border-radius: 2px; }
-        
-        .quick-ref { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-        .ref-chip {
-            background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px;
-            font-size: 0.8rem; cursor: pointer; transition: 0.2s; color: var(--text-dim);
-        }
-        .ref-chip:hover { background: var(--primary); color: #000; }
-
-        @media (max-width: 768px) {
-            .regex-editor-area { grid-template-columns: 1fr; height: auto; }
-            .regex-editor-area > .editor-box { height: 300px; }
-        }
-    </style>
 </head>
 <body style="padding: 1rem;">
-    <div class="sub-tab-group">
-        <div class="sub-tab active" onclick="textTool.switchTab('basic', this)">基础处理</div>
-        <div class="sub-tab" onclick="textTool.switchTab('regex', this)">正则实验室</div>
-    </div>
-
-    <!-- Basic Tool Workspace -->
     <div id="workspace-basic" class="workspace">
         <div class="panel">
             <div class="panel-header">
@@ -95,7 +15,7 @@
                     <button class="btn btn-icon" onclick="app.clear('text'); textTool.updateStats();">清空</button>
                 </div>
             </div>
-            <textarea id="text-input" placeholder="在此输入文本..." style="height: 200px;"></textarea>
+            <textarea id="text-input" placeholder="在此输入文本..." style="min-height: 220px;"></textarea>
             <div class="stats-row">
                 <span>字符: <b id="stat-total">0</b></span>
                 <span>非空: <b id="stat-nospace">0</b></span>
@@ -139,64 +59,7 @@
                     <button class="btn btn-icon btn-secondary" onclick="app.copy('text-output')">复制</button>
                 </div>
             </div>
-            <textarea id="text-output" readonly placeholder="处理结果..." style="height: 200px;"></textarea>
-        </div>
-    </div>
-
-    <!-- Regex Tool Workspace -->
-    <div id="workspace-regex" class="workspace" style="display:none;">
-        <div class="regex-bar">
-            <div class="regex-input-group">
-                <span>/</span>
-                <input type="text" id="regex-input" class="regex-input" placeholder="expression" value="\b\w+\b" oninput="textTool.runRegex()">
-                <span>/</span>
-            </div>
-            <div class="flags-group">
-                <label><input type="checkbox" id="flag-g" checked onchange="textTool.runRegex()"> global (g)</label>
-                <label><input type="checkbox" id="flag-m" checked onchange="textTool.runRegex()"> multiline (m)</label>
-                <label><input type="checkbox" id="flag-i" onchange="textTool.runRegex()"> insensitive (i)</label>
-            </div>
-        </div>
-
-        <div class="quick-ref">
-            <span class="ref-chip" onclick="textTool.insertRegex('\\d+')">数字 \d</span>
-            <span class="ref-chip" onclick="textTool.insertRegex('\\w+')">单词 \w</span>
-            <span class="ref-chip" onclick="textTool.insertRegex('[a-z]')">小写 [a-z]</span>
-            <span class="ref-chip" onclick="textTool.insertRegex('^...$')">整行 ^$</span>
-            <span class="ref-chip" onclick="textTool.insertRegex('(...)')">分组 ()</span>
-            <span class="ref-chip" onclick="textTool.insertRegex('[\\u4e00-\\u9fa5]')">中文</span>
-            <span class="ref-chip" onclick="textTool.insertRegex('((?=.*\\d)(?=.*[a-z]).{8,})')">强密码</span>
-        </div>
-
-        <div class="regex-editor-area">
-            <!-- Test String -->
-            <div class="editor-box">
-                <div class="box-header">
-                    测试文本 (Test String)
-                    <button class="btn btn-sm btn-icon" onclick="document.getElementById('regex-test-input').value=''; textTool.runRegex()">×</button>
-                </div>
-                <div style="position:relative; flex:1; overflow:hidden;">
-                    <div id="regex-highlight" class="text-layer highlight-layer"></div>
-                    <textarea id="regex-test-input" class="text-layer" spellcheck="false" oninput="textTool.runRegex()" onscroll="textTool.syncScroll()">
-Aurora Toolbox is amazing!
-Project started in 2024.
-Email: contact@example.com
-IP: 192.168.1.1
-中文测试：你好世界
-                    </textarea>
-                </div>
-            </div>
-
-            <!-- Match Results -->
-            <div class="editor-box">
-                <div class="box-header">
-                    匹配结果 (Matches)
-                    <span id="match-count" style="color:var(--secondary)">0 matches</span>
-                </div>
-                <div id="match-list" class="text-layer" style="background: rgba(0,0,0,0.1);">
-                    <!-- Results injected here -->
-                </div>
-            </div>
+            <textarea id="text-output" readonly placeholder="处理结果..." style="min-height: 220px;"></textarea>
         </div>
     </div>
 
@@ -205,21 +68,6 @@ IP: 192.168.1.1
     <script src="../js/loader.js"></script>
     <script>
         const textTool = {
-            switchTab: function(tab, el) {
-                document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-                el.classList.add('active');
-                
-                if(tab === 'basic') {
-                    document.getElementById('workspace-basic').style.display = 'block';
-                    document.getElementById('workspace-regex').style.display = 'none';
-                } else {
-                    document.getElementById('workspace-basic').style.display = 'none';
-                    document.getElementById('workspace-regex').style.display = 'block';
-                    this.runRegex(); // Init regex view
-                }
-            },
-
-            // Basic Text Logic
             updateStats: function() {
                 const val = document.getElementById('text-input').value;
                 document.getElementById('stat-total').innerText = val.length;
@@ -246,7 +94,7 @@ IP: 192.168.1.1
                     case 'sort': res = input.split('\n').sort().join('\n'); break;
                     case 'sc2tc':
                         app.showToast('正在加载组件...', 'info');
-                        ResourceLoader.load('opencc-js').then(() => {
+                        ResourceLoader.loadDeps('@opencc').then(() => {
                             const sc2tc = OpenCC.Converter({ from: 'cn', to: 'tw' });
                             const res = sc2tc(input);
                             document.getElementById('text-output').value = res;
@@ -256,7 +104,7 @@ IP: 192.168.1.1
                         return;
                     case 'tc2sc':
                         app.showToast('正在加载组件...', 'info');
-                        ResourceLoader.load('opencc-js').then(() => {
+                        ResourceLoader.loadDeps('@opencc').then(() => {
                             const tc2sc = OpenCC.Converter({ from: 'tw', to: 'cn' });
                             const res = tc2sc(input);
                             document.getElementById('text-output').value = res;
@@ -268,97 +116,6 @@ IP: 192.168.1.1
 
                 document.getElementById('text-output').value = res;
                 document.getElementById('text-out-stat').innerText = `${res.length} 字符`;
-            },
-
-            // Regex Logic
-            insertRegex: function(str) {
-                const input = document.getElementById('regex-input');
-                const start = input.selectionStart;
-                const end = input.selectionEnd;
-                const val = input.value;
-                input.value = val.substring(0, start) + str + val.substring(end);
-                input.focus();
-                input.selectionStart = input.selectionEnd = start + str.length;
-                this.runRegex();
-            },
-
-            syncScroll: function() {
-                const textarea = document.getElementById('regex-test-input');
-                const highlight = document.getElementById('regex-highlight');
-                highlight.scrollTop = textarea.scrollTop;
-                highlight.scrollLeft = textarea.scrollLeft;
-            },
-
-            runRegex: function() {
-                const pattern = document.getElementById('regex-input').value;
-                const text = document.getElementById('regex-test-input').value;
-                const highlight = document.getElementById('regex-highlight');
-                const list = document.getElementById('match-list');
-                const countLabel = document.getElementById('match-count');
-
-                if (!pattern) {
-                    highlight.innerHTML = '';
-                    list.innerHTML = '';
-                    countLabel.innerText = '0 matches';
-                    return;
-                }
-
-                let flags = '';
-                if (document.getElementById('flag-g').checked) flags += 'g';
-                if (document.getElementById('flag-i').checked) flags += 'i';
-                if (document.getElementById('flag-m').checked) flags += 'm';
-
-                try {
-                    const regex = new RegExp(pattern, flags);
-                    
-                    // Highlight Logic
-                    const safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    let highlightedHtml = safeText.replace(regex, (match) => {
-                        if(!match) return '';
-                        return `<span class="match">${match}</span>`;
-                    });
-                    
-                    highlightedHtml = highlightedHtml.replace(/\n/g, '<br>');
-                    highlight.innerHTML = highlightedHtml;
-
-                    // Match List Logic
-                    let matches = [];
-                    let match;
-                    
-                    if (regex.global) {
-                        regex.lastIndex = 0;
-                        while ((match = regex.exec(text)) !== null) {
-                            matches.push(match);
-                            if (match.index === regex.lastIndex) regex.lastIndex++;
-                        }
-                    } else {
-                        match = regex.exec(text);
-                        if (match) matches.push(match);
-                    }
-
-                    countLabel.innerText = `${matches.length} matches`;
-                    
-                    if (matches.length > 0) {
-                        let listHtml = '';
-                        matches.forEach((m, i) => {
-                            listHtml += `<div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed var(--border);">
-                                <div style="color:var(--secondary); font-weight:bold;">Match ${i + 1}</div>
-                                <div style="color:var(--text-main);">${m[0]}</div>
-                                <div style="font-size:0.8rem; color:var(--text-dim); margin-top:4px;">
-                                    Index: ${m.index} | Groups: [${m.slice(1).join(', ')}]
-                                </div>
-                            </div>`;
-                        });
-                        list.innerHTML = listHtml;
-                    } else {
-                        list.innerHTML = '<div style="color:var(--text-dim); padding:10px;">No matches found</div>';
-                    }
-
-                } catch (e) {
-                    countLabel.innerText = 'Error';
-                    list.innerHTML = `<div style="color:#fb5454;">Invalid Regex: ${e.message}</div>`;
-                    highlight.innerHTML = '';
-                }
             }
         };
 

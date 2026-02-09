@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音转文本 (STT)</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .stt-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .stt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            padding: 1rem;
+            align-items: start;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+        .input-group label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.2;
+        }
+        .input-group input[type="text"],
+        .input-group select,
+        .input-group textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            font-size: 0.95rem;
+        }
+        .upload-area {
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(255,255,255,0.04);
+        }
+        .file-info {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            margin-top: 10px;
+            gap: 8px;
+        }
+        .upload-block {
+            padding: 0 1rem 1rem;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .upload-block audio {
+            width: 100%;
+        }
+        .upload-config {
+            display: none;
+        }
+        .stt-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 0 1rem 1rem;
+        }
+        .stt-container textarea {
+            box-sizing: border-box;
+            width: 100%;
+        }
+        #stt-output {
+            min-height: 220px;
+            margin: 0 1rem 1rem;
+            width: calc(100% - 2rem);
+        }
+        .status-row {
+            padding: 0 1rem 1rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+        .support-warning {
+            padding: 1rem;
+            color: #f43f5e;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body style="padding: 1rem;">
+    <div class="workspace stt-container">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">语音转文本 (STT)</div>
+                <div class="panel-actions">
+                    <button class="btn btn-icon" onclick="sttTool.clear()">清空</button>
+                </div>
+            </div>
+            <div class="stt-grid">
+                <div class="input-group">
+                    <label for="stt-source">识别来源</label>
+                    <select id="stt-source">
+                        <option value="mic">麦克风实时</option>
+                        <option value="upload">上传音频</option>
+                        <option value="playback">回放识别</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="stt-lang">识别语言</label>
+                    <select id="stt-lang">
+                        <option value="zh-CN">中文（普通话）</option>
+                        <option value="zh-HK">中文（粤语）</option>
+                        <option value="en-US">English (US)</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="ja-JP">日本語</option>
+                        <option value="ko-KR">한국어</option>
+                        <option value="fr-FR">Français</option>
+                        <option value="de-DE">Deutsch</option>
+                        <option value="es-ES">Español</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="stt-mode">识别模式</label>
+                    <select id="stt-mode">
+                        <option value="continuous">连续</option>
+                        <option value="single">单次</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>显示实时结果</label>
+                    <label><input type="checkbox" id="stt-interim"> 启用</label>
+                </div>
+                <div class="input-group upload-config" id="stt-api-group">
+                    <label for="stt-api">上传识别 API</label>
+                    <input type="text" id="stt-api" placeholder="https://example.com/stt">
+                </div>
+                <div class="input-group upload-config" id="stt-header-group">
+                    <label for="stt-header-name">请求头</label>
+                    <input type="text" id="stt-header-name" placeholder="Authorization">
+                </div>
+                <div class="input-group upload-config">
+                    <label for="stt-header-value">请求头值</label>
+                    <input type="text" id="stt-header-value" placeholder="Bearer ...">
+                </div>
+            </div>
+            <div class="stt-actions">
+                <button class="btn btn-primary" onclick="sttTool.start()">开始识别</button>
+                <button class="btn" onclick="sttTool.stop()">停止</button>
+                <button class="btn btn-primary" id="stt-upload-btn" onclick="sttTool.recognizeUpload()" disabled>识别上传音频</button>
+                <button class="btn btn-primary" id="stt-playback-btn" onclick="sttTool.playbackRecognize()" disabled>播放并识别</button>
+                <button class="btn btn-secondary" onclick="app.copy('stt-output')">复制文本</button>
+            </div>
+            <div class="upload-block" id="stt-upload-block">
+                <div class="upload-area" onclick="document.getElementById('stt-file-input').click()">
+                    <i class="fas fa-file-audio" style="font-size: 2rem; margin-bottom: 10px; color: var(--text-dim);"></i>
+                    <p style="color: var(--text-dim); margin:0;">点击或拖拽音频文件到此处</p>
+                    <input type="file" id="stt-file-input" accept="audio/*" onchange="sttTool.handleFile(this)" style="display:none;">
+                </div>
+                <div id="stt-file-info" class="file-info">
+                    <span id="stt-file-text"></span>
+                    <button class="btn btn-secondary btn-sm" onclick="sttTool.clearFile()">移除文件</button>
+                </div>
+                <audio id="stt-audio" controls></audio>
+            </div>
+            <textarea id="stt-output" placeholder="识别结果将显示在这里..." readonly></textarea>
+            <div class="status-row" id="stt-status">状态：就绪</div>
+        </div>
+
+        <div class="panel" id="stt-support" style="display:none;">
+            <div class="support-warning">当前浏览器不支持实时语音识别，可使用上传识别。</div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    <script src="../js/app.js"></script>
+    <script>
+        const sttTool = {
+            recognition: null,
+            recognizing: false,
+            finalText: '',
+            uploadFile: null,
+            init: function() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    document.getElementById('stt-support').style.display = 'block';
+                    this.setStatus('实时识别不可用');
+                }
+                document.getElementById('stt-source').addEventListener('change', () => this.updateSource());
+                this.updateSource();
+            },
+            updateSource: function() {
+                const source = document.getElementById('stt-source').value;
+                const isUpload = source === 'upload';
+                const isPlayback = source === 'playback';
+                document.getElementById('stt-upload-block').style.display = (isUpload || isPlayback) ? 'flex' : 'none';
+                document.getElementById('stt-api-group').style.display = isUpload ? 'flex' : 'none';
+                document.getElementById('stt-header-group').style.display = isUpload ? 'flex' : 'none';
+                Array.from(document.querySelectorAll('.upload-config')).forEach(el => {
+                    el.style.display = isUpload ? 'flex' : 'none';
+                });
+                document.getElementById('stt-mode').disabled = isUpload || isPlayback;
+                document.getElementById('stt-interim').disabled = isUpload || isPlayback;
+                if (isUpload) {
+                    this.stop();
+                    this.setStatus('上传识别就绪');
+                } else if (isPlayback) {
+                    this.stop();
+                    this.setStatus('回放识别就绪');
+                }
+                document.getElementById('stt-upload-btn').disabled = !isUpload || !this.uploadFile;
+                document.getElementById('stt-playback-btn').disabled = !isPlayback || !this.uploadFile;
+            },
+            buildRecognition: function() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                recognition.lang = document.getElementById('stt-lang').value;
+                recognition.continuous = document.getElementById('stt-mode').value === 'continuous';
+                recognition.interimResults = document.getElementById('stt-interim').checked;
+                recognition.onstart = () => {
+                    this.recognizing = true;
+                    this.setStatus('识别中');
+                };
+                recognition.onerror = () => {
+                    this.recognizing = false;
+                    this.setStatus('错误');
+                };
+                recognition.onend = () => {
+                    this.recognizing = false;
+                    this.setStatus('已停止');
+                };
+                recognition.onresult = (event) => {
+                    let interim = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            this.finalText += transcript + '\n';
+                        } else {
+                            interim += transcript;
+                        }
+                    }
+                    const output = document.getElementById('stt-output');
+                    output.value = this.finalText + (interim ? interim : '');
+                };
+                return recognition;
+            },
+            start: function() {
+                if (this.recognizing) return;
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const source = document.getElementById('stt-source').value;
+                if (source === 'upload') {
+                    this.recognizeUpload();
+                    return;
+                }
+                if (source === 'playback') {
+                    this.playbackRecognize();
+                    return;
+                }
+                if (!SpeechRecognition) return;
+                this.recognition = this.buildRecognition();
+                this.recognition.start();
+            },
+            stop: function() {
+                if (this.recognition && this.recognizing) {
+                    this.recognition.stop();
+                }
+            },
+            handleFile: function(input) {
+                const file = input.files && input.files[0];
+                if (!file) return;
+                this.uploadFile = file;
+                document.getElementById('stt-file-text').innerText = `${file.name} (${file.size} bytes)`;
+                document.getElementById('stt-file-info').style.display = 'flex';
+                const audio = document.getElementById('stt-audio');
+                audio.src = URL.createObjectURL(file);
+                document.getElementById('stt-upload-btn').disabled = false;
+                if (document.getElementById('stt-source').value === 'playback') {
+                    document.getElementById('stt-playback-btn').disabled = false;
+                }
+            },
+            clearFile: function() {
+                this.uploadFile = null;
+                document.getElementById('stt-file-input').value = '';
+                document.getElementById('stt-file-info').style.display = 'none';
+                document.getElementById('stt-file-text').innerText = '';
+                document.getElementById('stt-audio').src = '';
+                document.getElementById('stt-upload-btn').disabled = true;
+                document.getElementById('stt-playback-btn').disabled = true;
+            },
+            extractText: function(payload) {
+                if (!payload) return '';
+                if (typeof payload === 'string') return payload;
+                const keys = ['text', 'transcript', 'result', 'message'];
+                for (const key of keys) {
+                    if (typeof payload[key] === 'string') return payload[key];
+                }
+                if (payload.data) {
+                    return this.extractText(payload.data);
+                }
+                return '';
+            },
+            recognizeUpload: async function() {
+                if (!this.uploadFile) {
+                    app.showToast('请先选择音频文件', 'error');
+                    return;
+                }
+                const api = document.getElementById('stt-api').value.trim();
+                if (!api) {
+                    app.showToast('请填写上传识别 API', 'error');
+                    return;
+                }
+                this.setStatus('上传识别中');
+                try {
+                    const form = new FormData();
+                    form.append('file', this.uploadFile);
+                    form.append('lang', document.getElementById('stt-lang').value);
+                    const headers = {};
+                    const headerName = document.getElementById('stt-header-name').value.trim();
+                    const headerValue = document.getElementById('stt-header-value').value.trim();
+                    if (headerName && headerValue) {
+                        headers[headerName] = headerValue;
+                    }
+                    const res = await fetch(api, {
+                        method: 'POST',
+                        headers,
+                        body: form
+                    });
+                    const raw = await res.text();
+                    let text = '';
+                    try {
+                        const json = JSON.parse(raw);
+                        text = this.extractText(json);
+                    } catch (e) {
+                        text = raw;
+                    }
+                    if (!text) {
+                        throw new Error('未获取到文本结果');
+                    }
+                    this.finalText = text;
+                    document.getElementById('stt-output').value = text;
+                    this.setStatus('完成');
+                } catch (e) {
+                    this.setStatus('错误');
+                    app.showToast('识别失败', 'error');
+                }
+            },
+            playbackRecognize: function() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    app.showToast('浏览器不支持回放识别', 'error');
+                    return;
+                }
+                if (!this.uploadFile) {
+                    app.showToast('请先选择音频文件', 'error');
+                    return;
+                }
+                this.stop();
+                this.finalText = '';
+                document.getElementById('stt-output').value = '';
+                const audio = document.getElementById('stt-audio');
+                audio.currentTime = 0;
+                this.recognition = this.buildRecognition();
+                this.recognition.onend = () => {
+                    this.recognizing = false;
+                    this.setStatus('已停止');
+                };
+                this.recognition.start();
+                audio.onended = () => {
+                    if (this.recognition && this.recognizing) this.recognition.stop();
+                };
+                audio.play().catch(() => {
+                    this.setStatus('播放失败');
+                });
+            },
+            clear: function() {
+                this.finalText = '';
+                document.getElementById('stt-output').value = '';
+                this.setStatus('就绪');
+            },
+            setStatus: function(text) {
+                document.getElementById('stt-status').innerText = `状态：${text}`;
+            }
+        };
+        sttTool.init();
+    </script>
+</body>
+</html>

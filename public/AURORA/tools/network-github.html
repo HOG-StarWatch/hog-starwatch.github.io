@@ -337,7 +337,7 @@
         // Init
         document.addEventListener('DOMContentLoaded', () => {
             // Load marked library
-            ResourceLoader.load('marked').then(() => {
+            ResourceLoader.loadDeps('marked').then(() => {
                 markedLoaded = true;
                 console.log('Marked library loaded');
             }).catch(err => console.error('Failed to load marked', err));
@@ -383,7 +383,16 @@
                 const url = `https://api.github.com/search/repositories?q=${query}&sort=${sort}&order=desc&per_page=30`;
 
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                if (!response.ok) {
+                    const remaining = response.headers.get('x-ratelimit-remaining');
+                    const reset = response.headers.get('x-ratelimit-reset');
+                    if (response.status === 403 && remaining === '0') {
+                        const resetTime = reset ? new Date(Number(reset) * 1000).toLocaleTimeString() : '';
+                        listEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ff4d4f;">已触发 GitHub 限流${resetTime ? '，预计恢复时间：' + resetTime : ''}</div>`;
+                        return;
+                    }
+                    throw new Error(`API Error: ${response.status}`);
+                }
                 
                 const data = await response.json();
                 renderRepos(data.items);
@@ -391,7 +400,8 @@
                 document.getElementById('list-title').textContent = currentMode === 'search' ? `"${document.getElementById('searchInput').value}" 的结果` : "🔥 热门趋势";
 
             } catch (error) {
-                listEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ff4d4f;">❌ 获取失败: ${error.message}</div>`;
+                const safeMsg = (window.app && app.escapeHtml) ? app.escapeHtml(error.message) : error.message;
+                listEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ff4d4f;">❌ 获取失败: ${safeMsg}</div>`;
             }
         }
 
@@ -444,12 +454,14 @@
                     langColor = colors[repo.language] || '#ccc';
                 }
 
+                const safeName = (window.app && app.escapeHtml) ? app.escapeHtml(repo.full_name) : repo.full_name;
+                const safeDesc = (window.app && app.escapeHtml) ? app.escapeHtml(repo.description || '暂无描述') : (repo.description || '暂无描述');
                 card.innerHTML = `
                     <div class="repo-header">
-                        <div class="repo-name">${repo.full_name}</div>
+                        <div class="repo-name">${safeName}</div>
                         <div style="font-size: 0.8rem; color: var(--text-dim);">${new Date(repo.updated_at).toLocaleDateString()}</div>
                     </div>
-                    <div class="repo-desc">${repo.description || '暂无描述'}</div>
+                    <div class="repo-desc">${safeDesc}</div>
                     <div class="repo-meta">
                         <div class="meta-item" style="color: ${langColor}">
                             <span class="lang-dot" style="background: ${langColor}"></span>
@@ -483,7 +495,21 @@
             try {
                 // Fetch Readme
                 const response = await fetch(`https://api.github.com/repos/${repo.full_name}/readme`);
-                if (!response.ok) throw new Error('No README found');
+                if (!response.ok) {
+                    const remaining = response.headers.get('x-ratelimit-remaining');
+                    const reset = response.headers.get('x-ratelimit-reset');
+                    if (response.status === 403 && remaining === '0') {
+                        const resetTime = reset ? new Date(Number(reset) * 1000).toLocaleTimeString() : '';
+                        contentEl.innerHTML = `<div style="text-align: center; padding: 20px;">
+                            <h3>已触发 GitHub 限流</h3>
+                            <p>${resetTime ? '预计恢复时间：' + resetTime : '请稍后重试'}</p>
+                            <p>请点击下方按钮直接访问 GitHub 查看</p>
+                        </div>`;
+                        toggleBtn.disabled = true;
+                        return;
+                    }
+                    throw new Error('No README found');
+                }
                 
                 const data = await response.json();
                 // GitHub API returns Base64 encoded content
@@ -496,9 +522,10 @@
                 renderPreviewContent();
 
             } catch (error) {
+                const safeMsg = (window.app && app.escapeHtml) ? app.escapeHtml(error.message) : error.message;
                 contentEl.innerHTML = `<div style="text-align: center; padding: 20px;">
                     <h3>无法加载预览</h3>
-                    <p>${error.message}</p>
+                    <p>${safeMsg}</p>
                     <p>请点击下方按钮直接访问 GitHub 查看</p>
                 </div>`;
                 toggleBtn.disabled = true;
@@ -517,13 +544,15 @@
             
             if (isRawView) {
                 // Raw View
-                contentEl.innerHTML = `<div class="source-view">${escapeHtml(currentRawContent)}</div>`;
+                contentEl.innerHTML = `<div class="source-view">${(window.app && app.escapeHtml) ? app.escapeHtml(currentRawContent) : escapeHtml(currentRawContent)}</div>`;
             } else {
                 // Rendered View
                 if (markedLoaded && window.marked) {
-                    contentEl.innerHTML = window.marked.parse(currentRawContent);
+                    const rendered = window.marked.parse(currentRawContent);
+                    const safeHtml = (window.app && app.sanitizeHtml) ? app.sanitizeHtml(rendered) : rendered;
+                    contentEl.innerHTML = safeHtml;
                 } else {
-                    contentEl.innerHTML = `<div class="source-view">${escapeHtml(currentRawContent)}</div>`;
+                    contentEl.innerHTML = `<div class="source-view">${(window.app && app.escapeHtml) ? app.escapeHtml(currentRawContent) : escapeHtml(currentRawContent)}</div>`;
                 }
             }
         }

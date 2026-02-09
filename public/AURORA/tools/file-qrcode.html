@@ -489,7 +489,7 @@
 
             try {
                 if(window.app && app.showToast) app.showToast('正在加载组件...', 'info');
-                await ResourceLoader.load(['fflate', 'qrcode']);
+                await ResourceLoader.loadDeps('@file-qrcode');
                 await generateDataQRCodeFromFiles(selectedFiles);
             } catch (err) {
                 console.error(err);

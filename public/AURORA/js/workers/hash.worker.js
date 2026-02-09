@@ -1,17 +1,26 @@
-/**
- * Web Worker for Hash Calculation
- * Handles CPU-intensive hash computations off the main thread.
- */
+let ready = Promise.reject(new Error('初始化失败'));
+try {
+    importScripts('../loader.js');
+    if (typeof ResourceLoader !== 'undefined') {
+        ready = ResourceLoader.load('crypto-js');
+    } else {
+        ready = Promise.reject(new Error('ResourceLoader 未加载'));
+    }
+} catch (e) {
+    ready = Promise.reject(e);
+}
 
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js');
-
-self.onmessage = function(e) {
+self.onmessage = async function(e) {
     const { type, payload } = e.data;
 
     if (type === 'calc') {
-        const { data, isFile, algos, hmacKey } = payload;
+        const { data, isFile, algos, hmacKey, requestId } = payload;
         
         try {
+            await ready;
+            if (typeof CryptoJS === 'undefined') {
+                throw new Error('CryptoJS 未加载');
+            }
             let inputData;
             
             // For files, data is an ArrayBuffer
@@ -37,10 +46,11 @@ self.onmessage = function(e) {
                 results[algo] = hash.toString(CryptoJS.enc.Hex);
             });
 
-            self.postMessage({ type: 'result', results: results });
+            self.postMessage({ type: 'result', results: results, requestId: requestId });
 
         } catch (error) {
-            self.postMessage({ type: 'error', error: error.message });
+            const msg = error && error.message ? error.message : 'Unknown error';
+            self.postMessage({ type: 'error', error: msg, requestId: requestId });
         }
     }
 };

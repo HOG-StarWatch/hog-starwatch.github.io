@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智能对比工具</title>
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsondiffpatch@0.4.1/dist/formatters-styles/html.css">
 </head>
 <body>
     <div class="workspace layout-vertical">
@@ -109,7 +108,7 @@
                 const newTxt = document.getElementById('diff-new').value;
                 
                 app.showToast('正在加载组件...', 'info');
-                ResourceLoader.load('diff_match_patch').then(() => {
+                ResourceLoader.loadDeps('@diff').then(() => {
                     const dmp = new diff_match_patch();
                     const diffs = dmp.diff_main(oldTxt, newTxt);
                     dmp.diff_cleanupSemantic(diffs);
@@ -157,7 +156,7 @@
                 }
 
                 app.showToast('正在加载组件...', 'info');
-                ResourceLoader.load('jsondiffpatch').then(() => {
+                ResourceLoader.loadDeps('@diff').then(() => {
                     const delta = jsondiffpatch.diff(oldObj, newObj);
                     
                     if (!delta) {

@@ -1,1 +1,1 @@
-请使用网页小工具栏[Base64储存文件](../Base64.html)工具解码[tdl.exe.7z.json](./tdl.exe.7z.json)获取tdl.exe.7z
+请使用网页小工具栏[Base64储存文件](../File64.html)工具解码[tdl.exe.7z.json](./tdl.exe.7z.json)获取tdl.exe.7z
