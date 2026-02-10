@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Developer Toolbox - 开发者全能工具箱</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+        /* --- Core Variables & Reset --- */
+        /* Removed redundant :root variables */
+        
+        body { 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+/* --- Top Navbar --- */
+.navbar {
+    height: 70px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    z-index: 100;
+    flex-shrink: 0;
+    justify-content: space-between; /* Ensure space between items */
+}
+/* Removed hardcoded .logo class as title was deleted */
+
+.nav-links {
+    display: flex;
+    gap: 10px;
+    height: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.nav-links::-webkit-scrollbar { display: none; }
+
+.nav-item {
+    padding: 0 16px;
+    height: 100%;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--text-dim);
+    border-bottom: 3px solid transparent;
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--text-main); }
+.nav-item.active { 
+    border-bottom-color: var(--primary); 
+    color: var(--text-main); 
+    background: linear-gradient(to top, rgba(179,136,255,0.1), transparent);
+}
+.nav-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+.nav-en { font-size: 13px; font-weight: 600; }
+.nav-cn { font-size: 11px; opacity: 0.8; font-weight: 400; }
+
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+}
+.mobile-menu-btn:hover { background: var(--bg-hover); }
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 15px;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: var(--bg-panel);
+        flex-direction: column;
+        height: auto;
+        border-bottom: 1px solid var(--border);
+        padding: 10px 0;
+        z-index: 1000;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        gap: 0;
+    }
+
+    .nav-links.open {
+        display: flex;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    .nav-item {
+        width: 100%;
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        height: auto;
+    }
+    
+    .nav-item.active {
+        border-bottom-color: transparent;
+        border-left: 4px solid var(--primary);
+        background: rgba(255,255,255,0.05);
+    }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Main Content --- */
+.main-content { 
+    flex: 1; 
+    position: relative; 
+    overflow: hidden; 
+    display: flex; 
+}
+.module-view { 
+    display: none; 
+    height: 100%; 
+    width: 100%; 
+    animation: fadeIn 0.4s ease; 
+}
+.module-view.active { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- Common UI Components --- */
+
+/* Layout overrides reusing style.css .workspace & .panel */
+.config-panel {
+    flex: 0 0 380px;
+    padding: 30px;
+    overflow-y: auto;
+}
+.preview-panel {
+    padding: 40px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+@media (max-width: 768px) {
+    .config-panel {
+        width: 100%;
+        flex: auto;
+    }
+}
+
+.group { margin-bottom: 24px; }
+label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; color: var(--primary); font-weight: 600; }
+
+
+/* .btn styles removed - using standard .btn from style.css */
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+.btn-outline:hover { border-color: var(--primary); background: var(--bg-hover); }
+
+.code-box {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 15px;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    width: 100%;
+    max-width: 700px;
+    margin-top: 20px;
+    position: relative;
+    box-shadow: var(--shadow);
+}
+.code-box pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
+.copy-btn { position: absolute; top: 10px; right: 10px; opacity: 0.7; }
+.copy-btn:hover { opacity: 1; }
+
+/* --- Social Preview Specific --- */
+.card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    margin-bottom: 30px;
+    transition: 0.3s;
+    color: #111;
+}
+.card-img { width: 100%; height: 270px; background: #eee; object-fit: cover; display: block; }
+.card-content { padding: 16px; }
+.card-domain { font-size: 12px; color: #606770; text-transform: uppercase; margin-bottom: 6px; }
+.card-title { font-size: 16px; font-weight: 700; margin: 0 0 6px; line-height: 1.3; color: #1c1e21; }
+.card-desc { font-size: 14px; color: #606770; line-height: 1.4; display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Platform Variants */
+.preview-mode-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-dim); padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-size: 13px; }
+.tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.card.twitter { border-radius: 16px; border: 1px solid #cfd9de; }
+.card.twitter .card-img { height: 260px; }
+.card.twitter .card-title { margin-top: 10px; margin-bottom: 4px; }
+
+.card.discord { background: #2f3136; border-left: 4px solid #202225; max-width: 432px; border-radius: 4px; padding: 0; display:flex; flex-direction: column; }
+.card.discord .card-content { padding: 12px 16px 16px; background: transparent; }
+.card.discord .card-site-name { font-size: 12px; color: #b9bbbe; margin-bottom: 8px; }
+.card.discord .card-title { color: #00b0f4; font-size: 16px; margin-bottom: 8px; }
+.card.discord .card-desc { color: #dcddde; font-size: 14px; margin-bottom: 16px; }
+.card.discord .card-img { height: auto; max-height: 300px; border-radius: 4px; }
+
+/* --- Badge Designer Specific --- */
+.badge-preview-area {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 200px;
+    padding: 20px;
+}
+.badge-preview-area img {
+    transform: scale(1.5);
+    transform-origin: center;
+    margin: 20px;
+}
+.color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+.c-btn { aspect-ratio: 1; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+.c-btn:hover, .c-btn.active { transform: scale(1.1); border-color: #fff; }
+
+/* --- Icon Explorer Specific --- */
+.icon-search-box { position: relative; }
+.search-icon-svg { position: absolute; right: 12px; top: 12px; color: #aaa; pointer-events: none; }
+
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 15px;
+    width: 100%;
+    padding: 10px;
+}
+.icon-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    aspect-ratio: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    color: var(--text-dim);
+    position: relative;
+    overflow: hidden;
+}
+.icon-item:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); color: var(--text-main); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.icon-item svg { width: 32px; height: 32px; margin-bottom: 8px; }
+.icon-name { font-size: 10px; text-align: center; width: 100%; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.7; }
+.icon-item:active { transform: scale(0.95); }
+
+.loading-spinner {
+    border: 4px solid rgba(255,255,255,0.1);
+    border-left-color: var(--primary);
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 30px auto;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* --- Favicon Grabber Specific --- */
+.fav-preview-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    display: flex; flex-direction: column; align-items: center;
+    position: relative;
+    width: 300px;
+    height: 300px;
+    justify-content: center;
+}
+.fav-img {
+    width: 128px; height: 128px;
+    object-fit: contain;
+    margin-bottom: 20px;
+}
+.fav-bg-check {
+    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), 
+                      linear-gradient(-45deg, #ccc 25%, transparent 25%), 
+                      linear-gradient(45deg, transparent 75%, #ccc 75%), 
+                      linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* --- Quick Chart Specific (New) --- */
+.chart-img {
+    max-width: 100%;
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+}
+
+/* --- Mock User Specific (New) --- */
+.user-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    color: #333;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 450px;
+    position: relative;
+    overflow: hidden;
+}
+.user-card::before {
+    content: ''; position: absolute; top:0; left:0; right:0; height: 6px;
+    background: linear-gradient(90deg, #6a11cb, #2575fc);
+}
+.user-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 3px solid #e0e7ff;
+    object-fit: cover;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-info h3 { margin: 0 0 5px; color: #111; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-info p { margin: 0; font-size: 13px; color: #666; line-height: 1.5; }
+.user-info .tag { 
+    display: inline-block; background: #eee; padding: 2px 8px; border-radius: 10px; 
+    font-size: 10px; color: #555; margin-top: 6px; font-weight: 600; text-transform: uppercase;
+}
+
+.json-box {
+    background: var(--bg-deep);
+    color: var(--secondary);
+    padding: 15px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 12px;
+    height: 250px;
+    overflow: auto;
+    width: 100%;
+    margin-top: 20px;
+    white-space: pre;
+    border: 1px solid var(--border);
+}
+
+/* --- Modal --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal {
+    width: 600px; max-width: 90%; max-height: 80vh;
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
+    padding: 30px; overflow-y: auto;
+    box-shadow: var(--shadow);
+    transform: translateY(20px); transition: 0.3s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal h3 { color: var(--primary); margin-top: 0; }
+.modal p { line-height: 1.6; color: var(--text-main); }
+.modal code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: var(--secondary); font-family: monospace; }
+.close-modal { float: right; cursor: pointer; font-size: 24px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<!-- Top Navbar -->
+<div class="navbar">
+    <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <div class="nav-links">
+        <div class="nav-item active" onclick="switchTab('social')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            <div class="nav-text">
+                <span class="nav-en">Social Preview</span>
+                <span class="nav-cn">社交预览</span>
+            </div>
+        </div>
+        <div class="nav-item" onclick="switchTab('badge')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.9V17L12 22l-9-4.9V7z"/></svg>
+            <div class="nav-text">
+                <span class="nav-en">Badge Designer</span>
+                <span class="nav-cn">徽章设计</span>
+            </div>
+        </div>
+        <div class="nav-item" onclick="switchTab('icon')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <div class="nav-text">
+                <span class="nav-en">Icon Explorer</span>
+                <span class="nav-cn">图标搜索</span>
+            </div>
+        </div>
+        <div class="nav-item" onclick="switchTab('favicon')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <div class="nav-text">
+                <span class="nav-en">Favicon Grabber</span>
+                <span class="nav-cn">图标获取</span>
+            </div>
+        </div>
+        <div class="nav-item" onclick="switchTab('chart')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="11" x2="8" y2="16"/><line x1="16" y1="13" x2="16" y2="16"/></svg>
+            <div class="nav-text">
+                <span class="nav-en">Quick Chart</span>
+                <span class="nav-cn">图表生成</span>
+            </div>
+        </div>
+        <div class="nav-item" onclick="switchTab('mock')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="nav-text">
+                <span class="nav-en">Mock User</span>
+                <span class="nav-cn">模拟用户</span>
+            </div>
+        </div>
+        <div class="nav-item" onclick="switchTab('lorem')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <div class="nav-text">
+                <span class="nav-en">Lorem Ipsum</span>
+                <span class="nav-cn">乱数假文</span>
+            </div>
+        </div>
+        <div class="nav-item" onclick="switchTab('placehold')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <div class="nav-text">
+                <span class="nav-en">Placeholder</span>
+                <span class="nav-cn">占位图生成</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    
+    <!-- Module 1: Social Preview -->
+    <div id="view-social" class="module-view active">
+        <div class="workspace">
+            <div class="panel config-panel">
+                <h2>
+                    配置 Meta
+                    <button class="btn btn-sm btn-outline" onclick="openModal('social-help')">帮助</button>
+                </h2>
+                <div class="group">
+                    <label>网站标题</label>
+                    <input type="text" id="sp-title" value="My Awesome Project" oninput="updateSP()">
+                </div>
+                <div class="group">
+                    <label>描述</label>
+                    <textarea id="sp-desc" oninput="updateSP()">Build faster with this amazing tool. It optimizes your workflow like never before.</textarea>
+                </div>
+                <div class="group">
+                    <label>图片链接</label>
+                    <input type="text" id="sp-img" value="https://placehold.co/1200x630/302b63/ffffff?text=Preview+Image" oninput="updateSP()">
+                </div>
+                <div class="group">
+                    <label>网站域名</label>
+                    <input type="text" id="sp-domain" value="example.com" oninput="updateSP()">
+                </div>
+                <div class="group">
+                    <label>主题色</label>
+                    <input type="color" id="sp-color" value="#00b0f4" oninput="updateSP()" style="height:40px; padding:0;">
+                </div>
+            </div>
+            
+            <div class="panel preview-panel">
+                <div class="preview-mode-tabs">
+                    <div class="tab-btn active" onclick="setSPMode('fb', this)">Facebook/OpenGraph</div>
+                    <div class="tab-btn" onclick="setSPMode('tw', this)">Twitter Large</div>
+                    <div class="tab-btn" onclick="setSPMode('dc', this)">Discord Embed</div>
+                </div>
+
+                <div id="sp-preview-container">
+                    <!-- Preview content injected by JS -->
+                </div>
+
+                <div class="code-box">
+                    <button class="btn btn-sm copy-btn" onclick="copyCode('sp-code')">复制</button>
+                    <pre id="sp-code"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module 2: Badge Designer -->
+    <div id="view-badge" class="module-view">
+        <div class="workspace">
+            <div class="panel config-panel">
+                <h2>
+                    设计徽章
+                    <button class="btn btn-sm btn-outline" onclick="openModal('badge-help')">帮助</button>
+                </h2>
+                <div class="group">
+                    <label>左侧文字</label>
+                    <input type="text" id="bd-label" value="build" oninput="updateBD()">
+                </div>
+                <div class="group">
+                    <label>右侧文字</label>
+                    <input type="text" id="bd-msg" value="passing" oninput="updateBD()">
+                </div>
+                <div class="group">
+                    <label>颜色</label>
+                    <input type="text" id="bd-color" value="brightgreen" oninput="updateBD()">
+                    <div class="color-grid" id="bd-cgrid"></div>
+                </div>
+                <div class="group">
+                    <label>样式</label>
+                    <select id="bd-style" onchange="updateBD()">
+                        <option value="flat">Flat</option>
+                        <option value="flat-square">Flat Square</option>
+                        <option value="plastic">Plastic</option>
+                        <option value="for-the-badge">For the Badge</option>
+                        <option value="social">Social</option>
+                    </select>
+                </div>
+                <div class="group">
+                    <label>Logo (SimpleIcons)</label>
+                    <input type="text" id="bd-logo" placeholder="github, react..." oninput="updateBD()">
+                </div>
+                <div class="group">
+                    <label>Logo 颜色</label>
+                    <input type="text" id="bd-logo-col" placeholder="white" oninput="updateBD()">
+                </div>
+            </div>
+            
+            <div class="panel preview-panel">
+                <div class="badge-preview-area">
+                    <img id="bd-preview" src="" style="cursor:pointer" onclick="window.open(this.src, '_blank')">
+                </div>
+                
+                <div class="code-box">
+                    <button class="btn btn-sm copy-btn" onclick="copyCode('bd-code-md')">复制 Markdown</button>
+                    <pre id="bd-code-md"></pre>
+                </div>
+                <div class="code-box">
+                    <button class="btn btn-sm copy-btn" onclick="copyCode('bd-code-html')">复制 HTML</button>
+                    <pre id="bd-code-html"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module 3: Icon Explorer -->
+    <div id="view-icon" class="module-view">
+        <div class="workspace">
+            <div class="panel config-panel">
+                <h2>
+                    Icon Explorer
+                    <button class="btn btn-sm btn-outline" onclick="openModal('icon-help')">帮助</button>
+                </h2>
+                <div class="group icon-search-box">
+                    <label>关键词</label>
+                    <input type="text" id="icon-query" placeholder="home, user, cloud..." onkeypress="if(event.key==='Enter') searchIcons()">
+                    <svg class="search-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <button class="btn" style="width:100%" onclick="searchIcons()">搜索图标</button>
+                
+                <div class="group" style="margin-top:30px">
+                    <label>预览颜色</label>
+                    <input type="color" id="icon-color" value="#ffffff" oninput="updateIconStyle()" style="height:40px; padding:0">
+                </div>
+                
+                <div class="group">
+                    <label>已选图标代码</label>
+                    <textarea id="icon-code" readonly placeholder="点击右侧图标获取代码..."></textarea>
+                    <button class="btn btn-sm" style="width:100%; margin-top:10px" onclick="copyCode('icon-code')">复制 SVG 代码</button>
+                </div>
+            </div>
+            
+            <div class="panel preview-panel">
+                <div id="icon-loading" class="loading-spinner" style="display:none"></div>
+                <div id="icon-results" class="icon-grid">
+                    <div style="grid-column:1/-1; text-align:center; color:var(--text-dim); padding-top:50px">
+                        请输入关键词搜索图标 <br> (Powered by Iconify)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module 4: Favicon Grabber -->
+    <div id="view-favicon" class="module-view">
+        <div class="workspace">
+            <div class="panel config-panel">
+                <h2>
+                    Favicon Grabber
+                    <button class="btn btn-sm btn-outline" onclick="openModal('fav-help')">帮助</button>
+                </h2>
+                <div class="group">
+                    <label>网站域名</label>
+                    <input type="text" id="fav-domain" placeholder="example.com" value="google.com" oninput="updateFav()">
+                </div>
+                <button class="btn" style="width:100%" onclick="updateFav()">获取图标</button>
+                
+                <div class="group" style="margin-top:30px">
+                    <label>代码 (HTML)</label>
+                    <textarea id="fav-code" readonly></textarea>
+                    <button class="btn btn-sm" style="width:100%; margin-top:10px" onclick="copyCode('fav-code')">复制代码</button>
+                </div>
+            </div>
+            
+            <div class="panel preview-panel">
+                <div class="fav-preview-box fav-bg-check">
+                    <img id="fav-img" class="fav-img" src="">
+                    <div style="color:#666; font-size:12px">Powered by Icon Horse</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module 5: Quick Chart -->
+    <div id="view-chart" class="module-view">
+        <div class="workspace">
+            <div class="panel config-panel">
+                <h2>
+                    Quick Chart
+                    <button class="btn btn-sm btn-outline" onclick="openModal('chart-help')">帮助</button>
+                </h2>
+                <div class="group">
+                    <label>类型</label>
+                    <select id="qc-type" onchange="updateChart()">
+                        <option value="bar">Bar (柱状图)</option>
+                        <option value="line">Line (折线图)</option>
+                        <option value="pie">Pie (饼图)</option>
+                        <option value="doughnut">Doughnut (环形图)</option>
+                        <option value="radar">Radar (雷达图)</option>
+                    </select>
+                </div>
+                <div class="group">
+                    <label>标题</label>
+                    <input type="text" id="qc-title" value="Monthly Users" oninput="updateChart()">
+                </div>
+                <div class="group">
+                    <label>标签 (逗号分隔)</label>
+                    <input type="text" id="qc-labels" value="Jan,Feb,Mar,Apr,May" oninput="updateChart()">
+                </div>
+                <div class="group">
+                    <label>数据 (逗号分隔)</label>
+                    <input type="text" id="qc-data" value="50,60,70,180,190" oninput="updateChart()">
+                </div>
+                <button class="btn" style="width:100%" onclick="updateChart()">生成图表</button>
+
+                <div class="group" style="margin-top:20px">
+                    <label>图片链接</label>
+                    <input type="text" id="qc-url" readonly onclick="this.select()">
+                    <button class="btn btn-sm" style="width:100%; margin-top:10px" onclick="copyCode('qc-url')">复制链接</button>
+                </div>
+            </div>
+            
+            <div class="panel preview-panel">
+                <img id="qc-img" class="chart-img" src="">
+                <div style="color:var(--text-dim); font-size:12px; margin-top:10px">Powered by QuickChart.io</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module 6: Mock User -->
+    <div id="view-mock" class="module-view">
+        <div class="workspace">
+            <div class="panel config-panel">
+                <h2>
+                    Mock User
+                    <button class="btn btn-sm btn-outline" onclick="openModal('mock-help')">帮助</button>
+                </h2>
+                <div class="group">
+                    <label>性别</label>
+                    <select id="mu-gender">
+                        <option value="">Any</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div class="group">
+                    <label>国籍</label>
+                    <select id="mu-nat">
+                        <option value="us">US (United States)</option>
+                        <option value="gb">GB (United Kingdom)</option>
+                        <option value="fr">FR (France)</option>
+                        <option value="de">DE (Germany)</option>
+                        <option value="au">AU (Australia)</option>
+                        <option value="cn">CN (China)</option>
+                        <option value="jp">JP (Japan)</option>
+                    </select>
+                </div>
+                <button class="btn" style="width:100%" onclick="fetchMockUser()">生成随机用户</button>
+            </div>
+            
+            <div class="panel preview-panel">
+                <div id="mu-card-container">
+                    <div style="color:var(--text-dim); margin-top:50px">点击左侧按钮生成用户</div>
+                </div>
+                
+                <div class="json-box" id="mu-json">
+// JSON 数据将显示在这里...
+                </div>
+                <button class="btn btn-sm" style="margin-top:10px" onclick="copyCode('mu-json')">复制 JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module 7: Lorem Ipsum -->
+    <div id="view-lorem" class="module-view">
+        <div class="workspace">
+            <div class="panel config-panel">
+                <h2>
+                    Lorem Ipsum
+                    <button class="btn btn-sm btn-outline" onclick="openModal('lorem-help')">帮助</button>
+                </h2>
+                <div class="group">
+                    <label>段落数量</label>
+                    <input type="number" id="li-paras" value="3" min="1" max="10">
+                </div>
+                <div class="group">
+                    <label>类型</label>
+                    <select id="li-type">
+                        <option value="all-meat">All Meat (Standard)</option>
+                        <option value="meat-and-filler">Meat and Filler</option>
+                    </select>
+                </div>
+                <button class="btn" style="width:100%" onclick="fetchLorem()">生成文本</button>
+            </div>
+            
+            <div class="panel preview-panel">
+                <div class="code-box" style="margin-top:0; height:100%; background:#fff; color:#333; font-family:serif; font-size:16px; line-height:1.6;">
+                    <button class="btn btn-sm copy-btn" onclick="copyCode('li-text')">复制</button>
+                    <div id="li-text" style="height:100%; overflow:auto; padding:20px; white-space:pre-wrap;">点击生成按钮获取文本...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Module 8: Placeholder -->
+    <div id="view-placehold" class="module-view">
+        <div class="workspace">
+            <div class="panel config-panel">
+                <h2>
+                    Placeholder
+                    <button class="btn btn-sm btn-outline" onclick="openModal('ph-help')">帮助</button>
+                </h2>
+                <div class="group" style="display:flex; gap:10px">
+                    <div style="flex:1">
+                        <label>宽</label>
+                        <input type="number" id="ph-w" value="600" oninput="updatePlacehold()">
+                    </div>
+                    <div style="flex:1">
+                        <label>高</label>
+                        <input type="number" id="ph-h" value="400" oninput="updatePlacehold()">
+                    </div>
+                </div>
+                <div class="group">
+                    <label>文字</label>
+                    <input type="text" id="ph-text" placeholder="Hello World" oninput="updatePlacehold()">
+                </div>
+                <div class="group" style="display:flex; gap:10px">
+                    <div style="flex:1">
+                        <label>背景色</label>
+                        <input type="color" id="ph-bg" value="#302b63" oninput="updatePlacehold()" style="height:40px; padding:0">
+                    </div>
+                    <div style="flex:1">
+                        <label>文字色</label>
+                        <input type="color" id="ph-fg" value="#ffffff" oninput="updatePlacehold()" style="height:40px; padding:0">
+                    </div>
+                </div>
+                <div class="group">
+                    <label>格式</label>
+                    <select id="ph-fmt" onchange="updatePlacehold()">
+                        <option value="png">PNG</option>
+                        <option value="svg">SVG</option>
+                        <option value="jpg">JPG</option>
+                        <option value="webp">WEBP</option>
+                    </select>
+                </div>
+                <button class="btn" style="width:100%" onclick="updatePlacehold()">刷新</button>
+
+                <div class="group" style="margin-top:20px">
+                    <label>链接</label>
+                    <input type="text" id="ph-url" readonly onclick="this.select()">
+                    <button class="btn btn-sm" style="width:100%; margin-top:10px" onclick="copyCode('ph-url')">复制链接</button>
+                </div>
+            </div>
+            
+            <div class="panel preview-panel">
+                <div style="border:1px dashed var(--border); padding:10px; display:inline-block">
+                    <img id="ph-preview" style="max-width:100%; height:auto; display:block">
+                </div>
+                <div class="code-box">
+                     <button class="btn btn-sm copy-btn" onclick="copyCode('ph-html')">复制 HTML</button>
+                     <pre id="ph-html"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modals -->
+<div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this) closeModal()">
+    <!-- Social Help -->
+    <div id="social-help" class="modal" style="display:none">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Social Preview 帮助</h3>
+        <p>此工具帮助你生成和预览网站的 Social Meta Tags (Open Graph, Twitter Cards)。</p>
+    </div>
+    <!-- Badge Help -->
+    <div id="badge-help" class="modal" style="display:none">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Badge Designer 帮助</h3>
+        <p>基于 <code>Shields.io</code> 的徽章生成器。常用于 GitHub README。</p>
+    </div>
+    <!-- Icon Help -->
+    <div id="icon-help" class="modal" style="display:none">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Icon Explorer 帮助</h3>
+        <p>基于 <code>Iconify</code> 的图标搜索工具。</p>
+    </div>
+    <!-- Favicon Help -->
+    <div id="fav-help" class="modal" style="display:none">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Favicon Grabber 帮助</h3>
+        <p>基于 <code>Icon Horse</code> 的 Favicon 获取工具。</p>
+    </div>
+    <!-- Chart Help -->
+    <div id="chart-help" class="modal" style="display:none">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Quick Chart 帮助</h3>
+        <p>基于 <code>QuickChart.io</code> 的图表生成工具。</p>
+    </div>
+    <!-- Mock Help -->
+    <div id="mock-help" class="modal" style="display:none">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Mock User 帮助</h3>
+        <p>基于 <code>RandomUser.me</code> 的随机用户数据生成器。</p>
+    </div>
+    <!-- Lorem Help -->
+    <div id="lorem-help" class="modal" style="display:none">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Lorem Ipsum 帮助</h3>
+        <p>基于 <code>baconipsum.com</code> 的乱数假文生成器。</p>
+    </div>
+    <!-- Placeholder Help -->
+    <div id="ph-help" class="modal" style="display:none">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3>Placeholder 帮助</h3>
+        <p>基于 <code>placehold.co</code> 的占位图生成服务。</p>
+    </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script src="../js/loader.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        ResourceLoader.loadDeps('@icons');
+    });
+</script>
+<script>
+/* --- Core Logic --- */
+function switchTab(tabId) {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll(`.nav-item[onclick="switchTab('${tabId}')"]`).forEach(el => el.classList.add('active'));
+    
+    document.querySelectorAll('.module-view').forEach(el => el.classList.remove('active'));
+    document.getElementById(`view-${tabId}`).classList.add('active');
+
+    // Close mobile menu if open
+    if (window.innerWidth <= 768) {
+        document.querySelector('.nav-links').classList.remove('open');
+    }
+}
+
+function openModal(id) {
+    document.querySelectorAll('.modal').forEach(el => el.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function copyCode(id) {
+    const el = document.getElementById(id);
+    const text = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value : el.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        // Simple toast or alert
+        const btn = document.activeElement;
+        const original = btn.innerText;
+        btn.innerText = '已复制!';
+        setTimeout(() => btn.innerText = original, 1000);
+    });
+}
+
+/* --- Social Preview Logic --- */
+let spMode = 'fb';
+function setSPMode(mode, btn) {
+    spMode = mode;
+    document.querySelectorAll('.preview-mode-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updateSP();
+}
+
+function updateSP() {
+    const title = document.getElementById('sp-title').value;
+    const desc = document.getElementById('sp-desc').value;
+    const img = document.getElementById('sp-img').value;
+    const domain = document.getElementById('sp-domain').value;
+    const color = document.getElementById('sp-color').value;
+
+    const container = document.getElementById('sp-preview-container');
+    let html = '';
+
+    if(spMode === 'fb') {
+        html = `
+            <div class="card">
+                <img src="${img}" class="card-img">
+                <div class="card-content">
+                    <div class="card-domain">${domain}</div>
+                    <div class="card-title">${title}</div>
+                    <div class="card-desc">${desc}</div>
+                </div>
+            </div>
+        `;
+    } else if (spMode === 'tw') {
+        html = `
+            <div class="card twitter">
+                <img src="${img}" class="card-img">
+                <div class="card-content">
+                    <div class="card-title">${title}</div>
+                    <div class="card-desc">${desc}</div>
+                    <div class="card-domain" style="margin-top:4px">🔗 ${domain}</div>
+                </div>
+            </div>
+        `;
+    } else if (spMode === 'dc') {
+        html = `
+            <div class="card discord" style="border-left-color:${color}">
+                <div class="card-content">
+                    <div class="card-site-name">${domain}</div>
+                    <div class="card-title" style="color:#00b0f4">${title}</div>
+                    <div class="card-desc">${desc}</div>
+                    <img src="${img}" class="card-img">
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+
+    // Generate Code
+    const meta = `
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://${domain}/">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${desc}">
+<meta property="og:image" content="${img}">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://${domain}/">
+<meta property="twitter:title" content="${title}">
+<meta property="twitter:description" content="${desc}">
+<meta property="twitter:image" content="${img}">
+    `.trim();
+    document.getElementById('sp-code').innerText = meta;
+}
+
+/* --- Badge Designer Logic --- */
+function initBD() {
+    const colors = ['brightgreen','green','yellowgreen','yellow','orange','red','blue','lightgrey','success','important','critical','informational','inactive','blueviolet','ff69b4','9cf'];
+    const grid = document.getElementById('bd-cgrid');
+    colors.forEach(c => {
+        const d = document.createElement('div');
+        d.className = 'c-btn';
+        d.style.backgroundColor = c.startsWith('#') ? c : getShieldColor(c);
+        d.onclick = () => {
+            document.getElementById('bd-color').value = c;
+            updateBD();
+        };
+        grid.appendChild(d);
+    });
+}
+function getShieldColor(name) {
+    const map = { brightgreen:'#4c1', green:'#97ca00', yellowgreen:'#a4a61d', yellow:'#dfb317', orange:'#fe7d37', red:'#e05d44', blue:'#007ec6', lightgrey:'#9f9f9f', success:'#4c1', important:'#fe7d37', critical:'#e05d44', informational:'#007ec6', inactive:'#9f9f9f', blueviolet:'#8a2be2' };
+    return map[name] || '#ccc';
+}
+
+function updateBD() {
+    const label = document.getElementById('bd-label').value.trim() || 'Label';
+    const msg = document.getElementById('bd-msg').value.trim() || 'Message';
+    let color = document.getElementById('bd-color').value.trim();
+    if (color.startsWith('#')) color = color.substring(1);
+    
+    const style = document.getElementById('bd-style').value;
+    const logo = document.getElementById('bd-logo').value.trim();
+    const logoCol = document.getElementById('bd-logo-col').value.trim();
+
+    const params = new URLSearchParams();
+    params.append('label', label);
+    params.append('message', msg);
+    params.append('color', color);
+    
+    if(style) params.append('style', style);
+    if(logo) params.append('logo', logo);
+    if(logoCol) params.append('logoColor', logoCol);
+
+    const url = `https://img.shields.io/static/v1?${params.toString()}`;
+
+    document.getElementById('bd-preview').src = url;
+    document.getElementById('bd-code-md').innerText = `![${label}](${url})`;
+    document.getElementById('bd-code-html').innerText = `<img src="${url}" alt="${label}">`;
+}
+
+/* --- Icon Explorer Logic --- */
+async function searchIcons() {
+    const q = document.getElementById('icon-query').value.trim();
+    if(!q) return;
+
+    const loader = document.getElementById('icon-loading');
+    const resDiv = document.getElementById('icon-results');
+    
+    loader.style.display = 'block';
+    resDiv.innerHTML = '';
+    
+    try {
+        const req = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(q)}&limit=60`);
+        const data = await req.json();
+        
+        loader.style.display = 'none';
+        
+        if(!data.icons || data.icons.length === 0) {
+            resDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-dim)">未找到相关图标</div>';
+            return;
+        }
+        
+        data.icons.forEach(iconStr => {
+            const [prefix, name] = iconStr.split(':');
+            const url = `https://api.iconify.design/${prefix}/${name}.svg`;
+            
+            const div = document.createElement('div');
+            div.className = 'icon-item';
+            div.innerHTML = `<img src="${url}" loading="lazy" width="24" height="24"><div class="icon-name">${name}</div>`;
+            div.onclick = () => selectIcon(prefix, name);
+            resDiv.appendChild(div);
+        });
+        
+    } catch(e) {
+        loader.style.display = 'none';
+        resDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red">搜索失败，请检查网络</div>';
+    }
+}
+
+async function selectIcon(prefix, name) {
+    const url = `https://api.iconify.design/${prefix}/${name}.svg`;
+    try {
+        const req = await fetch(url);
+        const svg = await req.text();
+        document.getElementById('icon-code').value = svg;
+    } catch(e) {
+        document.getElementById('icon-code').value = `<img src="${url}">`;
+    }
+}
+
+function updateIconStyle() {}
+
+/* --- Favicon Grabber Logic --- */
+function updateFav() {
+    let domain = document.getElementById('fav-domain').value.trim();
+    if (!domain) return;
+    domain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const url = `https://icon.horse/icon/${domain}`;
+    document.getElementById('fav-img').src = url;
+    document.getElementById('fav-code').value = `<img src="${url}" alt="${domain} favicon">`;
+}
+
+/* --- Quick Chart Logic --- */
+function updateChart() {
+    const type = document.getElementById('qc-type').value;
+    const title = document.getElementById('qc-title').value;
+    const labels = document.getElementById('qc-labels').value.split(',');
+    const data = document.getElementById('qc-data').value.split(',').map(Number);
+    
+    const config = {
+        type: type,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: title,
+                data: data,
+                backgroundColor: 'rgba(179, 136, 255, 0.5)',
+                borderColor: '#b388ff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            title: { display: true, text: title }
+        }
+    };
+    
+    const url = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(config))}&width=500&height=300&bkg=white`;
+    document.getElementById('qc-img').src = url;
+    document.getElementById('qc-url').value = url;
+}
+
+/* --- Mock User Logic --- */
+async function fetchMockUser() {
+    const gender = document.getElementById('mu-gender').value;
+    const nat = document.getElementById('mu-nat').value;
+    
+    let url = 'https://randomuser.me/api/?results=1';
+    if(gender) url += `&gender=${gender}`;
+    if(nat) url += `&nat=${nat}`;
+    
+    const btn = document.querySelector('#view-mock .btn');
+    const originalText = btn.innerText;
+    btn.innerText = 'Loading...';
+    
+    try {
+        const req = await fetch(url);
+        const data = await req.json();
+        const user = data.results[0];
+        
+        document.getElementById('mu-json').innerText = JSON.stringify(user, null, 2);
+        
+        const card = `
+            <div class="user-card">
+                <img src="${user.picture.large}" class="user-avatar">
+                <div class="user-info">
+                    <h3>${user.name.first} ${user.name.last}</h3>
+                    <p>${user.email}</p>
+                    <p>${user.location.city}, ${user.location.country}</p>
+                    <div class="tag">${user.login.username}</div>
+                </div>
+            </div>
+        `;
+        document.getElementById('mu-card-container').innerHTML = card;
+        
+    } catch(e) {
+        alert('获取失败');
+    }
+    
+    btn.innerText = originalText;
+}
+
+/* --- Lorem Ipsum Logic --- */
+async function fetchLorem() {
+    const paras = document.getElementById('li-paras').value;
+    const type = document.getElementById('li-type').value;
+    
+    const btn = document.querySelector('#view-lorem .btn');
+    const originalText = btn.innerText;
+    btn.innerText = 'Generating...';
+    
+    try {
+        const req = await fetch(`https://baconipsum.com/api/?type=${type}&paras=${paras}`);
+        const data = await req.json();
+        document.getElementById('li-text').innerText = data.join('\n\n');
+    } catch(e) {
+        document.getElementById('li-text').innerText = '生成失败';
+    }
+    
+    btn.innerText = originalText;
+}
+
+/* --- Placeholder Logic --- */
+function updatePlacehold() {
+    const w = document.getElementById('ph-w').value || 600;
+    const h = document.getElementById('ph-h').value || 400;
+    const bg = document.getElementById('ph-bg').value.replace('#', '');
+    const fg = document.getElementById('ph-fg').value.replace('#', '');
+    const text = document.getElementById('ph-text').value;
+    const fmt = document.getElementById('ph-fmt').value;
+
+    let url = `https://placehold.co/${w}x${h}/${bg}/${fg}.${fmt}`;
+    if (text) url += `?text=${encodeURIComponent(text)}`;
+
+    document.getElementById('ph-preview').src = url;
+    document.getElementById('ph-url').value = url;
+    document.getElementById('ph-html').innerText = `<img src="${url}" alt="${text || 'placeholder'}">`;
+}
+
+// Initialize
+initBD();
+updateBD();
+updateSP();
+updateFav();
+updateChart();
+updatePlacehold();
+
+</script>
+</body>
+</html>

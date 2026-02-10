@@ -15,14 +15,16 @@ const ResourceLoader = {
         ],
         'crypto-js': [
             'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js',
-            'https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js',
-            'https://unpkg.com/crypto-js@4.1.1/crypto-js.min.js',
-            'https://npm.elemecdn.com/crypto-js@4.1.1/crypto-js.min.js',
+            'https://cdn.staticfile.org/crypto-js/4.1.1/crypto-js.min.js',
+            'https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js',
+            'https://unpkg.com/crypto-js@4.1.1/crypto-js.js',
+            'https://npm.elemecdn.com/crypto-js@4.1.1/crypto-js.js',
             'https://lib.baomitu.com/crypto-js/4.1.1/crypto-js.min.js',
             'https://cdn.bootcdn.net/ajax/libs/crypto-js/4.1.1/crypto-js.min.js'
         ],
         'lz-string': [
             'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js',
+            'https://cdn.staticfile.org/lz-string/1.4.4/lz-string.min.js',
             'https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js',
             'https://unpkg.com/lz-string@1.4.4/libs/lz-string.min.js',
             'https://npm.elemecdn.com/lz-string@1.4.4/libs/lz-string.min.js',
@@ -33,30 +35,32 @@ const ResourceLoader = {
             'https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.min.js',
             'https://unpkg.com/opencc-js@1.0.5/dist/umd/full.min.js',
             'https://npm.elemecdn.com/opencc-js@1.0.5/dist/umd/full.min.js',
-            'https://unpkg.zhimg.com/opencc-js@1.0.5/dist/umd/full.min.js',
             'https://fastly.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.min.js'
         ],
         'js-beautify': [
             'https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify.min.js',
-            'https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify.min.js',
-            'https://unpkg.com/js-beautify@1.14.7/js/lib/beautify.min.js',
-            'https://npm.elemecdn.com/js-beautify@1.14.7/js/lib/beautify.min.js',
+            'https://cdn.staticfile.org/js-beautify/1.14.7/beautify.min.js',
+            'https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify.js',
+            'https://unpkg.com/js-beautify@1.14.7/js/lib/beautify.js',
+            'https://npm.elemecdn.com/js-beautify@1.14.7/js/lib/beautify.js',
             'https://lib.baomitu.com/js-beautify/1.14.7/beautify.min.js',
             'https://cdn.bootcdn.net/ajax/libs/js-beautify/1.14.7/beautify.min.js'
         ],
         'js-beautify-css': [
             'https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-css.min.js',
-            'https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-css.min.js',
-            'https://unpkg.com/js-beautify@1.14.7/js/lib/beautify-css.min.js',
-            'https://npm.elemecdn.com/js-beautify@1.14.7/js/lib/beautify-css.min.js',
+            'https://cdn.staticfile.org/js-beautify/1.14.7/beautify-css.min.js',
+            'https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-css.js',
+            'https://unpkg.com/js-beautify@1.14.7/js/lib/beautify-css.js',
+            'https://npm.elemecdn.com/js-beautify@1.14.7/js/lib/beautify-css.js',
             'https://lib.baomitu.com/js-beautify/1.14.7/beautify-css.min.js',
             'https://cdn.bootcdn.net/ajax/libs/js-beautify/1.14.7/beautify-css.min.js'
         ],
         'js-beautify-html': [
             'https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-html.min.js',
-            'https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-html.min.js',
-            'https://unpkg.com/js-beautify@1.14.7/js/lib/beautify-html.min.js',
-            'https://npm.elemecdn.com/js-beautify@1.14.7/js/lib/beautify-html.min.js',
+            'https://cdn.staticfile.org/js-beautify/1.14.7/beautify-html.min.js',
+            'https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-html.js',
+            'https://unpkg.com/js-beautify@1.14.7/js/lib/beautify-html.js',
+            'https://npm.elemecdn.com/js-beautify@1.14.7/js/lib/beautify-html.js',
             'https://lib.baomitu.com/js-beautify/1.14.7/beautify-html.min.js',
             'https://cdn.bootcdn.net/ajax/libs/js-beautify/1.14.7/beautify-html.min.js'
         ],
@@ -69,6 +73,7 @@ const ResourceLoader = {
         ],
         'jszip': [
             'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+            'https://cdn.staticfile.org/jszip/3.10.1/jszip.min.js',
             'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
             'https://unpkg.com/jszip@3.10.1/dist/jszip.min.js',
             'https://cdn.bootcdn.net/ajax/libs/jszip/3.10.1/jszip.min.js',
@@ -77,6 +82,7 @@ const ResourceLoader = {
         ],
         'file-saver': [
             'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js',
+            'https://cdn.staticfile.org/FileSaver.js/2.0.5/FileSaver.min.js',
             'https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js',
             'https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js',
             'https://cdn.bootcdn.net/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js',
@@ -85,6 +91,7 @@ const ResourceLoader = {
         ],
         'uuid': [
             'https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js',
+            'https://cdn.staticfile.org/uuid/8.3.2/uuid.min.js',
             'https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js',
             'https://unpkg.com/uuid@8.3.2/dist/umd/uuid.min.js',
             'https://cdn.bootcdn.net/ajax/libs/uuid/8.3.2/uuid.min.js',
@@ -93,6 +100,7 @@ const ResourceLoader = {
         ],
         'punycode': [
             'https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js',
+            'https://cdn.staticfile.org/punycode/1.4.1/punycode.min.js',
             'https://cdn.jsdelivr.net/npm/punycode@1.4.1/punycode.min.js',
             'https://unpkg.com/punycode@1.4.1/punycode.min.js',
             'https://cdn.bootcdn.net/ajax/libs/punycode/1.4.1/punycode.min.js',
@@ -103,11 +111,11 @@ const ResourceLoader = {
             'https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js',
             'https://unpkg.com/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js',
             'https://npm.elemecdn.com/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js',
-            'https://unpkg.zhimg.com/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js',
             'https://fastly.jsdelivr.net/npm/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js'
         ],
         'mammoth': [
             'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
+            'https://cdn.staticfile.org/mammoth/1.6.0/mammoth.browser.min.js',
             'https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js',
             'https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js',
             'https://cdn.bootcdn.net/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
@@ -118,28 +126,24 @@ const ResourceLoader = {
             'https://cdn.jsdelivr.net/npm/fflate@0.8.0/umd/index.min.js',
             'https://unpkg.com/fflate@0.8.0/umd/index.min.js',
             'https://npm.elemecdn.com/fflate@0.8.0/umd/index.min.js',
-            'https://unpkg.zhimg.com/fflate@0.8.0/umd/index.min.js',
             'https://fastly.jsdelivr.net/npm/fflate@0.8.0/umd/index.min.js'
         ],
         'qrcode': [
             'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js',
             'https://unpkg.com/qrcode@1.5.1/build/qrcode.min.js',
             'https://npm.elemecdn.com/qrcode@1.5.1/build/qrcode.min.js',
-            'https://unpkg.zhimg.com/qrcode@1.5.1/build/qrcode.min.js',
             'https://fastly.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js'
         ],
         'hash-wasm': [
             'https://cdn.jsdelivr.net/npm/hash-wasm@4.9.0/dist/index.umd.min.js',
             'https://unpkg.com/hash-wasm@4.9.0/dist/index.umd.min.js',
             'https://npm.elemecdn.com/hash-wasm@4.9.0/dist/index.umd.min.js',
-            'https://unpkg.zhimg.com/hash-wasm@4.9.0/dist/index.umd.min.js',
             'https://fastly.jsdelivr.net/npm/hash-wasm@4.9.0/dist/index.umd.min.js'
         ],
         'hash-wasm-esm': [
             'https://cdn.jsdelivr.net/npm/hash-wasm@4.9.0/dist/index.esm.min.js',
             'https://unpkg.com/hash-wasm@4.9.0/dist/index.esm.min.js',
             'https://npm.elemecdn.com/hash-wasm@4.9.0/dist/index.esm.min.js',
-            'https://unpkg.zhimg.com/hash-wasm@4.9.0/dist/index.esm.min.js',
             'https://fastly.jsdelivr.net/npm/hash-wasm@4.9.0/dist/index.esm.min.js'
         ],
         'jsondiffpatch': [
@@ -155,28 +159,24 @@ const ResourceLoader = {
             'https://cdn.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.js',
             'https://unpkg.com/markdown-wasm@1.2.0/dist/markdown.js',
             'https://npm.elemecdn.com/markdown-wasm@1.2.0/dist/markdown.js',
-            'https://unpkg.zhimg.com/markdown-wasm@1.2.0/dist/markdown.js',
             'https://fastly.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.js'
         ],
         'markdown-wasm-esm': [
             'https://cdn.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.es.js',
             'https://unpkg.com/markdown-wasm@1.2.0/dist/markdown.es.js',
             'https://npm.elemecdn.com/markdown-wasm@1.2.0/dist/markdown.es.js',
-            'https://unpkg.zhimg.com/markdown-wasm@1.2.0/dist/markdown.es.js',
             'https://fastly.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.es.js'
         ],
         'brotli-wasm': [
             'https://unpkg.com/brotli-wasm@1.3.1/index.web.js',
             'https://cdn.jsdelivr.net/npm/brotli-wasm@1.3.1/index.web.js',
             'https://npm.elemecdn.com/brotli-wasm@1.3.1/index.web.js',
-            'https://unpkg.zhimg.com/brotli-wasm@1.3.1/index.web.js',
             'https://fastly.jsdelivr.net/npm/brotli-wasm@1.3.1/index.web.js'
         ],
         'brotli-wasm-esm': [
             'https://unpkg.com/brotli-wasm@1.3.1/index.web.js',
             'https://cdn.jsdelivr.net/npm/brotli-wasm@1.3.1/index.web.js',
             'https://npm.elemecdn.com/brotli-wasm@1.3.1/index.web.js',
-            'https://unpkg.zhimg.com/brotli-wasm@1.3.1/index.web.js',
             'https://fastly.jsdelivr.net/npm/brotli-wasm@1.3.1/index.web.js'
         ],
         'photon': [
@@ -196,7 +196,6 @@ const ResourceLoader = {
             'https://unpkg.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
             'https://cdn.jsdelivr.net/npm/zstd-wasm@0.0.21/dist/zstd-wasm.js',
             'https://npm.elemecdn.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
-            'https://unpkg.zhimg.com/zstd-wasm@0.0.21/dist/zstd-wasm.js',
             'https://fastly.jsdelivr.net/npm/zstd-wasm@0.0.21/dist/zstd-wasm.js'
         ],
         'gif.js': [
@@ -210,11 +209,13 @@ const ResourceLoader = {
         ],
         'marked': [
             'https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js',
+            'https://cdn.staticfile.org/marked/9.1.2/marked.min.js',
             'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
             'https://unpkg.com/marked@9.1.2/marked.min.js'
         ],
         'font-awesome': [
             'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+            'https://cdn.staticfile.org/font-awesome/6.4.0/css/all.min.css',
             'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css',
             'https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css',
             'https://npm.elemecdn.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css',
@@ -246,6 +247,8 @@ const ResourceLoader = {
         'tools/format.html': ['@beautify'],
         'tools/diff.html': ['@diff'],
         'tools/network-ip.html': ['@icons'],
+        'tools/developer-toolbox.html': ['@icons'],
+        'tools/hf-space-converter.html': ['@icons'],
         'tools/image-pixel.html': ['@icons'],
         'tools/text.html': ['@opencc'],
         'tools/network-github.html': ['marked'],

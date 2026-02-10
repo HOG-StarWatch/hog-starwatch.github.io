@@ -15,6 +15,7 @@ export default [
         { text: 'Windows/Office', link: '../../../MAS/', target: '_self', },
         { text: 'CF', link: '../../../CF/', target: '_self', },
         { text: 'Epic Games免费游戏', link: '../../../epic.html', target: '_self', },
+        { text: 'HF-Space-AppConverter', link: '../../../hf-space-app-converter.html', target: '_self', },
         { text: '排序算法可视化', link: '../../../sorting_visualizer.html', target: '_self', },
       ],
     },
@@ -36,6 +37,7 @@ export default [
     { text: '网页小工具',
       items: [
         { text: 'AURORA❤极光', link: '../../../AURORA/index.html', target: '_self', },
+        { text: '网页开发素材箱', link: '../../../developer-toolbox.html', target: '_self', },
         { text: 'HTML在线运行', link: '../../../html_runner.html', target: '_self', },
         { text: 'HTML在线运行', link: '../../../htmlrunner.html', target: '_self', },
         { text: 'File64', link: '../../../File64.html.html', target: '_self', },

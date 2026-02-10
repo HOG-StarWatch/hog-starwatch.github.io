@@ -54,23 +54,14 @@
         }
 
         .unit-select {
-            background: var(--bg-deep);
-            color: var(--text-main);
-            border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: var(--radius-md);
-            font-size: 1rem;
+            width: 100%;
         }
 
         .value-input {
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            color: var(--primary);
             font-size: 1.5rem;
             padding: 15px;
-            border-radius: var(--radius-md);
             text-align: center;
-            font-family: var(--font-mono);
+            height: auto; /* 覆盖全局可能的 height */
         }
         .value-input:focus { border-color: var(--primary); }
 

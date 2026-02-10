@@ -6,15 +6,6 @@
     <title>幻影坦克生成器</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        body {
-            background: transparent;
-            padding: 0;
-            overflow: auto !important; /* Force scroll */
-            display: block;
-            height: auto !important; /* Allow growth */
-            min-height: 100vh;
-        }
-
         .upload-placeholder {
             color: var(--text-dim);
             font-size: 0.9rem;
@@ -50,11 +41,6 @@
 
         /* Mobile Scroll Fix */
         @media (max-width: 768px) {
-            body {
-                height: auto !important;
-                overflow-y: auto !important;
-                display: block !important;
-            }
             .layout-sidebar {
                 height: auto !important;
                 overflow: visible !important;
@@ -67,7 +53,7 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="layout-sidebar">
         <!-- Sidebar Controls -->
         <div class="controls">

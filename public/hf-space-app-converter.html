@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HF Space App Converter</title>
+<style>
+:root { --bg:#1e1e1ef2; --txt:#e0e0e0; --txt-2:#aaa; --brd:#444; --in-bg:#2d2d2d; --prm:#8e44ad; --prm-h:#9b59b6; --sec:#3d3d3d; --sec-h:#4d4d4d; --shd:0 4px 20px #0006; --body-bg:#121212; }
+[data-theme="light"] { --bg:#ffffff95; --txt:#333; --txt-2:#666; --brd:#eee; --in-bg:#fff; --prm:#9b59b6; --prm-h:#8e44ad; --sec:#f1f3f5; --sec-h:#e9ecef; --shd:0 4px 20px #0002; --body-bg:#f8f9fa; }
+body { margin:0; overflow:hidden; font-family:system-ui,sans-serif; background:var(--body-bg); color:var(--txt); transition:background .3s; }
+iframe { position:fixed; inset:0; width:100%; height:100%; border:0; }
+.panel, .icon { position:fixed; top:0; left:0; transform:translate(var(--x,0),var(--y,0)) scale(var(--s,1)); transition:transform .6s cubic-bezier(.2,.8,.2,1),opacity .3s; }
+.panel { z-index:100; background:var(--bg); backdrop-filter:blur(10px); padding:16px; border-radius:12px; box-shadow:var(--shd); width:320px; border:1px solid var(--brd); display:flex; flex-direction:column; gap:10px; --s:1; outline:0; }
+.panel:focus { border-color:var(--prm); box-shadow:0 0 0 2px var(--prm); }
+.panel.min { --s:0.9; opacity:0; pointer-events:none; }
+.icon { z-index:99; width:40px; height:40px; background:var(--prm); border-radius:50%; box-shadow:var(--shd); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; font-weight:bold; font-size:14px; --s:0; opacity:0; pointer-events:none; }
+.icon.show { --s:1; opacity:0.6; pointer-events:auto; } .icon.show:hover { --s:1.1; opacity:1; }
+.tl { --x:20px; --y:20px; } .tr { --x:calc(100vw - 100% - 20px); --y:20px; }
+.bl { --x:20px; --y:calc(100vh - 100% - 20px); } .br { --x:calc(100vw - 100% - 20px); --y:calc(100vh - 100% - 20px); }
+.center { --x:calc(50vw - 50%); --y:calc(50vh - 50%); }
+.head { display:flex; justify-content:space-between; font-weight:bold; font-size:14px; }
+.btns { display:flex; gap:8px; }
+.ibtn { background:0; border:0; color:var(--txt-2); cursor:pointer; padding:4px; border-radius:4px; } .ibtn:hover { color:var(--txt); background:#ffffff1a; }
+input { padding:8px; border:1px solid var(--brd); border-radius:6px; background:var(--in-bg); color:var(--txt); outline:0; width:100%; box-sizing:border-box; } input:focus { border-color:var(--prm); }
+.act-btns { display:flex; gap:8px; }
+.btn { flex:1; padding:8px; border:0; border-radius:6px; cursor:pointer; color:#fff; font-weight:500; }
+.btn-p { background:var(--prm); } .btn-p:hover { background:var(--prm-h); }
+.btn-s { background:var(--sec); color:var(--txt); } .btn-s:hover { background:var(--sec-h); } .btn-s:disabled { opacity:0.5; cursor:not-allowed; }
+.status { font-size:12px; color:#2ecc71; height:18px; overflow:hidden; text-overflow:ellipsis; display:none; } .status.err { color:#e74c3c; }
+.pos-bar { display:flex; justify-content:center; gap:12px; border-top:1px solid var(--brd); padding-top:8px; }
+.p-btn { width:24px; height:24px; border-radius:4px; border:1px solid var(--brd); background:var(--in-bg); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--txt-2); font-size:10px; }
+.p-btn:hover { color:var(--txt); } .p-btn.act { background:var(--prm); color:#fff; border-color:var(--prm); }
+.empty { position:fixed; top:35%; left:50%; transform:translate(-50%,-50%); color:var(--txt-2); text-align:center; z-index:-1; pointer-events:none; }
+.tip { font-size:12px; opacity:0.6; margin-top:16px; font-weight:normal; }
+code { background:rgba(127,127,127,0.2); padding:2px 4px; border-radius:3px; font-family:monospace; }
+</style>
+</head>
+<body>
+<iframe id="mainFrame"></iframe>
+<div class="empty" id="empty">
+    <h2>请输入 Space 链接</h2>
+    <p>支持自动提取文本中的链接</p>
+    <div class="tip">💡 技巧：网址后加 <code>?url=链接</code> 可直接加载</div>
+</div>
+<div id="icon" class="icon tr" onclick="togMin()">❤</div>
+<div id="panel" class="panel tr" onmouseenter="els.inp.focus()" tabindex="0">
+    <div class="head">
+        <span>HF Space App Converter</span>
+        <div class="btns"><button class="ibtn" onclick="togThm()" id="tBtn">☀️</button><button class="ibtn" onclick="togMin()">_</button></div>
+    </div>
+    <input type="text" id="inp" placeholder="粘贴链接或包含链接的文本...">
+    <div class="act-btns"><button class="btn btn-p" id="goBtn" onclick="act()">转换并加载</button><button class="btn btn-s" id="cpBtn" onclick="cp()" disabled>复制</button></div>
+    <div id="st" class="status"></div>
+    <div class="pos-bar">
+        <div class="p-btn" onclick="setPos('tl')"></div><div class="p-btn" onclick="setPos('tr')"></div>
+        <div class="p-btn" onclick="setPos('bl')"></div><div class="p-btn" onclick="setPos('br')"></div>
+    </div>
+</div>
+<script>
+let curUrl='', isDark=true, curPos='center', isLoaded=false, els={};
+['mainFrame','empty','icon','panel','inp','cpBtn','st','tBtn','goBtn'].forEach(k=>els[k]=document.getElementById(k));
+const ICONS = { center: '↖↗↙↘', tl: '●→↓↘', tr: '←●↙↓', bl: '↑↗●→', br: '↖↑←●' };
+const KEYS = ['tl','tr','bl','br'];
+
+const setPos = p => {
+    if(p===curPos) p='center';
+    curPos = p;
+    ['tl','tr','bl','br','center'].forEach(c => { els.panel.classList.remove(c); els.icon.classList.remove(c); });
+    els.panel.classList.add(p); els.icon.classList.add(p);
+    
+    document.querySelectorAll('.p-btn').forEach((b,i) => {
+        b.classList.toggle('act', KEYS[i]===p);
+        b.textContent = ICONS[p][i];
+    });
+};
+setPos('center');
+
+const togMin = () => { els.panel.classList.toggle('min'); els.icon.classList.toggle('show'); };
+const togThm = () => {
+    isDark = !isDark;
+    document.documentElement.setAttribute('data-theme', isDark?'':'light');
+    els.tBtn.textContent = isDark ? '☀️' : '🌙';
+};
+const show = (m,e=0) => { els.st.textContent=m; els.st.style.display='block'; els.st.className='status'+(e?' err':''); if(!e) setTimeout(()=>els.st.style.display='none',3000); };
+
+const act = () => isLoaded ? clear() : convert();
+
+const convert = () => {
+    const v = els.inp.value.trim();
+    let url;
+
+    const mDirect = v.match(/https?:\/\/[\w\-\.]+\.hf\.space[^\s]*/);
+
+    const mStd = v.match(/huggingface\.co\/spaces\/([\w\-\.]+)\/([\w\-\.]+)/i);
+
+    if (mDirect) {
+        url = mDirect[0];
+    } else if (mStd) {
+        const u = mStd[1].toLowerCase().replace(/\./g, '-');
+        const r = mStd[2].toLowerCase().replace(/\./g, '-');
+        url = `https://${u}-${r}.hf.space`;
+    } else {
+        return show('未找到有效的 Space 链接', 1);
+    }
+
+    curUrl = url;
+    els.mainFrame.src = curUrl;
+    els.cpBtn.disabled = false;
+    els.empty.style.display = 'none';
+    if(curPos === 'center') setPos('tr');
+    show('加载中...');
+    isLoaded = true;
+    els.goBtn.innerHTML = '清空';
+    els.mainFrame.onload = () => show('加载完成');
+};
+
+const clear = () => {
+    els.inp.value = '';
+    els.cpBtn.disabled = true;
+    curUrl = '';
+    isLoaded = false;
+    els.goBtn.innerHTML = '转换并加载';
+    show('已清空');
+};
+
+const cp = () => curUrl && navigator.clipboard.writeText(curUrl).then(()=>show('已复制!')).catch(()=>show('复制失败',1));
+
+// Events & Init
+els.inp.onkeydown = e => { if(e.key==='Enter') convert(); };
+els.inp.onpaste = () => setTimeout(convert, 50);
+const p = new URLSearchParams(location.search).get('url');
+if(p) { els.inp.value=p; convert(); }
+document.onkeydown = e => {
+    if(els.panel.classList.contains('min')) return;
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='v') els.inp.focus();
+    if(document.activeElement === els.panel) {
+        const k = e.key;
+        const MAP = {
+            tl:{ArrowRight:'tr',ArrowDown:'bl'}, tr:{ArrowLeft:'tl',ArrowDown:'br'},
+            bl:{ArrowRight:'br',ArrowUp:'tl'}, br:{ArrowLeft:'bl',ArrowUp:'tr'},
+            center:{ArrowUp:'tl',ArrowDown:'br',ArrowLeft:'bl',ArrowRight:'tr'}
+        };
+        if(MAP[curPos] && MAP[curPos][k]) { setPos(MAP[curPos][k]); e.preventDefault(); }
+    }
+};
+</script>
+</body>
+</html>

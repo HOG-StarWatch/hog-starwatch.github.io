@@ -6,16 +6,6 @@
     <title>IP地址信息查询工具</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-
-        html {
-            overflow-y: auto;
-        }
-        body {
-            padding: 20px;
-            overflow-y: auto;
-            min-height: 100vh;
-        }
-        
         .container {
             max-width: 1400px;
             width: 95%;
@@ -199,7 +189,7 @@
         
         input[type="text"]:focus {
             border-color: var(--primary);
-            outline: none;
+            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
         }
         
         button {
@@ -339,7 +329,7 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="container">
         <header>
             <h1><i class="fas fa-network-wired"></i> IP地址信息查询</h1>

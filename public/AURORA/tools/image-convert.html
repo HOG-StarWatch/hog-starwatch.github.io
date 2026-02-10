@@ -13,36 +13,6 @@
             gap: 1.5rem;
         }
         
-        .upload-area {
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-lg);
-            padding: 3rem 2rem;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.02);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-dim);
-            min-height: 200px;
-        }
-        
-        .upload-area:hover {
-            border-color: var(--primary);
-            background: rgba(192, 132, 252, 0.05);
-            color: var(--text-main);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-        
-        .upload-area.drag-over {
-            border-color: var(--secondary);
-            background: rgba(45, 212, 191, 0.1);
-            transform: scale(1.02);
-        }
-
         .preview-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -104,7 +74,7 @@
         }
     </style>
 </head>
-<body style="padding: 1rem;">
+<body class="scroll-content">
     <div class="sub-tab-group">
         <div class="sub-tab active" onclick="switchSubTab('format', this)">格式转换</div>
         <div class="sub-tab" onclick="switchSubTab('resize', this)">尺寸调整</div>
