@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脚本执行助手 & 书签生成器 v2.0</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-color: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1200px; /* Increased max-width for better editor space */
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            /* Mobile default: auto height */
+        }
+
+        @media (min-width: 768px) {
+            .main-container {
+                height: calc(100vh - 40px);
+                grid-template-columns: 350px 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            
+            /* Header spans full width */
+            .header-panel {
+                grid-column: 1 / -1;
+            }
+            
+            /* Panels in the second row should scroll internally if needed */
+            .panel {
+                overflow: hidden; /* Prevent panel itself from scrolling */
+            }
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .header-panel {
+            /* grid-column handled in media query for responsiveness */
+            text-align: center;
+            background: linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%);
+            border: none;
+            padding: 30px;
+            flex-shrink: 0; /* Don't shrink header */
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            margin-top: 8px;
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        input[type="text"], 
+        select, 
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Consolas', 'Monaco', monospace;
+            box-sizing: border-box;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+
+        textarea {
+            resize: none;
+            min-height: 200px;
+            flex: 1; /* Fill remaining space in the panel */
+            line-height: 1.5;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            font-size: 0.95rem;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-primary { background-color: var(--accent-color); }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+
+        .btn-success { background-color: var(--success-color); }
+        .btn-success:hover { background-color: #059669; }
+
+        .btn-secondary { background-color: #334155; }
+        .btn-secondary:hover { background-color: #475569; }
+
+        .btn-block { width: 100%; }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        
+        .tool-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+        .tool-card:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: var(--accent-color);
+        }
+        .tool-card .icon { font-size: 1.5rem; margin-bottom: 5px; display: block; }
+
+        .note {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            background: rgba(245, 158, 11, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid var(--warning-color);
+            line-height: 1.5;
+        }
+
+        .bookmarklet-preview {
+            background: #111;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px dashed var(--border-color);
+        }
+
+        .bookmarklet-btn {
+            display: inline-block;
+            background: var(--success-color);
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            cursor: grab;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+        .overlay.hidden { display: none; }
+        
+        .modal {
+            width: min(800px, 90vw);
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .flex-row { display: flex; gap: 10px; align-items: center; }
+        .flex-between { justify-content: space-between; }
+        
+        optgroup { color: var(--accent-color); font-weight: bold; }
+
+        /* New Styles for Refactoring */
+        .preset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            /* height: calc(100vh - 280px); Removed fixed height */
+            flex: 1; /* Fill available space */
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--input-bg);
+            padding: 8px;
+        }
+        
+        /* Scrollbar styling */
+        .preset-list::-webkit-scrollbar { width: 8px; }
+        .preset-list::-webkit-scrollbar-track { background: var(--bg-color); }
+        .preset-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .preset-list::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        @media (max-width: 767px) {
+            .preset-list {
+                height: 300px;
+            }
+        }
+
+        .preset-category {
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            font-weight: bold;
+            margin: 12px 0 4px 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .preset-category:first-child { margin-top: 4px; }
+
+        .preset-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+        }
+        .preset-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+        .preset-item.active {
+            background: var(--accent-color);
+            color: white;
+            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+        }
+        .preset-item .icon {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        .preset-item .name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .search-box input {
+            padding-left: 36px;
+        }
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="panel header-panel">
+            <h1 id="headerTitle">脚本执行助手</h1>
+            <div id="headerSubtitle" class="subtitle">生成书签脚本 (Bookmarklet) & 在任意网页执行代码</div>
+        </div>
+
+        <!-- Left Column: Presets List -->
+        <div class="panel" style="padding: 16px; gap: 10px; overflow: hidden;">
+            <div class="search-box">
+                <input type="text" id="presetSearch" placeholder="搜索预设脚本...">
+            </div>
+            <div id="presetList" class="preset-list">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Right Column: Editor & Controls -->
+        <div class="panel" style="overflow-y: auto;">
+            <!-- Toolbar -->
+            <div class="flex-row flex-between" style="margin-bottom: 5px;">
+                <label for="scriptInput" style="margin:0">脚本编辑器</label>
+                <div class="flex-row">
+                    <button id="openTmConverterBtn" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem;">
+                        🧩 油猴转换
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem;">
+                        🗑️ 清空
+                    </button>
+                </div>
+            </div>
+
+            <textarea id="scriptInput" placeholder="// 在此粘贴或编写 JavaScript 代码..."></textarea>
+            
+            <!-- Secondary Inputs -->
+            <div class="flex-row" style="gap: 15px;">
+                <div style="flex: 1;">
+                    <label for="bookmarkletName">名称</label>
+                    <input type="text" id="bookmarkletName" placeholder="我的脚本">
+                </div>
+                <div style="flex: 1;">
+                    <label for="urlInput">测试网址 (运行模式)</label>
+                    <input type="text" id="urlInput" placeholder="https://example.com">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex-row" style="margin-top: 10px;">
+                <button id="generateBookmarkletBtn" class="btn btn-success" style="flex: 2;">
+                    ✨ 生成书签 (Bookmarklet)
+                </button>
+                <button id="openButton" class="btn btn-primary" style="flex: 1;" title="尝试在新标签页运行 (可能会被拦截)">
+                    🚀 运行
+                </button>
+            </div>
+            
+            <!-- Note -->
+            <div class="note" style="margin-top: 10px; padding: 8px;">
+                <strong>提示:</strong> 左侧选择脚本或手动输入，点击“生成书签”后拖拽按钮到书签栏。
+            </div>
+
+            <!-- Output Area -->
+            <div id="bookmarkletOutput" class="panel" style="display: none; background: #111; margin-top: 20px; border: 1px dashed var(--accent-color);">
+                <label style="text-align: center; color: var(--success-color);">👇 将此按钮拖拽到书签栏 👇</label>
+                <div style="display: flex; justify-content: center; padding: 20px;">
+                    <a id="bookmarkletLink" href="#" class="bookmarklet-btn">
+                        我的脚本
+                    </a>
+                </div>
+                
+                <div style="border-top: 1px solid #333; padding-top: 15px; margin-top: 10px;">
+                    <label>或手动复制:</label>
+                    <div class="flex-row">
+                        <input type="text" id="bookmarkletRaw" readonly>
+                        <button id="copyButton" class="btn btn-secondary">📋 复制</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tampermonkey Converter Modal -->
+    <div id="tmConverterOverlay" class="overlay hidden">
+        <div class="modal">
+            <div class="flex-row flex-between">
+                <h3 style="margin:0">🧩 油猴脚本转换工具</h3>
+                <button id="tmCloseBtn" class="btn btn-secondary" style="padding: 4px 10px;">✕</button>
+            </div>
+            <div>
+                <label>粘贴 UserScript 内容:</label>
+                <textarea id="tmInput" style="height: 200px;" placeholder="// ==UserScript== ..."></textarea>
+            </div>
+            <div class="flex-row">
+                <label class="flex-row"><input type="checkbox" id="tmUseRequire" checked> 解析 @require</label>
+                <label class="flex-row"><input type="checkbox" id="tmUseShim" checked> 填充 GM_* API</label>
+            </div>
+            <div class="flex-row flex-between">
+                <button id="tmPasteBtn" class="btn btn-secondary">📋 从剪贴板粘贴</button>
+                <button id="tmConvertBtn" class="btn btn-primary">✅ 转换并加载</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Telegram Downloader Source (Preserved) -->
+    <script id="tgdown-source" type="text/plain">
+(function () {
+  const unsafeWindow = window;
+  const logger = {
+    info: (message, fileName = null) => {
+      console.log(
+        `[Tel Download] ${fileName ? `${fileName}: ` : ""}${message}`
+      );
+    },
+    error: (message, fileName = null) => {
+      console.error(
+        `[Tel Download] ${fileName ? `${fileName}: ` : ""}${message}`
+      );
+    },
+  };
+  const DOWNLOAD_ICON = "\ue977";
+  const FORWARD_ICON = "\ue995";
+  const contentRangeRegex = /^bytes (\d+)-(\d+)\/(\d+)$/;
+  const REFRESH_DELAY = 500;
+  const hashCode = (s) => {
+    var h = 0,
+      l = s.length,
+      i = 0;
+    if (l > 0) {
+      while (i < l) {
+        h = ((h << 5) - h + s.charCodeAt(i++)) | 0;
+      }
+    }
+    return h >>> 0;
+  };
+
+  const createProgressBar = (videoId, fileName) => {
+    const isDarkMode =
+      document.querySelector("html").classList.contains("night") ||
+      document.querySelector("html").classList.contains("theme-dark");
+    const container = document.getElementById(
+      "tel-downloader-progress-bar-container"
+    );
+    const innerContainer = document.createElement("div");
+    innerContainer.id = "tel-downloader-progress-" + videoId;
+    innerContainer.style.width = "20rem";
+    innerContainer.style.marginTop = "0.4rem";
+    innerContainer.style.padding = "0.6rem";
+    innerContainer.style.backgroundColor = isDarkMode
+      ? "rgba(0,0,0,0.3)"
+      : "rgba(0,0,0,0.6)";
+
+    const flexContainer = document.createElement("div");
+    flexContainer.style.display = "flex";
+    flexContainer.style.justifyContent = "space-between";
+
+    const title = document.createElement("p");
+    title.className = "filename";
+    title.style.margin = 0;
+    title.style.color = "white";
+    title.innerText = fileName;
+
+    const closeButton = document.createElement("div");
+    closeButton.style.cursor = "pointer";
+    closeButton.style.fontSize = "1.2rem";
+    closeButton.style.color = isDarkMode ? "#8a8a8a" : "white";
+    closeButton.innerHTML = "&times;";
+    closeButton.onclick = function () {
+      container.removeChild(innerContainer);
+    };
+
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress";
+    progressBar.style.backgroundColor = "#e2e2e2";
+    progressBar.style.position = "relative";
+    progressBar.style.width = "100%";
+    progressBar.style.height = "1.6rem";
+    progressBar.style.borderRadius = "2rem";
+    progressBar.style.overflow = "hidden";
+
+    const counter = document.createElement("p");
+    counter.style.position = "absolute";
+    counter.style.zIndex = 5;
+    counter.style.left = "50%";
+    counter.style.top = "50%";
+    counter.style.transform = "translate(-50%, -50%)";
+    counter.style.margin = 0;
+    counter.style.color = "black";
+    const progress = document.createElement("div");
+    progress.style.position = "absolute";
+    progress.style.height = "100%";
+    progress.style.width = "0%";
+    progress.style.backgroundColor = "#6093B5";
+
+    progressBar.appendChild(counter);
+    progressBar.appendChild(progress);
+    flexContainer.appendChild(title);
+    flexContainer.appendChild(closeButton);
+    innerContainer.appendChild(flexContainer);
+    innerContainer.appendChild(progressBar);
+    container.appendChild(innerContainer);
+  };
+
+  const updateProgress = (videoId, fileName, progress) => {
+    const innerContainer = document.getElementById(
+      "tel-downloader-progress-" + videoId
+    );
+    innerContainer.querySelector("p.filename").innerText = fileName;
+    const progressBar = innerContainer.querySelector("div.progress");
+    progressBar.querySelector("p").innerText = progress + "%";
+    progressBar.querySelector("div").style.width = progress + "%";
+  };
+
+  const completeProgress = (videoId) => {
+    const progressBar = document
+      .getElementById("tel-downloader-progress-" + videoId)
+      .querySelector("div.progress");
+    progressBar.querySelector("p").innerText = "Completed";
+    progressBar.querySelector("div").style.backgroundColor = "#B6C649";
+    progressBar.querySelector("div").style.width = "100%";
+  };
+
+  const AbortProgress = (videoId) => {
+    const progressBar = document
+      .getElementById("tel-downloader-progress-" + videoId)
+      .querySelector("div.progress");
+    progressBar.querySelector("p").innerText = "Aborted";
+    progressBar.querySelector("div").style.backgroundColor = "#D16666";
+    progressBar.querySelector("div").style.width = "100%";
+  };
+
+  const tel_download_video = (url) => {
+    let _blobs = [];
+    let _next_offset = 0;
+    let _total_size = null;
+    let _file_extension = "mp4";
+
+    const videoId =
+      (Math.random() + 1).toString(36).substring(2, 10) +
+      "_" +
+      Date.now().toString();
+    let fileName = hashCode(url).toString(36) + "." + _file_extension;
+
+    try {
+      const metadata = JSON.parse(
+        decodeURIComponent(url.split("/")[url.split("/").length - 1])
+      );
+      if (metadata.fileName) {
+        fileName = metadata.fileName;
+      }
+    } catch (e) {}
+    logger.info(`URL: ${url}`, fileName);
+
+    const fetchNextPart = (_writable) => {
+      fetch(url, {
+        method: "GET",
+        headers: {
+          Range: `bytes=${_next_offset}-`,
+        },
+        "User-Agent":
+          "User-Agent Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/117.0",
+      })
+        .then((res) => {
+          if (![200, 206].includes(res.status)) {
+            throw new Error("Non 200/206 response was received: " + res.status);
+          }
+          const mime = res.headers.get("Content-Type").split(";")[0];
+          if (!mime.startsWith("video/")) {
+            throw new Error("Get non video response with MIME type " + mime);
+          }
+          _file_extension = mime.split("/")[1];
+          fileName =
+            fileName.substring(0, fileName.indexOf(".") + 1) + _file_extension;
+
+          const match = res.headers
+            .get("Content-Range")
+            .match(contentRangeRegex);
+
+          const startOffset = parseInt(match[1]);
+          const endOffset = parseInt(match[2]);
+          const totalSize = parseInt(match[3]);
+
+          if (startOffset !== _next_offset) {
+            logger.error("Gap detected between responses.", fileName);
+            logger.info("Last offset: " + _next_offset, fileName);
+            logger.info("New start offset " + match[1], fileName);
+            throw "Gap detected between responses.";
+          }
+          if (_total_size && totalSize !== _total_size) {
+            logger.error("Total size differs", fileName);
+            throw "Total size differs";
+          }
+
+          _next_offset = endOffset + 1;
+          _total_size = totalSize;
+
+          logger.info(
+            `Get response: ${res.headers.get(
+              "Content-Length"
+            )} bytes data from ${res.headers.get("Content-Range")}`,
+            fileName
+          );
+          logger.info(
+            `Progress: ${((_next_offset * 100) / _total_size).toFixed(0)}%`,
+            fileName
+          );
+          updateProgress(
+            videoId,
+            fileName,
+            ((_next_offset * 100) / _total_size).toFixed(0)
+          );
+          return res.blob();
+        })
+        .then((resBlob) => {
+          if (_writable !== null) {
+            _writable.write(resBlob).then(() => {});
+          } else {
+            _blobs.push(resBlob);
+          }
+        })
+        .then(() => {
+          if (!_total_size) {
+            throw new Error("_total_size is NULL");
+          }
+
+          if (_next_offset < _total_size) {
+            fetchNextPart(_writable);
+          } else {
+            if (_writable !== null) {
+              _writable.close().then(() => {
+                logger.info("Download finished", fileName);
+              });
+            } else {
+              save();
+            }
+            completeProgress(videoId);
+          }
+        })
+        .catch((reason) => {
+          logger.error(reason, fileName);
+          AbortProgress(videoId);
+        });
+    };
+
+    const save = () => {
+      logger.info("Finish downloading blobs", fileName);
+      logger.info("Concatenating blobs and downloading...", fileName);
+
+      const blob = new Blob(_blobs, { type: "video/mp4" });
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      logger.info("Final blob size: " + blob.size + " bytes", fileName);
+
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.href = blobUrl;
+      a.download = fileName;
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+
+      logger.info("Download triggered", fileName);
+    };
+
+    const supportsFileSystemAccess =
+      "showSaveFilePicker" in unsafeWindow &&
+      (() => {
+        try {
+          return unsafeWindow.self === unsafeWindow.top;
+        } catch {
+          return false;
+        }
+      })();
+    if (supportsFileSystemAccess) {
+      unsafeWindow
+        .showSaveFilePicker({
+          suggestedName: fileName,
+        })
+        .then((handle) => {
+          handle
+            .createWritable()
+            .then((writable) => {
+              fetchNextPart(writable);
+              createProgressBar(videoId);
+            })
+            .catch((err) => {
+              console.error(err.name, err.message);
+            });
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            console.error(err.name, err.message);
+          }
+        });
+    } else {
+      fetchNextPart(null);
+      createProgressBar(videoId);
+    }
+  };
+
+  const tel_download_audio = (url) => {
+    let _blobs = [];
+    let _next_offset = 0;
+    let _total_size = null;
+    const fileName = hashCode(url).toString(36) + ".ogg";
+
+    const fetchNextPart = (_writable) => {
+      fetch(url, {
+        method: "GET",
+        headers: {
+          Range: `bytes=${_next_offset}-`,
+        },
+      })
+        .then((res) => {
+          if (res.status !== 206 && res.status !== 200) {
+            logger.error(
+              "Non 200/206 response was received: " + res.status,
+              fileName
+            );
+            return;
+          }
+
+          const mime = res.headers.get("Content-Type").split(";")[0];
+          if (!mime.startsWith("audio/")) {
+            logger.error(
+              "Get non audio response with MIME type " + mime,
+              fileName
+            );
+            throw "Get non audio response with MIME type " + mime;
+          }
+
+          try {
+            const match = res.headers
+              .get("Content-Range")
+              .match(contentRangeRegex);
+
+            const startOffset = parseInt(match[1]);
+            const endOffset = parseInt(match[2]);
+            const totalSize = parseInt(match[3]);
+
+            if (startOffset !== _next_offset) {
+              logger.error("Gap detected between responses.");
+              logger.info("Last offset: " + _next_offset);
+              logger.info("New start offset " + match[1]);
+              throw "Gap detected between responses.";
+            }
+            if (_total_size && totalSize !== _total_size) {
+              logger.error("Total size differs");
+              throw "Total size differs";
+            }
+
+            _next_offset = endOffset + 1;
+            _total_size = totalSize;
+          } finally {
+            logger.info(
+              `Get response: ${res.headers.get(
+                "Content-Length"
+              )} bytes data from ${res.headers.get("Content-Range")}`
+            );
+            return res.blob();
+          }
+        })
+        .then((resBlob) => {
+          if (_writable !== null) {
+            _writable.write(resBlob).then(() => {});
+          } else {
+            _blobs.push(resBlob);
+          }
+        })
+        .then(() => {
+          if (_next_offset < _total_size) {
+            fetchNextPart(_writable);
+          } else {
+            if (_writable !== null) {
+              _writable.close().then(() => {
+                logger.info("Download finished", fileName);
+              });
+            } else {
+              save();
+            }
+          }
+        })
+        .catch((reason) => {
+          logger.error(reason, fileName);
+        });
+    };
+
+    const save = () => {
+      logger.info(
+        "Finish downloading blobs. Concatenating blobs and downloading...",
+        fileName
+      );
+
+      let blob = new Blob(_blobs, { type: "audio/ogg" });
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      logger.info("Final blob size in bytes: " + blob.size, fileName);
+
+      blob = 0;
+
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.href = blobUrl;
+      a.download = fileName;
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+
+      logger.info("Download triggered", fileName);
+    };
+
+    const supportsFileSystemAccess =
+      "showSaveFilePicker" in unsafeWindow &&
+      (() => {
+        try {
+          return unsafeWindow.self === unsafeWindow.top;
+        } catch {
+          return false;
+        }
+      })();
+    if (supportsFileSystemAccess) {
+      unsafeWindow
+        .showSaveFilePicker({
+          suggestedName: fileName,
+        })
+        .then((handle) => {
+          handle
+            .createWritable()
+            .then((writable) => {
+              fetchNextPart(writable);
+            })
+            .catch((err) => {
+              console.error(err.name, err.message);
+            });
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            console.error(err.name, err.message);
+          }
+        });
+    } else {
+      fetchNextPart(null);
+    }
+  };
+
+  const tel_download_image = (imageUrl) => {
+    const fileName =
+      (Math.random() + 1).toString(36).substring(2, 10) + ".jpeg";
+
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.href = imageUrl;
+    a.download = fileName;
+    a.click();
+    document.body.removeChild(a);
+
+    logger.info("Download triggered", fileName);
+  };
+
+  logger.info("Initialized");
+
+  setInterval(() => {
+    const storiesContainer = document.getElementById("StoryViewer");
+    if (storiesContainer) {
+      const createDownloadButton = () => {
+        const downloadIcon = document.createElement("i");
+        downloadIcon.className = "icon icon-download";
+        const downloadButton = document.createElement("button");
+        downloadButton.className =
+          "Button TkphaPyQ tiny translucent-white round tel-download";
+        downloadButton.appendChild(downloadIcon);
+        downloadButton.setAttribute("type", "button");
+        downloadButton.setAttribute("title", "Download");
+        downloadButton.setAttribute("aria-label", "Download");
+        downloadButton.onclick = () => {
+          const video = storiesContainer.querySelector("video");
+          const videoSrc =
+            video?.src ||
+            video?.currentSrc ||
+            video?.querySelector("source")?.src;
+          if (videoSrc) {
+            tel_download_video(videoSrc);
+          } else {
+            const images = storiesContainer.querySelectorAll("img.PVZ8TOWS");
+            if (images.length > 0) {
+              const imageSrc = images[images.length - 1]?.src;
+              if (imageSrc) tel_download_image(imageSrc);
+            }
+          }
+        };
+        return downloadButton;
+      };
+
+      const storyHeader =
+        storiesContainer.querySelector(".GrsJNw3y") ||
+        storiesContainer.querySelector(".DropdownMenu").parentNode;
+      if (storyHeader && !storyHeader.querySelector(".tel-download")) {
+        storyHeader.insertBefore(
+          createDownloadButton(),
+          storyHeader.querySelector("button")
+        );
+      }
+    }
+
+    const mediaContainer = document.querySelector(
+      "#MediaViewer .MediaViewerSlide--active"
+    );
+    const mediaViewerActions = document.querySelector(
+      "#MediaViewer .MediaViewerActions"
+    );
+    if (!mediaContainer || !mediaViewerActions) return;
+
+    const videoPlayer = mediaContainer.querySelector(
+      ".MediaViewerContent > .VideoPlayer"
+    );
+    const img = mediaContainer.querySelector(".MediaViewerContent > div > img");
+    const downloadIcon = document.createElement("i");
+    downloadIcon.className = "icon icon-download";
+    const downloadButton = document.createElement("button");
+    downloadButton.className =
+      "Button smaller translucent-white round tel-download";
+    downloadButton.setAttribute("type", "button");
+    downloadButton.setAttribute("title", "Download");
+    downloadButton.setAttribute("aria-label", "Download");
+    if (videoPlayer) {
+      const videoUrl = videoPlayer.querySelector("video").currentSrc;
+      downloadButton.setAttribute("data-tel-download-url", videoUrl);
+      downloadButton.appendChild(downloadIcon);
+      downloadButton.onclick = () => {
+        tel_download_video(videoPlayer.querySelector("video").currentSrc);
+      };
+
+      const controls = videoPlayer.querySelector(".VideoPlayerControls");
+      if (controls) {
+        const buttons = controls.querySelector(".buttons");
+        if (!buttons.querySelector("button.tel-download")) {
+          const spacer = buttons.querySelector(".spacer");
+          spacer.after(downloadButton);
+        }
+      }
+
+      if (mediaViewerActions.querySelector("button.tel-download")) {
+        const telDownloadButton = mediaViewerActions.querySelector(
+          "button.tel-download"
+        );
+        if (
+          mediaViewerActions.querySelectorAll('button[title="Download"]')
+            .length > 1
+        ) {
+          mediaViewerActions.querySelector("button.tel-download").remove();
+        } else if (
+          telDownloadButton.getAttribute("data-tel-download-url") !== videoUrl
+        ) {
+          telDownloadButton.onclick = () => {
+            tel_download_video(videoPlayer.querySelector("video").currentSrc);
+          };
+          telDownloadButton.setAttribute("data-tel-download-url", videoUrl);
+        }
+      } else if (
+        !mediaViewerActions.querySelector('button[title="Download"]')
+      ) {
+        mediaViewerActions.prepend(downloadButton);
+      }
+    } else if (img && img.src) {
+      downloadButton.setAttribute("data-tel-download-url", img.src);
+      downloadButton.appendChild(downloadIcon);
+      downloadButton.onclick = () => {
+        tel_download_image(img.src);
+      };
+
+      if (mediaViewerActions.querySelector("button.tel-download")) {
+        const telDownloadButton = mediaViewerActions.querySelector(
+          "button.tel-download"
+        );
+        if (
+          mediaViewerActions.querySelectorAll('button[title="Download"]')
+            .length > 1
+        ) {
+          mediaViewerActions.querySelector("button.tel-download").remove();
+        } else if (
+          telDownloadButton.getAttribute("data-tel-download-url") !== img.src
+        ) {
+          telDownloadButton.onclick = () => {
+            tel_download_image(img.src);
+          };
+          telDownloadButton.setAttribute("data-tel-download-url", img.src);
+        }
+      } else if (
+        !mediaViewerActions.querySelector('button[title="Download"]')
+      ) {
+        mediaViewerActions.prepend(downloadButton);
+      }
+    }
+  }, REFRESH_DELAY);
+
+  setInterval(() => {
+    const pinnedAudio = document.body.querySelector(".pinned-audio");
+    let dataMid;
+    let downloadButtonPinnedAudio =
+      document.body.querySelector("._tel_download_button_pinned_container") ||
+      document.createElement("button");
+    if (pinnedAudio) {
+      dataMid = pinnedAudio.getAttribute("data-mid");
+      downloadButtonPinnedAudio.className =
+        "btn-icon tgico-download _tel_download_button_pinned_container";
+      downloadButtonPinnedAudio.innerHTML = `<span class="tgico button-icon">${DOWNLOAD_ICON}</span>`;
+    }
+    const audioElements = document.body.querySelectorAll("audio-element");
+    audioElements.forEach((audioElement) => {
+      const bubble = audioElement.closest(".bubble");
+      if (
+        !bubble ||
+        bubble.querySelector("._tel_download_button_pinned_container")
+      ) {
+        return;
+      }
+      if (
+        dataMid &&
+        downloadButtonPinnedAudio.getAttribute("data-mid") !== dataMid &&
+        audioElement.getAttribute("data-mid") === dataMid
+      ) {
+        downloadButtonPinnedAudio.onclick = (e) => {
+          e.stopPropagation();
+          if (isAudio) {
+              tel_download_audio(link);
+          } else {
+              tel_download_video(link);
+          }
+        };
+        downloadButtonPinnedAudio.setAttribute("data-mid", dataMid);
+        const link = audioElement.audio && audioElement.audio.getAttribute("src");
+        const isAudio = audioElement.audio && audioElement.audio instanceof HTMLAudioElement
+        if (link) {
+          pinnedAudio
+            .querySelector(".pinned-container-wrapper-utils")
+            .appendChild(downloadButtonPinnedAudio);
+        }
+      }
+    });
+
+    const storiesContainer = document.getElementById("stories-viewer");
+    if (storiesContainer) {
+      const createDownloadButton = () => {
+        const downloadButton = document.createElement("button");
+        downloadButton.className = "btn-icon rp tel-download";
+        downloadButton.innerHTML = `<span class="tgico">${DOWNLOAD_ICON}</span><div class="c-ripple"></div>`;
+        downloadButton.setAttribute("type", "button");
+        downloadButton.setAttribute("title", "Download");
+        downloadButton.setAttribute("aria-label", "Download");
+        downloadButton.onclick = () => {
+          const video = storiesContainer.querySelector("video.media-video");
+          const videoSrc =
+            video?.src ||
+            video?.currentSrc ||
+            video?.querySelector("source")?.src;
+          if (videoSrc) {
+            tel_download_video(videoSrc);
+          } else {
+            const imageSrc =
+              storiesContainer.querySelector("img.media-photo")?.src;
+            if (imageSrc) tel_download_image(imageSrc);
+          }
+        };
+        return downloadButton;
+      };
+
+      const storyHeader = storiesContainer.querySelector(
+        "[class^='_ViewerStoryHeaderRight']"
+      );
+      if (storyHeader && !storyHeader.querySelector(".tel-download")) {
+        storyHeader.prepend(createDownloadButton());
+      }
+
+      const storyFooter = storiesContainer.querySelector(
+        "[class^='_ViewerStoryFooterRight']"
+      );
+      if (storyFooter && !storyFooter.querySelector(".tel-download")) {
+        storyFooter.prepend(createDownloadButton());
+      }
+    }
+
+    const mediaContainer = document.querySelector(".media-viewer-whole");
+    if (!mediaContainer) return;
+    const mediaAspecter = mediaContainer.querySelector(
+      ".media-viewer-movers .media-viewer-aspecter"
+    );
+    const mediaButtons = mediaContainer.querySelector(
+      ".media-viewer-topbar .media-viewer-buttons"
+    );
+    if (!mediaAspecter || !mediaButtons) return;
+
+    const hiddenButtons = mediaButtons.querySelectorAll("button.btn-icon.hide");
+    let onDownload = null;
+    for (const btn of hiddenButtons) {
+      btn.classList.remove("hide");
+      if (btn.textContent === FORWARD_ICON) {
+        btn.classList.add("tgico-forward");
+      }
+      if (btn.textContent === DOWNLOAD_ICON) {
+        btn.classList.add("tgico-download");
+        onDownload = () => {
+          btn.click();
+        };
+        logger.info("onDownload", onDownload);
+      }
+    }
+
+    if (mediaAspecter.querySelector(".ckin__player")) {
+      const controls = mediaAspecter.querySelector(
+        ".default__controls.ckin__controls"
+      );
+      if (controls && !controls.querySelector(".tel-download")) {
+        const brControls = controls.querySelector(
+          ".bottom-controls .right-controls"
+        );
+        const downloadButton = document.createElement("button");
+        downloadButton.className =
+          "btn-icon default__button tgico-download tel-download";
+        downloadButton.innerHTML = `<span class="tgico">${DOWNLOAD_ICON}</span>`;
+        downloadButton.setAttribute("type", "button");
+        downloadButton.setAttribute("title", "Download");
+        downloadButton.setAttribute("aria-label", "Download");
+        if (onDownload) {
+          downloadButton.onclick = onDownload;
+        } else {
+          downloadButton.onclick = () => {
+            tel_download_video(mediaAspecter.querySelector("video").src);
+          };
+        }
+        brControls.prepend(downloadButton);
+      }
+    } else if (
+      mediaAspecter.querySelector("video") &&
+      mediaAspecter.querySelector("video") &&
+      !mediaButtons.querySelector("button.btn-icon.tgico-download")
+    ) {
+      const downloadButton = document.createElement("button");
+      downloadButton.className = "btn-icon tgico-download tel-download";
+      downloadButton.innerHTML = `<span class="tgico button-icon">${DOWNLOAD_ICON}</span>`;
+      downloadButton.setAttribute("type", "button");
+      downloadButton.setAttribute("title", "Download");
+      downloadButton.setAttribute("aria-label", "Download");
+      if (onDownload) {
+        downloadButton.onclick = onDownload;
+      } else {
+        downloadButton.onclick = () => {
+          tel_download_video(mediaAspecter.querySelector("video").src);
+        };
+      }
+      mediaButtons.prepend(downloadButton);
+    } else if (!mediaButtons.querySelector("button.btn-icon.tgico-download")) {
+      if (
+        !mediaAspecter.querySelector("img.thumbnail") ||
+        !mediaAspecter.querySelector("img.thumbnail").src
+      ) {
+        return;
+      }
+      const downloadButton = document.createElement("button");
+      downloadButton.className = "btn-icon tgico-download tel-download";
+      downloadButton.innerHTML = `<span class="tgico button-icon">${DOWNLOAD_ICON}</span>`;
+      downloadButton.setAttribute("type", "button");
+      downloadButton.setAttribute("title", "Download");
+      downloadButton.setAttribute("aria-label", "Download");
+      if (onDownload) {
+        downloadButton.onclick = onDownload;
+      } else {
+        downloadButton.onclick = () => {
+          tel_download_image(mediaAspecter.querySelector("img.thumbnail").src);
+        };
+      }
+      mediaButtons.prepend(downloadButton);
+    }
+  }, REFRESH_DELAY);
+
+  (function setupProgressBar() {
+    const body = document.querySelector("body");
+    const container = document.createElement("div");
+    container.id = "tel-downloader-progress-bar-container";
+    container.style.position = "fixed";
+    container.style.bottom = 0;
+    container.style.right = 0;
+    if (location.pathname.startsWith("/k/")) {
+      container.style.zIndex = 4;
+    } else {
+      container.style.zIndex = 1600;
+    }
+    body.appendChild(container);
+  })();
+
+  alert("✅ Telegram 下载器已注入\n用法：打开任意媒体详情页，点击下载按钮即可。");
+  logger.info("Completed script setup.");
+})();
+    </script>
+
+    <script>
+        // --- Data & Presets ---
+        const SOURCE_APP_NAME = "ScriptAssistant";
+        const TELEGRAM_SOURCE = document.getElementById('tgdown-source').textContent;
+
+        const CATEGORIES = {
+            MEDIA: "📺 媒体工具 (Media)",
+            EXTRACT: "📥 内容提取 (Extract)",
+            UNLOCK: "🔓 解锁净化 (Unlock)",
+            DEV: "🛠️ 开发调试 (Dev)",
+            NAV: "🧭 导航搜索 (Nav)",
+            UTIL: "⚙️ 通用工具 (Util)"
+        };
+
+        const PRESETS = [
+            {
+                category: CATEGORIES.MEDIA,
+                name: "M3U8 视频下载器 (Mux/TS)",
+                desc: "原理：动态加载 Vue3 和 mux.js 库，通过 fetch 并行下载 TS 分片，使用 Web Crypto API (AES-CBC) 解密，最后在浏览器端无损合并转码为 MP4 文件。",
+                icon: "📥",
+                value: `(async function () {
+    if (document.getElementById('m3u8-injector-host')) { alert('M3U8 Downloader is already active.'); return; }
+    const CDNS = {
+        vue: ["https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.15/vue.global.prod.min.js"],
+        mux: ["https://cdnjs.cloudflare.com/ajax/libs/mux.js/6.3.0/mux.min.js"]
+    };
+    const loadScript = (s) => new Promise((r,j)=>{let el=document.createElement('script');el.src=s;el.onload=r;el.onerror=j;document.head.appendChild(el)});
+    const STYLES = \`
+        :host { all: initial; z-index: 999999; position: fixed; bottom: 20px; right: 20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .injector-box {
+            background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); color: #e5e7eb;
+            padding: 16px; border-radius: 12px; width: 320px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            display: flex; flex-direction: column; gap: 12px;
+            transition: all 0.3s ease;
+        }
+        .injector-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .title { font-weight: 700; font-size: 14px; color: #fff; }
+        .close-btn { background: none; border: none; color: #9ca3af; font-size: 20px; cursor: pointer; padding: 0; }
+        .close-btn:hover { color: #fff; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .label { font-size: 11px; color: #9ca3af; font-weight: 500; }
+        input, select {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; width: 100%; box-sizing: border-box;
+        }
+        input:focus, select:focus { border-color: #d946ef; outline: none; }
+        .btn-row { display: flex; gap: 8px; }
+        .btn {
+            flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;
+            background: #333; color: #fff; transition: background 0.2s;
+        }
+        .btn-primary { background: linear-gradient(135deg, #d946ef, #8b5cf6); }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .progress-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+        .progress-fill { height: 100%; background: #34d399; transition: width 0.3s; }
+        .status { font-size: 11px; color: #ccc; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .minimized { width: 40px; height: 40px; border-radius: 50%; padding: 0; align-items: center; justify-content: center; cursor: pointer; }
+        .minimized .content { display: none; }
+        .minimized-icon { display: block; font-size: 20px; }
+        \`;
+    try {
+        await loadScript(CDNS.vue[0]);
+        await loadScript(CDNS.mux[0]);
+        const host = document.createElement('div'); host.id='m3u8-injector-host'; document.body.appendChild(host);
+        const shadow = host.attachShadow({mode:'open'});
+        const style=document.createElement('style'); style.textContent=STYLES; shadow.appendChild(style);
+        const appRoot=document.createElement('div'); shadow.appendChild(appRoot);
+        const {createApp,ref}=Vue;
+        createApp({
+            template: \`
+                <div class="injector-box" :class="{ minimized: isMinimized }">
+                    <div v-if="isMinimized" @click="isMinimized = false" class="minimized-icon">📥</div>
+                    <div v-else class="content">
+                        <div class="injector-header">
+                            <span class="title">M3U8 视频下载器</span>
+                            <button class="close-btn" @click="close">×</button>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="label">视频地址 (URL)</label>
+                            <input v-model="url" placeholder="http://.../playlist.m3u8">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="label">导出格式</label>
+                            <select v-model="format">
+                                <option value="mp4">MP4 (自动合并)</option>
+                                <option value="ts">TS (原始分片)</option>
+                            </select>
+                        </div>
+
+                        <div class="btn-row">
+                            <button class="btn btn-primary" @click="start" :disabled="isBusy">{{ isBusy ? '处理中...' : '下载' }}</button>
+                            <button class="btn" @click="isMinimized = true">_</button>
+                        </div>
+
+                        <div v-if="progress > 0 || status">
+                            <div class="progress-bar">
+                                <div class="progress-fill" :style="{ width: progress + '%' }"></div>
+                            </div>
+                            <div class="status" :title="status">{{ status }}</div>
+                        </div>
+                    </div>
+                </div>
+            \`,
+            setup() {
+                const url = ref(window.location.href.includes('.m3u8') ? window.location.href : '');
+                const format = ref('mp4');
+                const isBusy = ref(false);
+                const isMinimized = ref(false);
+                const progress = ref(0);
+                const status = ref('');
+                
+                // Logic Helpers
+                const log = (msg) => { status.value = msg; console.log('[Inj]', msg); };
+                
+                const fetchBuffer = async (u) => {
+                    const res = await fetch(u);
+                    if (!res.ok) throw new Error(\`Fetch \${res.status}\`);
+                    return res.arrayBuffer();
+                };
+
+                const decrypt = async (data, key, id) => {
+                    // Simple AES-128
+                    let keyData = key.data;
+                    if (!keyData) {
+                        keyData = await fetchBuffer(key.uri);
+                        key.data = keyData; // cache
+                    }
+                    const keyObj = await crypto.subtle.importKey("raw", keyData, { name: "AES-CBC" }, false, ["decrypt"]);
+                    let iv = key.iv;
+                    if (!iv) {
+                        const b = new ArrayBuffer(16);
+                        new DataView(b).setUint32(12, id);
+                        iv = new Uint8Array(b);
+                    } else if (typeof iv === 'string') {
+                         iv = new Uint8Array(iv.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+                    }
+                    return await crypto.subtle.decrypt({ name: "AES-CBC", iv }, keyObj, data);
+                };
+
+                const parseM3u8 = async (u) => {
+                    const txt = await (await fetch(u)).text();
+                    const lines = txt.split('\\n');
+                    const segs = [];
+                    let key = null;
+                    let seq = 0;
+                    
+                    for (let i = 0; i < lines.length; i++) {
+                        let l = lines[i].trim();
+                        if (l.startsWith('#EXT-X-KEY')) {
+                            const method = l.match(/METHOD=([^,]+)/)[1];
+                            const uri = l.match(/URI="([^"]+)"/)[1];
+                            const iv = l.match(/IV=([^,]+)/)?.[1];
+                            if (method === 'AES-128') key = { uri: new URL(uri, u).href, iv };
+                            else key = null;
+                        } else if (l.startsWith('#EXTINF:')) {
+                            const dur = parseFloat(l.match(/[\\d.]+/)[0]);
+                            let next = lines[++i]?.trim();
+                            while(next === '' || next.startsWith('#')) next = lines[++i]?.trim();
+                            if (next) {
+                                segs.push({
+                                    id: seq++,
+                                    url: new URL(next, u).href,
+                                    duration: dur,
+                                    key: key ? {...key} : null
+                                });
+                            }
+                        }
+                    }
+                    return segs;
+                };
+
+                const start = async () => {
+                    if (!url.value) return;
+                    isBusy.value = true;
+                    progress.value = 0;
+                    try {
+                        log('解析 M3U8...');
+                        const segs = await parseM3u8(url.value);
+                        if (!segs.length) throw new Error('未找到分片');
+                        
+                        log(\`发现 \${segs.length} 个分片。开始下载...\`);
+                        const blobs = [];
+                        let done = 0;
+                        
+                        for (const seg of segs) {
+                            try {
+                                let data = await fetchBuffer(seg.url);
+                                if (seg.key) data = await decrypt(data, seg.key, seg.id);
+                                blobs.push(data);
+                                done++;
+                                progress.value = Math.floor((done / segs.length) * 100);
+                                status.value = \`下载中 \${done}/\${segs.length}\`;
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        }
+
+                        log('合并中...');
+                        if (format.value === 'mp4') {
+                            if (!window.muxjs) throw new Error('Mux.js 未加载');
+                            const transmuxer = new muxjs.Transmuxer({ keepOriginalTimestamps: true });
+                            const parts = [];
+                            transmuxer.on('data', (s) => {
+                                if (s.initSegment) parts.push(new Uint8Array(s.initSegment));
+                                if (s.data) parts.push(new Uint8Array(s.data));
+                            });
+                            for (const b of blobs) transmuxer.push(new Uint8Array(b));
+                            transmuxer.flush();
+                            const finalBlob = new Blob(parts, { type: 'video/mp4' });
+                            downloadBlob(finalBlob, 'video.mp4');
+                        } else {
+                            const finalBlob = new Blob(blobs, { type: 'video/mp2t' });
+                            downloadBlob(finalBlob, 'video.ts');
+                        }
+                        log('完成！');
+                    } catch (e) {
+                        log('错误: ' + e.message);
+                        console.error(e);
+                    } finally {
+                        isBusy.value = false;
+                    }
+                };
+
+                const downloadBlob = (b, name) => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(b);
+                    a.download = name;
+                    a.click();
+                };
+
+                const close = () => {
+                    host.remove();
+                };
+
+                return { url, format, isBusy, isMinimized, progress, status, start, close };
+            }
+        }).mount(appRoot);
+    } catch(e){alert('Err:'+e.message)}
+})();`
+            },
+            {
+                category: CATEGORIES.MEDIA,
+                name: "Telegram 媒体下载器",
+                desc: "原理：劫持 (Hook) 浏览器的 XMLHttpRequest 和 DOM 事件，捕获 Telegram Web 加载的媒体 Blob URL，并通过创建隐藏的 <a> 标签强制触发下载。",
+                icon: "✈",
+                value: TELEGRAM_SOURCE
+            },
+            {
+                category: CATEGORIES.EXTRACT,
+                name: "提取所有图片 (Extract Images)",
+                desc: "原理：执行 document.querySelectorAll('img') 获取页面所有图片节点，提取 .src 属性并使用 Set 去重，最后通过 window.open() 打开新窗口并用 document.write() 渲染预览画廊。",
+                icon: "🖼️",
+                value: `(function() {
+    var imgs = document.querySelectorAll('img');
+    var srcList = Array.from(imgs).map(img => img.src).filter(src => src);
+    var uniqueSrc = [...new Set(srcList)];
+    
+    if(uniqueSrc.length === 0) { alert('未找到图片'); return; }
+    
+    var win = window.open('', '_blank');
+    if (!win) { alert('弹窗被拦截，请允许弹窗后重试'); return; }
+    win.document.write('<h1>Found ' + uniqueSrc.length + ' images</h1>');
+    win.document.write('<textarea style="width:100%;height:300px">' + uniqueSrc.join('\\n') + '</textarea>');
+    uniqueSrc.forEach(src => {
+        win.document.write('<div style="margin:10px;display:inline-block"><img src="' + src + '" style="max-height:100px;border:1px solid #ccc"></div>');
+    });
+})();`
+            },
+            {
+                category: CATEGORIES.MEDIA,
+                name: "视频倍速控制 (Video Speed)",
+                desc: "原理：遍历页面所有 video 标签 (document.querySelectorAll('video'))，直接修改其 .playbackRate 属性为指定倍率 (如 2.0)。",
+                icon: "⏩",
+                value: `(function(){
+    // ==========================================
+    // 🔧 配置区域 (Configuration)
+    // ==========================================
+    // 请修改下方的数字来调整速度
+    // Modify the number below to change speed
+    // 常用值 (Common values): 2.0, 2.5, 3.0, 0.5
+    
+    const SPEED = 2.0; 
+
+    // ==========================================
+    
+    var videos = document.querySelectorAll('video');
+    if(videos.length === 0) { alert('❌ 未找到视频 (No video found)'); return; }
+    videos.forEach(v => v.playbackRate = SPEED);
+    alert('⏩ 已将 ' + videos.length + ' 个视频设为 ' + SPEED + 'x 倍速');
+})();`
+            },
+            {
+                category: CATEGORIES.MEDIA,
+                name: "YouTube 画中画 (PiP)",
+                desc: "原理：调用 video 元素的 requestPictureInPicture API，实现系统级画中画悬浮播放。",
+                icon: "📺",
+                value: `(function(){
+    const v = document.querySelector('video');
+    if (v) {
+        v.requestPictureInPicture();
+    } else {
+        alert('未找到视频');
+    }
+})();`
+            },
+
+
+            {
+                category: CATEGORIES.UNLOCK,
+                name: "解除右键/复制限制 (Enable Copy)",
+                desc: "原理：注入 CSS (user-select: auto) 并拦截/阻止 contextmenu、copy、selectstart 等事件的冒泡。",
+                icon: "🔓",
+                value: `(function(){
+    const css = '*{user-select:auto!important;-webkit-user-select:auto!important;}';
+    const style = document.createElement('style'); 
+    style.innerText = css; 
+    document.head.appendChild(style);
+    
+    document.addEventListener('contextmenu', e => e.stopPropagation(), true);
+    document.addEventListener('copy', e => e.stopPropagation(), true);
+    document.addEventListener('selectstart', e => e.stopPropagation(), true);
+    
+    alert('已解除右键与选择限制');
+})();`
+            },
+            {
+                category: CATEGORIES.UNLOCK,
+                name: "Steam 偏好解锁 (Steam Content)",
+                desc: "原理：查找带有 account_setting_not_customer_facing 类名的隐藏 DOM 节点，移除该类名并修改 style.display，从而显示被隐藏的成人内容选项。",
+                icon: "🎮",
+                value: `(function(){
+    'use strict';
+    var doms = document.querySelectorAll('.preference_row.account_setting_not_customer_facing');
+    if(doms.length === 0){
+        alert('未找到隐藏选项，请确认是否在 Steam 偏好设置页面！');
+        return;
+    }
+    doms.forEach(function(dom){
+        dom.classList.remove('account_setting_not_customer_facing');
+        dom.style.border = "2px solid #6a1b9a";
+        dom.style.padding = "10px";
+    });
+    
+    var label1 = doms[0].querySelector("label");
+    var span1 = doms[0].querySelector("span");
+    if(label1) label1.innerText = '频繁的裸露画面或色情内容 (已解锁)';
+    if(span1) span1.innerHTML = '主要展示裸露画面或色情主题的游戏或内容。<br>勾选此框确认已满18岁。';
+    
+    var label2 = doms[1].querySelector("label");
+    var span2 = doms[1].querySelector("span");
+    if(label2) label2.innerText = '仅限成人的色情内容 (已解锁)';
+    if(span2) span2.innerHTML = '包含仅针对成人受众的性意味明显或露骨的游戏。<br>勾选此框确认已满18岁。';
+    
+    alert('✅ 隐藏选项已解锁！请在页面下方勾选新出现的选项。');
+})();`
+            },
+            {
+                category: CATEGORIES.UNLOCK,
+                name: "解除网页变灰 (Restore Color)",
+                desc: "原理：创建 style 标签注入 CSS，强制设置 html, body, * { filter: none !important } 以覆盖全站灰度滤镜。",
+                icon: "🌈",
+                value: `(function(){
+    var style = document.createElement('style');
+    style.innerHTML = 'html, body, * { -webkit-filter: none !important; filter: none !important; }';
+    document.body.appendChild(style);
+    alert('🌈 已尝试移除网页灰度滤镜');
+})();`
+            },
+            {
+                category: CATEGORIES.UNLOCK,
+                name: "移除广告 Iframes",
+                desc: "原理：执行 document.querySelectorAll('iframe') 获取所有内嵌框架，遍历并逐个调用 .remove() 方法将其从 DOM 中删除。",
+                icon: "🧹",
+                value: `(function(){
+    const iframes = document.querySelectorAll('iframe');
+    iframes.forEach(i => i.remove());
+    alert('已移除 ' + iframes.length + ' 个 iframe 广告框。');
+})();`
+            },
+            {
+                category: CATEGORIES.UNLOCK,
+                name: "移除浮动元素 (Remove Sticky)",
+                desc: "原理：遍历所有 DOM 元素，通过 getComputedStyle(el).position 检查定位属性，若为 fixed 或 sticky 则调用 .remove() 删除。",
+                icon: "🧼",
+                value: `(function(){
+    document.querySelectorAll('*').forEach(el => {
+        const pos = getComputedStyle(el).position;
+        if (pos === 'fixed' || pos === 'sticky') el.remove();
+    });
+    alert('已移除浮动/固定元素');
+})();`
+            },
+            {
+                category: CATEGORIES.UNLOCK,
+                name: "清除当前网站 Cookies",
+                desc: "原理：读取 document.cookie 获取所有 Cookie 名称，遍历并通过设置 expires 为 1970 年 (过期时间) 覆盖原 Cookie，从而实现删除。",
+                icon: "🍪",
+                value: `(function(){
+    var cookies = document.cookie.split(";");
+    for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i];
+        var eqPos = cookie.indexOf("=");
+        var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=." + document.domain;
+    }
+    alert('🗑️ 已尝试清除当前域名下的 Cookies');
+})();`
+            },
+
+
+
+            {
+                category: CATEGORIES.DEV,
+                name: "JSON 格式化 (JSON Prettify)",
+                desc: "原理：读取 body 文本进行 JSON.parse 校验，使用 JSON.stringify 格式化后重新渲染为 pre 标签。",
+                icon: "💅",
+                value: `(function(){
+    var txt = document.body.innerText;
+    try {
+        var j = JSON.parse(txt);
+        document.body.innerHTML = '<pre style="word-wrap:break-word;white-space:pre-wrap;font-family:monospace;padding:15px;background:#f5f5f5;color:#333;border-radius:5px;margin:10px;">' + JSON.stringify(j, null, 2) + '</pre>';
+        alert('✅ JSON 格式化成功');
+    } catch(e) {
+        alert('❌ 当前页面内容不是有效的 JSON');
+    }
+})();`
+            },
+            {
+                category: CATEGORIES.UTIL,
+                name: "屏幕常亮/防止休眠 (Wake Lock)",
+                desc: "原理：调用 navigator.wakeLock.request('screen') 申请屏幕唤醒锁，防止设备自动休眠。",
+                icon: "💡",
+                value: `(async function(){
+    if ('wakeLock' in navigator) {
+        try {
+            window.wakeLock = await navigator.wakeLock.request('screen');
+            alert('💡 屏幕常亮模式已开启');
+        } catch(e) {
+            alert('❌ 开启失败: ' + e);
+        }
+    } else {
+        alert('❌ 浏览器不支持 WakeLock API');
+    }
+})();`
+            },
+            {
+                category: CATEGORIES.DEV,
+                name: "开启网页编辑模式 (Edit Page)",
+                desc: "原理：访问 document.designMode 属性，将其值在 'on' (可编辑) 和 'off' (不可编辑) 之间切换，实现类似于 Word 文档的编辑体验。",
+                icon: "✏️",
+                value: `(function(){
+    document.designMode = document.designMode === 'on' ? 'off' : 'on'; 
+    alert('Design Mode: ' + document.designMode);
+})();`
+            },
+            {
+                category: CATEGORIES.EXTRACT,
+                name: "下载当前网页 (Download Page)",
+                desc: "原理：获取 document.documentElement.outerHTML，创建 Blob 对象 (type: text/html)，生成 URL.createObjectURL 链接并模拟点击下载。",
+                icon: "💾",
+                value: `(function(){
+    const blob = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = document.title + '.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+})();`
+            },
+            {
+                category: CATEGORIES.NAV,
+                name: "自动滚动页面 (Auto Scroll)",
+                desc: "原理：使用 setInterval 设置定时器，每 20ms 调用 window.scrollBy(0, n) 向下滚动，并监听 dblclick 事件以清除定时器停止滚动。",
+                icon: "📜",
+                value: `(function(){
+    var scrollSpeed = 2;
+    var timer = setInterval(function(){
+        window.scrollBy(0, scrollSpeed);
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+            clearInterval(timer);
+        }
+    }, 20);
+    
+    document.addEventListener('dblclick', function(){
+        clearInterval(timer);
+        alert('🛑 自动滚动已停止');
+    }, {once: true});
+    
+    alert('⬇️ 开始自动滚动，双击页面任意处停止。');
+})();`
+            },
+            {
+                category: CATEGORIES.UTIL,
+                name: "生成当前页面二维码",
+                desc: "原理：使用 encodeURIComponent(location.href) 编码当前网址，调用第三方 API (api.qrserver.com) 生成二维码图片并悬浮显示。",
+                icon: "📱",
+                value: `(function(){
+    // Note: This uses an external API. 
+    // If the site has strict CSP, this might fail to load the image.
+    const url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(location.href);
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;background:#fff;padding:10px;border:2px solid #000;';
+    div.innerHTML = '<img src="' + url + '"><br><button onclick="this.parentNode.remove()">Close</button>';
+    document.body.appendChild(div);
+})();`
+            },
+            {
+                category: CATEGORIES.EXTRACT,
+                name: "提取页面纯文本 (Extract Text)",
+                desc: "原理：获取 document.body.innerText，替换 HTML 特殊字符 (&, <, >) 进行转义，最后在新窗口的 <textarea> 中显示纯文本。",
+                icon: "📝",
+                value: `(function(){
+    var text = document.body ? document.body.innerText.trim() : '';
+    if (!text) {
+        alert('未找到可提取文本');
+        return;
+    }
+    var safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    var win = window.open('', '_blank');
+    if (!win) { alert('弹窗被拦截'); return; }
+    win.document.write('<h1>Extracted Text</h1>');
+    win.document.write('<textarea style="width:100%;height:80vh">' + safeText + '</textarea>');
+})();`
+            },
+            {
+                category: CATEGORIES.UTIL,
+                name: "切换图片/视频显示 (Toggle Media)",
+                desc: "原理：动态注入/移除 CSS (visibility: hidden)，控制 img/video/iframe 的显示状态。",
+                icon: "🖼️",
+                value: `(function(){
+    var hidden = document.documentElement.getAttribute('data-media-hidden') === '1';
+    var styleId = 'media-toggle-style';
+    var style = document.getElementById(styleId);
+    
+    if (!hidden) {
+        if (!style) {
+            style = document.createElement('style');
+            style.id = styleId;
+            style.innerHTML = 'img, video, iframe { visibility: hidden !important; }';
+            document.head.appendChild(style);
+        }
+        document.documentElement.setAttribute('data-media-hidden', '1');
+        alert('🖼️ 已隐藏图片/视频/iframe');
+        return;
+    }
+    
+    if (style && style.parentNode) {
+        style.parentNode.removeChild(style);
+    }
+    document.documentElement.removeAttribute('data-media-hidden');
+    alert('🖼️ 已恢复图片/视频/iframe');
+})();`
+            },
+            {
+                category: CATEGORIES.UNLOCK,
+                name: "清理本地/会话存储 (Clear Storage)",
+                desc: "原理：调用 localStorage.clear() 和 sessionStorage.clear() 清空本地存储数据。",
+                icon: "🧹",
+                value: `(function(){
+    var localOk = false;
+    var sessionOk = false;
+    try {
+        localStorage.clear();
+        localOk = true;
+    } catch(e) {}
+    try {
+        sessionStorage.clear();
+        sessionOk = true;
+    } catch(e) {}
+    alert('🧹 已尝试清理存储: localStorage ' + (localOk ? '✔' : '✖') + ' / sessionStorage ' + (sessionOk ? '✔' : '✖'));
+})();`
+            },
+            {
+                category: CATEGORIES.UTIL,
+                name: "暂停页面动画 (Pause Animations)",
+                desc: "原理：注入 CSS * { animation-play-state: paused !important } 暂停 CSS 动画，同时遍历所有 video/audio 元素调用 .pause() 方法。",
+                icon: "⏸️",
+                value: `(function(){
+    var styleId = 'pause-anim-style';
+    var style = document.getElementById(styleId);
+    
+    if (style) {
+        style.parentNode.removeChild(style);
+        alert('▶️ 已恢复动画');
+        return;
+    }
+    
+    style = document.createElement('style');
+    style.id = styleId;
+    style.innerHTML = '*{animation-play-state:paused !important; transition:none !important;}';
+    document.head.appendChild(style);
+    
+    var media = document.querySelectorAll('video, audio');
+    media.forEach(function(item){
+        item.pause();
+    });
+    
+    alert('⏸️ 已暂停动画与媒体');
+})();`
+            },
+
+
+            {
+                category: CATEGORIES.NAV,
+                name: "回到顶部 (Scroll to Top)",
+                desc: "原理：调用 window.scrollTo({ top: 0, behavior: 'smooth' }) 平滑滚动至顶部。",
+                icon: "⬆️",
+                value: `(function(){
+    window.scrollTo({
+        top: 0, 
+        left: 0, 
+        behavior: 'smooth'
+    });
+})();`
+            },
+            {
+                category: CATEGORIES.NAV,
+                name: "前往底部 (Scroll to Bottom)",
+                desc: "平滑滚动到页面底部。",
+                icon: "⬇️",
+                value: `(function(){
+    window.scrollTo({
+        top: document.body.scrollHeight, 
+        behavior: 'smooth'
+    });
+})();`
+            },
+            {
+                category: CATEGORIES.EXTRACT,
+                name: "复制为 Markdown 链接",
+                desc: "将当前页面的标题和 URL 格式化为 Markdown 链接并复制。",
+                icon: "📋",
+                value: `(function(){
+    const md = '[' + document.title + '](' + location.href + ')';
+    prompt('复制 Markdown 链接:', md);
+})();`
+            },
+            {
+                category: CATEGORIES.DEV,
+                name: "查看网页源码 (View Source)",
+                desc: "原理：获取 outerHTML 并转义，写入新窗口 (about:blank)，绕过 view-source: 协议限制。",
+                icon: "👓",
+                value: `(function(){
+    var win = window.open('about:blank', '_blank');
+    if (!win) { alert('弹窗被拦截，请允许弹窗后重试'); return; }
+    var html = document.documentElement.outerHTML.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    win.document.write('<html><head><title>Source of ' + document.title + '</title><style>body{background:#1e1e1e;color:#d4d4d4;font-family:Consolas,monospace;white-space:pre-wrap;word-break:break-all;margin:0;padding:16px;}</style></head><body>' + html + '</body></html>');
+    win.document.close();
+})();`
+            },
+
+
+            {
+                category: CATEGORIES.DEV,
+                name: "显示所有隐藏元素 (Reveal Hidden)",
+                desc: "原理：遍历所有元素，强制重置 display:none 和 visibility:hidden 的样式属性。",
+                icon: "👁️",
+                value: `(function(){
+    document.querySelectorAll('*').forEach(e => {
+        const style = getComputedStyle(e);
+        if (style.display === 'none') e.style.display = 'block';
+        if (style.visibility === 'hidden') e.style.visibility = 'visible';
+    });
+    alert('已尝试显示所有隐藏元素');
+})();`
+            },
+            {
+                category: CATEGORIES.DEV,
+                name: "高亮重复链接 (Highlight Duplicate Links)",
+                desc: "原理：统计页面所有 a 标签 href 出现次数，对重复链接添加高亮边框样式。",
+                icon: "🔴",
+                value: `(function(){
+    const links = Array.from(document.querySelectorAll('a'));
+    const hrefs = links.map(a => a.href);
+    const counts = {};
+    hrefs.forEach(h => { counts[h] = (counts[h] || 0) + 1 });
+    
+    let found = 0;
+    links.forEach(a => {
+        if (counts[a.href] > 1) {
+            a.style.backgroundColor = 'yellow';
+            a.style.border = '2px solid red';
+            found++;
+        }
+    });
+    alert('Found ' + found + ' duplicate links.');
+})();`
+            },
+            {
+                category: CATEGORIES.NAV,
+                name: "在 Github1s 中打开 (Open in Github1s)",
+                desc: "原理：将当前 URL 域名中的 github.com 替换为 github1s.com 并跳转。",
+                icon: "🐙",
+                value: `(function(){
+    if (location.hostname === 'github.com') {
+        location.href = location.href.replace('github.com', 'github1s.com');
+    } else {
+        alert('当前不是 GitHub 页面！');
+    }
+})();`
+            },
+            {
+                category: CATEGORIES.DEV,
+                name: "显示隐藏密码 (Show Passwords)",
+                desc: "原理：将页面所有 input[type=\"password\"] 的 type 属性修改为 text。",
+                icon: "👁️",
+                value: `(function(){
+    document.querySelectorAll('input[type="password"]').forEach(i => {
+        i.type = 'text';
+        i.style.backgroundColor = '#ffeb3b';
+        i.style.color = '#000';
+    });
+    alert('✅ 已显示所有密码框内容');
+})();`
+            },
+            {
+                category: CATEGORIES.DEV,
+                name: "显示元素边框 (Outline Elements)",
+                desc: "原理：为页面所有元素 (*) 添加随机颜色的 outline 边框，用于调试布局。",
+                icon: "🕸️",
+                value: `(function(){
+    [].forEach.call(document.querySelectorAll("*"), function(a) {
+        a.style.outline = "1px solid #" + (~~(Math.random() * (1 << 24))).toString(16)
+    });
+})();`
+            },
+            {
+                category: CATEGORIES.EXTRACT,
+                name: "提取所有链接 (Extract Links)",
+                desc: "提取页面内所有超链接 (a href)，并在新窗口列出。",
+                icon: "🔗",
+                value: `(function(){
+    var links = document.querySelectorAll('a');
+    var hrefs = Array.from(links).map(l => l.href).filter(h => h && h.startsWith('http'));
+    var unique = [...new Set(hrefs)];
+    
+    if (unique.length === 0) {
+        alert('未找到链接');
+        return;
+    }
+    
+    var win = window.open('', '_blank');
+    if (!win) { alert('弹窗被拦截'); return; }
+    win.document.write('<h1>Found ' + unique.length + ' links</h1>');
+    win.document.write('<textarea style="width:100%;height:400px">' + unique.join('\\n') + '</textarea>');
+})();`
+            },
+            {
+                category: CATEGORIES.DEV,
+                name: "性能监控 (Performance Stats)",
+                desc: "原理：动态创建 script 标签加载 stats.js 库，并在 onload 回调中初始化监控面板。",
+                icon: "📊",
+                value: `(function(){
+    const s = document.createElement('script');
+    s.src = 'https://mrdoob.github.io/stats.js/build/stats.min.js';
+    s.onload = () => {
+        const st = new Stats();
+        document.body.appendChild(st.dom)
+    };
+    document.head.appendChild(s);
+})();`
+            },
+
+
+            {
+                category: CATEGORIES.UTIL,
+                name: "网页深色模式 (Force Dark Mode)",
+                desc: "原理：在 html 根元素注入 CSS filter: invert(1) hue-rotate(180deg) 实现全局反色。",
+                icon: "🌑",
+                value: `(function(){
+    const style = document.createElement('style');
+    style.innerHTML = 'html { filter: invert(1) hue-rotate(180deg); } img, video { filter: invert(1) hue-rotate(180deg); }';
+    document.head.appendChild(style);
+})();`
+            }
+        ];
+
+        // --- Logic ---
+        const presetList = document.getElementById('presetList');
+        const presetSearch = document.getElementById('presetSearch');
+        const scriptInput = document.getElementById('scriptInput');
+        const bookmarkletOutput = document.getElementById('bookmarkletOutput');
+        const bookmarkletLink = document.getElementById('bookmarkletLink');
+        const bookmarkletRaw = document.getElementById('bookmarkletRaw');
+        const bookmarkletNameInput = document.getElementById('bookmarkletName');
+        const openButton = document.getElementById('openButton');
+        const generateBtn = document.getElementById('generateBookmarkletBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        
+        let currentPresetName = '';
+
+        // 1. Render Presets Function
+        function renderPresets(filterText = '') {
+            presetList.innerHTML = '';
+            const filter = filterText.toLowerCase();
+            
+            // Group filtered presets
+            const groups = {};
+            let hasResults = false;
+
+            PRESETS.forEach(p => {
+                if (filter && !p.name.toLowerCase().includes(filter) && !p.category.toLowerCase().includes(filter)) {
+                    return;
+                }
+                hasResults = true;
+                if (!groups[p.category]) groups[p.category] = [];
+                groups[p.category].push(p);
+            });
+
+            if (!hasResults) {
+                presetList.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:20px;">无匹配结果</div>';
+                return;
+            }
+
+            // Render Groups
+            Object.values(CATEGORIES).forEach(catName => {
+                if (groups[catName]) {
+                    const catTitle = document.createElement('div');
+                    catTitle.className = 'preset-category';
+                    catTitle.textContent = catName;
+                    presetList.appendChild(catTitle);
+
+                    groups[catName].forEach(p => {
+                        const item = document.createElement('div');
+                        item.className = 'preset-item';
+                        item.innerHTML = `<span class="icon">${p.icon || '📜'}</span><span class="name">${p.name}</span>`;
+                        
+                        item.onclick = () => {
+                            // Highlight
+                            document.querySelectorAll('.preset-item').forEach(el => el.classList.remove('active'));
+                            item.classList.add('active');
+                            
+                            // Set content
+                            scriptInput.value = p.value;
+                            currentPresetName = p.name;
+                            bookmarkletNameInput.value = p.name;
+                            
+                            // Update Header
+                            document.getElementById('headerTitle').textContent = p.name;
+                            document.getElementById('headerSubtitle').textContent = p.desc || '生成书签脚本 (Bookmarklet) & 在任意网页执行代码';
+
+                            // Auto scroll to editor on mobile
+                            if (window.innerWidth < 768) {
+                                scriptInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        };
+
+                        presetList.appendChild(item);
+                    });
+                }
+            });
+        }
+
+        // Debounce Utility
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        // Initial Render
+        renderPresets();
+
+        // 2. Search Listener (Debounced)
+        presetSearch.addEventListener('input', debounce((e) => {
+            renderPresets(e.target.value);
+        }, 300));
+
+        clearBtn.onclick = () => {
+            scriptInput.value = '';
+            bookmarkletNameInput.value = '';
+            bookmarkletOutput.style.display = 'none';
+            document.querySelectorAll('.preset-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('headerTitle').textContent = '脚本执行助手';
+            document.getElementById('headerSubtitle').textContent = '生成书签脚本 (Bookmarklet) & 在任意网页执行代码';
+        };
+
+        generateBtn.addEventListener('click', function() {
+            const script = scriptInput.value.trim();
+            if (!script) return alert('请先输入代码。');
+
+            // Minify/Wrap
+            const code = `javascript:(function(){${encodeURIComponent(script)}})();`;
+            // Actually standard bookmarklets often use URI encoding on the inner part
+            // A safer robust pattern:
+            // javascript:(function(){ var s = document.createElement('script'); s.textContent = decodeURIComponent('...'); document.body.appendChild(s); })();
+            // But simple eval is standard for these tools.
+            
+            // Let's stick to the previous robust encoding logic:
+            let minified = script;
+            minified += `\nconsole.log('✅ Executed ${SOURCE_APP_NAME}');`;
+            // Double-encode % to %25 so that the browser's URL decoding leaves the % intact
+            // for decodeURIComponent to handle.
+            // Also escape single quotes for the JS string literal.
+            const encoded = encodeURIComponent(minified)
+                .replace(/'/g, "%27")
+                .replace(/%/g, "%25"); 
+            const finalHref = `javascript:(function(){try{eval(decodeURIComponent('${encoded}'))}catch(e){alert('执行错误: '+e)}})();`;
+
+            const name = bookmarkletNameInput.value || currentPresetName || '我的脚本';
+            
+            bookmarkletLink.href = finalHref;
+            bookmarkletLink.textContent = "✡" + name;
+            bookmarkletRaw.value = finalHref;
+            
+            bookmarkletOutput.style.display = 'block';
+            bookmarkletOutput.scrollIntoView({behavior: 'smooth'});
+        });
+
+        document.getElementById('copyButton').onclick = () => {
+            bookmarkletRaw.select();
+            document.execCommand('copy');
+            alert('已复制到剪贴板！');
+        };
+
+        openButton.onclick = () => {
+            const url = document.getElementById('urlInput').value || "about:blank";
+            const script = scriptInput.value;
+            if(!script) return;
+            
+            const w = window.open(url);
+            if(!w) return alert('弹窗被拦截');
+            
+            // Try inject
+            setTimeout(() => {
+                try {
+                    w.eval(script);
+                } catch(e) {
+                    alert('无法自动注入 (跨域限制)。请使用书签脚本 (Bookmarklet) 方式。');
+                }
+            }, 1000);
+        };
+
+        // --- Tampermonkey Converter Logic (Full Parity) ---
+        const tmOverlay = document.getElementById('tmConverterOverlay');
+        const tmInput = document.getElementById('tmInput');
+        const tmUseRequire = document.getElementById('tmUseRequire');
+        const tmUseShim = document.getElementById('tmUseShim');
+
+        document.getElementById('openTmConverterBtn').onclick = () => tmOverlay.classList.remove('hidden');
+        document.getElementById('tmCloseBtn').onclick = () => tmOverlay.classList.add('hidden');
+        
+        // Hide on click outside
+        tmOverlay.onclick = (e) => {
+            if (e.target === tmOverlay) tmOverlay.classList.add('hidden');
+        };
+
+        function convertTampermonkey(source, options) {
+            const o = options || {};
+            const metaMatch = source.match(/==UserScript==[\s\S]*?==\/UserScript==/);
+            const meta = metaMatch ? metaMatch[0] : "";
+            const body = metaMatch ? source.replace(metaMatch[0], "") : source;
+            const requires = [];
+            const matches = [];
+            const includes = [];
+            const excludes = [];
+            let name = "";
+            if (meta) {
+                let m;
+                const reqRe = /@require\s+([^\s]+)/g;
+                while ((m = reqRe.exec(meta))) requires.push(m[1]);
+                const matRe = /@match\s+([^\s]+)/g;
+                while ((m = matRe.exec(meta))) matches.push(m[1]);
+                const incRe = /@include\s+([^\s]+)/g;
+                while ((m = incRe.exec(meta))) includes.push(m[1]);
+                const excRe = /@exclude\s+([^\s]+)/g;
+                while ((m = excRe.exec(meta))) excludes.push(m[1]);
+                const nameMatch = meta.match(/@name\s+([^\n\r]+)/);
+                if (nameMatch) name = nameMatch[1].trim();
+            }
+            function esc(p) {
+                return p.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+            }
+            const conds = matches.concat(includes).map(p => 'new RegExp("^' + esc(p) + '$").test(location.href)');
+            const exConds = excludes.map(p => 'new RegExp("^' + esc(p) + '$").test(location.href)');
+            const allowExpr = conds.length ? '(' + conds.join('||') + ')' : 'true';
+            const denyExpr = exConds.length ? '(' + exConds.join('||') + ')' : 'false';
+            const check = (conds.length || exConds.length) ? 'if(!' + allowExpr + '||' + denyExpr + '){return;}' : '';
+            const requireLoader = (o.useRequire !== false && requires.length) ? 'var __req=[' + requires.map(u => '"' + u + '"').join(',') + '];var __load=function(u){return new Promise(function(r,j){var s=document.createElement("script");s.src=u;s.onload=function(){r()};s.onerror=function(){j(new Error(u))};document.head.appendChild(s)});};' : '';
+            const shim = (o.useShim !== false) ? 
+                'var GM_getValue=function(k,d){try{var v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch(e){return d}};'+
+                'var GM_setValue=function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};'+
+                'var GM_deleteValue=function(k){try{localStorage.removeItem(k)}catch(e){}};'+
+                'var GM_addStyle=function(css){var s=document.createElement("style");s.textContent=css;document.head.appendChild(s);return s};'+
+                'var GM_xmlhttpRequest=function(opt){var u=opt&&opt.url||"";var m=opt&&opt.method||"GET";var h=opt&&opt.headers||{};var b=opt&&opt.data;return fetch(u,{method:m,headers:h,body:b,credentials:"include"}).then(function(res){return res.text().then(function(t){if(opt&&opt.onload){opt.onload({responseText:t,status:res.status,responseHeaders:""})}})}).catch(function(err){if(opt&&opt.onerror){opt.onerror(err)}})};'+
+                'var GM_notification=function(o){var t=(typeof o==="string")?o:(o&&o.text)||"";alert(t)};'+
+                'var GM_registerMenuCommand=function(){};'+
+                'var GM_download=function(o){var url=(typeof o==="string")?o:o.url;var name=(o&&o.name)||"download";var a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove()};'
+            : '';
+            const wrapped = '(function(){var unsafeWindow=window;' + check + requireLoader + shim + ((requires.length && o.useRequire !== false) ? 'var __run=async function(){for(var i=0;i<__req.length;i++){await __load(__req[i])}try{(function(){' + body + '})();}catch(e){alert("脚本执行错误: "+e.message)}};__run();' : 'try{(function(){' + body + '})();}catch(e){alert("脚本执行错误: "+e.message)}') + '})();';
+            return { code: wrapped, name: name };
+        }
+
+        document.getElementById('tmConvertBtn').onclick = () => {
+            const src = tmInput.value || '';
+            if(!src.trim()) return alert('请粘贴脚本内容');
+            
+            const result = convertTampermonkey(src, { 
+                useRequire: tmUseRequire.checked, 
+                useShim: tmUseShim.checked 
+            });
+            
+            scriptInput.value = result.code;
+            if(result.name) bookmarkletNameInput.value = result.name;
+            currentPresetName = 'TM 转化脚本';
+            
+            tmOverlay.classList.add('hidden');
+        };
+
+        document.getElementById('tmPasteBtn').onclick = async () => {
+            try {
+                const t = await navigator.clipboard.readText();
+                tmInput.value = t;
+            } catch(e) { alert('剪贴板权限被拒绝'); }
+        };
+
+    </script>
+</body>
+</html>

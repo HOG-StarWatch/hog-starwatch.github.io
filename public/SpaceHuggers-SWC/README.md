@@ -21,7 +21,9 @@ document.body.appendChild(s);
 (() => {
   if (window.CheatMenuLoaded) return;
   const cheatMenuBase64 = '[[[[[BASE64_OF_CHEATMENU_JS]]]]]';
-  const cheatMenuSource = atob(cheatMenuBase64);
+  const cheatMenuSource = new TextDecoder("utf-8").decode(
+    Uint8Array.from(atob(cheatMenuBase64), c => c.charCodeAt(0))
+  );
   const s = document.createElement('script');
   s.textContent = cheatMenuSource;
   document.documentElement.appendChild(s);
@@ -54,9 +56,11 @@ document.body.appendChild(s);
 - 其他文件与原版一致，方便随时还原。
 - 不加载 `cheatMenu.js` 即为原版体验。
 
-## 构建版与已部署版本加载作弊菜单
-- JS13K 构建版会精简调试能力，作弊菜单可加载但调试相关功能可能不可用。
-- 已部署网页版可在控制台动态加载：将 `s.src` 改为可访问的完整地址。
+## 构建与已部署版本加载作弊菜单
+- JS13K 构建版会精简调试能力，映射变量名称，由于其多算法压缩策略及其激进，本菜单原生不支持,所有功能均无效。~~你随便找个页面注入都能打开菜单不算~~
+- **但是！** 对于基础的构建版，我提供了一个 **动态扫描器 (`cheatMenuScanner.js`)**，它可以分析内存中的对象结构，自动识别并挂载游戏核心变量（如 `players`, `engineObjects`, `Vector2` 等）。
+- **使用方法**：先在控制台注入 `cheatMenuScanner.js`，成功后再注入 `cheatMenu.js` 即可在构建版/网页版中使用作弊功能。
+- （注：部分高级功能如“地形编辑”可能因核心函数被内联而受限，但基础的无敌、生成等功能通常可用）
 
 ## 作弊菜单功能
 - 玩家增强：上帝模式、幽灵飞行、无限连跳、超级速度、鼠标瞄准
