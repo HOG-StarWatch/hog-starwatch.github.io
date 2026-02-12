@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>脚本执行助手 & 书签生成器 v2.0</title>
+    <title>脚本执行助手 & 书签生成器</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -1421,6 +1421,8 @@
                             }
                         }
 
+                        if (blobs.length === 0) throw new Error('所有分片下载失败 (可能存在 CORS 跨域限制，请注入到m3u8链接域名下网页)');
+
                         log('合并中...');
                         if (format.value === 'mp4') {
                             if (!window.muxjs) throw new Error('Mux.js 未加载');
@@ -1432,8 +1434,15 @@
                             });
                             for (const b of blobs) transmuxer.push(new Uint8Array(b));
                             transmuxer.flush();
-                            const finalBlob = new Blob(parts, { type: 'video/mp4' });
-                            downloadBlob(finalBlob, 'video.mp4');
+                            
+                            if (parts.length === 0) {
+                                log('MP4 转码失败 (数据为空)，尝试导出为 TS...');
+                                const finalBlob = new Blob(blobs, { type: 'video/mp2t' });
+                                downloadBlob(finalBlob, 'video.ts');
+                            } else {
+                                const finalBlob = new Blob(parts, { type: 'video/mp4' });
+                                downloadBlob(finalBlob, 'video.mp4');
+                            }
                         } else {
                             const finalBlob = new Blob(blobs, { type: 'video/mp2t' });
                             downloadBlob(finalBlob, 'video.ts');
@@ -1448,10 +1457,13 @@
                 };
 
                 const downloadBlob = (b, name) => {
+                    if (b.size === 0) { alert('生成的文件为空 (0 bytes)，请检查源是否可访问'); return; }
                     const a = document.createElement('a');
                     a.href = URL.createObjectURL(b);
                     a.download = name;
+                    document.body.appendChild(a);
                     a.click();
+                    document.body.removeChild(a);
                 };
 
                 const close = () => {
@@ -1490,6 +1502,840 @@
     uniqueSrc.forEach(src => {
         win.document.write('<div style="margin:10px;display:inline-block"><img src="' + src + '" style="max-height:100px;border:1px solid #ccc"></div>');
     });
+})();`
+            },
+            {
+                category: CATEGORIES.EXTRACT,
+                name: "网络小说下载器 (Novel Downloader)",
+                desc: "原理：Vue3 驱动的增强版下载器。支持：自动识别目录、自定义并发数、章节排序/反选/范围选择、手动添加章节、断点重试、智能提取正文、GBK/UTF-8 自动解码。",
+                icon: "📚",
+                value: `(async function() {
+    if (document.getElementById('novel-downloader-host')) { alert('小说下载器已运行'); return; }
+
+    // 1. Load Vue if not present
+    const loadScript = (src) => new Promise((resolve, reject) => {
+        if (window.Vue) return resolve();
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+
+    try {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.15/vue.global.prod.min.js');
+    } catch (e) {
+        alert('无法加载 Vue库，请检查网络');
+        return;
+    }
+
+    // 2. Create Host & Shadow DOM
+    const host = document.createElement('div');
+    host.id = 'novel-downloader-host';
+    document.body.appendChild(host);
+    const shadow = host.attachShadow({mode: 'open'});
+
+    // 3. Styles
+    const styleEl = document.createElement('style');
+    styleEl.textContent = \`
+        :host { all: initial; font-family: 'Segoe UI', system-ui, sans-serif; position: fixed; top: 20px; right: 20px; z-index: 999999; }
+        .panel { 
+            background: #1e293b; color: #f8fafc; width: 380px; max-height: 85vh; 
+            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+            border: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden;
+            transition: opacity 0.2s;
+        }
+        .header { 
+            padding: 12px 16px; background: #0f172a; border-bottom: 1px solid #334155; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .title { font-weight: 600; font-size: 15px; color: #a5b4fc; }
+        .close-btn { cursor: pointer; color: #64748b; font-size: 18px; line-height: 1; border:none; background:none; padding:4px; }
+        .close-btn:hover { color: #fff; }
+        
+        .content { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        
+        .section-title { font-size: 12px; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+        
+        .input-group { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        input[type="text"], input[type="number"] {
+            background: #0f172a; border: 1px solid #334155; color: #fff; padding: 6px 10px; 
+            border-radius: 4px; flex: 1; font-size: 13px;
+        }
+        input:focus { outline: none; border-color: #6366f1; }
+        
+        .btn {
+            background: #334155; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; 
+            cursor: pointer; font-size: 12px; transition: 0.2s; white-space: nowrap;
+        }
+        .btn:hover { background: #475569; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: #4f46e5; color: white; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+        .chapter-list { 
+            border: 1px solid #334155; background: #0f172a; border-radius: 4px; 
+            height: 200px; overflow-y: auto; display: flex; flex-direction: column;
+        }
+        .chapter-item {
+            display: flex; gap: 8px; padding: 6px 10px; border-bottom: 1px solid #1e293b; 
+            align-items: center; font-size: 12px;
+        }
+        .chapter-item:hover { background: #1e293b; }
+        .chapter-item.downloaded { color: #22c55e; }
+        .chapter-item.error { color: #ef4444; }
+        
+        .stats-bar { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 4px; }
+        
+        .progress-box { margin-top: auto; padding-top: 10px; border-top: 1px solid #334155; }
+        .progress-track { height: 6px; background: #334155; border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+        .progress-fill { height: 100%; background: #22c55e; width: 0%; transition: width 0.2s; }
+        .log { font-family: monospace; font-size: 11px; color: #cbd5e1; height: 1.2em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    \`;
+    shadow.appendChild(styleEl);
+
+    // 4. UI Template
+    const appRoot = document.createElement('div');
+    shadow.appendChild(appRoot);
+
+    const { createApp, ref, computed, reactive, nextTick } = Vue;
+
+    createApp({
+        template: \`
+            <div class="panel" v-if="visible">
+                <div class="header">
+                    <span class="title">📚 Novel Downloader</span>
+                    <button class="close-btn" @click="close">×</button>
+                </div>
+                
+                <div class="content">
+                    <!-- Step 1: Analyze -->
+                    <div v-if="step === 1">
+                        <div class="section-title">1. 页面分析</div>
+                        <div class="input-group">
+                            <input type="text" v-model="selector" placeholder="章节选择器 (可选, 如 .list a)">
+                            <button class="btn btn-sm" @click="openListPicker" title="在页面上点选章节链接">🖱️ 点选</button>
+                        </div>
+                        <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;line-height:1.4;">
+                            ℹ️ <b>章节选择器说明：</b><br>
+                            当自动分析不准确时，请填写 CSS 选择器定位章节链接。<br>
+                            例如：<br>
+                            • <code>.list a</code> (选取 class="list" 容器内的所有链接)<br>
+                            • <code>#catalog a</code> (选取 id="catalog" 容器内的所有链接)<br>
+                            • <code>.chapter-link</code> (选取 class="chapter-link" 的链接)<br>
+                            👉 点击右侧 "🖱️ 点选" 按钮可开启可视化选择模式。
+                        </div>
+                        <button class="btn btn-primary" style="width:100%" @click="analyze">🔍 分析页面链接</button>
+                    </div>
+
+                    <!-- Step 2: Configure -->
+                    <div v-else class="content-wrapper" style="display:flex;flex-direction:column;gap:10px;flex:1">
+                        <div class="input-group" style="justify-content:space-between">
+                            <div class="input-group" style="margin:0; flex:1">
+                                <span style="font-size:12px;color:#94a3b8">并发数:</span>
+                                <input type="number" v-model="concurrency" min="1" max="20" style="width:50px">
+                            </div>
+                            <div class="input-group" style="margin:0; flex:1">
+                                <span style="font-size:12px;color:#94a3b8">重试:</span>
+                                <input type="number" v-model="maxRetries" min="0" max="5" style="width:40px">
+                            </div>
+                        </div>
+
+                        <div class="toolbar" style="display:flex;gap:5px;flex-wrap:wrap">
+                            <button class="btn btn-sm" @click="selectAll">全选</button>
+                            <button class="btn btn-sm" @click="selectNone">全不选</button>
+                            <button class="btn btn-sm" @click="selectInverse">反选</button>
+                            <button class="btn btn-sm" @click="reverseList">倒序</button>
+                            <button class="btn btn-sm" @click="smartSort">智能排序</button>
+                            <button class="btn btn-sm" @click="checkMissing">检查缺漏</button>
+                            <button class="btn btn-sm" @click="moveSelected">🔀 移动</button>
+                            <button class="btn btn-sm" @click="removeSelected">移除选中</button>
+                            <button class="btn btn-sm" @click="showAddModal = true">➕ 手动添加</button>
+                            <button class="btn btn-sm" @click="openPicker">🔧 选取正文</button>
+                            <button class="btn btn-sm" @click="exportList">📋 导出列表</button>
+                        </div>
+                        
+                        <div class="input-group" v-if="contentSelector">
+                            <span style="font-size:12px;color:#f59e0b">当前正文选择器: {{ contentSelector }}</span>
+                            <button class="btn btn-sm btn-danger" @click="contentSelector = ''">清除</button>
+                        </div>
+
+                        <div class="chapter-list">
+                            <div v-for="(chap, idx) in chapters" :key="idx" 
+                                 class="chapter-item" 
+                                 :class="{downloaded: chap.status==='done', error: chap.status==='error'}"
+                                 @mouseenter="highlight(chap.sourceId)"
+                                 @mouseleave="unhighlight(chap.sourceId)">
+                                <input type="checkbox" :checked="chap.selected" @click="handleCheck($event, idx)" :disabled="isDownloading">
+                                <a :href="chap.url" target="_blank" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:inherit;text-decoration:none;" :title="chap.title">
+                                    {{ idx + 1 }}. {{ chap.title }}
+                                </a>
+                                <span v-if="chap.status === 'done'">✅</span>
+                                <span v-else-if="chap.status === 'error'" :title="chap.content">❌</span>
+                                <span v-else-if="chap.status === 'ing'">⬇️</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-bar">
+                            <span>共 {{ chapters.length }} 章</span>
+                            <span>选中: {{ selectedCount }}</span>
+                        </div>
+
+                        <div v-if="isDownloading" class="progress-box">
+                            <div class="progress-track">
+                                <div class="progress-fill" :style="{width: progressPercent + '%'}"></div>
+                            </div>
+                            <div class="log">{{ logMsg }}</div>
+                        </div>
+
+                        <div style="display:flex;gap:10px;margin-top:5px">
+                            <button v-if="!isDownloading" class="btn btn-primary" style="flex:1" @click="startDownload" :disabled="selectedCount === 0">🚀 开始下载</button>
+                            <button v-else class="btn btn-danger" style="flex:1" @click="stopDownload">⏹ 停止</button>
+                            
+                            <button v-if="hasData && !isDownloading" class="btn btn-success" @click="exportTxt">💾 导出 TXT</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Modal -->
+                <div v-if="showAddModal" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#1e293b;padding:16px;z-index:10;display:flex;flex-direction:column;">
+                    <div class="section-title">手动添加章节</div>
+                    <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">
+                        格式：序号 标题 链接 (支持多行)<br>
+                        例如：101 第一章 https://example.com/1.html
+                    </div>
+                    <textarea v-model="addInput" style="flex:1;background:#0f172a;color:#fff;border:1px solid #334155;padding:8px;font-family:monospace;resize:none;"></textarea>
+                    <div style="display:flex;gap:10px;margin-top:10px;">
+                        <button class="btn btn-primary" style="flex:1" @click="confirmAdd">确认添加</button>
+                        <button class="btn" style="flex:1" @click="showAddModal = false">取消</button>
+                    </div>
+                </div>
+
+                <!-- Picker Modal / Overlay -->
+                <div v-if="showPicker" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;display:flex;flex-direction:column; background:#fff;">
+                    
+                    <!-- Control Bar -->
+                    <div style="background:#1e293b;padding:10px;display:flex;justify-content:space-between;align-items:center;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span v-if="pickerMode === 'list'">🖱️ 列表选择模式: 请点击页面中的任意章节链接</span>
+                            <span v-else>🖱️ 正文选择模式: 请点击正文内容区域</span>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <button class="btn btn-sm btn-danger" @click="closePicker">取消 (ESC)</button>
+                        </div>
+                    </div>
+
+                    <!-- Unified Picker: Iframe Container -->
+                    <div style="flex:1;position:relative;background:#fff;">
+                         <div v-if="pickerLoading" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.8);color:#000;z-index:10;">
+                             正在加载页面...
+                         </div>
+                         <iframe ref="pickerFrame" style="width:100%;height:100%;border:none;" @load="onFrameLoad"></iframe>
+                    </div>
+                </div>
+            </div>
+        \`,
+        setup() {
+            const visible = ref(true);
+            const step = ref(1);
+            const selector = ref('');
+            const chapters = ref([]);
+            const concurrency = ref(5);
+            const maxRetries = ref(3);
+            const isDownloading = ref(false);
+            const shouldStop = ref(false);
+            const logMsg = ref('准备就绪');
+            const finishedCount = ref(0);
+            
+            // New Refs
+            const contentSelector = ref('');
+            const showAddModal = ref(false);
+            const addInput = ref('');
+            const lastCheckedIndex = ref(null);
+            
+            const showPicker = ref(false);
+            const pickerMode = ref('content'); // 'content' or 'list'
+            const pickerLoading = ref(false);
+            const pickerFrame = ref(null);
+            
+            // Highlight State
+            const highlightStyle = ref({ display: 'none' });
+            const highlightLabel = ref('');
+
+            const selectedCount = computed(() => chapters.value.filter(c => c.selected).length);
+            const hasData = computed(() => chapters.value.some(c => c.content));
+            const progressPercent = computed(() => {
+                const total = chapters.value.filter(c => c.selected).length;
+                return total ? (finishedCount.value / total) * 100 : 0;
+            });
+
+            // --- Analysis ---
+            const analyze = () => {
+                let links = [];
+                if (selector.value) {
+                    links = Array.from(document.querySelectorAll(selector.value));
+                } else {
+                    // Smart detection
+                    links = Array.from(document.querySelectorAll('a')).filter(a => {
+                        const txt = a.innerText.trim();
+                        const href = a.getAttribute('href');
+                        return href && 
+                               !href.startsWith('javascript') && 
+                               !href.startsWith('#') &&
+                               txt.length > 1 && txt.length < 60 &&
+                               (
+                                   /第.+章|序章|楔子|Chapter/i.test(txt) || 
+                                   /^\\d+(\\s|.)/.test(txt) ||
+                                   /\\/\\d+\\.html?$/.test(a.href)
+                               );
+                    });
+                }
+
+                // Deduplicate
+                const seen = new Set();
+                const result = [];
+                links.forEach((a, index) => {
+                    if (a.host && a.host !== location.host) return;
+                    const url = a.href;
+                    if (!seen.has(url)) {
+                        seen.add(url);
+                        // Tag for highlighting
+                        const uid = 'nd-link-' + index;
+                        a.setAttribute('data-nd-id', uid);
+                        
+                        result.push({
+                            title: a.innerText.trim(),
+                            url: url,
+                            sourceId: uid,
+                            selected: true,
+                            status: 'pending', // pending, ing, done, error
+                            content: null,
+                            retries: 0
+                        });
+                    }
+                });
+
+                if (result.length === 0) {
+                    alert('未找到章节链接，请尝试填写选择器');
+                } else {
+                    chapters.value = result;
+                    step.value = 2;
+                    lastCheckedIndex.value = null;
+                }
+            };
+
+            // --- Smart Sort & Check ---
+            const c2n = (s) => {
+                const map = {'零':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'百':100,'千':1000,'万':10000,'两':2};
+                let n = 0, section = 0;
+                for (let i = 0; i < s.length; i++) {
+                    let v = map[s[i]];
+                    if (v >= 10) {
+                        if (section === 0) section = 1;
+                        n += section * v;
+                        section = 0;
+                    } else {
+                        section = v;
+                    }
+                }
+                return n + section;
+            };
+
+            const getChapterIndex = (title) => {
+                let match = title.match(/第\\s*(\\d+)\\s*章/) || title.match(/^(\\d+)[\\s\\.]/);
+                if (match) return parseInt(match[1]);
+                match = title.match(/第\\s*([零一二三四五六七八九十百千万两]+)\\s*章/);
+                if (match) return c2n(match[1]);
+                return -1;
+            };
+
+            const smartSort = () => {
+                chapters.value.sort((a, b) => {
+                    const idxA = getChapterIndex(a.title);
+                    const idxB = getChapterIndex(b.title);
+                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    return a.url.localeCompare(b.url);
+                });
+                lastCheckedIndex.value = null;
+            };
+
+            const checkMissing = () => {
+                let prev = -1;
+                const missing = [];
+                const sorted = [...chapters.value].sort((a, b) => getChapterIndex(a.title) - getChapterIndex(b.title));
+                sorted.forEach(c => {
+                    const curr = getChapterIndex(c.title);
+                    if (curr === -1) return;
+                    if (prev !== -1 && curr > prev + 1) {
+                        for (let k = prev + 1; k < curr; k++) missing.push(k);
+                    }
+                    prev = curr;
+                });
+                if (missing.length > 0) {
+                     alert(\`发现 \${missing.length} 个缺失章节：\${missing.slice(0, 10).join(', ')}\${missing.length > 10 ? '...' : ''}\`);
+                } else {
+                    alert('未检测到章节序号中断');
+                }
+            };
+
+            const highlight = (id) => {
+                if (!id) return;
+                const el = document.querySelector(\`a[data-nd-id="\${id}"]\`);
+                if (el) {
+                    el.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+                    el.style.outline = "3px solid #f59e0b";
+                    el.style.backgroundColor = "rgba(245, 158, 11, 0.2)";
+                    el.style.transition = "all 0.3s";
+                }
+            };
+
+            const unhighlight = (id) => {
+                if (!id) return;
+                const el = document.querySelector(\`a[data-nd-id="\${id}"]\`);
+                if (el) {
+                    el.style.outline = "";
+                    el.style.backgroundColor = "";
+                }
+            };
+
+            const moveSelected = () => {
+                const selected = chapters.value.filter(c => c.selected);
+                if (selected.length !== 1) {
+                    alert('请仅选中一个章节进行移动');
+                    return;
+                }
+                const item = selected[0];
+                const oldIndex = chapters.value.indexOf(item);
+                
+                const input = prompt(\`当前位置: \${oldIndex + 1}\\n请输入新位置 (1-\${chapters.value.length}):\`, oldIndex + 1);
+                if (input === null) return;
+                const newIndex = parseInt(input) - 1;
+                
+                if (isNaN(newIndex) || newIndex < 0 || newIndex >= chapters.value.length) {
+                    alert('无效的位置');
+                    return;
+                }
+                
+                chapters.value.splice(oldIndex, 1);
+                chapters.value.splice(newIndex, 0, item);
+                lastCheckedIndex.value = null;
+            };
+
+            // --- List Management ---
+            const selectAll = () => chapters.value.forEach(c => c.selected = true);
+            const selectNone = () => chapters.value.forEach(c => c.selected = false);
+            const selectInverse = () => chapters.value.forEach(c => c.selected = !c.selected);
+
+            const handleCheck = (e, index) => {
+                const newVal = !chapters.value[index].selected;
+                chapters.value[index].selected = newVal;
+                
+                if (e.shiftKey && lastCheckedIndex.value !== null) {
+                    const start = Math.min(lastCheckedIndex.value, index);
+                    const end = Math.max(lastCheckedIndex.value, index);
+                    for (let i = start; i <= end; i++) {
+                        chapters.value[i].selected = newVal;
+                    }
+                }
+                
+                lastCheckedIndex.value = index;
+            };
+
+            const reverseList = () => {
+                chapters.value.reverse();
+                lastCheckedIndex.value = null;
+            };
+            const removeSelected = () => {
+                chapters.value = chapters.value.filter(c => !c.selected);
+                lastCheckedIndex.value = null;
+            };
+            const confirmAdd = () => {
+                if (!addInput.value) return;
+                addInput.value.split('\\n').forEach(line => {
+                    const parts = line.trim().split(/\\s+/);
+                    if (parts.length >= 2) {
+                        const url = parts.pop();
+                        const title = parts.join(' ');
+                        chapters.value.push({
+                            title, url, selected: true, status: 'pending', content: null, retries: 0
+                        });
+                    }
+                });
+                showAddModal.value = false;
+                addInput.value = '';
+            };
+
+            const exportList = () => {
+                const list = chapters.value.map(c => \`\${c.title} \${c.url}\`).join('\\n');
+                const blob = new Blob([list], {type: 'text/plain;charset=utf-8'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'chapters_list.txt';
+                a.click();
+            };
+
+            // --- Event Handlers (Hoisted) ---
+            // Removed previous List Picker event handlers as we now use iframe for both modes
+            
+            // --- Picker ---
+            const renderPicker = async (url, mode) => {
+                showPicker.value = true;
+                pickerMode.value = mode;
+                pickerLoading.value = true;
+                
+                // For List Picker, we might want to use the current document's HTML
+                // But fetchDoc is cleaner if the page is accessible.
+                // However, to ensure we see exactly what the user sees (including JS rendered content),
+                // cloning the document into the iframe is better for 'list' mode.
+                
+                try {
+                    let doc;
+                    if (mode === 'list') {
+                        // Use current document content
+                        doc = document.cloneNode(true);
+                        // Fix relative links
+                        const baseUrl = location.href;
+                        doc.querySelectorAll('link[href]').forEach(el => {
+                             try { el.href = new URL(el.getAttribute('href'), baseUrl).href; } catch(e){}
+                        });
+                        doc.querySelectorAll('img[src]').forEach(el => {
+                             try { el.src = new URL(el.getAttribute('src'), baseUrl).href; } catch(e){}
+                        });
+                    } else {
+                        // Fetch remote content
+                        doc = await fetchDoc(url);
+                        // Fix relative links
+                        const baseUrl = url;
+                         doc.querySelectorAll('link[href]').forEach(el => {
+                             try { el.href = new URL(el.getAttribute('href'), baseUrl).href; } catch(e){}
+                        });
+                    }
+
+                    // Inject styles
+                    const style = doc.createElement('style');
+                    style.textContent = \`
+                        * { cursor: crosshair !important; }
+                        *:hover { outline: 2px solid red !important; background: rgba(255,0,0,0.1) !important; }
+                    \`;
+                    doc.head.appendChild(style);
+                    
+                    doc.querySelectorAll('script, iframe').forEach(el => el.remove());
+                    
+                    doc.querySelectorAll('a').forEach(el => {
+                        el.removeAttribute('target');
+                        el.setAttribute('href', 'javascript:void(0)');
+                    });
+
+                    // Set iframe content
+                    // We use a small timeout to ensure the iframe ref is available if it was just v-if'ed
+                    setTimeout(() => {
+                        if (pickerFrame.value) {
+                            const blob = new Blob([doc.documentElement.outerHTML], {type: 'text/html'});
+                            pickerFrame.value.src = URL.createObjectURL(blob);
+                        }
+                    }, 50);
+
+                } catch (e) {
+                    alert('加载页面失败: ' + e.message);
+                    showPicker.value = false;
+                    pickerLoading.value = false;
+                }
+            };
+            
+            const onFrameLoad = () => {
+                pickerLoading.value = false;
+                if (!pickerFrame.value) return;
+                try {
+                    const iDoc = pickerFrame.value.contentDocument;
+                    if (!iDoc) return;
+                    
+                    // Add click handler to iframe
+                    iDoc.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // For iframe, target is inside iframe
+                        pickerClick(e, iDoc);
+                    }, true);
+                } catch(e) {}
+            };
+            
+            const closePicker = () => {
+                showPicker.value = false;
+                if (pickerFrame.value) pickerFrame.value.src = 'about:blank';
+            };
+            
+            const openListPicker = () => {
+                renderPicker(location.href, 'list');
+            };
+
+            const openPicker = async () => {
+                if (chapters.value.length === 0) {
+                    alert('请先分析页面获取章节列表');
+                    return;
+                }
+                const selected = chapters.value.filter(c => c.selected);
+                let targetUrl = (selected.length === 1) ? selected[0].url : chapters.value[0].url;
+                renderPicker(targetUrl, 'content');
+            };
+
+            const pickerHover = (e) => {};
+
+            const pickerClick = (e, contextDoc) => {
+                // e.target is the clicked element
+                // contextDoc is document or iframe document
+                let target = e.target;
+                
+                // Helper to build path
+                const getPath = (el) => {
+                    const path = [];
+                    let curr = el;
+                    while(curr && curr.tagName !== 'BODY' && curr.tagName !== 'HTML') {
+                         let s = curr.tagName.toLowerCase();
+                         if (curr.id) { s += '#' + curr.id; path.unshift(s); break; }
+                         if (curr.classList.length) { 
+                             s += '.' + Array.from(curr.classList).join('.'); 
+                         }
+                         path.unshift(s);
+                         curr = curr.parentElement;
+                    }
+                    return path.join(' > ');
+                };
+
+                if (pickerMode.value === 'list') {
+                    // --- List Mode ---
+                    let linkEl = target.closest('a');
+                    if (linkEl) target = linkEl;
+                    
+                    const candidates = [];
+                    candidates.push(getPath(target));
+                    
+                    if (target.parentElement) {
+                        const pPath = getPath(target.parentElement);
+                        candidates.push(pPath + ' a');
+                        if (target.parentElement.className) {
+                            candidates.push('.' + target.parentElement.className.split(' ').join('.') + ' a');
+                        }
+                        if (target.parentElement.id) {
+                            candidates.push('#' + target.parentElement.id + ' a');
+                        }
+                    }
+                    
+                    let bestCand = '';
+                    let maxCount = 0;
+                    const uniqueCands = [...new Set(candidates)];
+                    
+                    for (const cand of uniqueCands) {
+                        try {
+                            const count = contextDoc.querySelectorAll(cand).length;
+                            if (count > 5) {
+                                if (count > maxCount) {
+                                    maxCount = count;
+                                    bestCand = cand;
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                    
+                    if (!bestCand && uniqueCands.length > 0) {
+                         bestCand = uniqueCands[0];
+                         try { maxCount = contextDoc.querySelectorAll(bestCand).length; } catch(e){}
+                    }
+
+                    if (bestCand) {
+                        if (confirm(\`检测到选择器: \${bestCand}\\n共匹配 \${maxCount} 个元素。\\n是否使用？\`)) {
+                            selector.value = bestCand;
+                            closePicker();
+                        }
+                    } else {
+                        alert('未能识别出有效的列表模式');
+                    }
+
+                } else {
+                    // --- Content Mode ---
+                    const finalSelector = getPath(target);
+                    if (confirm(\`确认使用选择器: \${finalSelector} ?\`)) {
+                        contentSelector.value = finalSelector;
+                        closePicker();
+                    }
+                }
+            };
+
+            // --- Downloading ---
+            const fetchDoc = async (url) => {
+                try {
+                    const res = await fetch(url, { credentials: 'include' });
+                    // 304 Not Modified is acceptable (browser uses cache)
+                    if (!res.ok && res.status !== 304) throw new Error(\`HTTP \${res.status}\`);
+                    const buffer = await res.arrayBuffer();
+                    
+                    // 1. Try UTF-8 first
+                    let decoder = new TextDecoder('utf-8');
+                    let text = decoder.decode(buffer);
+                    
+                    // 2. Check for charset in meta
+                    const metaMatch = text.match(/<meta[^>]*charset=["']?([\\w-]+)["']?/i);
+                    let charset = metaMatch ? metaMatch[1] : 'utf-8';
+
+                    // 3. Heuristic: if many replacement chars or GBK meta, switch to GBK
+                    // The replacement character is  (U+FFFD)
+                    const replacementCount = (text.match(/\\ufffd/g) || []).length;
+                    
+                    if (/gb/i.test(charset) || (replacementCount > text.length * 0.01)) {
+                         try {
+                            decoder = new TextDecoder('gbk');
+                            text = decoder.decode(buffer);
+                         } catch(e) {
+                            // Fallback to utf-8 if gbk fails (unlikely for TextDecoder)
+                         }
+                    }
+                    
+                    return new DOMParser().parseFromString(text, 'text/html');
+                } catch (e) {
+                    throw new Error(\`Fetch failed: \${e.message}\`);
+                }
+            };
+
+            const cleanText = (html) => {
+                const temp = document.createElement('div');
+                temp.innerHTML = html;
+                // No ad removal as requested
+                return temp.innerText
+                    .replace(/\\n\\s*\\n/g, '\\n\\n') // Normalize newlines
+                    .replace(/&nbsp;/g, ' ')
+                    .trim();
+            };
+
+            const processChapter = async (chap) => {
+                if (!chap.selected || chap.status === 'done') return;
+                chap.status = 'ing';
+                try {
+                    const doc = await fetchDoc(chap.url);
+                    let best = null;
+                    if (contentSelector.value) {
+                        best = doc.querySelector(contentSelector.value);
+                    }
+
+                    if (!best) {
+                        // Find content container: broader search
+                        const candidates = Array.from(doc.querySelectorAll('div, article, section, main, .content, #content, .read-content, .txtnav'));
+                        let maxLen = 0;
+                        
+                        // Filter candidates
+                        const validCandidates = candidates.filter(el => {
+                            // Ignore if it has too many links relative to text length (likely nav/footer)
+                            const linkTextLen = Array.from(el.querySelectorAll('a')).reduce((acc, a) => acc + a.innerText.length, 0);
+                            const totalLen = el.innerText.length;
+                            if (totalLen < 100) return false; // Too short
+                            if (linkTextLen / totalLen > 0.5) return false; // Mostly links
+                            return true;
+                        });
+
+                        validCandidates.forEach(el => {
+                            const len = el.innerText.length;
+                            if (len > maxLen) { maxLen = len; best = el; }
+                        });
+                    }
+
+                    if (best) {
+                        chap.content = cleanText(best.innerHTML);
+                        if (chap.content.length < 50) {
+                             throw new Error(\`Content too short (\${chap.content.length} chars). Possible anti-bot or wrong selector.\`);
+                        }
+                        chap.status = 'done';
+                        finishedCount.value++;
+                        logMsg.value = \`已下载: \${chap.title}\`;
+                    } else {
+                        throw new Error('No valid content container found');
+                    }
+                } catch (e) {
+                    chap.retries++;
+                    if (chap.retries <= maxRetries.value) {
+                        logMsg.value = \`重试 \${chap.title} (\${chap.retries})...\`;
+                        await new Promise(r => setTimeout(r, 1000));
+                        await processChapter(chap); // Retry
+                    } else {
+                        chap.status = 'error';
+                        chap.content = \`[下载失败] \${e.message}\`;
+                        logMsg.value = \`失败: \${chap.title}\`;
+                        finishedCount.value++; // Count as finished to progress bar
+                    }
+                }
+            };
+
+            const startDownload = async () => {
+                isDownloading.value = true;
+                shouldStop.value = false;
+                finishedCount.value = 0;
+                
+                // Reset pending status for selected
+                chapters.value.forEach(c => {
+                    if(c.selected && c.status === 'error') {
+                        c.status = 'pending';
+                        c.retries = 0;
+                    }
+                });
+
+                const queue = chapters.value.filter(c => c.selected && c.status !== 'done');
+                const pool = [];
+                
+                for (const chap of queue) {
+                    if (shouldStop.value) break;
+                    
+                    const p = processChapter(chap).then(() => {
+                        pool.splice(pool.indexOf(p), 1);
+                    });
+                    pool.push(p);
+                    
+                    if (pool.length >= concurrency.value) {
+                        await Promise.race(pool);
+                    }
+                }
+                
+                await Promise.all(pool);
+                isDownloading.value = false;
+                logMsg.value = '下载任务结束';
+            };
+
+            const stopDownload = () => {
+                shouldStop.value = true;
+                logMsg.value = '正在停止...';
+            };
+
+            const exportTxt = () => {
+                let fullText = \`《\${document.title}》\\n来源：\${location.href}\\n\\n\`;
+                chapters.value.forEach(c => {
+                    if (c.selected && c.content) {
+                        fullText += \`\\n\\n=== \${c.title} ===\\n\\n\${c.content}\`;
+                    }
+                });
+                const blob = new Blob([fullText], {type: 'text/plain;charset=utf-8'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = \`\${document.title.replace(/[\\\\/:*?"<>|]/g, '_')}.txt\`;
+                a.click();
+            };
+
+            const close = () => host.remove();
+
+            return {
+                visible, step, selector, chapters, concurrency, maxRetries,
+                isDownloading, logMsg, progressPercent, selectedCount, hasData,
+                contentSelector, showAddModal, addInput, showPicker, highlightStyle, highlightLabel, pickerFrame, pickerLoading,
+                analyze, selectAll, selectNone, selectInverse, handleCheck, reverseList, smartSort, checkMissing, moveSelected, removeSelected, confirmAdd,
+                startDownload, stopDownload, exportTxt, exportList, close, highlight, unhighlight,
+                openPicker, closePicker, pickerHover, pickerClick, onFrameLoad, openListPicker
+            };
+        }
+    }).mount(appRoot);
+
 })();`
             },
             {
@@ -1618,19 +2464,318 @@
             },
             {
                 category: CATEGORIES.UNLOCK,
-                name: "清除当前网站 Cookies",
-                desc: "原理：读取 document.cookie 获取所有 Cookie 名称，遍历并通过设置 expires 为 1970 年 (过期时间) 覆盖原 Cookie，从而实现删除。",
+                name: "Cookie 管理器 (Cookie Editor)",
+                desc: "可视化管理当前网站 Cookie。支持查看、编辑、删除、新增、导入、导出 Cookie (仅限非 HttpOnly)。新增：搜索过滤、Base64 解码、锁定保护、深色模式支持。",
                 icon: "🍪",
                 value: `(function(){
-    var cookies = document.cookie.split(";");
-    for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i];
-        var eqPos = cookie.indexOf("=");
-        var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=." + document.domain;
+    var id = 'cookie-editor-ui';
+    if(document.getElementById(id)) { document.getElementById(id).remove(); return; }
+    
+    // CSS: Support Dark Mode & New Features (Purple Liquid Glass Theme)
+    var css = \`
+        :root {
+            --ce-bg: rgba(255, 255, 255, 0.65);
+            --ce-text: #2d004d;
+            --ce-border: rgba(255, 255, 255, 0.4);
+            --ce-head-bg: rgba(255, 255, 255, 0.4);
+            --ce-hover: rgba(138, 43, 226, 0.1);
+            --ce-name: #6a0dad;
+            --ce-val: #555;
+            --ce-btn-bg: rgba(255, 255, 255, 0.5);
+            --ce-btn-border: rgba(138, 43, 226, 0.2);
+            --ce-btn-hover: rgba(138, 43, 226, 0.2);
+            --ce-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --ce-bg: rgba(30, 0, 50, 0.75);
+                --ce-text: #e0d0f0;
+                --ce-border: rgba(255, 255, 255, 0.1);
+                --ce-head-bg: rgba(0, 0, 0, 0.2);
+                --ce-hover: rgba(180, 100, 255, 0.15);
+                --ce-name: #d8b0ff;
+                --ce-val: #a0a0a0;
+                --ce-btn-bg: rgba(255, 255, 255, 0.1);
+                --ce-btn-border: rgba(255, 255, 255, 0.1);
+                --ce-btn-hover: rgba(255, 255, 255, 0.2);
+                --ce-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            }
+        }
+        #cookie-editor-ui {
+            position: fixed; top: 20px; right: 20px; width: 380px; max-height: 80vh;
+            background: var(--ce-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--ce-border);
+            box-shadow: var(--ce-shadow);
+            z-index: 2147483647;
+            font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: var(--ce-text);
+            display: flex; flex-direction: column; border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .ce-head {
+            padding: 12px; background: var(--ce-head-bg);
+            border-bottom: 1px solid var(--ce-border);
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .ce-title-row { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; letter-spacing: 0.5px; }
+        .ce-search-row input {
+            width: 100%; padding: 6px 10px;
+            border: 1px solid var(--ce-border); border-radius: 8px;
+            background: rgba(255,255,255,0.1); color: var(--ce-text);
+            box-sizing: border-box; outline: none;
+            transition: border-color 0.2s;
+        }
+        .ce-search-row input:focus { border-color: var(--ce-name); }
+        .ce-body {
+            flex: 1; overflow-y: auto; padding: 0;
+            scrollbar-width: thin; scrollbar-color: var(--ce-btn-border) transparent;
+        }
+        .ce-body::-webkit-scrollbar { width: 6px; }
+        .ce-body::-webkit-scrollbar-thumb { background-color: var(--ce-btn-border); border-radius: 3px; }
+        .ce-item {
+            display: flex; align-items: center; padding: 10px 12px;
+            border-bottom: 1px solid var(--ce-border);
+            transition: background 0.2s;
+        }
+        .ce-item:hover { background: var(--ce-hover); }
+        .ce-info { flex: 1; overflow: hidden; margin-right: 8px; }
+        .ce-name { font-weight: 600; color: var(--ce-name); margin-bottom: 3px; word-break: break-all; }
+        .ce-val { color: var(--ce-val); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: Consolas, monospace; opacity: 0.9; }
+        .ce-actions { display: flex; gap: 6px; }
+        .ce-btn {
+            cursor: pointer; padding: 5px 10px;
+            border: 1px solid var(--ce-btn-border);
+            background-color: var(--ce-btn-bg);
+            border-radius: 6px; font-size: 12px;
+            color: var(--ce-text); line-height: 1;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        .ce-btn:hover { background-color: var(--ce-btn-hover); transform: translateY(-1px); }
+        .ce-btn:active { transform: translateY(0); }
+        .ce-btn.red { color: #ff4d4f; border-color: rgba(255, 77, 79, 0.3); }
+        .ce-btn.red:hover { background-color: rgba(255, 77, 79, 0.1); }
+        .ce-foot {
+            padding: 12px; border-top: 1px solid var(--ce-border);
+            display: flex; flex-direction: column; gap: 10px;
+            background: var(--ce-head-bg);
+        }
+        .ce-foot-btns { display: flex; justify-content: space-between; align-items: center; }
+        .ce-foot-group { display: flex; gap: 8px; }
+        .ce-note { font-size: 11px; opacity: 0.6; text-align: center; margin-top: 4px; }
+    \`;
+    
+    var style = document.createElement('style');
+    style.textContent = css;
+    
+    var div = document.createElement('div');
+    div.id = id;
+    div.innerHTML = \`
+        <div class="ce-head">
+            <div class="ce-title-row">
+                <span>🍪 Cookie Editor</span>
+                <button id="ce-close" class="ce-btn">✕</button>
+            </div>
+            <div class="ce-search-row">
+                <input type="text" id="ce-search" placeholder="🔍 Search cookies...">
+            </div>
+        </div>
+        <div class="ce-body" id="ce-list"></div>
+        <div class="ce-foot">
+            <div class="ce-foot-btns">
+                <div class="ce-foot-group">
+                    <button id="ce-add" class="ce-btn">➕ Add</button>
+                    <button id="ce-import" class="ce-btn" title="Import JSON">📥 Imp</button>
+                    <button id="ce-export" class="ce-btn" title="Copy JSON">📤 Exp</button>
+                </div>
+                <button id="ce-clear" class="ce-btn red">🗑️ Clear All</button>
+            </div>
+            <div class="ce-note">⚠️ HttpOnly cookies are invisible to JS.</div>
+        </div>
+    \`;
+    div.appendChild(style);
+    document.body.appendChild(div);
+    
+    // --- Logic ---
+    var STORAGE_KEY = 'ce_locked_' + location.hostname;
+    var lockedSet = new Set();
+    try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if(saved) JSON.parse(saved).forEach(n => lockedSet.add(n));
+    } catch(e){}
+
+    function saveLocks() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...lockedSet]));
     }
-    alert('🗑️ 已尝试清除当前域名下的 Cookies');
+
+    function getCookies() {
+        var cookies = document.cookie.split(';');
+        var res = [];
+        cookies.forEach(c => {
+            if(!c.trim()) return;
+            var parts = c.split('=');
+            var name = parts[0].trim();
+            var val = parts.slice(1).join('=');
+            if(name) res.push({name, value: val});
+        });
+        return res;
+    }
+
+    function render() {
+        var list = document.getElementById('ce-list');
+        list.innerHTML = '';
+        var search = document.getElementById('ce-search').value.toLowerCase();
+        
+        var cookies = getCookies();
+        var filtered = cookies.filter(c => c.name.toLowerCase().includes(search));
+        
+        if(filtered.length===0) {
+            list.innerHTML = '<div style="padding:20px;text-align:center;color:#999">' + (cookies.length===0 ? 'No Cookies Found' : 'No Match') + '</div>';
+            return;
+        }
+        
+        filtered.forEach(c => {
+            var isLocked = lockedSet.has(c.name);
+            
+            var item = document.createElement('div');
+            item.className = 'ce-item';
+            
+            var info = document.createElement('div');
+            info.className = 'ce-info';
+            info.innerHTML = '<div class="ce-name" title="'+c.name+'">'+c.name + (isLocked ? ' 🔒' : '') + '</div><div class="ce-val" title="'+c.value+'">'+c.value+'</div>';
+            
+            var actions = document.createElement('div');
+            actions.className = 'ce-actions';
+            
+            // Lock Button
+            var lockBtn = document.createElement('button');
+            lockBtn.className = 'ce-btn';
+            lockBtn.textContent = isLocked ? '🔓' : '🔒';
+            lockBtn.title = isLocked ? 'Unlock' : 'Lock (Protect from Clear All)';
+            lockBtn.onclick = () => {
+                if(isLocked) lockedSet.delete(c.name);
+                else lockedSet.add(c.name);
+                saveLocks();
+                render();
+            };
+
+            // B64 Button
+            var b64Btn = document.createElement('button');
+            b64Btn.className = 'ce-btn';
+            b64Btn.textContent = 'B64';
+            b64Btn.title = 'Base64 Decode/Encode';
+            b64Btn.onclick = () => {
+                // Simple heuristic: if decoded is printable, show it. Else offer to encode.
+                try {
+                    var decoded = decodeURIComponent(escape(window.atob(c.value)));
+                    // Check if looks like text
+                    if(/^[\x20-\x7E\s]+$/.test(decoded) || decoded.trim().startsWith('{')) {
+                        prompt('Base64 Decoded:', decoded);
+                    } else {
+                        throw new Error('Not text');
+                    }
+                } catch(e) {
+                    var encoded = window.btoa(unescape(encodeURIComponent(c.value)));
+                    prompt('Base64 Encoded:', encoded);
+                }
+            };
+
+            var editBtn = document.createElement('button');
+            editBtn.className = 'ce-btn';
+            editBtn.textContent = '✎';
+            editBtn.onclick = () => {
+                var v = prompt('Edit value for '+c.name, c.value);
+                if(v !== null) {
+                    document.cookie = c.name + '=' + v + '; path=/';
+                    render();
+                }
+            };
+            
+            var delBtn = document.createElement('button');
+            delBtn.className = 'ce-btn red';
+            delBtn.textContent = '🗑️';
+            delBtn.onclick = () => {
+                if(isLocked && !confirm('This cookie is locked. Delete anyway?')) return;
+                document.cookie = c.name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+                document.cookie = c.name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.' + location.hostname;
+                document.cookie = c.name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=' + location.hostname;
+                render();
+            };
+            
+            actions.appendChild(lockBtn);
+            actions.appendChild(b64Btn);
+            actions.appendChild(editBtn);
+            actions.appendChild(delBtn);
+            item.appendChild(info);
+            item.appendChild(actions);
+            list.appendChild(item);
+        });
+    }
+    
+    document.getElementById('ce-close').onclick = () => div.remove();
+    document.getElementById('ce-search').oninput = render;
+    
+    document.getElementById('ce-add').onclick = () => {
+        var n = prompt('Cookie Name:');
+        if(!n) return;
+        var v = prompt('Cookie Value:');
+        if(v===null) return;
+        document.cookie = n + '=' + v + '; path=/';
+        render();
+    };
+    
+    document.getElementById('ce-export').onclick = () => {
+        var cookies = getCookies();
+        var json = JSON.stringify(cookies, null, 2);
+        var ta = document.createElement('textarea');
+        ta.value = json;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('✅ ' + cookies.length + ' cookies copied to clipboard!');
+    };
+    
+    document.getElementById('ce-import').onclick = () => {
+        var json = prompt('Paste Cookie JSON:');
+        if(!json) return;
+        try {
+            var arr = JSON.parse(json);
+            if(!Array.isArray(arr)) throw new Error('Not an array');
+            var count = 0;
+            arr.forEach(c => {
+                if(c.name) {
+                    document.cookie = c.name + '=' + (c.value||'') + '; path=/';
+                    count++;
+                }
+            });
+            render();
+            alert('✅ Imported ' + count + ' cookies.');
+        } catch(e) {
+            alert('❌ Import failed: ' + e.message);
+        }
+    };
+
+    document.getElementById('ce-clear').onclick = () => {
+        var all = getCookies();
+        var toDelete = all.filter(c => !lockedSet.has(c.name));
+        var lockedCount = all.length - toDelete.length;
+        
+        var msg = 'Clear ' + toDelete.length + ' cookies?';
+        if(lockedCount > 0) msg += '\\n(Skipping ' + lockedCount + ' locked cookies)';
+        
+        if(!confirm(msg)) return;
+        
+        toDelete.forEach(c => {
+            document.cookie = c.name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+            document.cookie = c.name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.' + location.hostname;
+             document.cookie = c.name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=' + location.hostname;
+        });
+        render();
+    };
+    
+    render();
 })();`
             },
 
