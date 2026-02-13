@@ -47,7 +47,7 @@ export default [
         { text: 'RDAP-Whois', link: '../../../RDAP-whois.html', target: '_self', },
         { text: 'Pixiv代理', link: '../../../i.pximg/i.pximg.net-prox.html', target: '_self', },
         { text: 'HTML混淆', link: '../../../htmlencrypt.html', target: '_self', },
-        { text: 'Github仓库探索器', link: '../../../github-repo-explorer/github-repo-explorer.html', target: '_self', },
+        { text: 'Github仓库探索器', link: '../../../github-repo-explorer/indext.html', target: '_self', },
         
         { text: '旋律生成器', link: '../../../melody.html', target: '_self', },
         { text: '时钟', link: '../../../clock.html', target: '_self', },

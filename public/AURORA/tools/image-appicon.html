@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图标制作</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* Tool-specific overrides */
+        .preview-area {
+            background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .canvas-container {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            background: transparent;
+            border-radius: 4px;
+            max-width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 70vh;
+            height: auto;
+        }
+
+        .input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .input-row label {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            flex: 1;
+        }
+
+        .input-row input[type="range"] {
+            flex: 2;
+        }
+
+        .input-row input[type="number"] {
+            width: 80px;
+        }
+    </style>
+</head>
+<body class="scroll-content">
+    <div class="workspace layout-sidebar">
+        <!-- Left Panel - Controls -->
+        <div class="panel controls">
+            <div class="panel-header">
+                <div class="panel-title">图标设置</div>
+                <div class="panel-actions">
+                    <span class="stat-badge">Lite</span>
+                    <button class="btn btn-icon btn-secondary" onclick="resetDefaults()" title="重置">↺</button>
+                </div>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
+                
+                <!-- Basic Settings -->
+                <div class="control-group">
+                    <label>基础设置</label>
+                    <div class="input-row">
+                        <label>尺寸 (px)</label>
+                        <input type="number" id="sizeInput" value="1024" min="64" max="2048">
+                    </div>
+                    <div class="input-row">
+                        <label>背景颜色</label>
+                        <div class="color-input-wrapper">
+                            <input type="color" id="bgColor" value="#3b82f6">
+                            <span id="bgColorVal">#3b82f6</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label>圆角 (%) <span id="borderRadiusVal" style="font-size:0.8rem; margin-left:5px;">22%</span></label>
+                        <input type="range" id="borderRadius" min="0" max="50" value="22">
+                    </div>
+                </div>
+
+                <!-- Content Settings -->
+                <div class="control-group">
+                    <label>内容设置</label>
+                    <div class="sub-tab-group">
+                        <button class="sub-tab active" onclick="switchTab('text')" id="tab-text">文字</button>
+                        <button class="sub-tab" onclick="switchTab('image')" id="tab-image">图片</button>
+                    </div>
+
+                    <!-- Text Mode -->
+                    <div id="textContent">
+                        <div style="margin-bottom: 10px;">
+                            <input type="text" id="textInput" value="A" class="full-width" placeholder="输入文字">
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <select id="fontFamily" class="full-width">
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Verdana">Verdana</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Impact">Impact</option>
+                                <option value="Comic Sans MS">Comic Sans MS</option>
+                                <option value="'Microsoft YaHei', sans-serif">微软雅黑</option>
+                                <option value="'SimHei', sans-serif">黑体</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <label>大小</label>
+                            <input type="range" id="textSize" min="10" max="800" value="600">
+                        </div>
+                        <div class="input-row">
+                            <label>颜色</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="textColor" value="#ffffff">
+                                <span id="textColorVal">#ffffff</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Mode -->
+                    <div id="imageContent" style="display: none;">
+                        <div class="upload-area" id="uploadArea" style="padding: 1rem; margin-bottom: 10px;">
+                            <i style="font-size: 1.5rem;">📁</i>
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">点击或拖拽上传图片</div>
+                            <input type="file" id="imageInput" accept="image/*" style="position:absolute; width:100%; height:100%; opacity:0; top:0; left:0; cursor:pointer;">
+                        </div>
+                        <div class="input-row">
+                            <label>缩放 (%)</label>
+                            <input type="range" id="imageScale" min="10" max="200" value="80">
+                        </div>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label>垂直偏移</label>
+                        <input type="range" id="offsetY" min="-200" max="200" value="0">
+                    </div>
+                </div>
+
+                <!-- Shadow & Border -->
+                <div class="control-group">
+                    <label>阴影与边框</label>
+                    <div class="input-row">
+                        <label>阴影颜色</label>
+                        <div class="color-input-wrapper">
+                            <input type="color" id="shadowColor" value="#000000">
+                            <span id="shadowColorVal">#000000</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label>模糊度</label>
+                        <input type="range" id="shadowBlur" min="0" max="50" value="0">
+                    </div>
+                    <div class="input-row">
+                        <label>X 偏移</label>
+                        <input type="range" id="shadowOffsetX" min="-50" max="50" value="0">
+                    </div>
+                    <div class="input-row">
+                        <label>Y 偏移</label>
+                        <input type="range" id="shadowOffsetY" min="-50" max="50" value="0">
+                    </div>
+                    
+                    <div class="dropdown-divider"></div>
+                    
+                    <div class="input-row" style="margin-top: 10px;">
+                        <label>边框宽度</label>
+                        <input type="range" id="borderWidth" min="0" max="100" value="0">
+                    </div>
+                    <div class="input-row">
+                        <label>边框颜色</label>
+                        <div class="color-input-wrapper">
+                            <input type="color" id="borderColor" value="#000000">
+                            <span id="borderColorVal">#000000</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="padding-top: 15px; border-top: 1px solid var(--border);">
+                <button class="btn btn-primary" id="downloadBtn" style="width: 100%; justify-content: center;">
+                    <span>⬇</span> 下载图标 (PNG)
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Panel - Preview -->
+        <div class="panel preview-area">
+            <div class="canvas-container">
+                <canvas id="canvas" width="1024" height="1024"></canvas>
+            </div>
+            <div style="margin-top: 15px; color: var(--text-dim); font-size: 0.8rem; text-align: center;">
+                实际输出: <span id="outputSizeDisplay" style="color: var(--secondary);">1024x1024</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        // State
+        const defaultState = {
+            size: 1024,
+            bgColor: '#3b82f6',
+            borderRadius: 22,
+            mode: 'text',
+            text: 'A',
+            textSize: 600,
+            textColor: '#ffffff',
+            font: 'Arial',
+            image: null,
+            imageScale: 80,
+            offsetY: 0,
+            shadowColor: '#000000',
+            shadowBlur: 0,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
+            borderWidth: 0,
+            borderColor: '#000000'
+        };
+
+        let state = { ...defaultState };
+
+        // Elements
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Inputs map
+        const inputs = {
+            size: document.getElementById('sizeInput'),
+            bgColor: document.getElementById('bgColor'),
+            borderRadius: document.getElementById('borderRadius'),
+            textInput: document.getElementById('textInput'),
+            textSize: document.getElementById('textSize'),
+            textColor: document.getElementById('textColor'),
+            fontFamily: document.getElementById('fontFamily'),
+            imageInput: document.getElementById('imageInput'),
+            imageScale: document.getElementById('imageScale'),
+            offsetY: document.getElementById('offsetY'),
+            shadowColor: document.getElementById('shadowColor'),
+            shadowBlur: document.getElementById('shadowBlur'),
+            shadowOffsetX: document.getElementById('shadowOffsetX'),
+            shadowOffsetY: document.getElementById('shadowOffsetY'),
+            borderWidth: document.getElementById('borderWidth'),
+            borderColor: document.getElementById('borderColor'),
+            downloadBtn: document.getElementById('downloadBtn')
+        };
+
+        // Helper to update color labels
+        function updateColorLabel(id, val) {
+            const el = document.getElementById(id + 'Val');
+            if(el) el.innerText = val;
+        }
+
+        // Initialize listeners
+        function initListeners() {
+            inputs.size.addEventListener('input', (e) => {
+                state.size = parseInt(e.target.value) || 1024;
+                document.getElementById('outputSizeDisplay').innerText = `${state.size}x${state.size}`;
+                render();
+            });
+
+            inputs.bgColor.addEventListener('input', (e) => {
+                state.bgColor = e.target.value;
+                updateColorLabel('bgColor', state.bgColor);
+                render();
+            });
+
+            inputs.borderRadius.addEventListener('input', (e) => {
+                state.borderRadius = parseInt(e.target.value);
+                document.getElementById('borderRadiusVal').innerText = `${state.borderRadius}%`;
+                render();
+            });
+
+            inputs.textInput.addEventListener('input', (e) => {
+                state.text = e.target.value;
+                render();
+            });
+
+            inputs.textSize.addEventListener('input', (e) => {
+                state.textSize = parseInt(e.target.value);
+                render();
+            });
+
+            inputs.textColor.addEventListener('input', (e) => {
+                state.textColor = e.target.value;
+                updateColorLabel('textColor', state.textColor);
+                render();
+            });
+
+            inputs.fontFamily.addEventListener('change', (e) => {
+                state.font = e.target.value;
+                render();
+            });
+
+            inputs.imageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            state.image = img;
+                            render();
+                            app.showToast('图片已加载');
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            inputs.imageScale.addEventListener('input', (e) => {
+                state.imageScale = parseInt(e.target.value);
+                render();
+            });
+
+            inputs.offsetY.addEventListener('input', (e) => {
+                state.offsetY = parseInt(e.target.value);
+                render();
+            });
+
+            inputs.shadowColor.addEventListener('input', (e) => {
+                state.shadowColor = e.target.value;
+                updateColorLabel('shadowColor', state.shadowColor);
+                render();
+            });
+
+            inputs.shadowBlur.addEventListener('input', (e) => {
+                state.shadowBlur = parseInt(e.target.value);
+                render();
+            });
+
+            inputs.shadowOffsetX.addEventListener('input', (e) => {
+                state.shadowOffsetX = parseInt(e.target.value);
+                render();
+            });
+
+            inputs.shadowOffsetY.addEventListener('input', (e) => {
+                state.shadowOffsetY = parseInt(e.target.value);
+                render();
+            });
+
+            inputs.borderWidth.addEventListener('input', (e) => {
+                state.borderWidth = parseInt(e.target.value);
+                render();
+            });
+
+            inputs.borderColor.addEventListener('input', (e) => {
+                state.borderColor = e.target.value;
+                updateColorLabel('borderColor', state.borderColor);
+                render();
+            });
+
+            inputs.downloadBtn.addEventListener('click', download);
+        }
+
+        // Tab Switching
+        window.switchTab = (tab) => {
+            state.mode = tab;
+            
+            document.getElementById('tab-text').classList.remove('active');
+            document.getElementById('tab-image').classList.remove('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            document.getElementById('textContent').style.display = 'none';
+            document.getElementById('imageContent').style.display = 'none';
+            
+            if (tab === 'text') {
+                document.getElementById('textContent').style.display = 'block';
+            } else {
+                document.getElementById('imageContent').style.display = 'block';
+            }
+            render();
+        };
+
+        window.resetDefaults = () => {
+            state = { ...defaultState };
+            // Reset Inputs
+            inputs.size.value = state.size;
+            inputs.bgColor.value = state.bgColor;
+            inputs.borderRadius.value = state.borderRadius;
+            inputs.textInput.value = state.text;
+            inputs.textSize.value = state.textSize;
+            inputs.textColor.value = state.textColor;
+            inputs.imageScale.value = state.imageScale;
+            inputs.offsetY.value = state.offsetY;
+            inputs.shadowColor.value = state.shadowColor;
+            inputs.shadowBlur.value = state.shadowBlur;
+            inputs.shadowOffsetX.value = state.shadowOffsetX;
+            inputs.shadowOffsetY.value = state.shadowOffsetY;
+            inputs.borderWidth.value = state.borderWidth;
+            inputs.borderColor.value = state.borderColor;
+            
+            // Update UI Labels
+            updateColorLabel('bgColor', state.bgColor);
+            updateColorLabel('textColor', state.textColor);
+            updateColorLabel('shadowColor', state.shadowColor);
+            updateColorLabel('borderColor', state.borderColor);
+            document.getElementById('borderRadiusVal').innerText = `${state.borderRadius}%`;
+            document.getElementById('outputSizeDisplay').innerText = `${state.size}x${state.size}`;
+            
+            switchTab('text');
+            app.showToast('已重置');
+        };
+
+        // Render Function
+        function render() {
+            canvas.width = state.size;
+            canvas.height = state.size;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Background (Rounded Rect)
+            const r = (state.borderRadius / 100) * state.size / 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(r, 0);
+            ctx.lineTo(state.size - r, 0);
+            ctx.quadraticCurveTo(state.size, 0, state.size, r);
+            ctx.lineTo(state.size, state.size - r);
+            ctx.quadraticCurveTo(state.size, state.size, state.size - r, state.size);
+            ctx.lineTo(r, state.size);
+            ctx.quadraticCurveTo(0, state.size, 0, state.size - r);
+            ctx.lineTo(0, r);
+            ctx.quadraticCurveTo(0, 0, r, 0);
+            ctx.closePath();
+            
+            ctx.fillStyle = state.bgColor;
+            ctx.fill();
+
+            // Clip for content
+            ctx.save();
+            ctx.clip();
+
+            const centerX = state.size / 2;
+            const centerY = state.size / 2 + (state.offsetY * (state.size / 1024));
+
+            // Shadow
+            const scaleFactor = state.size / 1024;
+            ctx.shadowColor = state.shadowColor;
+            ctx.shadowBlur = state.shadowBlur * scaleFactor;
+            ctx.shadowOffsetX = state.shadowOffsetX * scaleFactor;
+            ctx.shadowOffsetY = state.shadowOffsetY * scaleFactor;
+
+            if (state.mode === 'text') {
+                const fontSize = state.textSize * scaleFactor;
+                ctx.font = `bold ${fontSize}px ${state.font}`;
+                ctx.fillStyle = state.textColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(state.text, centerX, centerY + (fontSize * 0.05));
+            } else if (state.mode === 'image' && state.image) {
+                const scale = state.imageScale / 100;
+                const imgW = state.image.width;
+                const imgH = state.image.height;
+                const aspect = imgW / imgH;
+                
+                let drawW, drawH;
+                if (aspect > 1) {
+                    drawW = state.size * scale;
+                    drawH = drawW / aspect;
+                } else {
+                    drawH = state.size * scale;
+                    drawW = drawH * aspect;
+                }
+                ctx.drawImage(state.image, centerX - drawW / 2, centerY - drawH / 2, drawW, drawH);
+            }
+
+            ctx.restore();
+
+            // Border
+            if (state.borderWidth > 0) {
+                const bw = state.borderWidth * (state.size / 1024);
+                ctx.lineWidth = bw;
+                ctx.strokeStyle = state.borderColor;
+                
+                ctx.beginPath();
+                ctx.moveTo(r, 0);
+                ctx.lineTo(state.size - r, 0);
+                ctx.quadraticCurveTo(state.size, 0, state.size, r);
+                ctx.lineTo(state.size, state.size - r);
+                ctx.quadraticCurveTo(state.size, state.size, state.size - r, state.size);
+                ctx.lineTo(r, state.size);
+                ctx.quadraticCurveTo(0, state.size, 0, state.size - r);
+                ctx.lineTo(0, r);
+                ctx.quadraticCurveTo(0, 0, r, 0);
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+
+        function download() {
+            const link = document.createElement('a');
+            link.download = 'app-icon.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            if(window.app && window.app.showToast) {
+                window.app.showToast('下载已开始');
+            }
+        }
+
+        initListeners();
+        render();
+
+    </script>
+</body>
+</html>

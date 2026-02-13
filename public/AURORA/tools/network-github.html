@@ -319,8 +319,12 @@
                         <p>正在加载 README...</p>
                     </div>
                 </div>
-                <div class="preview-header" style="border-top: 1px solid var(--border); border-bottom: none;">
+                <div class="preview-header" style="border-top: 1px solid var(--border); border-bottom: none; flex-direction: column; gap: 10px;">
                     <a href="#" target="_blank" id="preview-link" class="btn btn-primary" style="width: 100%; text-align: center;">在 GitHub 上查看</a>
+                    <div style="display: flex; gap: 10px; width: 100%;">
+                        <a href="#" target="_blank" id="repo-explorer-link" class="btn btn-secondary" style="flex: 1; text-align: center; font-size: 0.8rem;">📦 Repo Explorer</a>
+                        <a href="#" target="_blank" id="github1s-link" class="btn btn-secondary" style="flex: 1; text-align: center; font-size: 0.8rem;">🐙 Github1s</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -480,11 +484,15 @@
             const contentEl = document.getElementById('preview-content');
             const titleEl = document.getElementById('preview-title');
             const linkEl = document.getElementById('preview-link');
+            const explorerLink = document.getElementById('repo-explorer-link');
+            const github1sLink = document.getElementById('github1s-link');
             const toggleBtn = document.getElementById('toggle-view-btn');
 
             panel.classList.add('active');
             titleEl.textContent = repo.full_name;
             linkEl.href = repo.html_url;
+            explorerLink.href = 'https://github-repo-explorer.pages.dev/?url=' + encodeURIComponent(repo.html_url);
+            github1sLink.href = repo.html_url.replace('github.com', 'github1s.com');
             contentEl.innerHTML = '<div style="text-align: center; margin-top: 50px;"><div class="loader"></div><p>正在加载 README...</p></div>';
             
             // Reset toggle state
