@@ -54,7 +54,6 @@
             </div>
             <div class="menu-row actions-row">
                 <button onclick="processLink()" class="btn-action btn-load">加载</button>
-                <button onclick="processLink(true)" class="btn-action btn-reload" title="不使用缓存重新加载">重载</button>
                 <button onclick="loadApiImage()" class="btn-action btn-random">随机</button>
                 <button onclick="copyConvertedLink()" class="btn-action btn-copy">复制</button>
             </div>
@@ -80,7 +79,9 @@
         <button id="quickRandomBtn" class="quick-access-btn" onclick="quickRandomImage()" title="随机">R</button>
     </div>
 
-    <div id="copyToast" class="copy-toast"></div>
+    <div id="toastContainer" class="toast-container"></div>
+
+    
 
     <div id="detailsPanel" class="details-panel">
         <h3>详情</h3>
@@ -314,39 +315,9 @@
         </div>
     </div>
 
-    <!-- Cache Dashboard FAB -->
-    <div class="cache-fab" onclick="openCacheDashboard()" title="缓存管理">
-        C
-    </div>
+    
 
-    <!-- Cache Dashboard Modal -->
-    <div id="cacheModal" class="cache-modal">
-        <div class="cache-modal-content">
-            <div class="cache-header">
-                <h2>缓存管理</h2>
-                <button class="cache-close" onclick="closeCacheDashboard()">×</button>
-            </div>
-            <div class="cache-body">
-                <div class="cache-stats">
-                    <div class="stat-card">
-                        <div class="stat-val" id="cacheCount">0</div>
-                        <div class="stat-label">缓存图片数</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-val" id="cacheMemory">0 MB</div>
-                        <div class="stat-label">预估占用内存</div>
-                    </div>
-                </div>
-                <div class="cache-grid" id="cacheList">
-                    <!-- Items will be populated here -->
-                </div>
-            </div>
-            <div class="cache-footer">
-                <button class="btn-danger" onclick="clearCache()">清空缓存</button>
-                <button onclick="closeCacheDashboard()">关闭</button>
-            </div>
-        </div>
-    </div>
+    
 
     <script src="app.js"></script>
 </body>

@@ -1,17 +1,98 @@
+// DOM 元素缓存 - 延迟初始化,确保 DOM 准备就绪
+let domElements = null;
+
+function initDomElements() {
+    if (domElements) return domElements;
+
+    const getElement = (id) => document.getElementById(id);
+
+    domElements = {
+        urlInput: getElement('urlInput'),
+        urlPageInput: getElement('urlPageInput'),
+        miniUrlPageInput: getElement('miniUrlPageInput'),
+        proxySelect: getElement('proxySelect'),
+        customProxyInput: getElement('customProxyInput'),
+        floatingMenuContent: getElement('floatingMenuContent'),
+        miniPager: getElement('miniPager'),
+        detailsPanel: getElement('detailsPanel'),
+        detailsGridMinimal: getElement('detailsGridMinimal'),
+        toggleDetailsBtn: getElement('toggleDetailsBtn'),
+        quickAccessContainer: getElement('quickAccessContainer'),
+        quickAccessBtn: getElement('quickAccessBtn'),
+        galleryBtn: getElement('galleryBtn'),
+        quickRandomBtn: getElement('quickRandomBtn'),
+        toastContainer: getElement('toastContainer'),
+        secretSettings: getElement('secretSettings'),
+        galleryBrowser: getElement('galleryBrowser'),
+        contentPreviewPanel: getElement('contentPreviewPanel'),
+        contentPreviewText: getElement('contentPreviewText'),
+        contentPreviewLinks: getElement('contentPreviewLinks'),
+        staticResourceBtn: getElement('staticResourceBtn'),
+        anotherBtn: getElement('AnotherBtn'),
+        staticResourceSection: getElement('staticResourceSection'),
+        anotherSection: getElement('AnotherSection'),
+        secretProxySelect: getElement('secretProxySelect'),
+        secretCustomProxyInput: getElement('secretCustomProxyInput'),
+        secretInput: getElement('secretInput'),
+        anotherInput: getElement('AnotherInput'),
+        galleryCsvSelect: getElement('galleryCsvSelect'),
+        localCsvInput: getElement('localCsvInput'),
+        gallerySearch: getElement('gallerySearch'),
+        gallerySort: getElement('gallerySort'),
+        tagIncludePanel: getElement('tagIncludePanel'),
+        tagExcludePanel: getElement('tagExcludePanel'),
+        galleryAiFilter: getElement('galleryAiFilter'),
+        galleryDateFormat: getElement('galleryDateFormat'),
+        selectedInclude: getElement('selectedInclude'),
+        selectedExclude: getElement('selectedExclude'),
+        clearSelectedTags: getElement('clearSelectedTags'),
+        perPageSelect: getElement('perPageSelect'),
+        prevPageBtn: getElement('prevPageBtn'),
+        nextPageBtn: getElement('nextPageBtn'),
+        pageInfo: getElement('pageInfo'),
+        pageInput: getElement('pageInput'),
+        jumpPageBtn: getElement('jumpPageBtn'),
+        galleryLoading: getElement('galleryLoading'),
+        galleryStatus: getElement('galleryStatus'),
+        galleryTableBody: getElement('galleryTableBody'),
+        useThumbCheckbox: getElement('useThumbCheckbox'),
+        errorMsg: getElement('errorMsg'),
+        infoMsg: getElement('infoMsg'),
+        resultLinkContainer: getElement('resultLinkContainer'),
+        resultLink: getElement('resultLink'),
+        imageContainer: getElement('imageContainer'),
+        loadingIndicator: getElement('loadingIndicator'),
+        loadingText: getElement('loadingText'),
+        progressContainer: getElement('progressContainer'),
+        progressBar: getElement('progressBar'),
+        progressStats: getElement('progressStats'),
+        resultImage: getElement('resultImage'),
+        downloadBtn: getElement('downloadBtn'),
+        downloadBtnMinimal: getElement('downloadBtnMinimal'),
+        detailsContainer: getElement('detailsContainer'),
+        detailsGrid: getElement('detailsGrid'),
+        fullscreenPreview: getElement('fullscreenPreview'),
+        openTagInclude: getElement('openTagInclude'),
+        openTagExclude: getElement('openTagExclude'),
+        minimalistToast: getElement('minimalistToast'),
+        minimalistProgress: getElement('minimalistProgress')
+    };
+
+    return domElements;
+}
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 const FETCH_TIMEOUT = 60000;
 const CONFIG = {
     preloadCount: 2,
     preloadEnabled: true,
-    cacheMaxAge: 7 * 24 * 60 * 60 * 1000,
     touchSwipeThreshold: 50,
     zoomMin: 0.5,
     zoomMax: 4,
     zoomStep: 0.25
 };
 
-let lastFailedUrl = null;
+let toastControllers = new Set();
 
 window.onerror = function(msg, url, line, col, error) {
     console.error('Global error:', msg, 'at', url, line, col);
@@ -49,38 +130,43 @@ window.addEventListener('offline', function() {
             ]);
         }
 
+        // =============================================
+        // UI & Interactions
+        // =============================================
+
         function toggleFloatingMenu() {
-            const content = document.getElementById('floatingMenuContent');
+            const content = domElements.floatingMenuContent;
             const toggle = document.querySelector('.floating-menu-toggle');
-            const miniPager = document.getElementById('miniPager');
+            const miniPager = domElements.miniPager;
             content.classList.remove('collapsed');
             toggle.style.display = 'none';
             miniPager.style.display = 'none';
         }
 
         function collapseMenu() {
-            const content = document.getElementById('floatingMenuContent');
+            const content = domElements.floatingMenuContent;
             const toggle = document.querySelector('.floating-menu-toggle');
-            const miniPager = document.getElementById('miniPager');
+            const miniPager = domElements.miniPager;
             content.classList.add('collapsed');
             toggle.style.display = 'flex';
             miniPager.style.display = 'flex';
         }
 
         function toggleDetailsPanel() {
-            const panel = document.getElementById('detailsPanel');
+            const panel = domElements.detailsPanel;
             if (panel) {
                 panel.classList.toggle('show');
             }
         }
 
         function showMinimaistMessage(msg, type = 'info') {
-            let toast = document.getElementById('minimalistToast');
+            let toast = domElements.minimalistToast;
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = 'minimalistToast';
                 toast.className = 'message-toast';
                 document.body.appendChild(toast);
+                domElements.minimalistToast = toast;
             }
             toast.textContent = msg;
             toast.className = 'message-toast ' + type + ' show';
@@ -90,13 +176,13 @@ window.addEventListener('offline', function() {
         }
 
         function showMinimalistProgress(percent, loaded, total) {
-            let bar = document.getElementById('minimalistProgress');
+            let bar = domElements.minimalistProgress;
             if (!bar) {
                 const container = document.createElement('div');
                 container.className = 'preview-progress';
                 container.innerHTML = '<div id="minimalistProgress" class="preview-progress-bar"></div>';
                 document.body.appendChild(container);
-                bar = document.getElementById('minimalistProgress');
+                bar = domElements.minimalistProgress = getElement('minimalistProgress');
             }
             bar.style.width = percent + '%';
             bar.parentElement.style.display = 'block';
@@ -107,59 +193,78 @@ window.addEventListener('offline', function() {
             }
         }
 
-        function setFullscreenPreview(url) {
-            const preview = document.getElementById('fullscreenPreview');
-            const existingImg = preview.querySelector('img');
-            const existingVideo = preview.querySelector('video');
-            
-            if (existingVideo) {
-                existingVideo.pause();
-                existingVideo.src = '';
-                existingVideo.load();
-                currentVideoElement = null;
-            }
-            
-            if (existingImg && existingImg.src && existingImg.src.startsWith('blob:')) {
-                URL.revokeObjectURL(existingImg.src);
-                currentObjectUrls.delete(existingImg.src);
-            }
-            
-            preview.innerHTML = '';
+
+
+        function showCopyToast(message, duration = 3000, isError = false, url = null) {
+            const container = domElements.toastContainer;
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast-message ${isError ? 'error' : ''}`;
+
+            let content = message;
             if (url) {
-                const img = document.createElement('img');
-                img.src = url;
-                img.style.cssText = 'object-fit:contain;width:100%;height:100%;';
-                if (url.startsWith('blob:')) {
-                    currentObjectUrls.add(url);
-                }
-                preview.appendChild(img);
+                const urlSpan = `<span class="toast-url" title="点击复制">${escapeHtml(url)}</span>`;
+                content += `<br>${urlSpan}`;
+                toast.innerHTML = content;
+            } else {
+                toast.textContent = content;
             }
-        }
 
-        function showCopyToast(text) {
-            const toast = document.getElementById('copyToast');
-            toast.textContent = text;
-            toast.className = 'copy-toast show';
-            toast.onclick = function() {
-                copyTextToClipboard(text);
-            };
-        }
+            const urlElement = toast.querySelector('.toast-url');
+            if (urlElement) {
+                urlElement.onclick = (e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(url)
+                        .then(() => {
+                            urlElement.textContent = '链接已复制!';
+                            urlElement.style.pointerEvents = 'none';
+                            setTimeout(() => {
+                                if (toast.parentElement) {
+                                    toast.remove();
+                                }
+                            }, 1500);
+                        })
+                        .catch(err => console.error('Failed to copy URL: ', err));
+                };
+            }
 
-        function copyTextToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                const toast = document.getElementById('copyToast');
-                toast.textContent = '已复制';
-                toast.className = 'copy-toast show copied';
-                setTimeout(() => {
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            let timeoutId;
+            let remaining = duration;
+            let start;
+            let controller;
+
+            const startTimeout = () => {
+                if (duration <= 0) return;
+                start = Date.now();
+                timeoutId = setTimeout(() => {
                     toast.classList.remove('show');
-                }, 1200);
-            }).catch(err => {
-                console.error('复制失败:', err);
-            });
+                    setTimeout(() => {
+                        if (toast.parentElement) {
+                            toast.remove();
+                            toastControllers.delete(controller);
+                        }
+                    }, 300);
+                }, remaining);
+            };
+
+            const pauseTimeout = () => {
+                if (duration <= 0) return;
+                clearTimeout(timeoutId);
+                remaining -= Date.now() - start;
+            };
+
+            controller = { pause: pauseTimeout, resume: startTimeout };
+            toastControllers.add(controller);
+
+            startTimeout();
         }
 
         function copyConvertedLink() {
-            const input = document.getElementById('urlInput').value.trim();
+            const input = domElements.urlInput.value.trim();
             if (!input) {
                 showMinimaistMessage('请先输入链接', 'error');
                 return;
@@ -189,7 +294,7 @@ window.addEventListener('offline', function() {
 
             originalUrl = url;
             replacedUrl = convertedUrl;
-            copyTextToClipboard(convertedUrl);
+            showCopyToast('已复制', 3000, true, convertedUrl);
         }
 
         let csvFilesConfig = [];
@@ -198,113 +303,18 @@ window.addEventListener('offline', function() {
         let replacedUrl = '';
         let hasAccessedSecret = false; // 标记是否访问过
         let currentFunction = 'static'; // 当前功能：static或Another
+        let lastFailedUrl = ''; // 记录最后加载失败的URL,用于重试功能
         
-        // Image Cache Manager
+        // Image Cache Manager (disabled)
         class ImageCacheManager {
-            constructor(maxSize = 50) {
-                this.maxSize = maxSize;
-                this.cacheName = 'pximg-cache-v1';
-                this.initCache();
-            }
-
-            async initCache() {
-                if ('caches' in window) {
-                    this.cacheStorage = await caches.open(this.cacheName);
-                }
-            }
-
-            async has(key) { 
-                if (!this.cacheStorage) return false;
-                const match = await this.cacheStorage.match(key);
-                return !!match;
-            }
-
-            async get(key) {
-                if (!this.cacheStorage) return undefined;
-                const response = await this.cacheStorage.match(key);
-                if (response) {
-                    const blob = await response.blob();
-                    return URL.createObjectURL(blob);
-                }
-                return undefined;
-            }
-
-            async set(key, value, size = 0) {
-                
-                if (!this.cacheStorage) return;
-
-                try {
-                    const blob = await fetch(value).then(r => r.blob());
-                    const response = new Response(blob, {
-                        headers: { 'Content-Type': blob.type }
-                    });
-                    await this.cacheStorage.put(key, response);
-                    
-                    this.enforceLimit();
-                    
-                    updateCacheDashboard();
-                } catch (e) {
-                    console.error('Cache set error:', e);
-                }
-            }
-            
-            async enforceLimit() {
-                if (!this.cacheStorage) return;
-                const keys = await this.cacheStorage.keys();
-                if (keys.length > this.maxSize) {
-                    const toDelete = keys.slice(0, keys.length - this.maxSize);
-                    for (const request of toDelete) {
-                        await this.cacheStorage.delete(request);
-                    }
-                }
-            }
-            
-            async delete(key) {
-                if (this.cacheStorage) {
-                    await this.cacheStorage.delete(key);
-                    updateCacheDashboard();
-                }
-            }
-            
-            async clear() {
-                if (this.cacheStorage) {
-                    const keys = await this.cacheStorage.keys();
-                    for (const request of keys) {
-                        await this.cacheStorage.delete(request);
-                    }
-                }
-                updateCacheDashboard();
-            }
-            
-            async getAll() {
-                if (!this.cacheStorage) return [];
-                const keys = await this.cacheStorage.keys();
-                const items = [];
-                
-                for (let i = keys.length - 1; i >= 0; i--) {
-                    const request = keys[i];
-                    const response = await this.cacheStorage.match(request);
-                    const blob = await response.blob();
-                    items.push({
-                        key: request.url,
-                        size: blob.size,
-                        blob: blob
-                    });
-                }
-                return items;
-            }
-            
-            async getSize() {
-                if (!this.cacheStorage) return 0;
-                const keys = await this.cacheStorage.keys();
-                let total = 0;
-                for (const req of keys) {
-                    const res = await this.cacheStorage.match(req);
-                    const blob = await res.blob();
-                    total += blob.size;
-                }
-                return total;
-            }
+            constructor() {}
+            async has(key) { return false; }
+            async get(key) { return undefined; }
+            async set(key, value, size = 0) {}
+            async delete(key) {}
+            async clear() {}
+            async getAll() { return []; }
+            async getSize() { return 0; }
         }
 
         const imageCache = new ImageCacheManager(50);
@@ -313,140 +323,20 @@ window.addEventListener('offline', function() {
         let currentVideoElement = null;
         let currentObjectUrls = new Set();
         
-        function openCacheDashboard() {
-            updateCacheDashboard();
-            document.getElementById('cacheModal').style.display = 'flex';
-        }
-
-        function closeCacheDashboard() {
-            document.getElementById('cacheModal').style.display = 'none';
-        }
         
-        window.onclick = function(event) {
-            const modal = document.getElementById('cacheModal');
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-
-        async function updateCacheDashboard() {
-            const list = document.getElementById('cacheList');
-            const countEl = document.getElementById('cacheCount');
-            const memEl = document.getElementById('cacheMemory');
-            
-            if (!list) return;
-            
-            const existingThumbs = list.querySelectorAll('.cache-thumb');
-            existingThumbs.forEach(img => {
-                if (img.src && img.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(img.src);
-                    currentObjectUrls.delete(img.src);
-                }
-            });
-            
-            const items = await imageCache.getAll();
-            const totalSize = await imageCache.getSize();
-            
-            countEl.textContent = items.length;
-            memEl.textContent = (totalSize / 1024 / 1024).toFixed(2) + ' MB';
-            
-            list.innerHTML = '';
-            if (items.length === 0) {
-                list.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#888; padding:20px;">暂无缓存数据</div>';
-                return;
-            }
-            
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'cache-item';
-                
-                const sizeStr = (item.size / 1024).toFixed(1) + ' KB';
-                const objectUrl = URL.createObjectURL(item.blob);
-                currentObjectUrls.add(objectUrl);
-                
-                const img = document.createElement('img');
-                img.src = objectUrl;
-                img.className = 'cache-thumb';
-                img.loading = 'lazy';
-                img.alt = 'Cached Image';
-                
-                const cacheInfo = document.createElement('div');
-                cacheInfo.className = 'cache-info';
-                
-                const cacheUrl = document.createElement('div');
-                cacheUrl.className = 'cache-url';
-                cacheUrl.title = item.key;
-                cacheUrl.textContent = item.key.split('/').pop();
-                
-                const cacheSize = document.createElement('div');
-                cacheSize.className = 'cache-size';
-                cacheSize.textContent = sizeStr;
-                
-                const btnContainer = document.createElement('div');
-                btnContainer.style.cssText = 'display:flex; gap:5px; margin-top:5px;';
-                
-                const downloadBtn = document.createElement('button');
-                downloadBtn.style.cssText = 'flex:1; padding:4px; font-size:12px; background:#4b0082; margin:0;';
-                downloadBtn.textContent = '\u2193';
-                downloadBtn.onclick = function() {
-                    downloadCacheItem(item.key);
-                };
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.style.cssText = 'flex:1; padding:4px; font-size:12px; background:#ff4757; margin:0;';
-                deleteBtn.textContent = '\u00d7';
-                deleteBtn.onclick = function() {
-                    deleteCacheItem(item.key);
-                };
-                
-                btnContainer.appendChild(downloadBtn);
-                btnContainer.appendChild(deleteBtn);
-                
-                cacheInfo.appendChild(cacheUrl);
-                cacheInfo.appendChild(cacheSize);
-                cacheInfo.appendChild(btnContainer);
-                
-                div.appendChild(img);
-                div.appendChild(cacheInfo);
-                list.appendChild(div);
-            });
-        }
-
-        async function deleteCacheItem(key) {
-            await imageCache.delete(key);
-        }
-
-        async function downloadCacheItem(key) {
-            try {
-                const blobUrl = await imageCache.get(key);
-                if (blobUrl) {
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = key.split('/').pop() || 'image.jpg';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(blobUrl);
-                }
-            } catch (e) {
-                console.error('Download failed:', e);
-                alert('下载失败');
-            }
-        }
-
-        async function clearCache() {
-            if (confirm('确定要清空所有缓存图片吗？')) {
-                await imageCache.clear();
-            }
-        }
 
         let galleryData = [];
         let galleryTags = new Set();
         let tagCountsMap = {};
         let isGalleryLoaded = false;
 
+
+        // =============================================
+        // Gallery & Data Handling
+        // =============================================
+
         function initCsvSelect(failed = false) {
-            const select = document.getElementById('galleryCsvSelect');
+            const select = domElements.galleryCsvSelect;
             if (!select) return;
             select.innerHTML = '';
             const placeholder = document.createElement('option');
@@ -490,20 +380,20 @@ window.addEventListener('offline', function() {
         function switchFunction(func) {
             currentFunction = func;
             
-            document.getElementById('staticResourceBtn').classList.toggle('active', func === 'static');
-            document.getElementById('AnotherBtn').classList.toggle('active', func === 'Another');
+            domElements.staticResourceBtn.classList.toggle('active', func === 'static');
+            domElements.anotherBtn.classList.toggle('active', func === 'Another');
             
-            document.getElementById('staticResourceSection').style.display = func === 'static' ? 'block' : 'none';
-            document.getElementById('AnotherSection').style.display = func === 'Another' ? 'block' : 'none';
+            domElements.staticResourceSection.style.display = func === 'static' ? 'block' : 'none';
+            domElements.anotherSection.style.display = func === 'Another' ? 'block' : 'none';
         }
 
         function checkSecretCode() {
-            const input = document.getElementById('urlInput');
+            const input = domElements.urlInput;
             const value = input.value.toLowerCase();
-            const container = document.getElementById('quickAccessContainer');
-            const btnProx = document.getElementById('quickAccessBtn');
-            const btnGallery = document.getElementById('galleryBtn');
-            const btnRandom = document.getElementById('quickRandomBtn');
+            const container = domElements.quickAccessContainer;
+            const btnProx = domElements.quickAccessBtn;
+            const btnGallery = domElements.galleryBtn;
+            const btnRandom = domElements.quickRandomBtn;
             
             if (value === 'prox') {
                 input.value = '';
@@ -525,12 +415,12 @@ window.addEventListener('offline', function() {
         }
 
         function fillUrl(url, itemData = null) {
-            const input = document.getElementById('urlInput');
+            const input = domElements.urlInput;
             input.value = url;
             
-            const detailsPanel = document.getElementById('detailsPanel');
-            const detailsGridMinimal = document.getElementById('detailsGridMinimal');
-            const toggleBtn = document.getElementById('toggleDetailsBtn');
+            const detailsPanel = domElements.detailsPanel;
+            const detailsGridMinimal = domElements.detailsGridMinimal;
+            const toggleBtn = domElements.toggleDetailsBtn;
             
             if (itemData && detailsGridMinimal) {
                 detailsGridMinimal.innerHTML = '';
@@ -625,128 +515,9 @@ window.addEventListener('offline', function() {
             });
         }
 
-        // --- Gallery Browser Functions ---
-        function openGalleryBrowser() {
-            document.getElementById('galleryBrowser').style.display = 'flex';
-            if (!isGalleryLoaded) {
-                loadGalleryData();
-            }
-        }
-
-        function pickRandomImage() {
-            if (galleryData.length === 0) {
-                alert('请先加载数据！');
-                return;
-            }
-            
-            const randomIndex = Math.floor(Math.random() * galleryData.length);
-            const item = galleryData[randomIndex];
-            
-            const useThumb = document.getElementById('useThumbCheckbox') && document.getElementById('useThumbCheckbox').checked;
-            
-            fillUrl(useThumb ? (item.thumb || item.original) : item.original, item);
-            closeGalleryBrowser();
-            
-            processLink();
-        }
-
-        function closeGalleryBrowser() {
-            document.getElementById('galleryBrowser').style.display = 'none';
-        }
-        
-        function debounce(fn, delay = 300) {
-            let timer = null;
-            return (...args) => {
-                if (timer) clearTimeout(timer);
-                timer = setTimeout(() => fn(...args), delay);
-            };
-        }
-
-        async function loadGalleryData() {
-            const loading = document.getElementById('galleryLoading');
-            const status = document.getElementById('galleryStatus');
-            const selectedFile = document.getElementById('galleryCsvSelect').value;
-            
-            if (!selectedFile) {
-                status.textContent = '请选择一个CSV文件';
-                return;
-            }
-
-            if (selectedFile === '__local__') {
-                const input = document.getElementById('localCsvInput');
-                if (!input) return;
-                const newInput = input.cloneNode(true);
-                input.parentNode.replaceChild(newInput, input);
-                newInput.addEventListener('change', async () => {
-                    const file = newInput.files && newInput.files[0];
-                    if (!file) {
-                        status.textContent = '未选择本地CSV文件';
-                        loading.style.display = 'none';
-                        return;
-                    }
-                    loading.style.display = 'block';
-                    status.textContent = '正在从本地加载: ' + file.name;
-                    try {
-                        const text = await file.text();
-                        galleryData = parseCSV(text);
-                        const tagCounts = {};
-                        galleryData.forEach(item => {
-                            if (item.tags_transl) {
-                                item.tags_transl.split(',').forEach(t => {
-                                    const tag = t.trim();
-                                    if (tag) {
-                                        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-                                    }
-                                });
-                            }
-                        });
-                        tagCountsMap = tagCounts;
-                        const includePanel = document.getElementById('tagIncludePanel');
-                        const excludePanel = document.getElementById('tagExcludePanel');
-                        includePanel.innerHTML = '';
-                        excludePanel.innerHTML = '';
-                        Object.keys(tagCounts)
-                            .sort((a, b) => {
-                                const diff = tagCounts[b] - tagCounts[a];
-                                if (diff !== 0) return diff;
-                                return a.localeCompare(b, 'zh-CN');
-                            })
-                            .forEach(tag => {
-                                const inc = document.createElement('div');
-                                inc.className = 'tag-item';
-                                inc.dataset.value = tag;
-                                inc.textContent = tag + ' (' + tagCounts[tag] + ')';
-                                includePanel.appendChild(inc);
-                                const exc = document.createElement('div');
-                                exc.className = 'tag-item';
-                                exc.dataset.value = tag;
-                                exc.textContent = tag + ' (' + tagCounts[tag] + ')';
-                                excludePanel.appendChild(exc);
-                            });
-                        isGalleryLoaded = true;
-                        status.textContent = '加载成功: ' + file.name + ' (共 ' + galleryData.length + ' 条数据)';
-                        renderGalleryTable();
-                    } catch (err) {
-                        console.error(err);
-                        status.textContent = '加载失败: ' + err.message;
-                    } finally {
-                        loading.style.display = 'none';
-                        newInput.value = '';
-                    }
-                });
-                newInput.click();
-                return;
-            }
-
-            loading.style.display = 'block';
-            status.textContent = '正在尝试加载数据...';
-            
+        function processCsvData(text, sourceName) {
+            const status = domElements.galleryStatus;
             try {
-                const response = await fetchWithTimeout(selectedFile, {}, FETCH_TIMEOUT);
-                if (!response.ok) {
-                    throw new Error('HTTP error! status: ' + response.status);
-                }
-                const text = await response.text();
                 galleryData = parseCSV(text);
                 
                 const tagCounts = {};
@@ -762,8 +533,8 @@ window.addEventListener('offline', function() {
                 });
                 tagCountsMap = tagCounts;
                 
-                const includePanel = document.getElementById('tagIncludePanel');
-                const excludePanel = document.getElementById('tagExcludePanel');
+                const includePanel = domElements.tagIncludePanel;
+                const excludePanel = domElements.tagExcludePanel;
                 includePanel.innerHTML = '';
                 excludePanel.innerHTML = '';
                 
@@ -787,10 +558,102 @@ window.addEventListener('offline', function() {
                     });
 
                 isGalleryLoaded = true;
-                status.textContent = `加载成功: ${selectedFile} (共 ${galleryData.length} 条数据)`;
+                status.textContent = `加载成功: ${sourceName} (共 ${galleryData.length} 条数据)`;
                 renderGalleryTable();
             } catch (err) {
                 console.error(err);
+                status.textContent = `加载失败: ${err.message}`;
+                throw err; // re-throw for the caller to handle
+            }
+        }
+
+        // --- Gallery Browser Functions ---
+        function openGalleryBrowser() {
+            domElements.galleryBrowser.style.display = 'flex';
+            if (!isGalleryLoaded) {
+                loadGalleryData();
+            }
+        }
+
+        function pickRandomImage() {
+            if (galleryData.length === 0) {
+                alert('请先加载数据！');
+                return;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * galleryData.length);
+            const item = galleryData[randomIndex];
+            
+            const useThumb = domElements.useThumbCheckbox && domElements.useThumbCheckbox.checked;
+            
+            fillUrl(useThumb ? (item.thumb || item.original) : item.original, item);
+            closeGalleryBrowser();
+            
+            processLink();
+        }
+
+        function closeGalleryBrowser() {
+            domElements.galleryBrowser.style.display = 'none';
+        }
+        
+        function debounce(fn, delay = 300) {
+            let timer = null;
+            return (...args) => {
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(() => fn(...args), delay);
+            };
+        }
+
+        async function loadGalleryData() {
+            const loading = domElements.galleryLoading;
+            const status = domElements.galleryStatus;
+            const selectedFile = domElements.galleryCsvSelect.value;
+            
+            if (!selectedFile) {
+                status.textContent = '请选择一个CSV文件';
+                return;
+            }
+
+            if (selectedFile === '__local__') {
+                const input = domElements.localCsvInput;
+                if (!input) return;
+                const newInput = input.cloneNode(true);
+                input.parentNode.replaceChild(newInput, input);
+                newInput.addEventListener('change', async () => {
+                    const file = newInput.files && newInput.files[0];
+                    if (!file) {
+                        status.textContent = '未选择本地CSV文件';
+                        return;
+                    }
+                    
+                    loading.style.display = 'block';
+                    status.textContent = '正在从本地加载: ' + file.name;
+                    
+                    try {
+                        const text = await file.text();
+                        processCsvData(text, file.name);
+                    } catch (err) {
+                        // error is logged in processCsvData
+                    } finally {
+                        loading.style.display = 'none';
+                        newInput.value = '';
+                    }
+                });
+                newInput.click();
+                return;
+            }
+
+            loading.style.display = 'block';
+            status.textContent = '正在尝试加载数据...';
+            
+            try {
+                const response = await fetchWithTimeout(selectedFile, {}, FETCH_TIMEOUT);
+                if (!response.ok) {
+                    throw new Error('HTTP error! status: ' + response.status);
+                }
+                const text = await response.text();
+                processCsvData(text, selectedFile);
+            } catch (err) {
                 status.textContent = `加载失败: ${err.message} (请确保 ${selectedFile} 存在)`;
             } finally {
                 loading.style.display = 'none';
@@ -800,15 +663,15 @@ window.addEventListener('offline', function() {
         let currentPage = 1;
         let perPage = 50;
         function updatePaginationUI(totalFiltered, totalPages) {
-            const info = document.getElementById('pageInfo');
-            const input = document.getElementById('pageInput');
+            const info = domElements.pageInfo;
+            const input = domElements.pageInput;
             if (info) info.textContent = `第 ${currentPage} / ${totalPages} 页`;
             if (input) {
                 input.max = Math.max(1, totalPages);
                 input.value = currentPage;
             }
-            const prevBtn = document.getElementById('prevPageBtn');
-            const nextBtn = document.getElementById('nextPageBtn');
+            const prevBtn = domElements.prevPageBtn;
+            const nextBtn = domElements.nextPageBtn;
             if (prevBtn) prevBtn.disabled = currentPage <= 1;
             if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
         }
@@ -828,20 +691,13 @@ window.addEventListener('offline', function() {
             renderGalleryTable();
         }
         
-        function renderGalleryTable() {
-            const tbody = document.getElementById('galleryTableBody');
-            const status = document.getElementById('galleryStatus');
-            tbody.innerHTML = '';
-            
-            const tStart = performance.now();
-                const searchText = document.getElementById('gallerySearch').value.toLowerCase();
-                const sortMode = document.getElementById('gallerySort').value;
-                const includeTags = Array.from(document.querySelectorAll('#tagIncludePanel .tag-item.selected')).map(el => el.dataset.value);
-                const excludeTags = Array.from(document.querySelectorAll('#tagExcludePanel .tag-item.selected')).map(el => el.dataset.value);
-                const filterAi = document.getElementById('galleryAiFilter').value;
-            const dateFormatEl = document.getElementById('galleryDateFormat');
-            const dateFormat = dateFormatEl ? dateFormatEl.value : 'raw';
-            
+        function getFilteredAndSortedItems() {
+            const searchText = domElements.gallerySearch.value.toLowerCase();
+            const sortMode = domElements.gallerySort.value;
+            const includeTags = Array.from(document.querySelectorAll('#tagIncludePanel .tag-item.selected')).map(el => el.dataset.value);
+            const excludeTags = Array.from(document.querySelectorAll('#tagExcludePanel .tag-item.selected')).map(el => el.dataset.value);
+            const filterAi = domElements.galleryAiFilter.value;
+
             let items = galleryData.filter(item => {
                 const matchSearch = !searchText || 
                     (item.title || '').toLowerCase().includes(searchText) || 
@@ -871,6 +727,21 @@ window.addEventListener('offline', function() {
                     default: return 0;
                 }
             });
+
+            return items;
+        }
+
+        function renderGalleryTable() {
+            const tbody = domElements.galleryTableBody;
+            const status = domElements.galleryStatus;
+            tbody.innerHTML = '';
+            
+            const tStart = performance.now();
+            
+            const items = getFilteredAndSortedItems();
+
+            const dateFormatEl = domElements.galleryDateFormat;
+            const dateFormat = dateFormatEl ? dateFormatEl.value : 'raw';
             
             const totalFiltered = items.length;
             const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage));
@@ -894,7 +765,7 @@ window.addEventListener('offline', function() {
                 btnOriginal.textContent = '填入链接';
                 btnOriginal.className = 'fill-url-btn action-btn';
                 btnOriginal.onclick = () => {
-                    const useThumb = document.getElementById('useThumbCheckbox') && document.getElementById('useThumbCheckbox').checked;
+                    const useThumb = domElements.useThumbCheckbox && domElements.useThumbCheckbox.checked;
                     fillUrl(useThumb ? (item.thumb || item.original) : item.original, item);
                     closeGalleryBrowser();
                 };
@@ -997,20 +868,20 @@ window.addEventListener('offline', function() {
         }
         
         const debouncedRender = debounce(renderGalleryTable, 300);
-        document.getElementById('gallerySearch').addEventListener('input', debouncedRender);
-        const tagIncludePanel = document.getElementById('tagIncludePanel');
-        const tagExcludePanel = document.getElementById('tagExcludePanel');
-        const aiFilterEl = document.getElementById('galleryAiFilter');
-        const sortEl = document.getElementById('gallerySort');
-        const dateFmtEl = document.getElementById('galleryDateFormat');
-        const perPageEl = document.getElementById('perPageSelect');
-        const prevBtn = document.getElementById('prevPageBtn');
-        const nextBtn = document.getElementById('nextPageBtn');
-        const jumpBtn = document.getElementById('jumpPageBtn');
-        const pageInput = document.getElementById('pageInput');
-        const selectedInclude = document.getElementById('selectedInclude');
-        const selectedExclude = document.getElementById('selectedExclude');
-        const clearSelectedBtn = document.getElementById('clearSelectedTags');
+        domElements.gallerySearch.addEventListener('input', debouncedRender);
+        const tagIncludePanel = domElements.tagIncludePanel;
+        const tagExcludePanel = domElements.tagExcludePanel;
+        const aiFilterEl = domElements.galleryAiFilter;
+        const sortEl = domElements.gallerySort;
+        const dateFmtEl = domElements.galleryDateFormat;
+        const perPageEl = domElements.perPageSelect;
+        const prevBtn = domElements.prevPageBtn;
+        const nextBtn = domElements.nextPageBtn;
+        const jumpBtn = domElements.jumpPageBtn;
+        const pageInput = domElements.pageInput;
+        const selectedInclude = domElements.selectedInclude;
+        const selectedExclude = domElements.selectedExclude;
+        const clearSelectedBtn = domElements.clearSelectedTags;
 
         function updateSelectedTagsSummary() {
             if (!selectedInclude || !selectedExclude) return;
@@ -1099,8 +970,8 @@ window.addEventListener('offline', function() {
         if (nextBtn) nextBtn.addEventListener('click', nextPage);
         if (jumpBtn && pageInput) jumpBtn.addEventListener('click', () => { const p = parseInt(pageInput.value, 10); if (!isNaN(p)) { goToPage(p); } });
         
-        const openTagIncludeBtn = document.getElementById('openTagInclude');
-        const openTagExcludeBtn = document.getElementById('openTagExclude');
+        const openTagIncludeBtn = domElements.openTagInclude;
+        const openTagExcludeBtn = domElements.openTagExclude;
         function togglePanel(btn, panel) {
             if (!btn || !panel) return;
             btn.addEventListener('click', () => {
@@ -1117,13 +988,18 @@ window.addEventListener('offline', function() {
             if (excWrap && !excWrap.contains(e.target)) { tagExcludePanel.classList.remove('open'); }
         });
 
+
+        // =============================================
+        // Secret Settings & Proxy
+        // =============================================
+
         function openSecretSettings() {
-            document.getElementById('secretSettings').style.display = 'flex';
+            domElements.secretSettings.style.display = 'flex';
             hasAccessedSecret = true;
-            const container = document.getElementById('quickAccessContainer');
-            const btnProx = document.getElementById('quickAccessBtn');
-            const btnGallery = document.getElementById('galleryBtn');
-            const btnRandom = document.getElementById('quickRandomBtn');
+            const container = domElements.quickAccessContainer;
+            const btnProx = domElements.quickAccessBtn;
+            const btnGallery = domElements.galleryBtn;
+            const btnRandom = domElements.quickRandomBtn;
             if (container) container.style.display = 'flex';
             if (btnProx) btnProx.style.display = 'flex';
             if (btnGallery) btnGallery.style.display = 'flex';
@@ -1131,15 +1007,15 @@ window.addEventListener('offline', function() {
         }
 
         function closeSecretSettings() {
-            document.getElementById('secretSettings').style.display = 'none';
-            document.getElementById('urlInput').value = '';
-            document.getElementById('secretInput').value = '';
-            document.getElementById('AnotherInput').value = '';
+            domElements.secretSettings.style.display = 'none';
+            domElements.urlInput.value = '';
+            domElements.secretInput.value = '';
+            domElements.anotherInput.value = '';
         }
 
         function handleSecretProxyChange() {
-            const secretProxySelect = document.getElementById('secretProxySelect');
-            const secretCustomProxyInput = document.getElementById('secretCustomProxyInput');
+            const secretProxySelect = domElements.secretProxySelect;
+            const secretCustomProxyInput = domElements.secretCustomProxyInput;
             
             if (secretProxySelect.value === 'custom') {
                 secretCustomProxyInput.style.display = 'block';
@@ -1157,9 +1033,9 @@ window.addEventListener('offline', function() {
         }
 
         function handleStaticResource() {
-            const secretInput = document.getElementById('secretInput').value.trim();
-            const secretProxySelect = document.getElementById('secretProxySelect');
-            const secretCustomProxyInput = document.getElementById('secretCustomProxyInput');
+            const secretInput = domElements.secretInput.value.trim();
+            const secretProxySelect = domElements.secretProxySelect;
+            const secretCustomProxyInput = domElements.secretCustomProxyInput;
             
             if (!secretInput) {
                 alert('❌ 请输入静态资源链接！');
@@ -1187,11 +1063,11 @@ window.addEventListener('offline', function() {
             
             window.open(finalUrl, '_blank');
             
-            document.getElementById('secretInput').value = '';
+            domElements.secretInput.value = '';
         }
 
         function handleAnotherAcceleration() {
-            const AnotherInput = document.getElementById('AnotherInput').value.trim();
+            const AnotherInput = domElements.anotherInput.value.trim();
             
             if (!AnotherInput) {
                 alert('❌ 请输入链接！');
@@ -1206,12 +1082,12 @@ window.addEventListener('offline', function() {
             
             window.open(finalUrl, '_blank');
             
-            document.getElementById('AnotherInput').value = '';
+            domElements.anotherInput.value = '';
         }
 
         function getProxyUrl() {
-            const proxySelect = document.getElementById('proxySelect');
-            const customProxyInput = document.getElementById('customProxyInput');
+            const proxySelect = domElements.proxySelect;
+            const customProxyInput = domElements.customProxyInput;
             
             if (proxySelect.value === 'custom') {
                 return customProxyInput.value.trim();
@@ -1221,8 +1097,8 @@ window.addEventListener('offline', function() {
         }
 
         function handleProxyChange() {
-            const proxySelect = document.getElementById('proxySelect');
-            const customProxyInput = document.getElementById('customProxyInput');
+            const proxySelect = domElements.proxySelect;
+            const customProxyInput = domElements.customProxyInput;
             
             if (proxySelect.value === 'custom') {
                 customProxyInput.style.display = 'block';
@@ -1231,178 +1107,77 @@ window.addEventListener('offline', function() {
             }
         }
 
+
+        // =============================================
+        // Image/Media Loading & Network
+        // =============================================
+
         async function loadImageWithProgress(url, retryCount = 0, skipCacheOverride = null) {
-            const loadingText = document.getElementById('loadingText');
-            const progressContainer = document.getElementById('progressContainer');
-            const progressBar = document.getElementById('progressBar');
-            const progressStats = document.getElementById('progressStats');
-            const resultImage = document.getElementById('resultImage');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const shouldSkipCache = skipCacheOverride === true;
+            const loadingText = domElements.loadingText;
+            const progressContainer = domElements.progressContainer;
+            const loadingIndicator = domElements.loadingIndicator;
+            const fullscreenPreview = domElements.fullscreenPreview;
 
-            if (currentFetchController) {
-                currentFetchController.abort();
+            // --- Prepare the DOM for image viewing ---
+            const video = fullscreenPreview.querySelector('video');
+            if (video) {
+                video.style.display = 'none';
+                video.pause();
             }
-            currentFetchController = new AbortController();
-            const signal = currentFetchController.signal;
 
-            loadingIndicator.className = 'loading-overlay'; 
+            let oldImg = fullscreenPreview.querySelector('img');
+            if (!oldImg) {
+                oldImg = document.createElement('img');
+                oldImg.style.cssText = 'object-fit:contain;width:100%;height:100%;';
+                fullscreenPreview.appendChild(oldImg);
+            }
+
+            // --- Show Loading Indicator ---
+            progressContainer.style.display = 'block'; // Make sure the container for the bar is visible
             loadingIndicator.style.display = 'flex';
-            
-            loadingText.textContent = '正在准备...';
-            progressContainer.style.display = 'block';
-            progressStats.style.display = 'block';
-            progressBar.style.width = '0%';
-            progressStats.textContent = '0%';
+            loadingText.textContent = '正在加载图片...';
+            fullscreenPreview.style.display = 'flex'; // Ensure preview is visible for streaming 
 
-            showMinimalistProgress(0, 0, 0);
+            // --- Clone image element to ensure clean event listeners ---
+            const newImg = oldImg.cloneNode(true);
+            newImg.src = ''; 
+            newImg.style.display = 'block'; 
+            oldImg.parentNode.replaceChild(newImg, oldImg);
 
-            if (!shouldSkipCache && await imageCache.has(url)) {
-                console.log('Using cached image for:', url);
-                const blobUrl = await imageCache.get(url);
-                
-                loadingText.textContent = '正在从缓存加载...';
-                showMinimalistMessage('从缓存加载', 'info');
-                
-                await new Promise(r => requestAnimationFrame(r));
-                
-                if (signal.aborted) return;
+            let hasFired = false; // Safety flag
 
-                resultImage.onload = function() {
-                    loadingIndicator.style.display = 'none';
-                    resultImage.style.display = 'block';
-                    setFullscreenPreview(blobUrl);
-                    showMinimalistProgress(100, 0, 0);
-                };
-                
-                resultImage.onerror = async function() {
-                    console.log('Cache corrupted, clearing and retrying...');
-                    await imageCache.delete(url);
-                    if (retryCount < MAX_RETRIES) {
-                        showMinimaistMessage('缓存损坏，正在重新加载...', 'info');
-                        await loadImageWithProgress(url, retryCount + 1, shouldSkipCache);
-                    } else {
-                        loadingIndicator.style.display = 'none';
-                        showErrorWithRetry('缓存读取失败，请重试', url, { current: retryCount, max: MAX_RETRIES });
-                    }
-                };
+            // --- Attach event listeners to the NEW element ---
+            newImg.onload = function() {
+                if (hasFired) return;
+                hasFired = true;
+                loadingIndicator.style.display = 'none';
+                fullscreenPreview.style.display = 'flex';
+                showCopyToast('图片加载完成', 3000, false, url);
+            };
 
-                resultImage.src = blobUrl;
-                replacedUrl = blobUrl;
-                return;
-            }
-
-            try {
-                loadingText.textContent = '正在建立连接...';
-                const response = await fetchWithTimeout(url, { signal }, FETCH_TIMEOUT);
-                if (!response.ok) {
-                    throw new Error('HTTP error! status: ' + response.status);
-                }
-
-                const contentLength = response.headers.get('content-length');
-                const total = contentLength ? parseInt(contentLength, 10) : 0;
-                let loaded = 0;
-
-                const reader = response.body.getReader();
-                const chunks = [];
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    chunks.push(value);
-                    loaded += value.length;
-
-                    if (total) {
-                        const percent = Math.round((loaded / total) * 100);
-                        progressBar.style.width = percent + '%';
-                        progressStats.textContent = percent + '% (' + (loaded / 1024 / 1024).toFixed(2) + ' MB / ' + (total / 1024 / 1024).toFixed(2) + ' MB)';
-                        showMinimalistProgress(percent, loaded, total);
-                    } else {
-                        progressStats.textContent = '已下载: ' + (loaded / 1024 / 1024).toFixed(2) + ' MB';
-                    }
-                }
-
-                loadingText.textContent = '正在渲染图片...';
-                
-                const blob = new Blob(chunks);
-                const objectUrl = URL.createObjectURL(blob);
-                
-                if (!shouldSkipCache) {
-                    await imageCache.set(url, objectUrl, blob.size);
-                }
-
-                if (signal.aborted) return;
-
-                resultImage.onload = function() {
-                    loadingIndicator.style.display = 'none';
-                    resultImage.style.display = 'block';
-                    setFullscreenPreview(objectUrl);
-                    showMinimalistProgress(100, loaded, total);
-                };
-                
-                resultImage.onerror = function() {
-                    loadingIndicator.style.display = 'none';
-                    showError('图片渲染失败');
-                };
-
-                resultImage.src = objectUrl;
-                replacedUrl = objectUrl;
-
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    console.log('Fetch aborted: ' + url);
-                    return;
-                }
-                
-                console.error(err);
-                
+            newImg.onerror = async function() {
+                if (hasFired) return;
+                hasFired = true;
+                console.error(`Failed to load image directly: ${url}`);
                 if (retryCount < MAX_RETRIES) {
-                    loadingText.textContent = '加载失败，正在重试 (' + (retryCount + 1) + '/' + MAX_RETRIES + ')...';
-                    showMinimaistMessage('加载失败，正在重试 (' + (retryCount + 1) + '/' + MAX_RETRIES + ')...', 'info');
+                    loadingText.textContent = `加载失败，正在重试 (${retryCount + 1}/${MAX_RETRIES})...`;
                     await new Promise(r => setTimeout(r, RETRY_DELAY * (retryCount + 1)));
-                    if (!signal.aborted) {
-                        await loadImageWithProgress(url, retryCount + 1, shouldSkipCache);
-                    }
-                    return;
-                }
-                
-                console.warn('Fetch failed, falling back to direct img src loading...');
-                
-                loadingText.textContent = '流式加载失败，尝试直接加载...';
-                progressContainer.style.display = 'none';
-                progressStats.style.display = 'none';
-                
-                if (resultImage.src && resultImage.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(resultImage.src);
-                    currentObjectUrls.delete(resultImage.src);
-                }
-                
-                if (signal.aborted) return;
-
-                resultImage.onload = function() {
-                    loadingIndicator.style.display = 'none';
-                    resultImage.style.display = 'block';
-                    setFullscreenPreview(url);
-                };
-                
-                resultImage.onerror = function() {
+                    loadImageWithProgress(url, retryCount + 1, skipCacheOverride);
+                } else {
                     loadingIndicator.style.display = 'none';
                     lastFailedUrl = url;
-                    showErrorWithRetry('图片加载失败: ' + err.message, url, { current: retryCount + 1, max: MAX_RETRIES });
-                };
-                
-                resultImage.src = url;
-                replacedUrl = url;
-            } finally {
-                 if (currentFetchController && currentFetchController.signal === signal) {
-                     currentFetchController = null;
-                 }
-            }
+                    showErrorWithRetry(`图片加载失败`, url, { current: retryCount + 1, max: MAX_RETRIES });
+                    showCopyToast('图片加载失败', 3000, true, url);
+                }
+            };
+
+            // --- Start loading ---
+            newImg.src = url;
+            replacedUrl = url;
         }
 
         function showErrorWithRetry(msg, url, retryInfo = null) {
-            const elem = document.getElementById('errorMsg');
+            const elem = domElements.errorMsg;
             if (elem) {
                 let retryStatus = '';
                 if (retryInfo) {
@@ -1420,7 +1195,7 @@ window.addEventListener('offline', function() {
         }
 
         function retryLoad(url) {
-            const elem = document.getElementById('errorMsg');
+            const elem = domElements.errorMsg;
             if (elem) elem.style.display = 'none';
             if (url) {
                 loadImageWithProgress(url, 0);
@@ -1429,53 +1204,49 @@ window.addEventListener('offline', function() {
             }
         }
 
-        async function preloadNextImages(currentUrl) {
-            let currentPage = 0;
-            const pMatch = currentUrl.match(/(_p)(\d+)(\.[a-zA-Z0-9]+)$/);
-            if (pMatch) {
-                currentPage = parseInt(pMatch[2], 10);
-            }
 
-            const preloadCount = 2;
-            
-            for (let i = 1; i <= preloadCount; i++) {
-                const nextPage = currentPage + i;
-                const nextUrl = setUrlPage(currentUrl, nextPage);
-                
-                if (await imageCache.has(nextUrl)) {
-                    console.log(`Page ${nextPage} already cached.`);
-                    continue;
-                }
-                
-                console.log(`Preloading page ${nextPage}: ${nextUrl}`);
-                
-                fetchWithTimeout(nextUrl, {}, 30000)
-                    .then(resp => {
-                        if (!resp.ok) throw new Error(resp.status);
-                        return resp.blob();
-                    })
-                    .then(async blob => {
-                        const objectUrl = URL.createObjectURL(blob);
-                        await imageCache.set(nextUrl, objectUrl, blob.size);
-                        console.log(`Preloaded page ${nextPage} success.`);
-                    })
-                    .catch(err => {
-                        console.log(`Preload page ${nextPage} failed:`, err.message);
-                    });
+
+        function handlePixivLink(originalUrl, skipCache) {
+            const proxyUrl = getProxyUrl();
+            if (!proxyUrl) {
+                showError('请选择或输入代理服务器地址');
+                return;
             }
+            showCopyToast('检测到Pixiv链接', 3000, false, originalUrl);
+            
+            const cleanProxyUrl = proxyUrl.replace(/\/+$/, '');
+            const replacedUrl = originalUrl.replace(
+                /i\.pximg\.net/g, 
+                cleanProxyUrl.replace(/^https?:\/\//, '')
+            );
+            
+            showCopyToast('转换链接: i.pximg.net -> ' + cleanProxyUrl.replace(/^https?:\/\//, ''), 3000, true, replacedUrl);
+            showInfo('已转接: i.pximg.net -> ' + cleanProxyUrl.replace(/^https?:\/\//, ''));
+            
+            const resultLink = domElements.resultLink;
+            const resultLinkContainer = domElements.resultLinkContainer;
+            if (resultLink) resultLink.textContent = replacedUrl;
+            if (resultLinkContainer) resultLinkContainer.style.display = 'block';
+
+            const downloadBtnMinimal = domElements.downloadBtnMinimal;
+            if (downloadBtnMinimal) downloadBtnMinimal.classList.add('visible');
+
+            isOriginalSize = false;
+            
+            const imageContainer = domElements.imageContainer;
+            if (imageContainer) imageContainer.style.display = 'block';
+            
+            showCopyToast('正在加载: ', 3000, false, replacedUrl);
+            loadImageWithProgress(replacedUrl, 0, skipCache);
         }
 
         function processLink(skipCache = false) {
-            const input = document.getElementById('urlInput').value.trim();
-            const errorMsg = document.getElementById('errorMsg');
-            const infoMsg = document.getElementById('infoMsg');
-            const imageContainer = document.getElementById('imageContainer');
-            const resultImage = document.getElementById('resultImage');
-            const resultLinkContainer = document.getElementById('resultLinkContainer');
-            const resultLink = document.getElementById('resultLink');
-            const downloadBtn = document.getElementById('downloadBtn');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const downloadBtnMinimal = document.getElementById('downloadBtnMinimal');
+            const input = domElements.urlInput.value.trim();
+            const errorMsg = domElements.errorMsg;
+            const infoMsg = domElements.infoMsg;
+            const imageContainer = domElements.imageContainer;
+            const resultLinkContainer = domElements.resultLinkContainer;
+            const loadingIndicator = domElements.loadingIndicator;
 
             if (errorMsg) errorMsg.style.display = 'none';
             if (infoMsg) infoMsg.style.display = 'none';
@@ -1487,14 +1258,14 @@ window.addEventListener('offline', function() {
                 return;
             }
 
-            showCopyToast(skipCache ? '正在处理链接(跳过缓存)...' : '正在处理链接...');
+            showCopyToast(skipCache ? '正在处理链接(跳过缓存)' : '正在处理链接', 3000, false, input);
 
             if (input.toLowerCase() === 'prox') {
-                showCopyToast('打开设置面板');
+                showCopyToast('打开设置面板', 3000, false);
                 openSecretSettings();
                 hasAccessedSecret = true;
-                const container = document.getElementById('quickAccessContainer');
-                const btnProx = document.getElementById('quickAccessBtn');
+                const container = domElements.quickAccessContainer;
+                const btnProx = domElements.quickAccessBtn;
                 if (container) container.style.display = 'flex';
                 if (btnProx) btnProx.style.display = 'flex';
                 return;
@@ -1506,41 +1277,11 @@ window.addEventListener('offline', function() {
                     urlToLoad = 'https://' + urlToLoad;
                 }
                 originalUrl = urlToLoad;
-
-                const proxyUrl = getProxyUrl();
-                const cleanProxyUrl = proxyUrl ? proxyUrl.replace(/\/+$/, '') : '';
                 
-                const isPixivLink = /i\.pximg\.net/i.test(originalUrl);
-                
-                if (isPixivLink) {
-                    if (!proxyUrl) {
-                        showError('请选择或输入代理服务器地址');
-                        return;
-                    }
-                    showCopyToast('检测到Pixiv链接');
-                    
-                    replacedUrl = originalUrl.replace(
-                        /i\.pximg\.net/g, 
-                        cleanProxyUrl.replace(/^https?:\/\//, '')
-                    );
-                    
-                    showCopyToast('转换链接: i.pximg.net -> ' + cleanProxyUrl.replace(/^https?:\/\//, ''));
-                    showInfo('已转接: i.pximg.net -> ' + cleanProxyUrl.replace(/^https?:\/\//, ''));
-                    
-                    if (resultLink) resultLink.textContent = replacedUrl;
-                    if (resultLinkContainer) resultLinkContainer.style.display = 'block';
-
-                    isOriginalSize = false;
-                    if (resultImage) resultImage.className = 'scaled-image';
-                    
-                    if (imageContainer) imageContainer.style.display = 'block';
-                    if (downloadBtnMinimal) downloadBtnMinimal.classList.add('visible');
-                    
-                    showCopyToast('正在加载图片...');
-                    loadImageWithProgress(replacedUrl, 0, skipCache);
-                    preloadNextImages(replacedUrl);
+                if (/i\.pximg\.net/i.test(originalUrl)) {
+                    handlePixivLink(originalUrl, skipCache);
                 } else {
-                    showCopyToast('加载链接: ' + urlToLoad);
+                    showCopyToast('加载链接: ', 3000, false, urlToLoad);
                     loadUrlAuto(urlToLoad, skipCache);
                 }
 
@@ -1556,58 +1297,56 @@ window.addEventListener('offline', function() {
         };
 
         async function loadUrlAuto(url) {
-            const imageContainer = document.getElementById('imageContainer');
-            const resultImage = document.getElementById('resultImage');
-            const resultLinkContainer = document.getElementById('resultLinkContainer');
-            const resultLink = document.getElementById('resultLink');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const downloadBtnMinimal = document.getElementById('downloadBtnMinimal');
+            const imageContainer = domElements.imageContainer;
+            const resultLinkContainer = domElements.resultLinkContainer;
+            const resultLink = domElements.resultLink;
+            const loadingIndicator = domElements.loadingIndicator;
+            const downloadBtnMinimal = domElements.downloadBtnMinimal;
 
             if (imageContainer) imageContainer.style.display = 'block';
-            if (resultLinkContainer) resultLinkContainer.style.display = 'block';
-            if (loadingIndicator) loadingIndicator.style.display = 'block';
-            if (resultImage) resultImage.style.display = 'none';
-            if (downloadBtnMinimal) downloadBtnMinimal.classList.add('visible');
+            if (resultLinkContainer) resultLinkContainer.style.display = 'none';
+            if (loadingIndicator) loadingIndicator.style.display = 'flex';
+            if (downloadBtnMinimal) downloadBtnMinimal.classList.remove('visible');
             
-            showCopyToast('正在请求链接...');
+            showCopyToast('正在请求链接...', 3000, false, url);
             showInfo('正在加载...');
 
             try {
                 const response = await fetchWithTimeout(url, {}, FETCH_TIMEOUT);
                 const contentType = response.headers.get('content-type') || '';
                 
-                showCopyToast('Content-Type: ' + contentType.split(';')[0]);
+                showCopyToast('Content-Type: ' + contentType.split(';')[0], 3000, false, url);
                 
                 if (contentType.includes('application/json') || contentType.includes('text/json')) {
-                    showCopyToast('检测到JSON响应，正在解析...');
+                    showCopyToast('检测到JSON响应，正在解析...', 3000, false, url);
                     const data = await response.json();
                     const imageUrl = extractImageUrl(data);
                     
                     if (imageUrl) {
-                        showCopyToast('从JSON提取链接: ' + imageUrl.substring(0, 50) + '...');
+                        showCopyToast('从JSON提取链接: ', 3000, false, imageUrl);
                         await loadMediaFromUrl(imageUrl);
                     } else {
-                        showCopyToast('未找到图片链接，显示内容预览');
+                        showCopyToast('未找到图片链接，显示内容预览', 3000, false, url);
                         showContentPreview(JSON.stringify(data, null, 2), url, 'json');
                     }
                 } else if (contentType.includes('text/')) {
-                    showCopyToast('检测到文本响应，正在提取链接...');
+                    showCopyToast('检测到文本响应，正在提取链接...', 3000, false, url);
                     const text = await response.text();
                     const links = extractAllUrls(text);
                     
                     if (links.length > 0) {
-                        showCopyToast('检测到 ' + links.length + ' 个链接');
+                        showCopyToast('检测到 ' + links.length + ' 个链接', 3000, false, url);
                         showContentPreview(text, url, 'text', links);
                     } else {
-                        showCopyToast('未检测到链接，显示文本内容');
+                        showCopyToast('未检测到链接，显示文本内容', 3000, false, url);
                         showContentPreview(text, url, 'text', []);
                     }
                 } else {
-                    showCopyToast('检测到媒体类型，直接加载...');
+                    showCopyToast('检测到媒体类型，直接加载...', 3000, false, url);
                     await loadMediaFromUrl(url);
                 }
             } catch (err) {
-                showCopyToast('加载失败: ' + err.message);
+                showCopyToast('加载失败: ' + err.message, 3000, false, url);
                 showError('加载失败: ' + err.message);
             }
         }
@@ -1626,9 +1365,9 @@ window.addEventListener('offline', function() {
                 type: type
             };
 
-            const panel = document.getElementById('contentPreviewPanel');
-            const textDiv = document.getElementById('contentPreviewText');
-            const linksDiv = document.getElementById('contentPreviewLinks');
+            const panel = domElements.contentPreviewPanel;
+            const textDiv = domElements.contentPreviewText;
+            const linksDiv = domElements.contentPreviewLinks;
 
             textDiv.textContent = content.substring(0, 5000);
             if (content.length > 5000) {
@@ -1666,12 +1405,12 @@ window.addEventListener('offline', function() {
 
             panel.classList.add('show');
             
-            const loadingIndicator = document.getElementById('loadingIndicator');
+            const loadingIndicator = domElements.loadingIndicator;
             if (loadingIndicator) loadingIndicator.style.display = 'none';
         }
 
         function closeContentPreview() {
-            const panel = document.getElementById('contentPreviewPanel');
+            const panel = domElements.contentPreviewPanel;
             panel.classList.remove('show');
         }
 
@@ -1686,22 +1425,21 @@ window.addEventListener('offline', function() {
             const linkIndex = parseInt(selectedInput.value, 10);
             const link = currentPreviewData.links[linkIndex];
 
-            showCopyToast('加载选中链接: ' + link.substring(0, 50) + '...');
+            showCopyToast('加载选中链接: ', 3000, false, link);
             closeContentPreview();
             
-            const input = document.getElementById('urlInput');
+            const input = domElements.urlInput;
             input.value = link;
             
             await loadMediaFromUrl(link);
         }
 
         async function loadMediaFromUrl(url) {
-            const resultLink = document.getElementById('resultLink');
-            const resultLinkContainer = document.getElementById('resultLinkContainer');
-            const resultImage = document.getElementById('resultImage');
-            const loadingIndicator = document.getElementById('loadingIndicator');
+            const resultLink = domElements.resultLink;
+            const resultLinkContainer = domElements.resultLinkContainer;
+            const loadingIndicator = domElements.loadingIndicator;
 
-            showCopyToast('准备加载媒体...');
+            showCopyToast('准备加载媒体...', 3000, false, url);
             
             originalUrl = url;
             replacedUrl = url;
@@ -1710,63 +1448,59 @@ window.addEventListener('offline', function() {
             const cleanProxyUrl = proxyUrl ? proxyUrl.replace(/\/+$/, '') : '';
 
             if (cleanProxyUrl && /i\.pximg\.net/i.test(url)) {
-                showCopyToast('转换Pixiv链接...');
+                showCopyToast('转换Pixiv链接...', 3000, false, url);
                 replacedUrl = url.replace(
                     /i\.pximg\.net/g, 
                     cleanProxyUrl.replace(/^https?:\/\//, '')
                 );
-                showCopyToast('转换完成: ' + replacedUrl.substring(0, 50) + '...');
+                showCopyToast('转换完成: ', 3000, false, replacedUrl);
             }
 
             if (resultLink) resultLink.textContent = replacedUrl;
             if (resultLinkContainer) resultLinkContainer.style.display = 'block';
 
             isOriginalSize = false;
-            if (resultImage) resultImage.className = 'scaled-image';
 
             const isVideo = /\.(mp4|webm|mov|avi)(\?.*)?$/i.test(replacedUrl);
 
             if (isVideo) {
-                showCopyToast('检测到视频，准备播放...');
+                showCopyToast('检测到视频，准备播放...', 3000, false, replacedUrl);
                 showVideoPreview(replacedUrl);
             } else {
-                showCopyToast('正在加载图片...');
+                showCopyToast('正在加载图片...', 3000, false, replacedUrl);
                 showInfo('正在加载图片...');
                 loadImageWithProgress(replacedUrl);
             }
         }
 
         function showVideoPreview(url) {
-            const preview = document.getElementById('fullscreenPreview');
-            
-            if (currentVideoElement) {
-                currentVideoElement.pause();
-                currentVideoElement.src = '';
-                currentVideoElement.load();
-                currentVideoElement = null;
+            const preview = domElements.fullscreenPreview;
+            const img = preview.querySelector('img');
+
+            // Ensure the <img> element is hidden
+            if (img) {
+                img.style.display = 'none';
+            }
+
+            // Ensure a <video> element exists, create if it doesn't
+            let video = preview.querySelector('video');
+            if (!video) {
+                video = document.createElement('video');
+                video.controls = true;
+                video.autoplay = true;
+                video.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+                preview.appendChild(video);
             }
             
-            const existingVideo = preview.querySelector('video');
-            if (existingVideo) {
-                existingVideo.pause();
-                existingVideo.src = '';
-                existingVideo.load();
-            }
-            
-            preview.innerHTML = '';
-            
-            const video = document.createElement('video');
+            video.style.display = 'block';
             video.src = url;
-            video.controls = true;
-            video.autoplay = true;
-            video.style.cssText = 'width:100%;height:100%;object-fit:contain;';
-            preview.appendChild(video);
+            video.play().catch(e => console.warn("Video play failed, likely requires user interaction.", e));
             currentVideoElement = video;
             
-            const loadingIndicator = document.getElementById('loadingIndicator');
+            const loadingIndicator = domElements.loadingIndicator;
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             
-            showCopyToast('视频已加载');
+            showCopyToast('视频已加载', 3000, false, url);
             showInfo('视频已加载');
         }
 
@@ -1821,7 +1555,7 @@ window.addEventListener('offline', function() {
         }
 
         function openInNewTab() {
-            const input = document.getElementById('urlInput').value.trim();
+            const input = domElements.urlInput.value.trim();
             
             if (!input) {
                 showError('❌ 请先输入一个链接！');
@@ -1831,8 +1565,8 @@ window.addEventListener('offline', function() {
             if (input.toLowerCase() === 'prox') {
                 openSecretSettings();
                 hasAccessedSecret = true;
-                const container = document.getElementById('quickAccessContainer');
-                const btnProx = document.getElementById('quickAccessBtn');
+                const container = domElements.quickAccessContainer;
+                const btnProx = domElements.quickAccessBtn;
                 if (container) container.style.display = 'flex';
                 if (btnProx) btnProx.style.display = 'flex';
                 return;
@@ -1893,7 +1627,7 @@ window.addEventListener('offline', function() {
         }
 
         function showError(msg) {
-            const elem = document.getElementById('errorMsg');
+            const elem = domElements.errorMsg;
             if (elem) {
                 elem.textContent = msg;
                 elem.style.display = 'block';
@@ -1902,7 +1636,7 @@ window.addEventListener('offline', function() {
         }
 
         function showInfo(msg) {
-            const elem = document.getElementById('infoMsg');
+            const elem = domElements.infoMsg;
             if (elem) {
                 elem.textContent = msg;
                 elem.style.display = 'block';
@@ -1949,9 +1683,9 @@ window.addEventListener('offline', function() {
         }
 
         function updatePageControlFromUrl() {
-            const input = document.getElementById('urlInput');
-            const pageInput = document.getElementById('urlPageInput');
-            const miniPageInput = document.getElementById('miniUrlPageInput');
+            const input = domElements.urlInput;
+            const pageInput = domElements.urlPageInput;
+            const miniPageInput = domElements.miniUrlPageInput;
             if (!input || !pageInput) return;
             const page = getUrlPage(input.value);
             if (page !== null) {
@@ -1966,7 +1700,7 @@ window.addEventListener('offline', function() {
             if (now - lastClickTime < 300) return; 
             lastClickTime = now;
 
-            const input = document.getElementById('urlInput');
+            const input = domElements.urlInput;
             let val = input.value.trim();
             if (!val) return;
             
@@ -1979,8 +1713,8 @@ window.addEventListener('offline', function() {
             const newUrl = setUrlPage(val, newPage);
             input.value = newUrl;
             const displayPage = newPage + 1;
-            document.getElementById('urlPageInput').value = displayPage;
-            const miniPageInput = document.getElementById('miniUrlPageInput');
+            domElements.urlPageInput.value = displayPage;
+            const miniPageInput = domElements.miniUrlPageInput;
             if (miniPageInput) miniPageInput.value = displayPage;
 
             processLink();
@@ -1991,7 +1725,7 @@ window.addEventListener('offline', function() {
             if (now - lastClickTime < 300) return; 
             lastClickTime = now;
 
-            const input = document.getElementById('urlInput');
+            const input = domElements.urlInput;
             let val = input.value.trim();
             if (!val) return;
             
@@ -2003,8 +1737,8 @@ window.addEventListener('offline', function() {
             
             const newUrl = setUrlPage(val, newPage);
             input.value = newUrl;
-            document.getElementById('urlPageInput').value = displayPage;
-            const miniPageInput = document.getElementById('miniUrlPageInput');
+            domElements.urlPageInput.value = displayPage;
+            const miniPageInput = domElements.miniUrlPageInput;
             if (miniPageInput) miniPageInput.value = displayPage;
 
             processLink();
@@ -2027,26 +1761,25 @@ window.addEventListener('offline', function() {
         function loadApiImage() {
             let apiUrl = 'https://img.futa.de5.net/1';
             
-            const customInput = document.getElementById('customProxyInput');
+            const customInput = domElements.customProxyInput;
             if (customInput && customInput.value.trim() !== '') {
                 apiUrl = customInput.value.trim();
             }
 
-            showCopyToast('正在准备API请求...');
+            showCopyToast('正在准备API请求...', 3000, false, apiUrl);
             
             const separator = apiUrl.includes('?') ? '&' : '?';
             const targetUrl = apiUrl + separator + 't=' + Date.now();
             
-            showCopyToast('API地址: ' + apiUrl);
+            showCopyToast('API地址: ', 3000, false, apiUrl);
             
-            const errorMsg = document.getElementById('errorMsg');
-            const infoMsg = document.getElementById('infoMsg');
-            const imageContainer = document.getElementById('imageContainer');
-            const resultImage = document.getElementById('resultImage');
-            const resultLinkContainer = document.getElementById('resultLinkContainer');
-            const resultLink = document.getElementById('resultLink');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const downloadBtnMinimal = document.getElementById('downloadBtnMinimal');
+            const errorMsg = domElements.errorMsg;
+            const infoMsg = domElements.infoMsg;
+            const imageContainer = domElements.imageContainer;
+            const resultLinkContainer = domElements.resultLinkContainer;
+            const resultLink = domElements.resultLink;
+            const loadingIndicator = domElements.loadingIndicator;
+            const downloadBtnMinimal = domElements.downloadBtnMinimal;
 
             if (errorMsg) errorMsg.style.display = 'none';
             if (infoMsg) infoMsg.style.display = 'none';
@@ -2054,7 +1787,6 @@ window.addEventListener('offline', function() {
             if (resultLinkContainer) resultLinkContainer.style.display = 'block';
             
             if (loadingIndicator) loadingIndicator.style.display = 'block';
-            if (resultImage) resultImage.style.display = 'none';
             
             if (resultLink) resultLink.textContent = apiUrl;
             
@@ -2062,22 +1794,20 @@ window.addEventListener('offline', function() {
             replacedUrl = targetUrl;
             
             isOriginalSize = false;
-            if (resultImage) resultImage.className = 'scaled-image';
             
             if (downloadBtnMinimal) downloadBtnMinimal.classList.add('visible');
             
-            showCopyToast('正在加载随机图片...');
+            showCopyToast('正在加载随机图片...', 3000, false, targetUrl);
             loadImageWithProgress(targetUrl);
         }
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                var secretSettings = document.getElementById('secretSettings');
-                var galleryBrowser = document.getElementById('galleryBrowser');
-                var cacheModal = document.getElementById('cacheModal');
-                var detailsPanel = document.getElementById('detailsPanel');
-                var floatingMenuContent = document.getElementById('floatingMenuContent');
-                var contentPreviewPanel = document.getElementById('contentPreviewPanel');
+                var secretSettings = domElements.secretSettings;
+                var galleryBrowser = domElements.galleryBrowser;
+                var detailsPanel = domElements.detailsPanel;
+                var floatingMenuContent = domElements.floatingMenuContent;
+                var contentPreviewPanel = domElements.contentPreviewPanel;
                 
                 if (contentPreviewPanel && contentPreviewPanel.classList.contains('show')) {
                     closeContentPreview();
@@ -2085,8 +1815,6 @@ window.addEventListener('offline', function() {
                     closeSecretSettings();
                 } else if (galleryBrowser && galleryBrowser.style.display === 'flex') {
                     closeGalleryBrowser();
-                } else if (cacheModal && cacheModal.style.display === 'flex') {
-                    closeCacheDashboard();
                 } else if (detailsPanel && detailsPanel.classList.contains('show')) {
                     detailsPanel.classList.remove('show');
                 } else if (floatingMenuContent && !floatingMenuContent.classList.contains('collapsed')) {
@@ -2123,7 +1851,7 @@ window.addEventListener('offline', function() {
         let currentZoom = 1;
         
         function zoomImage(delta) {
-            const preview = document.getElementById('fullscreenPreview');
+            const preview = domElements.fullscreenPreview;
             const img = preview.querySelector('img');
             if (!img) return;
             
@@ -2133,7 +1861,7 @@ window.addEventListener('offline', function() {
         }
         
         function resetZoom() {
-            const preview = document.getElementById('fullscreenPreview');
+            const preview = domElements.fullscreenPreview;
             const img = preview.querySelector('img');
             if (!img) return;
             currentZoom = 1;
@@ -2163,7 +1891,7 @@ window.addEventListener('offline', function() {
                 const currentDistance = getTouchDistance(e.touches);
                 const scale = currentDistance / initialDistance;
                 const newZoom = Math.max(CONFIG.zoomMin, Math.min(CONFIG.zoomMax, initialZoom * scale));
-                const preview = document.getElementById('fullscreenPreview');
+                const preview = domElements.fullscreenPreview;
                 const img = preview.querySelector('img');
                 if (img) {
                     currentZoom = newZoom;
@@ -2197,24 +1925,37 @@ window.addEventListener('offline', function() {
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化 DOM 元素缓存
+            initDomElements();
+
             handleProxyChange();
             handleSecretProxyChange();
             
             hasAccessedSecret = false;
-            const quickBtn = document.getElementById('quickAccessBtn');
-            const galleryBtn = document.getElementById('galleryBtn');
-            const randomBtn = document.getElementById('quickRandomBtn');
-            const container = document.getElementById('quickAccessContainer');
+            const quickBtn = domElements.quickAccessBtn;
+            const galleryBtn = domElements.galleryBtn;
+            const randomBtn = domElements.quickRandomBtn;
+            const container = domElements.quickAccessContainer;
             if (quickBtn) quickBtn.style.display = 'none';
             if (galleryBtn) galleryBtn.style.display = 'none';
             if (randomBtn) randomBtn.style.display = 'none';
             if (container) container.style.display = 'none';
 
+            const toastContainer = domElements.toastContainer;
+            if (toastContainer) {
+                toastContainer.addEventListener('mouseover', () => {
+                    toastControllers.forEach(c => c.pause());
+                });
+                toastContainer.addEventListener('mouseout', () => {
+                    toastControllers.forEach(c => c.resume());
+                });
+            }
+
             setupDragAndDrop();
         });
 
         function setupDragAndDrop() {
-            const galleryBrowser = document.getElementById('galleryBrowser');
+            const galleryBrowser = domElements.galleryBrowser;
             
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 galleryBrowser.addEventListener(eventName, preventDefaults, false);
@@ -2247,60 +1988,17 @@ window.addEventListener('offline', function() {
             if (files.length > 0) {
                 const file = files[0];
                 if (file.name.endsWith('.csv')) {
-                    const loading = document.getElementById('galleryLoading');
-                    const status = document.getElementById('galleryStatus');
+                    const loading = domElements.galleryLoading;
+                    const status = domElements.galleryStatus;
                     
                     loading.style.display = 'block';
                     status.textContent = '正在加载: ' + file.name;
                     
                     try {
                         const text = await file.text();
-                        galleryData = parseCSV(text);
-                        
-                        const tagCounts = {};
-                        galleryData.forEach(item => {
-                            if (item.tags_transl) {
-                                item.tags_transl.split(',').forEach(t => {
-                                    const tag = t.trim();
-                                    if (tag) {
-                                        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-                                    }
-                                });
-                            }
-                        });
-                        tagCountsMap = tagCounts;
-                        
-                        const includePanel = document.getElementById('tagIncludePanel');
-                        const excludePanel = document.getElementById('tagExcludePanel');
-                        includePanel.innerHTML = '';
-                        excludePanel.innerHTML = '';
-                        
-                        Object.keys(tagCounts)
-                            .sort((a, b) => {
-                                const diff = tagCounts[b] - tagCounts[a];
-                                if (diff !== 0) return diff;
-                                return a.localeCompare(b, 'zh-CN');
-                            })
-                            .forEach(tag => {
-                                const inc = document.createElement('div');
-                                inc.className = 'tag-item';
-                                inc.dataset.value = tag;
-                                inc.textContent = tag + ' (' + tagCounts[tag] + ')';
-                                includePanel.appendChild(inc);
-                                
-                                const exc = document.createElement('div');
-                                exc.className = 'tag-item';
-                                exc.dataset.value = tag;
-                                exc.textContent = tag + ' (' + tagCounts[tag] + ')';
-                                excludePanel.appendChild(exc);
-                            });
-
-                        isGalleryLoaded = true;
-                        status.textContent = '加载成功: ' + file.name + ' (共 ' + galleryData.length + ' 条数据)';
-                        renderGalleryTable();
+                        processCsvData(text, file.name);
                     } catch (err) {
-                        console.error(err);
-                        status.textContent = '加载失败: ' + err.message;
+                        // error is logged in processCsvData
                     } finally {
                         loading.style.display = 'none';
                     }
