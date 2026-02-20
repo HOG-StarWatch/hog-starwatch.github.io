@@ -45,7 +45,7 @@ export default [
         { text: 'IP检测', link: '../../../IPcheck.html', target: '_self', },
         { text: '延迟&测速', link: '../../../ping-speedtest.html', target: '_self', },
         { text: 'RDAP-Whois', link: '../../../RDAP-whois.html', target: '_self', },
-        { text: 'Pixiv代理', link: '../../../i.pximg/i.pximg.net-prox.html', target: '_self', },
+        { text: 'Pixiv代理', link: '../../../i.pximg/index.html', target: '_self', },
         { text: 'HTML混淆', link: '../../../htmlencrypt.html', target: '_self', },
         { text: 'Github仓库探索器', link: '../../../github-repo-explorer/index.html', target: '_self', },
         
