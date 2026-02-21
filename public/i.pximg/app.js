@@ -28,13 +28,13 @@ function initDomElements() {
         contentPreviewText: getElement('contentPreviewText'),
         contentPreviewLinks: getElement('contentPreviewLinks'),
         staticResourceBtn: getElement('staticResourceBtn'),
-        anotherBtn: getElement('AnotherBtn'),
+        anotherBtn: getElement('anotherBtn'),
         staticResourceSection: getElement('staticResourceSection'),
-        anotherSection: getElement('AnotherSection'),
+        anotherSection: getElement('anotherSection'),
         secretProxySelect: getElement('secretProxySelect'),
         secretCustomProxyInput: getElement('secretCustomProxyInput'),
         secretInput: getElement('secretInput'),
-        anotherInput: getElement('AnotherInput'),
+        anotherInput: getElement('anotherInput'),
         galleryCsvSelect: getElement('galleryCsvSelect'),
         localCsvInput: getElement('localCsvInput'),
         gallerySearch: getElement('gallerySearch'),
@@ -198,35 +198,16 @@ window.addEventListener('offline', function() {
         function showCopyToast(message, duration = 3000, isError = false, url = null) {
             const container = domElements.toastContainer;
             if (!container) return;
+
             const toast = document.createElement('div');
             toast.className = `toast-message ${isError ? 'error' : ''}`;
 
-            let content = message;
+            let content = escapeHtml(message);
             if (url) {
-                const urlSpan = `<span class="toast-url" title="点击复制">${escapeHtml(url)}</span>`;
+                const urlSpan = `<span class="toast-url" title="点击复制" data-url="${escapeHtml(url)}">${escapeHtml(url)}</span>`;
                 content += `<br>${urlSpan}`;
-                toast.innerHTML = content;
-            } else {
-                toast.textContent = content;
             }
-
-            const urlElement = toast.querySelector('.toast-url');
-            if (urlElement) {
-                urlElement.onclick = (e) => {
-                    e.stopPropagation();
-                    navigator.clipboard.writeText(url)
-                        .then(() => {
-                            urlElement.textContent = '链接已复制!';
-                            urlElement.style.pointerEvents = 'none';
-                            setTimeout(() => {
-                                if (toast.parentElement) {
-                                    toast.remove();
-                                }
-                            }, 1500);
-                        })
-                        .catch(err => console.error('Failed to copy URL: ', err));
-                };
-            }
+            toast.innerHTML = content;
 
             container.appendChild(toast);
 
@@ -373,9 +354,7 @@ window.addEventListener('offline', function() {
             }
             initCsvSelect(failed);
         }
-        window.addEventListener('DOMContentLoaded', () => {
-            loadCsvConfig();
-        });
+        
 
         function switchFunction(func) {
             currentFunction = func;
@@ -754,9 +733,10 @@ window.addEventListener('offline', function() {
             status.textContent = `显示 ${pageItems.length} / ${totalFiltered} 条数据 (总计 ${galleryData.length})`;
             
             const frag = document.createDocumentFragment();
-            pageItems.forEach(item => {
+            pageItems.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.className = 'gallery-row';
+                tr.dataset.index = startIndex + index;
                 
                 const tdAction = document.createElement('td');
                 tdAction.className = 'action-col cell-action';
@@ -764,11 +744,6 @@ window.addEventListener('offline', function() {
                 const btnOriginal = document.createElement('button');
                 btnOriginal.textContent = '填入链接';
                 btnOriginal.className = 'fill-url-btn action-btn';
-                btnOriginal.onclick = () => {
-                    const useThumb = domElements.useThumbCheckbox && domElements.useThumbCheckbox.checked;
-                    fillUrl(useThumb ? (item.thumb || item.original) : item.original, item);
-                    closeGalleryBrowser();
-                };
                 tdAction.appendChild(btnOriginal);
                 tr.appendChild(tdAction);
 
@@ -799,32 +774,18 @@ window.addEventListener('offline', function() {
                 if (item.tags_transl) {
                     const tags = item.tags_transl.split(',').map(x => x.trim()).filter(Boolean);
                     const threshold = 3;
-                    const spans = [];
                     tags.forEach((t, idx) => {
                         const span = document.createElement('span');
                         span.className = 'tag-pill';
                         if (idx >= threshold) span.style.display = 'none';
                         span.textContent = t;
                         tdTags.appendChild(span);
-                        spans.push(span);
                     });
                     if (tags.length > threshold) {
                         const btn = document.createElement('button');
                         btn.className = 'tag-toggle';
                         btn.textContent = '展开';
                         btn.setAttribute('data-expanded', '0');
-                        btn.onclick = () => {
-                            const expanded = btn.getAttribute('data-expanded') === '1';
-                            if (expanded) {
-                                spans.forEach((s, idx) => { if (idx >= threshold) s.style.display = 'none'; });
-                                btn.textContent = '展开';
-                                btn.setAttribute('data-expanded', '0');
-                            } else {
-                                spans.forEach(s => { s.style.display = 'inline-block'; });
-                                btn.textContent = '收起';
-                                btn.setAttribute('data-expanded', '1');
-                            }
-                        };
                         tdTags.appendChild(btn);
                     }
                 }
@@ -867,126 +828,7 @@ window.addEventListener('offline', function() {
             status.textContent += `，渲染耗时 ${tElapsed.toFixed(1)} ms`;
         }
         
-        const debouncedRender = debounce(renderGalleryTable, 300);
-        domElements.gallerySearch.addEventListener('input', debouncedRender);
-        const tagIncludePanel = domElements.tagIncludePanel;
-        const tagExcludePanel = domElements.tagExcludePanel;
-        const aiFilterEl = domElements.galleryAiFilter;
-        const sortEl = domElements.gallerySort;
-        const dateFmtEl = domElements.galleryDateFormat;
-        const perPageEl = domElements.perPageSelect;
-        const prevBtn = domElements.prevPageBtn;
-        const nextBtn = domElements.nextPageBtn;
-        const jumpBtn = domElements.jumpPageBtn;
-        const pageInput = domElements.pageInput;
-        const selectedInclude = domElements.selectedInclude;
-        const selectedExclude = domElements.selectedExclude;
-        const clearSelectedBtn = domElements.clearSelectedTags;
 
-        function updateSelectedTagsSummary() {
-            if (!selectedInclude || !selectedExclude) return;
-            const inc = Array.from(document.querySelectorAll('#tagIncludePanel .tag-item.selected')).map(el => el.dataset.value);
-            const exc = Array.from(document.querySelectorAll('#tagExcludePanel .tag-item.selected')).map(el => el.dataset.value);
-            selectedInclude.innerHTML = '';
-            selectedExclude.innerHTML = '';
-            inc.forEach(tag => {
-                const pill = document.createElement('span');
-                pill.className = 'tag-pill';
-                pill.dataset.tag = tag;
-                pill.textContent = tag;
-                selectedInclude.appendChild(pill);
-            });
-            exc.forEach(tag => {
-                const pill = document.createElement('span');
-                pill.className = 'tag-pill';
-                pill.dataset.tag = tag;
-                pill.textContent = tag;
-                selectedExclude.appendChild(pill);
-            });
-        }
-        function reorderTagPanel(panel) {
-            if (!panel) return;
-            const items = Array.from(panel.querySelectorAll('.tag-item'));
-            items.sort((a, b) => {
-                const aSel = a.classList.contains('selected') ? 1 : 0;
-                const bSel = b.classList.contains('selected') ? 1 : 0;
-                if (aSel !== bSel) return bSel - aSel;
-                const ta = a.dataset.value || '';
-                const tb = b.dataset.value || '';
-                const ca = tagCountsMap[ta] || 0;
-                const cb = tagCountsMap[tb] || 0;
-                if (ca !== cb) return cb - ca;
-                return ta.localeCompare(tb, 'zh-CN');
-            });
-            items.forEach(it => panel.appendChild(it));
-        }
-        function bindPanelClick(panel) {
-            if (!panel) return;
-            panel.addEventListener('click', (e) => {
-                const item = e.target.closest('.tag-item');
-                if (!item || !panel.contains(item)) return;
-                item.classList.toggle('selected');
-                updateSelectedTagsSummary();
-                reorderTagPanel(panel);
-                debouncedRender();
-            });
-        }
-        bindPanelClick(tagIncludePanel);
-        bindPanelClick(tagExcludePanel);
-        if (clearSelectedBtn) {
-            clearSelectedBtn.addEventListener('click', () => {
-                document.querySelectorAll('#tagIncludePanel .tag-item.selected, #tagExcludePanel .tag-item.selected').forEach(el => el.classList.remove('selected'));
-                updateSelectedTagsSummary();
-                debouncedRender();
-            });
-        }
-        if (selectedInclude) {
-            selectedInclude.addEventListener('click', (e) => {
-                const pill = e.target.closest('.tag-pill');
-                if (!pill) return;
-                const tag = pill.dataset.tag;
-                const item = document.querySelector(`#tagIncludePanel .tag-item[data-value="${tag}"]`);
-                if (item) item.classList.remove('selected');
-                updateSelectedTagsSummary();
-                debouncedRender();
-            });
-        }
-        if (selectedExclude) {
-            selectedExclude.addEventListener('click', (e) => {
-                const pill = e.target.closest('.tag-pill');
-                if (!pill) return;
-                const tag = pill.dataset.tag;
-                const item = document.querySelector(`#tagExcludePanel .tag-item[data-value="${tag}"]`);
-                if (item) item.classList.remove('selected');
-                updateSelectedTagsSummary();
-                debouncedRender();
-            });
-        }
-        if (aiFilterEl) aiFilterEl.addEventListener('change', debouncedRender);
-        if (sortEl) sortEl.addEventListener('change', renderGalleryTable);
-        if (dateFmtEl) dateFmtEl.addEventListener('change', renderGalleryTable);
-        if (perPageEl) perPageEl.addEventListener('change', () => { perPage = parseInt(perPageEl.value, 10) || 50; currentPage = 1; renderGalleryTable(); });
-        if (prevBtn) prevBtn.addEventListener('click', prevPage);
-        if (nextBtn) nextBtn.addEventListener('click', nextPage);
-        if (jumpBtn && pageInput) jumpBtn.addEventListener('click', () => { const p = parseInt(pageInput.value, 10); if (!isNaN(p)) { goToPage(p); } });
-        
-        const openTagIncludeBtn = domElements.openTagInclude;
-        const openTagExcludeBtn = domElements.openTagExclude;
-        function togglePanel(btn, panel) {
-            if (!btn || !panel) return;
-            btn.addEventListener('click', () => {
-                panel.classList.toggle('open');
-                reorderTagPanel(panel);
-            });
-        }
-        togglePanel(openTagIncludeBtn, tagIncludePanel);
-        togglePanel(openTagExcludeBtn, tagExcludePanel);
-        document.addEventListener('click', (e) => {
-            const incWrap = openTagIncludeBtn ? openTagIncludeBtn.parentElement : null;
-            const excWrap = openTagExcludeBtn ? openTagExcludeBtn.parentElement : null;
-            if (incWrap && !incWrap.contains(e.target)) { tagIncludePanel.classList.remove('open'); }
-            if (excWrap && !excWrap.contains(e.target)) { tagExcludePanel.classList.remove('open'); }
-        });
 
 
         // =============================================
@@ -1181,13 +1023,32 @@ window.addEventListener('offline', function() {
             if (elem) {
                 let retryStatus = '';
                 if (retryInfo) {
-                    retryStatus = '<div class="retry-progress">重试进度: ' + retryInfo.current + '/' + retryInfo.max + '</div>';
+                    retryStatus = `<div class="retry-progress">重试进度: ${retryInfo.current}/${retryInfo.max}</div>`;
                 }
-                elem.innerHTML = escapeHtml(msg) + 
-                    '<div class="error-actions">' +
-                    '<button class="retry-btn" onclick="retryLoad(\'' + escapeHtml(url) + '\')">重试</button>' +
-                    '</div>' +
-                    retryStatus;
+
+                elem.innerHTML = ''; 
+
+                const msgSpan = document.createElement('span');
+                msgSpan.textContent = msg;
+                elem.appendChild(msgSpan);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'error-actions';
+
+                const retryBtn = document.createElement('button');
+                retryBtn.className = 'retry-btn';
+                retryBtn.textContent = '重试';
+                retryBtn.addEventListener('click', () => retryLoad(url));
+                actionsDiv.appendChild(retryBtn);
+
+                elem.appendChild(actionsDiv);
+
+                if (retryStatus) {
+                    const statusDiv = document.createElement('div');
+                    statusDiv.innerHTML = retryStatus;
+                    elem.appendChild(statusDiv);
+                }
+
                 elem.style.display = 'block';
             }
             showMinimaistMessage(msg, 'error');
@@ -1696,10 +1557,6 @@ window.addEventListener('offline', function() {
         }
 
         function changeUrlPage(delta) {
-            const now = Date.now();
-            if (now - lastClickTime < 300) return; 
-            lastClickTime = now;
-
             const input = domElements.urlInput;
             let val = input.value.trim();
             if (!val) return;
@@ -1721,10 +1578,6 @@ window.addEventListener('offline', function() {
         }
 
         function jumpUrlPage(page) {
-            const now = Date.now();
-            if (now - lastClickTime < 300) return; 
-            lastClickTime = now;
-
             const input = domElements.urlInput;
             let val = input.value.trim();
             if (!val) return;
@@ -1949,9 +1802,152 @@ window.addEventListener('offline', function() {
                 toastContainer.addEventListener('mouseout', () => {
                     toastControllers.forEach(c => c.resume());
                 });
+
+                toastContainer.addEventListener('click', (e) => {
+                    const urlSpan = e.target.closest('.toast-url');
+                    if (urlSpan && urlSpan.dataset.url) {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(urlSpan.dataset.url)
+                            .then(() => {
+                                urlSpan.textContent = '链接已复制!';
+                                urlSpan.style.pointerEvents = 'none';
+                                const toast = urlSpan.closest('.toast-message');
+                                setTimeout(() => {
+                                    if (toast && toast.parentElement) {
+                                        toast.remove();
+                                    }
+                                }, 1500);
+                            })
+                            .catch(err => console.error('Failed to copy URL: ', err));
+                    }
+                });
             }
 
             setupDragAndDrop();
+            loadCsvConfig();
+
+            const debouncedRender = debounce(renderGalleryTable, 300);
+            domElements.gallerySearch.addEventListener('input', debouncedRender);
+            const tagIncludePanel = domElements.tagIncludePanel;
+            const tagExcludePanel = domElements.tagExcludePanel;
+            const aiFilterEl = domElements.galleryAiFilter;
+            const sortEl = domElements.gallerySort;
+            const dateFmtEl = domElements.galleryDateFormat;
+            const perPageEl = domElements.perPageSelect;
+            const prevBtn = domElements.prevPageBtn;
+            const nextBtn = domElements.nextPageBtn;
+            const jumpBtn = domElements.jumpPageBtn;
+            const pageInput = domElements.pageInput;
+            const selectedInclude = domElements.selectedInclude;
+            const selectedExclude = domElements.selectedExclude;
+            const clearSelectedBtn = domElements.clearSelectedTags;
+
+            function updateSelectedTagsSummary() {
+                if (!selectedInclude || !selectedExclude) return;
+                const inc = Array.from(document.querySelectorAll('#tagIncludePanel .tag-item.selected')).map(el => el.dataset.value);
+                const exc = Array.from(document.querySelectorAll('#tagExcludePanel .tag-item.selected')).map(el => el.dataset.value);
+                selectedInclude.innerHTML = '';
+                selectedExclude.innerHTML = '';
+                inc.forEach(tag => {
+                    const pill = document.createElement('span');
+                    pill.className = 'tag-pill';
+                    pill.dataset.tag = tag;
+                    pill.textContent = tag;
+                    selectedInclude.appendChild(pill);
+                });
+                exc.forEach(tag => {
+                    const pill = document.createElement('span');
+                    pill.className = 'tag-pill';
+                    pill.dataset.tag = tag;
+                    pill.textContent = tag;
+                    selectedExclude.appendChild(pill);
+                });
+            }
+            function reorderTagPanel(panel) {
+                if (!panel) return;
+                const items = Array.from(panel.querySelectorAll('.tag-item'));
+                items.sort((a, b) => {
+                    const aSel = a.classList.contains('selected') ? 1 : 0;
+                    const bSel = b.classList.contains('selected') ? 1 : 0;
+                    if (aSel !== bSel) return bSel - aSel;
+                    const ta = a.dataset.value || '';
+                    const tb = b.dataset.value || '';
+                    const ca = tagCountsMap[ta] || 0;
+                    const cb = tagCountsMap[tb] || 0;
+                    if (ca !== cb) return cb - ca;
+                    return ta.localeCompare(tb, 'zh-CN');
+                });
+                items.forEach(it => panel.appendChild(it));
+            }
+            function bindPanelClick(panel) {
+                if (!panel) return;
+                panel.addEventListener('click', (e) => {
+                    const item = e.target.closest('.tag-item');
+                    if (!item || !panel.contains(item)) return;
+                    item.classList.toggle('selected');
+                    updateSelectedTagsSummary();
+                    reorderTagPanel(panel);
+                    debouncedRender();
+                });
+            }
+            bindPanelClick(tagIncludePanel);
+            bindPanelClick(tagExcludePanel);
+            if (clearSelectedBtn) {
+                clearSelectedBtn.addEventListener('click', () => {
+                    document.querySelectorAll('#tagIncludePanel .tag-item.selected, #tagExcludePanel .tag-item.selected').forEach(el => el.classList.remove('selected'));
+                    updateSelectedTagsSummary();
+                    debouncedRender();
+                });
+            }
+            if (selectedInclude) {
+                selectedInclude.addEventListener('click', (e) => {
+                    const pill = e.target.closest('.tag-pill');
+                    if (!pill) return;
+                    const tag = pill.dataset.tag;
+                    const item = document.querySelector(`#tagIncludePanel .tag-item[data-value="${tag}"]`);
+                    if (item) item.classList.remove('selected');
+                    updateSelectedTagsSummary();
+                    debouncedRender();
+                });
+            }
+            if (selectedExclude) {
+                selectedExclude.addEventListener('click', (e) => {
+                    const pill = e.target.closest('.tag-pill');
+                    if (!pill) return;
+                    const tag = pill.dataset.tag;
+                    const item = document.querySelector(`#tagExcludePanel .tag-item[data-value="${tag}"]`);
+                    if (item) item.classList.remove('selected');
+                    updateSelectedTagsSummary();
+                    debouncedRender();
+                });
+            }
+            if (aiFilterEl) aiFilterEl.addEventListener('change', debouncedRender);
+            if (sortEl) sortEl.addEventListener('change', renderGalleryTable);
+            if (dateFmtEl) dateFmtEl.addEventListener('change', renderGalleryTable);
+            if (perPageEl) perPageEl.addEventListener('change', () => { perPage = parseInt(perPageEl.value, 10) || 50; currentPage = 1; renderGalleryTable(); });
+            if (prevBtn) prevBtn.addEventListener('click', prevPage);
+            if (nextBtn) nextBtn.addEventListener('click', nextPage);
+            if (jumpBtn && pageInput) jumpBtn.addEventListener('click', () => { const p = parseInt(pageInput.value, 10); if (!isNaN(p)) { goToPage(p); } });
+            
+            const openTagIncludeBtn = domElements.openTagInclude;
+            const openTagExcludeBtn = domElements.openTagExclude;
+            function togglePanel(btn, panel) {
+                if (!btn || !panel) return;
+                btn.addEventListener('click', () => {
+                    panel.classList.toggle('open');
+                    reorderTagPanel(panel);
+                });
+            }
+            togglePanel(openTagIncludeBtn, tagIncludePanel);
+            togglePanel(openTagExcludeBtn, tagExcludePanel);
+            document.addEventListener('click', (e) => {
+                const incWrap = openTagIncludeBtn ? openTagIncludeBtn.parentElement : null;
+                const excWrap = openTagExcludeBtn ? openTagExcludeBtn.parentElement : null;
+                if (incWrap && !incWrap.contains(e.target)) { tagIncludePanel.classList.remove('open'); }
+                if (excWrap && !excWrap.contains(e.target)) { tagExcludePanel.classList.remove('open'); }
+            });
+
+            bindEventListeners();
         });
 
         function setupDragAndDrop() {
@@ -2005,6 +2001,95 @@ window.addEventListener('offline', function() {
                 } else {
                     showMinimaistMessage('请上传CSV文件', 'error');
                 }
+            }
+        }
+
+        function bindEventListeners() {
+            const D = (id, event, handler) => {
+                const element = domElements[id] || document.getElementById(id);
+                if (element) {
+                    element.addEventListener(event, handler);
+                }
+            };
+
+            // Floating Menu and Preview
+            D('toggleFloatingMenuBtn', 'click', toggleFloatingMenu);
+            D('collapseMenuBtn', 'click', collapseMenu);
+            D('processLinkBtn', 'click', () => processLink(false));
+            D('loadApiImageBtn', 'click', loadApiImage);
+            D('copyConvertedLinkBtn', 'click', copyConvertedLink);
+            D('proxySelect', 'change', handleProxyChange);
+            D('urlInput', 'input', () => { checkSecretCode(); updatePageControlFromUrl(); });
+
+            // Pagers
+            D('miniPagerPrevBtn', 'click', () => changeUrlPage(-1));
+            D('miniPagerNextBtn', 'click', () => changeUrlPage(1));
+            D('miniUrlPageInput', 'change', (e) => jumpUrlPage(e.target.value));
+            D('pagerPrevBtn', 'click', () => changeUrlPage(-1));
+            D('pagerNextBtn', 'click', () => changeUrlPage(1));
+            D('urlPageInput', 'change', (e) => jumpUrlPage(e.target.value));
+
+            // Content Preview
+            D('closeContentPreviewBtn_header', 'click', closeContentPreview);
+            D('closeContentPreviewBtn_footer', 'click', closeContentPreview);
+            D('processSelectedLinkBtn', 'click', processSelectedLink);
+
+            // Main Preview and Quick Access
+            D('downloadBtnMinimal', 'click', downloadImage);
+            D('toggleDetailsBtn', 'click', toggleDetailsPanel);
+            D('quickAccessBtn', 'click', openSecretSettings);
+            D('galleryBtn', 'click', openGalleryBrowser);
+            D('quickRandomBtn', 'click', quickRandomImage);
+            D('resultLink', 'click', (e) => copyToClipboard(e.currentTarget));
+            D('downloadBtn', 'click', downloadImage);
+
+            // Secret Settings Panel
+            D('staticResourceBtn', 'click', () => switchFunction('static'));
+            D('anotherBtn', 'click', () => switchFunction('Another'));
+            D('secretProxySelect', 'change', handleSecretProxyChange);
+            D('handleSecretActionBtn', 'click', handleSecretAction);
+            D('closeSecretSettingsBtn', 'click', closeSecretSettings);
+
+            // Gallery Browser
+            D('pickRandomImageBtn', 'click', pickRandomImage);
+            D('closeGalleryBrowserBtn', 'click', closeGalleryBrowser);
+            D('galleryCsvSelect', 'change', loadGalleryData);
+
+            // Event Delegation for Gallery Table
+            const galleryTableBody = domElements.galleryTableBody;
+            if (galleryTableBody) {
+                galleryTableBody.addEventListener('click', (e) => {
+                    const target = e.target;
+                    if (target.classList.contains('fill-url-btn')) {
+                        const row = target.closest('.gallery-row');
+                        if (row && row.dataset.index) {
+                            const index = parseInt(row.dataset.index, 10);
+                            const items = getFilteredAndSortedItems();
+                            const item = items[index];
+                            if (item) {
+                                const useThumb = domElements.useThumbCheckbox && domElements.useThumbCheckbox.checked;
+                                fillUrl(useThumb ? (item.thumb || item.original) : item.original, item);
+                                closeGalleryBrowser();
+                            }
+                        }
+                    } else if (target.classList.contains('tag-toggle')) {
+                        const expanded = target.getAttribute('data-expanded') === '1';
+                        const tagsCell = target.closest('.cell-tags');
+                        if (tagsCell) {
+                            const spans = tagsCell.querySelectorAll('.tag-pill');
+                            const threshold = 3;
+                            if (expanded) {
+                                spans.forEach((s, idx) => { if (idx >= threshold) s.style.display = 'none'; });
+                                target.textContent = '展开';
+                                target.setAttribute('data-expanded', '0');
+                            } else {
+                                spans.forEach(s => { s.style.display = 'inline-block'; });
+                                target.textContent = '收起';
+                                target.setAttribute('data-expanded', '1');
+                            }
+                        }
+                    }
+                });
             }
         }
 

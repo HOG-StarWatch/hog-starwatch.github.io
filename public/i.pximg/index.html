@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <meta name="theme-color" content="#0d0d12"/>
-    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
     <title>Pixiv原图i.pximg.net</title>
     <link rel="stylesheet" href="style.css"/>
@@ -16,67 +16,67 @@
     <div id="contentPreviewPanel" class="content-preview-panel">
         <div class="content-preview-header">
             <h3>内容预览</h3>
-            <button class="content-preview-close" onclick="closeContentPreview()">×</button>
+            <button class="content-preview-close" id="closeContentPreviewBtn_header">×</button>
         </div>
         <div class="content-preview-body">
             <div id="contentPreviewText" class="content-preview-text"></div>
             <div id="contentPreviewLinks" class="content-preview-links"></div>
         </div>
         <div class="content-preview-footer">
-            <button class="btn-recursive" onclick="processSelectedLink()">加载选中链接</button>
-            <button class="btn-close-preview" onclick="closeContentPreview()">关闭</button>
+            <button class="btn-recursive" id="processSelectedLinkBtn">加载选中链接</button>
+            <button class="btn-close-preview" id="closeContentPreviewBtn_footer">关闭</button>
         </div>
     </div>
     
     <div id="floatingMenu" class="floating-menu">
-        <button class="floating-menu-toggle" onclick="toggleFloatingMenu()" title="展开菜单">☰</button>
+        <button class="floating-menu-toggle" id="toggleFloatingMenuBtn" title="展开菜单">☰</button>
         <div class="mini-pager" id="miniPager">
-            <button onclick="changeUrlPage(-1)" class="mini-pager-btn">◀</button>
+            <button id="miniPagerPrevBtn" class="mini-pager-btn">◀</button>
             <div class="mini-page-indicator">
                 <span>P</span>
-                <input type="number" id="miniUrlPageInput" value="1" min="1" onchange="jumpUrlPage(this.value)"/>
+                <input type="number" id="miniUrlPageInput" value="1" min="1"/>
             </div>
-            <button onclick="changeUrlPage(1)" class="mini-pager-btn">▶</button>
+            <button id="miniPagerNextBtn" class="mini-pager-btn">▶</button>
         </div>
         <div class="floating-menu-content" id="floatingMenuContent">
             <div class="menu-header">
                 <span class="menu-title">Pixiv Viewer</span>
-                <select id="proxySelect" onchange="handleProxyChange()" class="header-proxy-select">
+                <select id="proxySelect" class="header-proxy-select">
                     <option value="https://prox.futa.de5.net/">站长自建</option>
                     <option value="https://prox.spacetimee.xyz/">Github公开</option>
                     <option value="custom">自定义</option>
                 </select>
-                <button class="menu-collapse-btn" onclick="collapseMenu()" title="收起">━</button>
+                <button class="menu-collapse-btn" id="collapseMenuBtn" title="收起">━</button>
             </div>
             <input type="url" id="customProxyInput" class="custom-proxy-input compact-input" placeholder="自定义地址"/>
             <div class="menu-row">
-                <input type="url" id="urlInput" class="compact-input flex-1" placeholder="输入Pixiv原图链接..." oninput="checkSecretCode(); updatePageControlFromUrl()"/>
+                <input type="url" id="urlInput" class="compact-input flex-1" placeholder="输入Pixiv原图链接..."/>
             </div>
             <div class="menu-row actions-row">
-                <button onclick="processLink()" class="btn-action btn-load">加载</button>
-                <button onclick="loadApiImage()" class="btn-action btn-random">随机</button>
-                <button onclick="copyConvertedLink()" class="btn-action btn-copy">复制</button>
+                <button id="processLinkBtn" class="btn-action btn-load">加载</button>
+                <button id="loadApiImageBtn" class="btn-action btn-random">随机</button>
+                <button id="copyConvertedLinkBtn" class="btn-action btn-copy">复制</button>
             </div>
             <div class="menu-row pager-row-compact">
-                <button onclick="changeUrlPage(-1)" class="pager-btn-compact">◀</button>
+                <button id="pagerPrevBtn" class="pager-btn-compact">◀</button>
                 <div class="page-indicator-compact">
                     <span>P</span>
-                    <input type="number" id="urlPageInput" value="1" min="1" onchange="jumpUrlPage(this.value)"/>
+                    <input type="number" id="urlPageInput" value="1" min="1"/>
                 </div>
-                <button onclick="changeUrlPage(1)" class="pager-btn-compact">▶</button>
+                <button id="pagerNextBtn" class="pager-btn-compact">▶</button>
             </div>
         </div>
     </div>
 
     <div class="preview-controls">
-        <button id="downloadBtnMinimal" onclick="downloadImage()" title="下载">↓</button>
-        <button id="toggleDetailsBtn" onclick="toggleDetailsPanel()" title="详情">i</button>
+        <button id="downloadBtnMinimal" title="下载">↓</button>
+        <button id="toggleDetailsBtn" title="详情">i</button>
     </div>
 
     <div id="quickAccessContainer" class="quick-access-container">
-        <button id="quickAccessBtn" class="quick-access-btn" onclick="openSecretSettings()" title="设置">S</button>
-        <button id="galleryBtn" class="quick-access-btn" onclick="openGalleryBrowser()" title="图库">G</button>
-        <button id="quickRandomBtn" class="quick-access-btn" onclick="quickRandomImage()" title="随机">R</button>
+        <button id="quickAccessBtn" class="quick-access-btn" title="设置">S</button>
+        <button id="galleryBtn" class="quick-access-btn" title="图库">G</button>
+        <button id="quickRandomBtn" class="quick-access-btn" title="随机">R</button>
     </div>
 
     <div id="toastContainer" class="toast-container"></div>
@@ -96,7 +96,7 @@
 
         <div id="resultLinkContainer" class="result-link-container" style="display: none;">
             <span class="result-link-label">链接：</span>
-            <div id="resultLink" class="result-link" onclick="copyToClipboard(this)"></div>
+            <div id="resultLink" class="result-link"></div>
         </div>
 
         <div id="imageContainer" class="image-container" style="display: none;">
@@ -113,7 +113,7 @@
                 <img id="resultImage" src="" alt="Pixiv图片" style="display: none;" />
             </div>
             <div class="button-container">
-                <button id="downloadBtn" class="show-original-btn" onclick="downloadImage()">下载</button>
+                <button id="downloadBtn" class="show-original-btn">下载</button>
             </div>
         </div>
 
@@ -130,15 +130,15 @@
             
             <!-- 功能切换按钮 -->
             <div class="function-toggle">
-                <button id="staticResourceBtn" class="active" onclick="switchFunction('static')">静态资源</button>
-                <button id="AnotherBtn" onclick="switchFunction('Another')">另一个静态资源-PikPak</button>
+                <button id="staticResourceBtn" class="active">静态资源</button>
+                <button id="anotherBtn">另一个静态资源-PikPak</button>
             </div>
             
             <!-- 静态资源部分 -->
             <div id="staticResourceSection">
                 <div class="secret-input-group">
                     <label for="secretProxySelect">选择服务器：</label>
-                    <select id="secretProxySelect" onchange="handleSecretProxyChange()">
+                    <select id="secretProxySelect">
                         <option value="https://prox.futa.de5.net/">站长自建</option>
                         <option value="https://prox.spacetimee.xyz/">Github大佬公开</option>
                         <option value="custom">自定义</option>
@@ -161,20 +161,20 @@
             </div>
             
             <!-- 另一个静态资源部分 -->
-            <div id="AnotherSection" style="display: none;">
+            <div id="anotherSection" style="display: none;">
                 <div class="secret-input-group">
-                    <label for="AnotherInput">输入链接：</label>
+                    <label for="anotherInput">输入链接：</label>
                     <input 
                         type="text" 
-                        id="AnotherInput" 
+                        id="anotherInput" 
                         placeholder="请输入链接..."
                     />
                 </div>
             </div>
             
             <div class="secret-buttons">
-                <button onclick="handleSecretAction()">执行操作</button>
-                <button class="close-secret" onclick="closeSecretSettings()">关闭</button>
+                <button id="handleSecretActionBtn">执行操作</button>
+                <button class="close-secret" id="closeSecretSettingsBtn">关闭</button>
             </div>
         </div>
     </div>
@@ -185,20 +185,20 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0;">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <h2 style="margin: 0;">图库浏览</h2>
-                    <button onclick="pickRandomImage()" style="margin: 0; padding: 8px 15px; background: #ff9f43; font-size: 14px; border-radius: 4px; border: none; cursor: pointer; color: white;">🎲 随机一图</button>
+                    <button id="pickRandomImageBtn" style="margin: 0; padding: 8px 15px; background: #ff9f43; font-size: 14px; border-radius: 4px; border: none; cursor: pointer; color: white;">🎲 随机一图</button>
                     <label class="thumb-option" for="useThumbCheckbox">
                         <input type="checkbox" id="useThumbCheckbox" />
                         使用缩略图
                     </label>
                 </div>
-                <button class="close-secret" onclick="closeGalleryBrowser()" style="width: auto; padding: 5px 15px;">✕</button>
+                <button class="close-secret" id="closeGalleryBrowserBtn" style="width: auto; padding: 5px 15px;">✕</button>
             </div>
             
             <div class="gallery-body">
                 <div class="gallery-sidebar">
                     <div class="input-wrapper">
                         <label style="display:block; color:#b19cd9; margin-bottom:5px; font-size:14px;">数据源</label>
-                        <select id="galleryCsvSelect" onchange="loadGalleryData()" style="padding: 10px; background: #3a3a4a; border: 1px solid #4b0082; color: #e6e6fa; border-radius: 4px;">
+                        <select id="galleryCsvSelect" style="padding: 10px; background: #3a3a4a; border: 1px solid #4b0082; color: #e6e6fa; border-radius: 4px;">
                             <!-- Options injected via JS -->
                         </select>
                         <input type="file" id="localCsvInput" accept=".csv" style="display:none;">
@@ -238,11 +238,15 @@
                         <label style="display:block; color:#b19cd9; margin-bottom:5px; font-size:14px;">已选标签</label>
                         <div class="selected-tags-row">
                             <div class="selected-group">
-                                <span class="selected-label">包含</span>
+                                <span class="selected-label" style="align-self: center;">包含</span>
+                                <select id="tagIncludeLogic" class="pager-select" style="margin: 0 5px; font-size: 12px; padding: 2px 4px; height: fit-content; align-self: center;">
+                                    <option value="OR">任一(OR)</option>
+                                    <option value="AND">所有(AND)</option>
+                                </select>
                                 <div id="selectedInclude" class="selected-tags"></div>
                             </div>
                             <div class="selected-group">
-                                <span class="selected-label">排除</span>
+                                <span class="selected-label" style="align-self: center;">排除</span>
                                 <div id="selectedExclude" class="selected-tags"></div>
                             </div>
                             <button id="clearSelectedTags" class="pager-btn">清空</button>
