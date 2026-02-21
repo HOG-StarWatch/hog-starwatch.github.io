@@ -2,11 +2,9 @@
 let domElements = null;
 
 function initDomElements() {
-    if (domElements) return domElements;
-
     const getElement = (id) => document.getElementById(id);
 
-    domElements = {
+    return {
         urlInput: getElement('urlInput'),
         urlPageInput: getElement('urlPageInput'),
         miniUrlPageInput: getElement('miniUrlPageInput'),
@@ -20,7 +18,7 @@ function initDomElements() {
         quickAccessContainer: getElement('quickAccessContainer'),
         quickAccessBtn: getElement('quickAccessBtn'),
         galleryBtn: getElement('galleryBtn'),
-        quickRandomBtn: getElement('quickRandomBtn'),
+        galleryRandomBtn: getElement('galleryRandomBtn'),
         toastContainer: getElement('toastContainer'),
         secretSettings: getElement('secretSettings'),
         galleryBrowser: getElement('galleryBrowser'),
@@ -69,16 +67,17 @@ function initDomElements() {
         resultImage: getElement('resultImage'),
         downloadBtn: getElement('downloadBtn'),
         downloadBtnMinimal: getElement('downloadBtnMinimal'),
+        openInNewTabBtnMinimal: getElement('openInNewTabBtnMinimal'),
         detailsContainer: getElement('detailsContainer'),
         detailsGrid: getElement('detailsGrid'),
         fullscreenPreview: getElement('fullscreenPreview'),
         openTagInclude: getElement('openTagInclude'),
         openTagExclude: getElement('openTagExclude'),
         minimalistToast: getElement('minimalistToast'),
-        minimalistProgress: getElement('minimalistProgress')
+        minimalistProgress: getElement('minimalistProgress'),
+        apiCategorySelect: getElement('apiCategorySelect'),
+        loadApiImageBtn: getElement('loadApiImageBtn')
     };
-
-    return domElements;
 }
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
@@ -92,7 +91,73 @@ const CONFIG = {
     zoomStep: 0.25
 };
 
-let toastControllers = new Set();
+// Image Cache Manager (disabled)
+class ImageCacheManager {
+    constructor() {}
+    async has(key) { return false; }
+    async get(key) { return undefined; }
+    async set(key, value, size = 0) {}
+    async delete(key) { return false; }
+    async clear() {}
+    async getAll() { return []; }
+    async getSize() { return 0; }
+}
+
+const appState = {
+    csvFilesConfig: [],
+    isOriginalSize: false,
+    originalUrl: '',
+    replacedUrl: '',
+    hasAccessedSecret: false,
+    currentFunction: 'static',
+    lastFailedUrl: '',
+    
+    // Fetch related
+    currentFetchController: null,
+    
+    // Media elements
+    currentVideoElement: null,
+    currentObjectUrls: new Set(),
+    
+    // Gallery state
+    galleryData: [],
+    galleryTags: new Set(),
+    tagCountsMap: {},
+    isGalleryLoaded: false,
+    currentPage: 1,
+    perPage: 50,
+    
+    // Preview state
+    currentPreviewData: {
+        links: [],
+        content: '',
+        sourceUrl: '',
+        type: ''
+    },
+    
+    // API mode
+    currentApiMode: null, // 'sfw', 'nsfw', or 'custom'
+    
+    // Zoom and touch state
+    currentZoom: 1,
+    touchStartX: 0,
+    touchStartY: 0,
+    touchStartTime: 0,
+    initialDistance: 0,
+    initialZoom: 1,
+
+    // Click throttle
+    lastClickTime: 0,
+
+    // API categories
+    sfwApiCategories: ['waifu', 'neko', 'shinobu', 'megumin', 'bully', 'cuddle', 'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk', 'yeet', 'blush', 'smile', 'wave', 'highfive', 'handhold', 'nom', 'bite', 'glomp', 'slap', 'kill', 'kick', 'happy', 'wink', 'poke', 'dance', 'cringe'],
+    nsfwApiCategories: ['waifu', 'neko', 'trap', 'blowjob'],
+    
+    // Image Cache
+    imageCache: new ImageCacheManager(50),
+
+    toastControllers: new Set()
+};
 
 window.onerror = function(msg, url, line, col, error) {
     console.error('Global error:', msg, 'at', url, line, col);
@@ -182,7 +247,7 @@ window.addEventListener('offline', function() {
                 container.className = 'preview-progress';
                 container.innerHTML = '<div id="minimalistProgress" class="preview-progress-bar"></div>';
                 document.body.appendChild(container);
-                bar = domElements.minimalistProgress = getElement('minimalistProgress');
+                bar = domElements.minimalistProgress = document.getElementById('minimalistProgress');
             }
             bar.style.width = percent + '%';
             bar.parentElement.style.display = 'block';
@@ -226,7 +291,7 @@ window.addEventListener('offline', function() {
                     setTimeout(() => {
                         if (toast.parentElement) {
                             toast.remove();
-                            toastControllers.delete(controller);
+                            appState.toastControllers.delete(controller);
                         }
                     }, 300);
                 }, remaining);
@@ -239,7 +304,7 @@ window.addEventListener('offline', function() {
             };
 
             controller = { pause: pauseTimeout, resume: startTimeout };
-            toastControllers.add(controller);
+            appState.toastControllers.add(controller);
 
             startTimeout();
         }
@@ -273,43 +338,19 @@ window.addEventListener('offline', function() {
                 return;
             }
 
-            originalUrl = url;
-            replacedUrl = convertedUrl;
+                        appState.originalUrl = url;
+            appState.replacedUrl = convertedUrl;
             showCopyToast('已复制', 3000, true, convertedUrl);
         }
 
-        let csvFilesConfig = [];
-        let isOriginalSize = false;
-        let originalUrl = '';
-        let replacedUrl = '';
-        let hasAccessedSecret = false; // 标记是否访问过
-        let currentFunction = 'static'; // 当前功能：static或Another
-        let lastFailedUrl = ''; // 记录最后加载失败的URL,用于重试功能
-        
-        // Image Cache Manager (disabled)
-        class ImageCacheManager {
-            constructor() {}
-            async has(key) { return false; }
-            async get(key) { return undefined; }
-            async set(key, value, size = 0) {}
-            async delete(key) {}
-            async clear() {}
-            async getAll() { return []; }
-            async getSize() { return 0; }
-        }
-
-        const imageCache = new ImageCacheManager(50);
-        let currentFetchController = null;
-        let lastClickTime = 0;
-        let currentVideoElement = null;
-        let currentObjectUrls = new Set();
         
         
 
-        let galleryData = [];
-        let galleryTags = new Set();
-        let tagCountsMap = {};
-        let isGalleryLoaded = false;
+
+
+        
+
+        
 
 
         // =============================================
@@ -326,7 +367,7 @@ window.addEventListener('offline', function() {
             placeholder.disabled = true;
             placeholder.selected = true;
             select.appendChild(placeholder);
-            csvFilesConfig.forEach(file => {
+            appState.csvFilesConfig.forEach(file => {
                 const option = document.createElement('option');
                 option.value = file;
                 option.textContent = file;
@@ -336,20 +377,20 @@ window.addEventListener('offline', function() {
             localOpt.value = '__local__';
             localOpt.textContent = '选择本地CSV文件...';
             select.appendChild(localOpt);
-            if (csvFilesConfig.length > 0) {
-                select.value = csvFilesConfig[0];
+            if (appState.csvFilesConfig.length > 0) {
+                select.value = appState.csvFilesConfig[0];
             }
         }
         async function loadCsvConfig() {
             let failed = false;
             try {
                 const resp = await fetch('csv.json');
-                if (!resp.ok) throw new Error();
+                if (!resp.ok) throw new Error('Failed to load csv.json');
                 const data = await resp.json();
                 const files = Array.isArray(data) ? data : (Array.isArray(data.files) ? data.files : []);
-                csvFilesConfig = files && files.length ? files : [];
+                appState.csvFilesConfig = files && files.length ? files : [];
             } catch (e) {
-                csvFilesConfig = [];
+                appState.csvFilesConfig = [];
                 failed = true;
             }
             initCsvSelect(failed);
@@ -357,7 +398,7 @@ window.addEventListener('offline', function() {
         
 
         function switchFunction(func) {
-            currentFunction = func;
+            appState.currentFunction = func;
             
             domElements.staticResourceBtn.classList.toggle('active', func === 'static');
             domElements.anotherBtn.classList.toggle('active', func === 'Another');
@@ -372,23 +413,23 @@ window.addEventListener('offline', function() {
             const container = domElements.quickAccessContainer;
             const btnProx = domElements.quickAccessBtn;
             const btnGallery = domElements.galleryBtn;
-            const btnRandom = domElements.quickRandomBtn;
+            const btnGalleryRandom = domElements.galleryRandomBtn;
             
             if (value === 'prox') {
                 input.value = '';
-                hasAccessedSecret = true;
+                appState.hasAccessedSecret = true;
                 container.style.display = 'flex';
                 btnProx.style.display = 'flex';
                 btnGallery.style.display = 'none';
-                btnRandom.style.display = 'none';
+                btnGalleryRandom.style.display = 'none';
                 openSecretSettings();
-            } else if (value === 'random') {
+    } else if (value === 'gallery') {
                 input.value = '';
-                hasAccessedSecret = true;
+                appState.hasAccessedSecret = true;
                 container.style.display = 'flex';
                 btnProx.style.display = 'none';
                 btnGallery.style.display = 'flex';
-                btnRandom.style.display = 'flex';
+                btnGalleryRandom.style.display = 'flex';
                 openGalleryBrowser();
             }
         }
@@ -497,10 +538,10 @@ window.addEventListener('offline', function() {
         function processCsvData(text, sourceName) {
             const status = domElements.galleryStatus;
             try {
-                galleryData = parseCSV(text);
+                appState.galleryData = parseCSV(text);
                 
                 const tagCounts = {};
-                galleryData.forEach(item => {
+                appState.galleryData.forEach(item => {
                     if (item.tags_transl) {
                         item.tags_transl.split(',').forEach(t => {
                             const tag = t.trim();
@@ -510,7 +551,7 @@ window.addEventListener('offline', function() {
                         });
                     }
                 });
-                tagCountsMap = tagCounts;
+                appState.tagCountsMap = tagCounts;
                 
                 const includePanel = domElements.tagIncludePanel;
                 const excludePanel = domElements.tagExcludePanel;
@@ -536,8 +577,8 @@ window.addEventListener('offline', function() {
                         excludePanel.appendChild(exc);
                     });
 
-                isGalleryLoaded = true;
-                status.textContent = `加载成功: ${sourceName} (共 ${galleryData.length} 条数据)`;
+                appState.isGalleryLoaded = true;
+                status.textContent = `加载成功: ${sourceName} (共 ${appState.galleryData.length} 条数据)`;
                 renderGalleryTable();
             } catch (err) {
                 console.error(err);
@@ -549,19 +590,19 @@ window.addEventListener('offline', function() {
         // --- Gallery Browser Functions ---
         function openGalleryBrowser() {
             domElements.galleryBrowser.style.display = 'flex';
-            if (!isGalleryLoaded) {
+            if (!appState.isGalleryLoaded) {
                 loadGalleryData();
             }
         }
 
         function pickRandomImage() {
-            if (galleryData.length === 0) {
-                alert('请先加载数据！');
+            if (appState.galleryData.length === 0) {
+                showMinimaistMessage('请先加载数据！', 'error');
                 return;
             }
             
-            const randomIndex = Math.floor(Math.random() * galleryData.length);
-            const item = galleryData[randomIndex];
+            const randomIndex = Math.floor(Math.random() * appState.galleryData.length);
+            const item = appState.galleryData[randomIndex];
             
             const useThumb = domElements.useThumbCheckbox && domElements.useThumbCheckbox.checked;
             
@@ -639,34 +680,33 @@ window.addEventListener('offline', function() {
             }
         }
 
-        let currentPage = 1;
-        let perPage = 50;
+        
         function updatePaginationUI(totalFiltered, totalPages) {
             const info = domElements.pageInfo;
             const input = domElements.pageInput;
-            if (info) info.textContent = `第 ${currentPage} / ${totalPages} 页`;
+            if (info) info.textContent = `第 ${appState.currentPage} / ${totalPages} 页`;
             if (input) {
                 input.max = Math.max(1, totalPages);
-                input.value = currentPage;
+                input.value = appState.currentPage;
             }
             const prevBtn = domElements.prevPageBtn;
             const nextBtn = domElements.nextPageBtn;
-            if (prevBtn) prevBtn.disabled = currentPage <= 1;
-            if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+            if (prevBtn) prevBtn.disabled = appState.currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = appState.currentPage >= totalPages;
         }
         function prevPage() {
-            if (currentPage > 1) {
-                currentPage--;
+            if (appState.currentPage > 1) {
+                appState.currentPage--;
                 renderGalleryTable();
             }
         }
         function nextPage() {
-            currentPage++;
+            appState.currentPage++;
             renderGalleryTable();
         }
         function goToPage(p) {
-            const total = Math.max(1, Math.ceil(galleryData.length / perPage));
-            currentPage = Math.min(Math.max(1, parseInt(p, 10) || 1), total);
+            const total = Math.max(1, Math.ceil(appState.galleryData.length / appState.perPage));
+            appState.currentPage = Math.min(Math.max(1, parseInt(p, 10) || 1), total);
             renderGalleryTable();
         }
         
@@ -677,7 +717,7 @@ window.addEventListener('offline', function() {
             const excludeTags = Array.from(document.querySelectorAll('#tagExcludePanel .tag-item.selected')).map(el => el.dataset.value);
             const filterAi = domElements.galleryAiFilter.value;
 
-            let items = galleryData.filter(item => {
+            let items = appState.galleryData.filter(item => {
                 const matchSearch = !searchText || 
                     (item.title || '').toLowerCase().includes(searchText) || 
                     (item.description || '').toLowerCase().includes(searchText) || 
@@ -723,14 +763,14 @@ window.addEventListener('offline', function() {
             const dateFormat = dateFormatEl ? dateFormatEl.value : 'raw';
             
             const totalFiltered = items.length;
-            const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage));
-            if (currentPage > totalPages) currentPage = totalPages;
-            const startIndex = (currentPage - 1) * perPage;
-            const endIndex = startIndex + perPage;
+            const totalPages = Math.max(1, Math.ceil(totalFiltered / appState.perPage));
+            if (appState.currentPage > totalPages) appState.currentPage = totalPages;
+            const startIndex = (appState.currentPage - 1) * appState.perPage;
+            const endIndex = startIndex + appState.perPage;
             const pageItems = items.slice(startIndex, endIndex);
             updatePaginationUI(totalFiltered, totalPages);
             
-            status.textContent = `显示 ${pageItems.length} / ${totalFiltered} 条数据 (总计 ${galleryData.length})`;
+            status.textContent = `显示 ${pageItems.length} / ${totalFiltered} 条数据 (总计 ${appState.galleryData.length})`;
             
             const frag = document.createDocumentFragment();
             pageItems.forEach((item, index) => {
@@ -837,15 +877,16 @@ window.addEventListener('offline', function() {
 
         function openSecretSettings() {
             domElements.secretSettings.style.display = 'flex';
-            hasAccessedSecret = true;
+            appState.hasAccessedSecret = true;
             const container = domElements.quickAccessContainer;
             const btnProx = domElements.quickAccessBtn;
-            const btnGallery = domElements.galleryBtn;
-            const btnRandom = domElements.quickRandomBtn;
-            if (container) container.style.display = 'flex';
-            if (btnProx) btnProx.style.display = 'flex';
-            if (btnGallery) btnGallery.style.display = 'flex';
-            if (btnRandom) btnRandom.style.display = 'flex';
+        const btnGallery = domElements.galleryBtn;
+        const btnGalleryRandom = domElements.galleryRandomBtn;
+
+        if (container) container.style.display = 'flex';
+        if (btnProx) btnProx.style.display = 'flex';
+        if (btnGallery) btnGallery.style.display = 'flex';
+        if (btnGalleryRandom) btnGalleryRandom.style.display = 'flex';
         }
 
         function closeSecretSettings() {
@@ -867,9 +908,9 @@ window.addEventListener('offline', function() {
         }
 
         function handleSecretAction() {
-            if (currentFunction === 'static') {
+            if (appState.currentFunction === 'static') {
                 handleStaticResource();
-            } else if (currentFunction === 'Another') {
+            } else if (appState.currentFunction === 'Another') {
                 handleAnotherAcceleration();
             }
         }
@@ -880,7 +921,7 @@ window.addEventListener('offline', function() {
             const secretCustomProxyInput = domElements.secretCustomProxyInput;
             
             if (!secretInput) {
-                alert('❌ 请输入静态资源链接！');
+                showMinimaistMessage('❌ 请输入静态资源链接！', 'error');
                 return;
             }
             
@@ -888,7 +929,7 @@ window.addEventListener('offline', function() {
             if (secretProxySelect.value === 'custom') {
                 proxyUrl = secretCustomProxyInput.value.trim();
                 if (!proxyUrl) {
-                    alert('❌ 请输入自定义服务器地址！');
+                    showMinimaistMessage('❌ 请输入自定义服务器地址！', 'error');
                     return;
                 }
             } else {
@@ -912,7 +953,7 @@ window.addEventListener('offline', function() {
             const AnotherInput = domElements.anotherInput.value.trim();
             
             if (!AnotherInput) {
-                alert('❌ 请输入链接！');
+                showMinimaistMessage('❌ 请输入链接！', 'error');
                 return;
             }
             
@@ -1007,7 +1048,7 @@ window.addEventListener('offline', function() {
                     loadImageWithProgress(url, retryCount + 1, skipCacheOverride);
                 } else {
                     loadingIndicator.style.display = 'none';
-                    lastFailedUrl = url;
+                    appState.lastFailedUrl = url;
                     showErrorWithRetry(`图片加载失败`, url, { current: retryCount + 1, max: MAX_RETRIES });
                     showCopyToast('图片加载失败', 3000, true, url);
                 }
@@ -1015,7 +1056,7 @@ window.addEventListener('offline', function() {
 
             // --- Start loading ---
             newImg.src = url;
-            replacedUrl = url;
+            appState.replacedUrl = url;
         }
 
         function showErrorWithRetry(msg, url, retryInfo = null) {
@@ -1052,7 +1093,7 @@ window.addEventListener('offline', function() {
                 elem.style.display = 'block';
             }
             showMinimaistMessage(msg, 'error');
-            lastFailedUrl = url;
+            appState.lastFailedUrl = url;
         }
 
         function retryLoad(url) {
@@ -1060,8 +1101,8 @@ window.addEventListener('offline', function() {
             if (elem) elem.style.display = 'none';
             if (url) {
                 loadImageWithProgress(url, 0);
-            } else if (lastFailedUrl) {
-                loadImageWithProgress(lastFailedUrl, 0);
+            } else if (appState.lastFailedUrl) {
+                loadImageWithProgress(appState.lastFailedUrl, 0);
             }
         }
 
@@ -1086,13 +1127,10 @@ window.addEventListener('offline', function() {
             
             const resultLink = domElements.resultLink;
             const resultLinkContainer = domElements.resultLinkContainer;
-            if (resultLink) resultLink.textContent = replacedUrl;
+            if (resultLink) resultLink.textContent = appState.replacedUrl;
             if (resultLinkContainer) resultLinkContainer.style.display = 'block';
 
-            const downloadBtnMinimal = domElements.downloadBtnMinimal;
-            if (downloadBtnMinimal) downloadBtnMinimal.classList.add('visible');
-
-            isOriginalSize = false;
+            appState.isOriginalSize = false;
             
             const imageContainer = domElements.imageContainer;
             if (imageContainer) imageContainer.style.display = 'block';
@@ -1124,7 +1162,7 @@ window.addEventListener('offline', function() {
             if (input.toLowerCase() === 'prox') {
                 showCopyToast('打开设置面板', 3000, false);
                 openSecretSettings();
-                hasAccessedSecret = true;
+                appState.hasAccessedSecret = true;
                 const container = domElements.quickAccessContainer;
                 const btnProx = domElements.quickAccessBtn;
                 if (container) container.style.display = 'flex';
@@ -1137,10 +1175,10 @@ window.addEventListener('offline', function() {
                 if (!urlToLoad.startsWith('http://') && !urlToLoad.startsWith('https://')) {
                     urlToLoad = 'https://' + urlToLoad;
                 }
-                originalUrl = urlToLoad;
+                appState.originalUrl = urlToLoad;
                 
-                if (/i\.pximg\.net/i.test(originalUrl)) {
-                    handlePixivLink(originalUrl, skipCache);
+                if (/i\.pximg\.net/i.test(appState.originalUrl)) {
+                    handlePixivLink(appState.originalUrl, skipCache);
                 } else {
                     showCopyToast('加载链接: ', 3000, false, urlToLoad);
                     loadUrlAuto(urlToLoad, skipCache);
@@ -1151,11 +1189,7 @@ window.addEventListener('offline', function() {
             }
         }
 
-        let currentPreviewData = {
-            links: [],
-            content: '',
-            sourceUrl: ''
-        };
+        
 
         async function loadUrlAuto(url) {
             const imageContainer = domElements.imageContainer;
@@ -1163,11 +1197,18 @@ window.addEventListener('offline', function() {
             const resultLink = domElements.resultLink;
             const loadingIndicator = domElements.loadingIndicator;
             const downloadBtnMinimal = domElements.downloadBtnMinimal;
+            const openInNewTabBtnMinimal = domElements.openInNewTabBtnMinimal;
+            const toggleDetailsBtn = domElements.toggleDetailsBtn;
+            const detailsPanel = domElements.detailsPanel;
 
             if (imageContainer) imageContainer.style.display = 'block';
             if (resultLinkContainer) resultLinkContainer.style.display = 'none';
             if (loadingIndicator) loadingIndicator.style.display = 'flex';
+            
             if (downloadBtnMinimal) downloadBtnMinimal.classList.remove('visible');
+            if (openInNewTabBtnMinimal) openInNewTabBtnMinimal.classList.remove('visible');
+            if (toggleDetailsBtn) toggleDetailsBtn.classList.remove('visible');
+            if (detailsPanel) detailsPanel.classList.remove('show');
             
             showCopyToast('正在请求链接...', 3000, false, url);
             showInfo('正在加载...');
@@ -1219,7 +1260,7 @@ window.addEventListener('offline', function() {
         }
 
         function showContentPreview(content, sourceUrl, type, links = []) {
-            currentPreviewData = {
+            appState.currentPreviewData = {
                 content: content,
                 sourceUrl: sourceUrl,
                 links: links,
@@ -1284,7 +1325,7 @@ window.addEventListener('offline', function() {
             }
 
             const linkIndex = parseInt(selectedInput.value, 10);
-            const link = currentPreviewData.links[linkIndex];
+            const link = appState.currentPreviewData.links[linkIndex];
 
             showCopyToast('加载选中链接: ', 3000, false, link);
             closeContentPreview();
@@ -1302,35 +1343,40 @@ window.addEventListener('offline', function() {
 
             showCopyToast('准备加载媒体...', 3000, false, url);
             
-            originalUrl = url;
-            replacedUrl = url;
+            appState.originalUrl = url;
+            appState.replacedUrl = url;
 
             const proxyUrl = getProxyUrl();
             const cleanProxyUrl = proxyUrl ? proxyUrl.replace(/\/+$/, '') : '';
 
             if (cleanProxyUrl && /i\.pximg\.net/i.test(url)) {
                 showCopyToast('转换Pixiv链接...', 3000, false, url);
-                replacedUrl = url.replace(
+                appState.replacedUrl = url.replace(
                     /i\.pximg\.net/g, 
                     cleanProxyUrl.replace(/^https?:\/\//, '')
                 );
-                showCopyToast('转换完成: ', 3000, false, replacedUrl);
+                showCopyToast('转换完成: ', 3000, false, appState.replacedUrl);
             }
 
-            if (resultLink) resultLink.textContent = replacedUrl;
+            if (resultLink) resultLink.textContent = appState.replacedUrl;
             if (resultLinkContainer) resultLinkContainer.style.display = 'block';
 
-            isOriginalSize = false;
+            const downloadBtnMinimal = domElements.downloadBtnMinimal;
+            const openInNewTabBtnMinimal = domElements.openInNewTabBtnMinimal;
+            if (downloadBtnMinimal) downloadBtnMinimal.classList.add('visible');
+            if (openInNewTabBtnMinimal) openInNewTabBtnMinimal.classList.add('visible');
 
-            const isVideo = /\.(mp4|webm|mov|avi)(\?.*)?$/i.test(replacedUrl);
+            appState.isOriginalSize = false;
+
+            const isVideo = /\.(mp4|webm|mov|avi)(\?.*)?$/i.test(appState.replacedUrl);
 
             if (isVideo) {
-                showCopyToast('检测到视频，准备播放...', 3000, false, replacedUrl);
-                showVideoPreview(replacedUrl);
+                showCopyToast('检测到视频，准备播放...', 3000, false, appState.replacedUrl);
+                showVideoPreview(appState.replacedUrl);
             } else {
-                showCopyToast('正在加载图片...', 3000, false, replacedUrl);
+                showCopyToast('正在加载图片...', 3000, false, appState.replacedUrl);
                 showInfo('正在加载图片...');
-                loadImageWithProgress(replacedUrl);
+                loadImageWithProgress(appState.replacedUrl);
             }
         }
 
@@ -1356,7 +1402,7 @@ window.addEventListener('offline', function() {
             video.style.display = 'block';
             video.src = url;
             video.play().catch(e => console.warn("Video play failed, likely requires user interaction.", e));
-            currentVideoElement = video;
+            appState.currentVideoElement = video;
             
             const loadingIndicator = domElements.loadingIndicator;
             if (loadingIndicator) loadingIndicator.style.display = 'none';
@@ -1425,7 +1471,7 @@ window.addEventListener('offline', function() {
 
             if (input.toLowerCase() === 'prox') {
                 openSecretSettings();
-                hasAccessedSecret = true;
+                appState.hasAccessedSecret = true;
                 const container = domElements.quickAccessContainer;
                 const btnProx = domElements.quickAccessBtn;
                 if (container) container.style.display = 'flex';
@@ -1465,20 +1511,28 @@ window.addEventListener('offline', function() {
             }
         }
 
+        function openInNewTabMinimal() {
+            if (appState.replacedUrl) {
+                window.open(appState.replacedUrl, '_blank');
+            } else {
+                showMinimaistMessage('没有可打开的链接', 'error');
+            }
+        }
+
         function downloadImage() {
-            if (!replacedUrl) {
+            if (!appState.replacedUrl) {
                 showError('❌ 没有可下载的图片链接');
                 return;
             }
 
             const a = document.createElement('a');
-            a.href = replacedUrl;
+            a.href = appState.replacedUrl;
             
             let filename = 'pixiv-image.png';
-            if (originalUrl) {
-                filename = originalUrl.split('/').pop();
-            } else if (replacedUrl && !replacedUrl.startsWith('blob:')) {
-                filename = replacedUrl.split('/').pop();
+            if (appState.originalUrl) {
+                filename = appState.originalUrl.split('/').pop();
+            } else if (appState.replacedUrl && !appState.replacedUrl.startsWith('blob:')) {
+                filename = appState.replacedUrl.split('/').pop();
             }
             a.download = filename;
             
@@ -1597,13 +1651,13 @@ window.addEventListener('offline', function() {
             processLink();
         }
 
-        async function quickRandomImage() {
-            if (!isGalleryLoaded) {
+        async function pickRandomFromGallery() {
+            if (!appState.isGalleryLoaded) {
                  await loadGalleryData();
             }
             
-            if (galleryData.length === 0) {
-                 alert('请先在图库中加载数据！');
+            if (appState.galleryData.length === 0) {
+                 showMinimaistMessage('请先在图库中加载数据！', 'error');
                  openGalleryBrowser(); 
                  return;
             }
@@ -1611,18 +1665,79 @@ window.addEventListener('offline', function() {
             pickRandomImage();
         }
 
+        
+
+        function populateApiCategorySelect(categories) {
+            const select = domElements.apiCategorySelect;
+            if (!select) return;
+            select.innerHTML = '';
+            const randomOpt = document.createElement('option');
+            randomOpt.value = 'random';
+            randomOpt.textContent = '随机';
+            select.appendChild(randomOpt);
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                select.appendChild(option);
+            });
+        }
+
+        function handleApiModeChange(e) {
+            const value = e.target.value.trim().toLowerCase();
+            const select = domElements.apiCategorySelect;
+            const button = domElements.loadApiImageBtn;
+
+            if (value === 'sfw') {
+                appState.currentApiMode = 'sfw';
+                populateApiCategorySelect(appState.sfwApiCategories);
+                select.style.display = 'inline-block';
+                button.style.display = 'inline-block';
+            } else if (value === 'nsfw') {
+                appState.currentApiMode = 'nsfw';
+                populateApiCategorySelect(appState.nsfwApiCategories);
+                select.style.display = 'inline-block';
+                button.style.display = 'inline-block';
+            } else if (value) {
+                appState.currentApiMode = 'custom';
+                select.style.display = 'none';
+                button.style.display = 'inline-block';
+            } else {
+                appState.currentApiMode = null;
+                select.style.display = 'none';
+                button.style.display = 'none';
+            }
+        }
+
         function loadApiImage() {
-            let apiUrl = 'https://img.futa.de5.net/1';
-            
-            const customInput = domElements.customProxyInput;
-            if (customInput && customInput.value.trim() !== '') {
-                apiUrl = customInput.value.trim();
+            let apiUrl;
+            const customApiValue = domElements.customProxyInput.value.trim();
+            const mode = customApiValue.toLowerCase();
+
+            if (mode === 'sfw' || mode === 'nsfw') {
+                appState.currentApiMode = mode;
+                let selectedCategory = domElements.apiCategorySelect.value;
+                const currentCategories = (appState.currentApiMode === 'sfw') ? appState.sfwApiCategories : appState.nsfwApiCategories;
+
+                if (selectedCategory === 'random') {
+                    if (currentCategories.length > 0) {
+                        selectedCategory = currentCategories[Math.floor(Math.random() * currentCategories.length)];
+                    } else {
+                        showError('API 分类加载失败，无法选择随机分类。');
+                        return;
+                    }
+                }
+                apiUrl = `https://api.waifu.pics/${appState.currentApiMode}/${selectedCategory}`;
+            } else if (customApiValue) {
+                apiUrl = customApiValue;
+            } else {
+                showError('服务器输入框为空。');
+                return;
             }
 
             showCopyToast('正在准备API请求...', 3000, false, apiUrl);
             
-            const separator = apiUrl.includes('?') ? '&' : '?';
-            const targetUrl = apiUrl + separator + 't=' + Date.now();
+            const targetUrl = apiUrl + (apiUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
             
             showCopyToast('API地址: ', 3000, false, apiUrl);
             
@@ -1643,15 +1758,13 @@ window.addEventListener('offline', function() {
             
             if (resultLink) resultLink.textContent = apiUrl;
             
-            originalUrl = ''; 
-            replacedUrl = targetUrl;
+            appState.originalUrl = ''; 
+            appState.replacedUrl = targetUrl;
             
-            isOriginalSize = false;
-            
-            if (downloadBtnMinimal) downloadBtnMinimal.classList.add('visible');
+            appState.isOriginalSize = false;
             
             showCopyToast('正在加载随机图片...', 3000, false, targetUrl);
-            loadImageWithProgress(targetUrl);
+            loadUrlAuto(targetUrl);
         }
 
         document.addEventListener('keydown', function(e) {
@@ -1701,15 +1814,15 @@ window.addEventListener('offline', function() {
             }
         });
 
-        let currentZoom = 1;
+        
         
         function zoomImage(delta) {
             const preview = domElements.fullscreenPreview;
             const img = preview.querySelector('img');
             if (!img) return;
             
-            currentZoom = Math.max(CONFIG.zoomMin, Math.min(CONFIG.zoomMax, currentZoom + delta));
-            img.style.transform = 'scale(' + currentZoom + ')';
+            appState.currentZoom = Math.max(CONFIG.zoomMin, Math.min(CONFIG.zoomMax, appState.currentZoom + delta));
+            img.style.transform = 'scale(' + appState.currentZoom + ')';
             img.style.transformOrigin = 'center center';
         }
         
@@ -1717,24 +1830,20 @@ window.addEventListener('offline', function() {
             const preview = domElements.fullscreenPreview;
             const img = preview.querySelector('img');
             if (!img) return;
-            currentZoom = 1;
+            appState.currentZoom = 1;
             img.style.transform = 'scale(1)';
         }
 
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchStartTime = 0;
-        let initialDistance = 0;
-        let initialZoom = 1;
+        
 
         document.addEventListener('touchstart', function(e) {
             if (e.touches.length === 1) {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-                touchStartTime = Date.now();
+                appState.touchStartX = e.touches[0].clientX;
+                appState.touchStartY = e.touches[0].clientY;
+                appState.touchStartTime = Date.now();
             } else if (e.touches.length === 2) {
-                initialDistance = getTouchDistance(e.touches);
-                initialZoom = currentZoom;
+                appState.initialDistance = getTouchDistance(e.touches);
+                appState.initialZoom = appState.currentZoom;
             }
         }, { passive: true });
 
@@ -1742,13 +1851,13 @@ window.addEventListener('offline', function() {
             if (e.touches.length === 2) {
                 e.preventDefault();
                 const currentDistance = getTouchDistance(e.touches);
-                const scale = currentDistance / initialDistance;
-                const newZoom = Math.max(CONFIG.zoomMin, Math.min(CONFIG.zoomMax, initialZoom * scale));
+                const scale = currentDistance / appState.initialDistance;
+                const newZoom = Math.max(CONFIG.zoomMin, Math.min(CONFIG.zoomMax, appState.initialZoom * scale));
                 const preview = domElements.fullscreenPreview;
                 const img = preview.querySelector('img');
                 if (img) {
-                    currentZoom = newZoom;
-                    img.style.transform = 'scale(' + currentZoom + ')';
+                    appState.currentZoom = newZoom;
+                    img.style.transform = 'scale(' + appState.currentZoom + ')';
                 }
             }
         }, { passive: false });
@@ -1757,9 +1866,9 @@ window.addEventListener('offline', function() {
             if (e.changedTouches.length === 1) {
                 const touchEndX = e.changedTouches[0].clientX;
                 const touchEndY = e.changedTouches[0].clientY;
-                const touchDuration = Date.now() - touchStartTime;
-                const deltaX = touchEndX - touchStartX;
-                const deltaY = touchEndY - touchStartY;
+                const touchDuration = Date.now() - appState.touchStartTime;
+                const deltaX = touchEndX - appState.touchStartX;
+                const deltaY = touchEndY - appState.touchStartY;
                 
                 if (touchDuration < 300 && Math.abs(deltaX) > CONFIG.touchSwipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
                     if (deltaX > 0) {
@@ -1779,28 +1888,28 @@ window.addEventListener('offline', function() {
 
         document.addEventListener('DOMContentLoaded', function() {
             // 初始化 DOM 元素缓存
-            initDomElements();
+            domElements = initDomElements();
 
             handleProxyChange();
             handleSecretProxyChange();
             
-            hasAccessedSecret = false;
+            appState.hasAccessedSecret = false;
             const quickBtn = domElements.quickAccessBtn;
             const galleryBtn = domElements.galleryBtn;
-            const randomBtn = domElements.quickRandomBtn;
+            const galleryRandomBtn = domElements.galleryRandomBtn;
             const container = domElements.quickAccessContainer;
             if (quickBtn) quickBtn.style.display = 'none';
             if (galleryBtn) galleryBtn.style.display = 'none';
-            if (randomBtn) randomBtn.style.display = 'none';
+            if (galleryRandomBtn) galleryRandomBtn.style.display = 'none';
             if (container) container.style.display = 'none';
 
             const toastContainer = domElements.toastContainer;
             if (toastContainer) {
                 toastContainer.addEventListener('mouseover', () => {
-                    toastControllers.forEach(c => c.pause());
+                    appState.toastControllers.forEach(c => c.pause());
                 });
                 toastContainer.addEventListener('mouseout', () => {
-                    toastControllers.forEach(c => c.resume());
+                    appState.toastControllers.forEach(c => c.resume());
                 });
 
                 toastContainer.addEventListener('click', (e) => {
@@ -1872,8 +1981,8 @@ window.addEventListener('offline', function() {
                     if (aSel !== bSel) return bSel - aSel;
                     const ta = a.dataset.value || '';
                     const tb = b.dataset.value || '';
-                    const ca = tagCountsMap[ta] || 0;
-                    const cb = tagCountsMap[tb] || 0;
+                    const ca = appState.tagCountsMap[ta] || 0;
+                    const cb = appState.tagCountsMap[tb] || 0;
                     if (ca !== cb) return cb - ca;
                     return ta.localeCompare(tb, 'zh-CN');
                 });
@@ -1924,7 +2033,7 @@ window.addEventListener('offline', function() {
             if (aiFilterEl) aiFilterEl.addEventListener('change', debouncedRender);
             if (sortEl) sortEl.addEventListener('change', renderGalleryTable);
             if (dateFmtEl) dateFmtEl.addEventListener('change', renderGalleryTable);
-            if (perPageEl) perPageEl.addEventListener('change', () => { perPage = parseInt(perPageEl.value, 10) || 50; currentPage = 1; renderGalleryTable(); });
+            if (perPageEl) perPageEl.addEventListener('change', () => { appState.perPage = parseInt(perPageEl.value, 10) || 50; appState.currentPage = 1; renderGalleryTable(); });
             if (prevBtn) prevBtn.addEventListener('click', prevPage);
             if (nextBtn) nextBtn.addEventListener('click', nextPage);
             if (jumpBtn && pageInput) jumpBtn.addEventListener('click', () => { const p = parseInt(pageInput.value, 10); if (!isNaN(p)) { goToPage(p); } });
@@ -2020,6 +2129,7 @@ window.addEventListener('offline', function() {
             D('copyConvertedLinkBtn', 'click', copyConvertedLink);
             D('proxySelect', 'change', handleProxyChange);
             D('urlInput', 'input', () => { checkSecretCode(); updatePageControlFromUrl(); });
+            D('customProxyInput', 'input', handleApiModeChange);
 
             // Pagers
             D('miniPagerPrevBtn', 'click', () => changeUrlPage(-1));
@@ -2036,10 +2146,11 @@ window.addEventListener('offline', function() {
 
             // Main Preview and Quick Access
             D('downloadBtnMinimal', 'click', downloadImage);
+            D('openInNewTabBtnMinimal', 'click', openInNewTabMinimal);
             D('toggleDetailsBtn', 'click', toggleDetailsPanel);
             D('quickAccessBtn', 'click', openSecretSettings);
             D('galleryBtn', 'click', openGalleryBrowser);
-            D('quickRandomBtn', 'click', quickRandomImage);
+            D('galleryRandomBtn', 'click', pickRandomFromGallery);
             D('resultLink', 'click', (e) => copyToClipboard(e.currentTarget));
             D('downloadBtn', 'click', downloadImage);
 
@@ -2094,15 +2205,15 @@ window.addEventListener('offline', function() {
         }
 
         function cleanupResources() {
-            if (currentVideoElement) {
-                currentVideoElement.pause();
-                currentVideoElement.src = '';
-                currentVideoElement = null;
+            if (appState.currentVideoElement) {
+                appState.currentVideoElement.pause();
+                appState.currentVideoElement.src = '';
+                appState.currentVideoElement = null;
             }
-            currentObjectUrls.forEach(function(url) {
+            appState.currentObjectUrls.forEach(function(url) {
                 URL.revokeObjectURL(url);
             });
-            currentObjectUrls.clear();
+            appState.currentObjectUrls.clear();
         }
 
         window.addEventListener('beforeunload', cleanupResources);

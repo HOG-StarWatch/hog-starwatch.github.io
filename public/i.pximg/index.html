@@ -54,7 +54,11 @@
             </div>
             <div class="menu-row actions-row">
                 <button id="processLinkBtn" class="btn-action btn-load">加载</button>
-                <button id="loadApiImageBtn" class="btn-action btn-random">随机</button>
+                <select id="apiCategorySelect" class="compact-select" style="display: none;">
+                    <option value="random">随机</option>
+                    <!-- Categories will be populated by JS -->
+                </select>
+                <button id="loadApiImageBtn" class="btn-action btn-random" style="display: none;">加载API</button>
                 <button id="copyConvertedLinkBtn" class="btn-action btn-copy">复制</button>
             </div>
             <div class="menu-row pager-row-compact">
@@ -70,13 +74,14 @@
 
     <div class="preview-controls">
         <button id="downloadBtnMinimal" title="下载">↓</button>
+        <button id="openInNewTabBtnMinimal" title="新标签页打开">↗</button>
         <button id="toggleDetailsBtn" title="详情">i</button>
     </div>
 
     <div id="quickAccessContainer" class="quick-access-container">
         <button id="quickAccessBtn" class="quick-access-btn" title="设置">S</button>
         <button id="galleryBtn" class="quick-access-btn" title="图库">G</button>
-        <button id="quickRandomBtn" class="quick-access-btn" title="随机">R</button>
+        <button id="galleryRandomBtn" class="quick-access-btn" title="图库随机">R</button>
     </div>
 
     <div id="toastContainer" class="toast-container"></div>
