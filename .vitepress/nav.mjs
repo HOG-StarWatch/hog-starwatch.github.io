@@ -42,6 +42,7 @@ export default [
         { text: 'HTML在线运行', link: '../../../html_runner.html', target: '_self', },
         { text: 'HTML在线运行', link: '../../../htmlrunner.html', target: '_self', },
         { text: '脚本执行器ProMax', link: '../../../ScriptExecutor.html', target: '_self', },
+        { text: 'UnicodeQQ昵称', link: '../../../Unicode.html', target: '_self', },
         { text: 'File64', link: '../../../File64.html', target: '_self', },
         { text: 'IP检测', link: '../../../IPcheck.html', target: '_self', },
         { text: '延迟&测速', link: '../../../ping-speedtest.html', target: '_self', },

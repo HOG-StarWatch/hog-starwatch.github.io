@@ -10,6 +10,7 @@ function initDomElements() {
         miniUrlPageInput: getElement('miniUrlPageInput'),
         proxySelect: getElement('proxySelect'),
         customProxyInput: getElement('customProxyInput'),
+        apiModeSelect: getElement('apiModeSelect'),
         floatingMenuContent: getElement('floatingMenuContent'),
         miniPager: getElement('miniPager'),
         detailsPanel: getElement('detailsPanel'),
@@ -76,31 +77,190 @@ function initDomElements() {
         minimalistToast: getElement('minimalistToast'),
         minimalistProgress: getElement('minimalistProgress'),
         apiCategorySelect: getElement('apiCategorySelect'),
-        loadApiImageBtn: getElement('loadApiImageBtn')
+        loadApiImageBtn: getElement('loadApiImageBtn'),
+        cacheManagerBtn: getElement('cacheManagerBtn'),
+        cacheManager: getElement('cacheManager'),
+        closeCacheManagerBtn: getElement('closeCacheManagerBtn'),
+        refreshCacheBtn: getElement('refreshCacheBtn'),
+        clearCacheBtn: getElement('clearCacheBtn'),
+        deleteSelectedCacheBtn: getElement('deleteSelectedCacheBtn'),
+        cacheTableBody: getElement('cacheTableBody'),
+        selectAllCache: getElement('selectAllCache'),
+        cacheStats: getElement('cacheStats')
     };
 }
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
-const FETCH_TIMEOUT = 60000;
-const CONFIG = {
-    preloadCount: 2,
-    preloadEnabled: true,
-    touchSwipeThreshold: 50,
-    zoomMin: 0.5,
-    zoomMax: 4,
-    zoomStep: 0.25
-};
+const MAX_RETRIES = APP_CONFIG.runtime.maxRetries;
+const RETRY_DELAY = APP_CONFIG.runtime.retryDelay;
+const FETCH_TIMEOUT = APP_CONFIG.runtime.fetchTimeout;
+const CONFIG = APP_CONFIG.runtime;
 
-// Image Cache Manager (disabled)
+// Image Cache Manager using IndexedDB
 class ImageCacheManager {
-    constructor() {}
-    async has(key) { return false; }
-    async get(key) { return undefined; }
-    async set(key, value, size = 0) {}
-    async delete(key) { return false; }
-    async clear() {}
-    async getAll() { return []; }
-    async getSize() { return 0; }
+    constructor(maxSize = 100) {
+        this.dbName = 'PixivViewerCache';
+        this.storeName = 'images';
+        this.db = null;
+        this.maxSize = maxSize;
+        this.initPromise = this.init();
+    }
+
+    async init() {
+        if (!window.indexedDB) {
+            console.warn("IndexedDB not supported");
+            return null;
+        }
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, 1);
+            
+            request.onerror = (event) => {
+                console.error("IndexedDB error:", event.target.error);
+                resolve(null); // Fail gracefully
+            };
+
+            request.onsuccess = (event) => {
+                this.db = event.target.result;
+                resolve(this.db);
+            };
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(this.storeName)) {
+                    const objectStore = db.createObjectStore(this.storeName, { keyPath: 'url' });
+                    objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    objectStore.createIndex('size', 'size', { unique: false });
+                }
+            };
+        });
+    }
+
+    async ensureDb() {
+        if (!this.db) {
+            await this.initPromise;
+        }
+        return this.db;
+    }
+
+    async has(url) {
+        try {
+            const db = await this.ensureDb();
+            if (!db) return false;
+            return new Promise((resolve) => {
+                const transaction = db.transaction([this.storeName], 'readonly');
+                const store = transaction.objectStore(this.storeName);
+                const request = store.count(url);
+                request.onsuccess = () => resolve(request.result > 0);
+                request.onerror = () => resolve(false);
+            });
+        } catch (e) {
+            console.error("Cache check failed", e);
+            return false;
+        }
+    }
+
+    async get(url) {
+        try {
+            const db = await this.ensureDb();
+            if (!db) return undefined;
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([this.storeName], 'readonly');
+                const store = transaction.objectStore(this.storeName);
+                const request = store.get(url);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        } catch (e) {
+            console.error("Cache get failed", e);
+            return undefined;
+        }
+    }
+
+    async set(url, blob) {
+        try {
+            const db = await this.ensureDb();
+            if (!db) return false;
+            
+            // Simple metadata
+            const record = {
+                url: url,
+                blob: blob,
+                timestamp: Date.now(),
+                size: blob.size,
+                type: blob.type
+            };
+
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([this.storeName], 'readwrite');
+                const store = transaction.objectStore(this.storeName);
+                const request = store.put(record);
+                
+                request.onsuccess = () => {
+                    resolve(true);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        } catch (e) {
+            console.error("Cache set failed", e);
+            return false;
+        }
+    }
+
+    async delete(url) {
+        try {
+            const db = await this.ensureDb();
+            if (!db) return false;
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([this.storeName], 'readwrite');
+                const store = transaction.objectStore(this.storeName);
+                const request = store.delete(url);
+                request.onsuccess = () => resolve(true);
+                request.onerror = () => reject(request.error);
+            });
+        } catch (e) {
+            return false;
+        }
+    }
+
+    async clear() {
+        try {
+            const db = await this.ensureDb();
+            if (!db) return false;
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([this.storeName], 'readwrite');
+                const store = transaction.objectStore(this.storeName);
+                const request = store.clear();
+                request.onsuccess = () => resolve(true);
+                request.onerror = () => reject(request.error);
+            });
+        } catch (e) {
+            return false;
+        }
+    }
+
+    async getAllMetadata() {
+        try {
+            const db = await this.ensureDb();
+            if (!db) return [];
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([this.storeName], 'readonly');
+                const store = transaction.objectStore(this.storeName);
+                const items = [];
+                const request = store.openCursor();
+                request.onsuccess = (event) => {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        const { blob, ...metadata } = cursor.value; 
+                        items.push(metadata);
+                        cursor.continue();
+                    } else {
+                        resolve(items);
+                    }
+                };
+                request.onerror = () => reject(request.error);
+            });
+        } catch (e) {
+            return [];
+        }
+    }
 }
 
 const appState = {
@@ -150,8 +310,8 @@ const appState = {
     lastClickTime: 0,
 
     // API categories
-    sfwApiCategories: ['waifu', 'neko', 'shinobu', 'megumin', 'bully', 'cuddle', 'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk', 'yeet', 'blush', 'smile', 'wave', 'highfive', 'handhold', 'nom', 'bite', 'glomp', 'slap', 'kill', 'kick', 'happy', 'wink', 'poke', 'dance', 'cringe'],
-    nsfwApiCategories: ['waifu', 'neko', 'trap', 'blowjob'],
+    sfwApiCategories: APP_CONFIG.api.categories.sfw,
+    nsfwApiCategories: APP_CONFIG.api.categories.nsfw,
     
     // Image Cache
     imageCache: new ImageCacheManager(50),
@@ -186,13 +346,46 @@ window.addEventListener('offline', function() {
             return div.innerHTML;
         }
 
-        function fetchWithTimeout(url, options = {}, timeout = FETCH_TIMEOUT) {
-            return Promise.race([
-                fetch(url, options),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('请求超时 (' + timeout/1000 + '秒)')), timeout)
-                )
-            ]);
+        function normalizeUrl(input) {
+            if (!input) return '';
+            let url = input.trim();
+            if (!/^(https?:\/\/)/i.test(url)) {
+                return 'https://' + url;
+            }
+            return url;
+        }
+
+        async function fetchWithTimeout(url, options = {}, timeout = FETCH_TIMEOUT) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            options.signal = controller.signal;
+
+            try {
+                const response = await fetch(url, options);
+                clearTimeout(id);
+                return response;
+            } catch (err) {
+                clearTimeout(id);
+                // Protocol fallback logic
+                if (url.startsWith('https://')) {
+                    console.warn(`HTTPS failed for ${url}, trying HTTP...`, err);
+                    const httpUrl = url.replace(/^https:\/\//, 'http://');
+                    
+                    const controllerFallback = new AbortController();
+                    const idFallback = setTimeout(() => controllerFallback.abort(), timeout);
+                    options.signal = controllerFallback.signal;
+                    
+                    try {
+                        const fallbackResponse = await fetch(httpUrl, options);
+                        clearTimeout(idFallback);
+                        return fallbackResponse;
+                    } catch (fallbackErr) {
+                        clearTimeout(idFallback);
+                        throw err; // Throw original error if fallback also fails
+                    }
+                }
+                throw err;
+            }
         }
 
         // =============================================
@@ -357,6 +550,53 @@ window.addEventListener('offline', function() {
         // Gallery & Data Handling
         // =============================================
 
+        function initProxies() {
+            const proxySelect = domElements.proxySelect;
+            const secretProxySelect = domElements.secretProxySelect;
+            
+            if (!proxySelect || !secretProxySelect) return;
+            
+            // 填充代理列表
+            APP_CONFIG.proxies.forEach(proxy => {
+                // Header Proxy Select
+                const option1 = document.createElement('option');
+                option1.value = proxy.url;
+                option1.textContent = proxy.label;
+                // 插入到 "自定义" 之前
+                proxySelect.insertBefore(option1, proxySelect.lastElementChild);
+                
+                // Secret Proxy Select
+                const option2 = document.createElement('option');
+                option2.value = proxy.url;
+                option2.textContent = proxy.label;
+                // 插入到 "自定义" 之前
+                secretProxySelect.insertBefore(option2, secretProxySelect.lastElementChild);
+            });
+            
+            // 设置默认值
+            if (APP_CONFIG.proxies.length > 0) {
+                proxySelect.value = APP_CONFIG.proxies[0].url;
+                secretProxySelect.value = APP_CONFIG.proxies[0].url;
+            }
+        }
+
+        function initApiModes() {
+            const select = domElements.apiModeSelect;
+            if (!select || !APP_CONFIG.apiShortcutOptions) return;
+            
+            // Keep the first placeholder option
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+
+            APP_CONFIG.apiShortcutOptions.forEach(mode => {
+                const option = document.createElement('option');
+                option.value = mode.value;
+                option.textContent = mode.label;
+                select.appendChild(option);
+            });
+        }
+
         function initCsvSelect(failed = false) {
             const select = domElements.galleryCsvSelect;
             if (!select) return;
@@ -423,7 +663,7 @@ window.addEventListener('offline', function() {
                 btnGallery.style.display = 'none';
                 btnGalleryRandom.style.display = 'none';
                 openSecretSettings();
-    } else if (value === 'gallery') {
+            } else if (value === 'gallery') {
                 input.value = '';
                 appState.hasAccessedSecret = true;
                 container.style.display = 'flex';
@@ -878,15 +1118,8 @@ window.addEventListener('offline', function() {
         function openSecretSettings() {
             domElements.secretSettings.style.display = 'flex';
             appState.hasAccessedSecret = true;
-            const container = domElements.quickAccessContainer;
-            const btnProx = domElements.quickAccessBtn;
-        const btnGallery = domElements.galleryBtn;
-        const btnGalleryRandom = domElements.galleryRandomBtn;
-
-        if (container) container.style.display = 'flex';
-        if (btnProx) btnProx.style.display = 'flex';
-        if (btnGallery) btnGallery.style.display = 'flex';
-        if (btnGalleryRandom) btnGalleryRandom.style.display = 'flex';
+            // Removed logic that forced all buttons to show.
+            // Visibility is now handled by checkSecretCode or click events.
         }
 
         function closeSecretSettings() {
@@ -927,7 +1160,7 @@ window.addEventListener('offline', function() {
             
             let proxyUrl;
             if (secretProxySelect.value === 'custom') {
-                proxyUrl = secretCustomProxyInput.value.trim();
+                proxyUrl = normalizeUrl(secretCustomProxyInput.value.trim());
                 if (!proxyUrl) {
                     showMinimaistMessage('❌ 请输入自定义服务器地址！', 'error');
                     return;
@@ -961,7 +1194,7 @@ window.addEventListener('offline', function() {
             
             // processedInput = processedInput.replace(/^https?:\/\//, '');
             
-            const finalUrl = 'https://p.futa.de5.net/' + processedInput;
+            const finalUrl = APP_CONFIG.staticAcceleration.baseUrl + processedInput;
             
             window.open(finalUrl, '_blank');
             
@@ -973,7 +1206,7 @@ window.addEventListener('offline', function() {
             const customProxyInput = domElements.customProxyInput;
             
             if (proxySelect.value === 'custom') {
-                return customProxyInput.value.trim();
+                return normalizeUrl(customProxyInput.value.trim());
             } else {
                 return proxySelect.value;
             }
@@ -995,7 +1228,7 @@ window.addEventListener('offline', function() {
         // Image/Media Loading & Network
         // =============================================
 
-        async function loadImageWithProgress(url, retryCount = 0, skipCacheOverride = null) {
+        async function loadImageWithProgress(url, retryCount = 0, skipCacheOverride = false) {
             const loadingText = domElements.loadingText;
             const progressContainer = domElements.progressContainer;
             const loadingIndicator = domElements.loadingIndicator;
@@ -1027,36 +1260,71 @@ window.addEventListener('offline', function() {
             newImg.style.display = 'block'; 
             oldImg.parentNode.replaceChild(newImg, oldImg);
 
-            let hasFired = false; // Safety flag
+            try {
+                let blob;
 
-            // --- Attach event listeners to the NEW element ---
-            newImg.onload = function() {
-                if (hasFired) return;
-                hasFired = true;
-                loadingIndicator.style.display = 'none';
-                fullscreenPreview.style.display = 'flex';
-                showCopyToast('图片加载完成', 3000, false, url);
-            };
+                // 1. Check Cache
+                // Only for Pixiv URLs (proxied or original)
+                const isPixiv = /i\.pximg\.net/.test(appState.originalUrl) || /i\.pximg\.net/.test(url);
+                
+                if (!skipCacheOverride && isPixiv) {
+                     const cached = await appState.imageCache.get(url);
+                     if (cached && cached.blob) {
+                         blob = cached.blob;
+                         loadingText.textContent = '从缓存加载...';
+                         showCopyToast('从缓存加载', 2000, false);
+                     }
+                }
 
-            newImg.onerror = async function() {
-                if (hasFired) return;
-                hasFired = true;
-                console.error(`Failed to load image directly: ${url}`);
-                if (retryCount < MAX_RETRIES) {
+                // 2. Fetch if not in cache
+                if (!blob) {
+                    loadingText.textContent = `正在下载... ${retryCount > 0 ? `(重试 ${retryCount}/${MAX_RETRIES})` : ''}`;
+                    
+                    const response = await fetchWithTimeout(url, {}, FETCH_TIMEOUT);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    blob = await response.blob();
+                    
+                    // 3. Save to Cache
+                    // We save everything to cache for management, even if we don't read it automatically
+                    if (blob) {
+                        await appState.imageCache.set(url, blob);
+                    }
+                }
+
+                // 4. Display
+                const objectUrl = URL.createObjectURL(blob);
+                appState.currentObjectUrls.add(objectUrl);
+                
+                newImg.onload = function() {
+                    loadingIndicator.style.display = 'none';
+                    fullscreenPreview.style.display = 'flex';
+                    showCopyToast('图片加载完成', 3000, false, url);
+                    
+                    if (domElements.downloadBtnMinimal) domElements.downloadBtnMinimal.classList.add('visible');
+                    if (domElements.openInNewTabBtnMinimal) domElements.openInNewTabBtnMinimal.classList.add('visible');
+                };
+                
+                newImg.onerror = function() {
+                     loadingIndicator.style.display = 'none';
+                     showError('图片数据无效');
+                };
+                
+                newImg.src = objectUrl;
+                appState.replacedUrl = objectUrl;
+
+            } catch (err) {
+                console.error("Load failed", err);
+                 if (retryCount < MAX_RETRIES) {
                     loadingText.textContent = `加载失败，正在重试 (${retryCount + 1}/${MAX_RETRIES})...`;
                     await new Promise(r => setTimeout(r, RETRY_DELAY * (retryCount + 1)));
                     loadImageWithProgress(url, retryCount + 1, skipCacheOverride);
                 } else {
                     loadingIndicator.style.display = 'none';
                     appState.lastFailedUrl = url;
-                    showErrorWithRetry(`图片加载失败`, url, { current: retryCount + 1, max: MAX_RETRIES });
+                    showErrorWithRetry(`图片加载失败: ${err.message}`, url, { current: retryCount + 1, max: MAX_RETRIES });
                     showCopyToast('图片加载失败', 3000, true, url);
                 }
-            };
-
-            // --- Start loading ---
-            newImg.src = url;
-            appState.replacedUrl = url;
+            }
         }
 
         function showErrorWithRetry(msg, url, retryInfo = null) {
@@ -1121,6 +1389,7 @@ window.addEventListener('offline', function() {
                 /i\.pximg\.net/g, 
                 cleanProxyUrl.replace(/^https?:\/\//, '')
             );
+            appState.replacedUrl = replacedUrl;
             
             showCopyToast('转换链接: i.pximg.net -> ' + cleanProxyUrl.replace(/^https?:\/\//, ''), 3000, true, replacedUrl);
             showInfo('已转接: i.pximg.net -> ' + cleanProxyUrl.replace(/^https?:\/\//, ''));
@@ -1171,10 +1440,7 @@ window.addEventListener('offline', function() {
             }
 
             try {
-                let urlToLoad = input;
-                if (!urlToLoad.startsWith('http://') && !urlToLoad.startsWith('https://')) {
-                    urlToLoad = 'https://' + urlToLoad;
-                }
+                let urlToLoad = normalizeUrl(input);
                 appState.originalUrl = urlToLoad;
                 
                 if (/i\.pximg\.net/i.test(appState.originalUrl)) {
@@ -1480,11 +1746,7 @@ window.addEventListener('offline', function() {
             }
 
             try {
-                let urlToOpen = input;
-
-                if (!urlToOpen.startsWith('http://') && !urlToOpen.startsWith('https://')) {
-                    urlToOpen = 'https://' + urlToOpen;
-                }
+                let urlToOpen = normalizeUrl(input);
 
                 const proxyUrl = getProxyUrl();
                 if (!proxyUrl) {
@@ -1687,6 +1949,15 @@ window.addEventListener('offline', function() {
             const value = e.target.value.trim().toLowerCase();
             const select = domElements.apiCategorySelect;
             const button = domElements.loadApiImageBtn;
+            const apiModeSelect = domElements.apiModeSelect;
+
+            if (value === 'api') {
+                e.target.style.display = 'none';
+                apiModeSelect.style.display = 'block';
+                apiModeSelect.value = ''; // reset
+                apiModeSelect.focus();
+                return;
+            }
 
             if (value === 'sfw') {
                 appState.currentApiMode = 'sfw';
@@ -1709,6 +1980,20 @@ window.addEventListener('offline', function() {
             }
         }
 
+        function handleApiModeSelect(e) {
+             const mode = e.target.value;
+             const customProxyInput = domElements.customProxyInput;
+             const apiModeSelect = domElements.apiModeSelect;
+             
+             if (mode) {
+                 customProxyInput.value = mode;
+                 apiModeSelect.style.display = 'none';
+                 customProxyInput.style.display = 'block';
+                 // Trigger change handler manually
+                 handleApiModeChange({ target: customProxyInput });
+             }
+        }
+
         function loadApiImage() {
             let apiUrl;
             const customApiValue = domElements.customProxyInput.value.trim();
@@ -1727,7 +2012,7 @@ window.addEventListener('offline', function() {
                         return;
                     }
                 }
-                apiUrl = `https://api.waifu.pics/${appState.currentApiMode}/${selectedCategory}`;
+                apiUrl = `${APP_CONFIG.api.baseUrl}/${appState.currentApiMode}/${selectedCategory}`;
             } else if (customApiValue) {
                 apiUrl = customApiValue;
             } else {
@@ -1767,6 +2052,269 @@ window.addEventListener('offline', function() {
             loadUrlAuto(targetUrl);
         }
 
+        // =============================================
+        // Cache Management UI
+        // =============================================
+
+        function openCacheManager() {
+            domElements.cacheManager.style.display = 'flex';
+            loadCacheData();
+        }
+
+        function closeCacheManager() {
+            domElements.cacheManager.style.display = 'none';
+        }
+
+        async function loadCacheData() {
+            const tbody = domElements.cacheTableBody;
+            const stats = domElements.cacheStats;
+            if (!tbody) return;
+            
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">加载中...</td></tr>';
+            
+            try {
+                const items = await appState.imageCache.getAllMetadata();
+                renderCacheTable(items);
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-error);">加载失败: ${e.message}</td></tr>`;
+            }
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        let cachePreviewTooltip = null;
+
+        function createCachePreviewTooltip() {
+            if (cachePreviewTooltip) return cachePreviewTooltip;
+            cachePreviewTooltip = document.createElement('div');
+            cachePreviewTooltip.className = 'cache-preview-tooltip';
+            const img = document.createElement('img');
+            cachePreviewTooltip.appendChild(img);
+            document.body.appendChild(cachePreviewTooltip);
+            return cachePreviewTooltip;
+        }
+
+        function updateTooltipPosition(x, y) {
+            if (!cachePreviewTooltip) return;
+            const offset = 15;
+            let left = x + offset;
+            let top = y + offset;
+            
+            // Simple boundary check
+            const rect = cachePreviewTooltip.getBoundingClientRect();
+            if (left + rect.width > window.innerWidth) {
+                left = x - rect.width - offset;
+            }
+            if (top + rect.height > window.innerHeight) {
+                top = y - rect.height - offset;
+            }
+            
+            cachePreviewTooltip.style.left = left + 'px';
+            cachePreviewTooltip.style.top = top + 'px';
+        }
+
+        async function showCachePreview(url, event) {
+             const tooltip = createCachePreviewTooltip();
+             const img = tooltip.querySelector('img');
+             
+             updateTooltipPosition(event.clientX, event.clientY);
+             
+             try {
+                 const data = await appState.imageCache.get(url);
+                 if (data && data.blob) {
+                     const objectUrl = URL.createObjectURL(data.blob);
+                     img.src = objectUrl;
+                     // Store old url to revoke
+                     if (img.dataset.objectUrl) {
+                         URL.revokeObjectURL(img.dataset.objectUrl);
+                     }
+                     img.dataset.objectUrl = objectUrl;
+                     tooltip.style.display = 'block';
+                     
+                     // Update position again after display (dimensions might change)
+                     requestAnimationFrame(() => updateTooltipPosition(event.clientX, event.clientY));
+                 }
+             } catch (e) {
+                 // console.error(e);
+             }
+        }
+
+        function hideCachePreview() {
+            if (cachePreviewTooltip) {
+                cachePreviewTooltip.style.display = 'none';
+                const img = cachePreviewTooltip.querySelector('img');
+                if (img && img.dataset.objectUrl) {
+                    URL.revokeObjectURL(img.dataset.objectUrl);
+                    img.dataset.objectUrl = '';
+                }
+                if (img) img.src = '';
+            }
+        }
+
+        function renderCacheTable(items) {
+            const tbody = domElements.cacheTableBody;
+            const stats = domElements.cacheStats;
+            tbody.innerHTML = '';
+            
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-muted);">缓存为空</td></tr>';
+                if (stats) stats.textContent = '0 项 / 0 B';
+                return;
+            }
+
+            let totalSize = 0;
+            items.sort((a, b) => b.timestamp - a.timestamp); // Newest first
+
+            const frag = document.createDocumentFragment();
+            items.forEach(item => {
+                totalSize += item.size || 0;
+                
+                const tr = document.createElement('tr');
+                tr.className = 'gallery-row';
+                
+                // Checkbox
+                const tdCheck = document.createElement('td');
+                tdCheck.className = 'th-center';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'cache-checkbox';
+                checkbox.dataset.url = item.url;
+                tdCheck.appendChild(checkbox);
+                tr.appendChild(tdCheck);
+                
+                // URL
+                const tdUrl = document.createElement('td');
+                tdUrl.className = 'cell-title';
+                tdUrl.style.cursor = 'help'; // Indicate hoverable
+                const urlDiv = document.createElement('div');
+                urlDiv.textContent = item.url;
+                urlDiv.style.whiteSpace = 'nowrap';
+                urlDiv.style.overflow = 'hidden';
+                urlDiv.style.textOverflow = 'ellipsis';
+                urlDiv.style.maxWidth = '300px';
+                urlDiv.title = item.url;
+                tdUrl.appendChild(urlDiv);
+                
+                // Add Hover Events
+                tdUrl.addEventListener('mouseenter', (e) => showCachePreview(item.url, e));
+                tdUrl.addEventListener('mouseleave', hideCachePreview);
+                tdUrl.addEventListener('mousemove', (e) => updateTooltipPosition(e.clientX, e.clientY));
+                
+                tr.appendChild(tdUrl);
+                
+                // Size
+                const tdSize = document.createElement('td');
+                tdSize.textContent = formatBytes(item.size || 0);
+                tr.appendChild(tdSize);
+                
+                // Type
+                const tdType = document.createElement('td');
+                tdType.textContent = item.type || '-';
+                tr.appendChild(tdType);
+                
+                // Date
+                const tdDate = document.createElement('td');
+                tdDate.textContent = new Date(item.timestamp).toLocaleString();
+                tr.appendChild(tdDate);
+                
+                // Actions
+                const tdAction = document.createElement('td');
+                tdAction.className = 'th-center cell-action';
+                
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = '保存';
+                saveBtn.className = 'action-btn';
+                saveBtn.style.fontSize = '10px';
+                saveBtn.style.padding = '2px 6px';
+                saveBtn.onclick = () => saveCacheItem(item.url);
+                
+                const delBtn = document.createElement('button');
+                delBtn.textContent = '删除';
+                delBtn.className = 'action-btn';
+                delBtn.style.fontSize = '10px';
+                delBtn.style.padding = '2px 6px';
+                delBtn.style.background = 'var(--accent-red-bg)';
+                delBtn.style.color = 'var(--accent-red)';
+                delBtn.onclick = () => deleteCacheItem(item.url);
+
+                tdAction.append(saveBtn, delBtn);
+                tr.appendChild(tdAction);
+                
+                frag.appendChild(tr);
+            });
+            tbody.appendChild(frag);
+            
+            if (stats) stats.textContent = `${items.length} 项 / ${formatBytes(totalSize)}`;
+        }
+
+        async function saveCacheItem(url) {
+            try {
+                const data = await appState.imageCache.get(url);
+                if (data && data.blob) {
+                    const a = document.createElement('a');
+                    const objUrl = URL.createObjectURL(data.blob);
+                    a.href = objUrl;
+                    a.download = url.split('/').pop() || 'image.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
+                } else {
+                    showMinimaistMessage('读取缓存失败', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showMinimaistMessage('保存失败', 'error');
+            }
+        }
+
+        async function deleteCacheItem(url) {
+            if (!confirm('确定删除此缓存项吗？')) return;
+            try {
+                await appState.imageCache.delete(url);
+                showMinimaistMessage('已删除', 'success');
+                loadCacheData(); // Reload
+            } catch (e) {
+                showMinimaistMessage('删除失败', 'error');
+            }
+        }
+
+        async function clearCache() {
+            if (!confirm('确定清空所有缓存吗？此操作不可恢复。')) return;
+            try {
+                await appState.imageCache.clear();
+                showMinimaistMessage('缓存已清空', 'success');
+                loadCacheData();
+            } catch (e) {
+                showMinimaistMessage('清空失败', 'error');
+            }
+        }
+        
+        async function deleteSelectedCache() {
+             const checked = document.querySelectorAll('.cache-checkbox:checked');
+             if (checked.length === 0) {
+                 showMinimaistMessage('请先选择项目', 'info');
+                 return;
+             }
+             if (!confirm(`确定删除选中的 ${checked.length} 项缓存吗？`)) return;
+             
+             let count = 0;
+             for (const cb of checked) {
+                 await appState.imageCache.delete(cb.dataset.url);
+                 count++;
+             }
+             showMinimaistMessage(`已删除 ${count} 项`, 'success');
+             loadCacheData();
+        }
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 var secretSettings = domElements.secretSettings;
@@ -1779,6 +2327,8 @@ window.addEventListener('offline', function() {
                     closeContentPreview();
                 } else if (secretSettings && secretSettings.style.display === 'flex') {
                     closeSecretSettings();
+                } else if (domElements.cacheManager && domElements.cacheManager.style.display === 'flex') {
+                    closeCacheManager();
                 } else if (galleryBrowser && galleryBrowser.style.display === 'flex') {
                     closeGalleryBrowser();
                 } else if (detailsPanel && detailsPanel.classList.contains('show')) {
@@ -1889,6 +2439,10 @@ window.addEventListener('offline', function() {
         document.addEventListener('DOMContentLoaded', function() {
             // 初始化 DOM 元素缓存
             domElements = initDomElements();
+
+            // 初始化代理列表
+            initProxies();
+            initApiModes();
 
             handleProxyChange();
             handleSecretProxyChange();
@@ -2130,6 +2684,14 @@ window.addEventListener('offline', function() {
             D('proxySelect', 'change', handleProxyChange);
             D('urlInput', 'input', () => { checkSecretCode(); updatePageControlFromUrl(); });
             D('customProxyInput', 'input', handleApiModeChange);
+            D('customProxyInput', 'blur', (e) => {
+                const val = e.target.value.trim();
+                if (!val) return;
+                // Don't normalize if it's a command
+                if (['api', 'sfw', 'nsfw'].includes(val.toLowerCase())) return;
+                e.target.value = normalizeUrl(val);
+            });
+            D('apiModeSelect', 'change', handleApiModeSelect);
 
             // Pagers
             D('miniPagerPrevBtn', 'click', () => changeUrlPage(-1));
@@ -2154,17 +2716,44 @@ window.addEventListener('offline', function() {
             D('resultLink', 'click', (e) => copyToClipboard(e.currentTarget));
             D('downloadBtn', 'click', downloadImage);
 
-            // Secret Settings Panel
+            // Static Resource Tabs
             D('staticResourceBtn', 'click', () => switchFunction('static'));
             D('anotherBtn', 'click', () => switchFunction('Another'));
             D('secretProxySelect', 'change', handleSecretProxyChange);
+            D('secretCustomProxyInput', 'blur', (e) => {
+                 if (e.target.value.trim()) e.target.value = normalizeUrl(e.target.value);
+            });
             D('handleSecretActionBtn', 'click', handleSecretAction);
             D('closeSecretSettingsBtn', 'click', closeSecretSettings);
+
+            // Proxy Selection logic for Static Resource
+            const secretProxySelect = domElements.secretProxySelect;
+            const secretCustomProxyGroup = document.getElementById('secretCustomProxyGroup');
+            if (secretProxySelect && secretCustomProxyGroup) {
+                secretProxySelect.addEventListener('change', () => {
+                     if (secretProxySelect.value === 'custom') {
+                         secretCustomProxyGroup.style.display = 'block';
+                     } else {
+                         secretCustomProxyGroup.style.display = 'none';
+                     }
+                });
+            }
 
             // Gallery Browser
             D('pickRandomImageBtn', 'click', pickRandomImage);
             D('closeGalleryBrowserBtn', 'click', closeGalleryBrowser);
             D('galleryCsvSelect', 'change', loadGalleryData);
+
+            // Cache Management
+            D('cacheManagerBtn', 'click', openCacheManager);
+            D('closeCacheManagerBtn', 'click', closeCacheManager);
+            D('refreshCacheBtn', 'click', loadCacheData);
+            D('clearCacheBtn', 'click', clearCache);
+            D('deleteSelectedCacheBtn', 'click', deleteSelectedCache);
+            D('selectAllCache', 'change', (e) => {
+                const checked = e.target.checked;
+                document.querySelectorAll('.cache-checkbox').forEach(cb => cb.checked = checked);
+            });
 
             // Event Delegation for Gallery Table
             const galleryTableBody = domElements.galleryTableBody;
