@@ -432,11 +432,26 @@
                     const id = `hash-out-${algo}-${Math.random().toString(36).slice(2, 8)}`;
                     const div = document.createElement('div');
                     div.className = 'input-row';
-                    div.innerHTML = `
-                        <label style="width:100px;">${algo}:</label>
-                        <input id="${id}" type="text" value="${val}" readonly style="flex:1;">
-                        <button class="btn btn-icon" onclick="app.copy('${id}')">📋</button>
-                    `;
+                    
+                    const label = document.createElement('label');
+                    label.style.width = '100px';
+                    label.textContent = algo + ':';
+                    
+                    const input = document.createElement('input');
+                    input.id = id;
+                    input.type = 'text';
+                    input.value = val;
+                    input.readOnly = true;
+                    input.style.flex = '1';
+                    
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-icon';
+                    btn.textContent = '📋';
+                    btn.onclick = () => app.copy(id);
+                    
+                    div.appendChild(label);
+                    div.appendChild(input);
+                    div.appendChild(btn);
                     grid.appendChild(div);
                 }
                 card.appendChild(title);

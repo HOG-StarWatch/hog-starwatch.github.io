@@ -6,14 +6,12 @@
     <title>视觉混合图生成器</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        /* Override global style.css */
         body {
             height: auto !important;
             overflow-y: auto !important;
             overflow-x: hidden;
         }
 
-        /* Local overrides */
         .upload-placeholder {
             color: var(--text-dim);
             font-size: 0.9rem;
@@ -25,14 +23,13 @@
             display: block;
             font-size: 0.95rem;
         }
-        
+
         .canvas-responsive {
             max-width: 100%;
             height: auto;
             object-fit: contain;
         }
 
-        /* Mobile Scroll Fix */
         @media (max-width: 768px) {
             body {
                 height: auto !important;
@@ -53,10 +50,9 @@
 </head>
 <body>
     <div class="layout-sidebar">
-        <!-- Sidebar Controls -->
         <div class="controls panel">
             <h2 style="margin:0 0 15px 0; color:var(--primary); font-size:1.5rem;">视觉混合图</h2>
-            
+
             <div class="control-group">
                 <span class="zone-label">1. 近看图 (细节/High Freq)</span>
                 <input type="file" id="input-near" accept="image/*" style="display: none;">
@@ -87,7 +83,7 @@
                 <label><span>混合平衡 (0=远, 1=近)</span> <span id="val-bal">0.5</span></label>
                 <input type="range" id="range-bal" min="0" max="1" step="0.1" value="0.5" style="width:100%" oninput="document.getElementById('val-bal').innerText=this.value">
             </div>
-            
+
             <div class="control-group">
                 <label>图像预处理</label>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -110,7 +106,6 @@
             </div>
         </div>
 
-        <!-- Preview Area -->
         <div class="preview-area">
             <div class="sub-tab-group" style="margin-bottom: 15px; width: 100%; justify-content: center;">
                 <div class="sub-tab active" onclick="setViewSize(1, this)">100% (近看)</div>
@@ -134,6 +129,30 @@
         const cvs = document.getElementById('result-cvs');
         const ctx = cvs.getContext('2d');
         let imgNear = null, imgFar = null;
+        let hybridWorker = null;
+
+        if (window.Worker) {
+            hybridWorker = new Worker('../js/workers/hybrid.worker.js');
+            hybridWorker.onmessage = (e) => {
+                const { type, outputData, error } = e.data;
+                if (type === 'complete') {
+                    const imgData = new ImageData(new Uint8ClampedArray(outputData), cvs.width, cvs.height);
+                    ctx.putImageData(imgData, 0, 0);
+                    document.getElementById('resultPlaceholder').style.display = 'none';
+                    cvs.style.display = 'block';
+                    document.getElementById('dlBtn').disabled = false;
+                    if (app && app.showToast) app.showToast('生成完成');
+                notifyParentResize();
+                } else if (type === 'error') {
+                    console.error('Worker Error:', error);
+                    if (app && app.showToast) app.showToast('生成失败: ' + error, 'error');
+                }
+            };
+            hybridWorker.onerror = (e) => {
+                console.error('Worker Load Error', e);
+                hybridWorker = null;
+            };
+        }
 
         document.getElementById('input-near').addEventListener('change', (e) => handleImage(e.target, 'near'));
         document.getElementById('input-far').addEventListener('change', (e) => handleImage(e.target, 'far'));
@@ -164,37 +183,100 @@
 
         function generateHybrid() {
             if(!imgNear || !imgFar) {
-                if(window.app && app.showToast) app.showToast('请先上传两张图片', 'error');
+                if (app && app.showToast) app.showToast('请先上传两张图片', 'error');
                 else alert('请先上传两张图片');
                 return;
             }
-            if(window.app && app.showToast) app.showToast('正在生成...', 'info');
-            
-            setTimeout(() => {
-                // Placeholder logic - replacing with a simple alpha blend for demo purposes
-                // Ideally this would use a frequency separation algorithm
-                
-                const w = imgNear.width;
-                const h = imgNear.height;
-                cvs.width = w;
-                cvs.height = h;
-                
-                ctx.globalAlpha = 0.5;
-                ctx.drawImage(imgNear, 0, 0, w, h);
-                ctx.drawImage(imgFar, 0, 0, w, h);
-                ctx.globalAlpha = 1.0;
-                
-                document.getElementById('resultPlaceholder').style.display = 'none';
-                cvs.style.display = 'block';
-                document.getElementById('dlBtn').disabled = false;
-                if(window.app && app.showToast) app.showToast('生成完成 (演示模式)');
-                
-                // Notify parent to resize
-                setTimeout(() => {
-                    const height = document.body.scrollHeight;
-                    window.parent.postMessage({ type: 'resize', height: height }, '*');
-                }, 100);
-            }, 100);
+
+            const w = imgNear.width;
+            const h = imgNear.height;
+            cvs.width = w;
+            cvs.height = h;
+
+            const dN = ctx.createImageData(0, 0).data;
+            const dNB = ctx.createImageData(0, 0).data;
+            const dFB = ctx.createImageData(0, 0).data;
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            tempCtx.drawImage(imgNear, 0, 0, w, h);
+            const dataNear = tempCtx.getImageData(0, 0, w, h);
+
+            const blurSize = parseInt(document.getElementById('range-hp').value);
+            tempCtx.filter = `blur(${blurSize}px)`;
+            tempCtx.drawImage(imgNear, 0, 0, w, h);
+            const dataNearBlur = tempCtx.getImageData(0, 0, w, h);
+            tempCtx.filter = 'none';
+
+            const lpSize = parseInt(document.getElementById('range-lp').value);
+            tempCtx.filter = `blur(${lpSize}px)`;
+            tempCtx.drawImage(imgFar, 0, 0, w, h);
+            const dataFarBlur = tempCtx.getImageData(0, 0, w, h);
+            tempCtx.filter = 'none';
+
+            const rangeBalValue = parseFloat(document.getElementById('range-bal').value);
+            const isGray = document.getElementById('chk-gray').checked;
+
+            if (hybridWorker) {
+                hybridWorker.postMessage({
+                    type: 'process',
+                    dN: dataNear.data.buffer,
+                    dNB: dataNearBlur.data.buffer,
+                    dFB: dataFarBlur.data.buffer,
+                    config: {
+                        rangeBalValue: rangeBalValue,
+                        isGray: isGray
+                    }
+                }, [dataNear.data.buffer, dataNearBlur.data.buffer, dataFarBlur.data.buffer]);
+            } else {
+                processHybridMain(dataNear.data, dataNearBlur.data, dataFarBlur.data, w, h, rangeBalValue, isGray);
+            }
+        }
+
+        function processHybridMain(dN, dNB, dFB, w, h, rangeBalValue, isGray) {
+            const outputData = new Uint8ClampedArray(dN.length);
+
+            for (let i = 0; i < dN.length; i += 4) {
+                if (isGray) {
+                    const lN = 0.299*dN[i] + 0.587*dN[i+1] + 0.114*dN[i+2];
+                    const lNB = 0.299*dNB[i] + 0.587*dNB[i+1] + 0.114*dNB[i+2];
+                    const lFB = 0.299*dFB[i] + 0.587*dFB[i+1] + 0.114*dFB[i+2];
+
+                    const highFreq = lN - lNB;
+                    const lowFreq = lFB;
+
+                    const hStrength = rangeBalValue * 3.0;
+                    let val = lowFreq + highFreq * hStrength;
+                    val = Math.min(255, Math.max(0, val));
+
+                    outputData[i] = val;
+                    outputData[i+1] = val;
+                    outputData[i+2] = val;
+                    outputData[i+3] = 255;
+                } else {
+                    for (let c = 0; c < 3; c++) {
+                        const highFreq = dN[i+c] - dNB[i+c];
+                        const lowFreq = dFB[i+c];
+
+                        const hStrength = rangeBalValue * 3.0;
+                        let val = lowFreq + highFreq * hStrength;
+
+                        outputData[i+c] = Math.min(255, Math.max(0, val));
+                    }
+                    outputData[i+3] = 255;
+                }
+            }
+
+            const imgData = new ImageData(outputData, w, h);
+            ctx.putImageData(imgData, 0, 0);
+            document.getElementById('resultPlaceholder').style.display = 'none';
+            cvs.style.display = 'block';
+            document.getElementById('dlBtn').disabled = false;
+            if (app && app.showToast) app.showToast('生成完成');
+            notifyParentResize();
         }
 
         function setViewSize(scale, btn) {
@@ -208,6 +290,13 @@
             link.download = 'hybrid_image.png';
             link.href = cvs.toDataURL();
             link.click();
+        }
+
+        function notifyParentResize() {
+            setTimeout(() => {
+                const height = document.body.scrollHeight;
+                window.parent.postMessage({ type: 'resize', height: height }, '*');
+            }, 100);
         }
     </script>
 </body>

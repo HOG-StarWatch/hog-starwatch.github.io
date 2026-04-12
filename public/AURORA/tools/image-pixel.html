@@ -106,8 +106,8 @@
                     originalCanvas.style.display = 'block';
                     pixelatedCanvas.style.display = 'none';
                     downloadBtn.disabled = true;
-                    
-                    if(window.app && app.showToast) app.showToast('图片已加载');
+
+                    if (app && app.showToast) app.showToast('图片已加载');
                 };
                 img.src = e.target.result;
             };
@@ -150,7 +150,7 @@
             originalCanvas.style.display = 'none';
             pixelatedCanvas.style.display = 'block';
             downloadBtn.disabled = false;
-            if(window.app && app.showToast) app.showToast('处理完成');
+            if (app && app.showToast) app.showToast('处理完成');
         });
 
         downloadBtn.addEventListener('click', () => {

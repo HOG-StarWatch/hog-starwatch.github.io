@@ -468,7 +468,7 @@
                     if (hiddenFiles.length === 0) throw new Error("请至少选择一个文件！");
                     
                     // Use ResourceLoader instead of assuming global JSZip
-                    if(window.app && app.showToast) app.showToast('正在加载组件...', 'info');
+                    if(app && app.showToast) app.showToast('正在加载组件...', 'info');
                     await ResourceLoader.loadDeps('jszip');
                     
                     const zip = new JSZip();

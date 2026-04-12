@@ -247,7 +247,7 @@
                         this.originalImage = img;
                         this.reset();
                         document.getElementById('placeholder').style.display = 'none';
-                        if(window.app && app.showToast) app.showToast('图片已加载');
+                        if(app && app.showToast) app.showToast('图片已加载');
                     };
                     img.src = e.target.result;
                 };

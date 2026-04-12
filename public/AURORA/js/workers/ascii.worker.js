@@ -46,7 +46,7 @@ self.onmessage = function(e) {
                     }
                     
                     if (isColor) {
-                        lineHtml += `<span style="color: rgb(${r},${g},${b})">${displayChar}</span>`;
+                        lineHtml += `<span style="color: rgb(${r}, ${g}, ${b})">${displayChar}</span>`;
                     } else {
                         lineHtml += displayChar;
                     }

@@ -488,7 +488,7 @@
             button.innerText = "处理中…";
 
             try {
-                if(window.app && app.showToast) app.showToast('正在加载组件...', 'info');
+                if(app && app.showToast) app.showToast('正在加载组件...', 'info');
                 await ResourceLoader.loadDeps('@file-qrcode');
                 await generateDataQRCodeFromFiles(selectedFiles);
             } catch (err) {

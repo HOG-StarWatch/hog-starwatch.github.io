@@ -5,44 +5,30 @@
 <title>HF Space App Converter</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
-    :root { 
-        --bg: var(--bg-panel); 
-        --txt: var(--text-main); 
-        --txt-2: var(--text-dim); 
-        --brd: var(--border); 
-        --in-bg: var(--bg-input); 
-        --prm: var(--primary); 
-        --prm-h: var(--primary); 
-        --sec: var(--bg-deep); 
-        --sec-h: var(--bg-hover); 
-        --shd: var(--shadow); 
-        --body-bg: transparent; 
-    }
-    
-    body { margin:0; overflow:hidden; font-family:var(--font-main, system-ui, sans-serif); background:var(--body-bg); color:var(--txt); transition:background .3s; }
+    body { margin:0; overflow:hidden; font-family:var(--font-main, system-ui, sans-serif); background:transparent; color:var(--text-main); transition:background .3s; }
     iframe { position:fixed; inset:0; width:100%; height:100%; border:0; }
     .panel, .icon { position:fixed; top:0; left:0; transform:translate(var(--x,0),var(--y,0)) scale(var(--s,1)); transition:transform .6s cubic-bezier(.2,.8,.2,1),opacity .3s; }
-    .panel { z-index:100; background:var(--bg); backdrop-filter:blur(10px); padding:16px; border-radius:var(--radius-lg, 12px); box-shadow:var(--shd); width:320px; border:1px solid var(--brd); display:flex; flex-direction:column; gap:10px; --s:1; outline:0; }
-    .panel:focus { border-color:var(--prm); box-shadow:0 0 0 2px var(--prm); }
+    .panel { z-index:100; background:var(--bg-panel); backdrop-filter:blur(10px); padding:16px; border-radius:var(--radius-lg, 12px); box-shadow:var(--shadow); width:320px; border:1px solid var(--border); display:flex; flex-direction:column; gap:10px; --s:1; outline:0; }
+    .panel:focus { border-color:var(--primary); box-shadow:0 0 0 2px var(--primary); }
     .panel.min { --s:0.9; opacity:0; pointer-events:none; }
-    .icon { z-index:99; width:40px; height:40px; background:var(--prm); border-radius:50%; box-shadow:var(--shd); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; font-weight:bold; font-size:14px; --s:0; opacity:0; pointer-events:none; }
+    .icon { z-index:99; width:40px; height:40px; background:var(--primary); border-radius:50%; box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; font-weight:bold; font-size:14px; --s:0; opacity:0; pointer-events:none; }
     .icon.show { --s:1; opacity:0.6; pointer-events:auto; } .icon.show:hover { --s:1.1; opacity:1; }
     .tl { --x:20px; --y:20px; } .tr { --x:calc(100vw - 100% - 20px); --y:20px; }
     .bl { --x:20px; --y:calc(100vh - 100% - 20px); } .br { --x:calc(100vw - 100% - 20px); --y:calc(100vh - 100% - 20px); }
     .center { --x:calc(50vw - 50%); --y:calc(50vh - 50%); }
     .head { display:flex; justify-content:space-between; font-weight:bold; font-size:14px; }
     .btns { display:flex; gap:8px; }
-    .ibtn { background:0; border:0; color:var(--txt-2); cursor:pointer; padding:4px; border-radius:4px; } .ibtn:hover { color:var(--txt); background:var(--bg-hover, #ffffff1a); }
-    input { padding:8px; border:1px solid var(--brd); border-radius:6px; background:var(--in-bg); color:var(--txt); outline:0; width:100%; box-sizing:border-box; } input:focus { border-color:var(--prm); }
+    .ibtn { background:0; border:0; color:var(--text-dim); cursor:pointer; padding:4px; border-radius:4px; } .ibtn:hover { color:var(--text-main); background:var(--bg-hover, #ffffff1a); }
+    input { padding:8px; border:1px solid var(--border); border-radius:6px; background:var(--input-bg); color:var(--text-main); outline:0; width:100%; box-sizing:border-box; } input:focus { border-color:var(--primary); }
     .act-btns { display:flex; gap:8px; }
     .btn { flex:1; padding:8px; border:0; border-radius:6px; cursor:pointer; color:#fff; font-weight:500; }
-    .btn-p { background:var(--prm); } .btn-p:hover { filter: brightness(1.1); }
-    .btn-s { background:var(--sec); color:var(--txt); } .btn-s:hover { background:var(--sec-h); } .btn-s:disabled { opacity:0.5; cursor:not-allowed; }
+    .btn-p { background:var(--primary); } .btn-p:hover { filter: brightness(1.1); }
+    .btn-s { background:var(--bg-deep); color:var(--text-main); } .btn-s:hover { background:var(--bg-hover); } .btn-s:disabled { opacity:0.5; cursor:not-allowed; }
     .status { font-size:12px; color:var(--success, #2ecc71); height:18px; overflow:hidden; text-overflow:ellipsis; display:none; } .status.err { color:var(--error, #e74c3c); }
-    .pos-bar { display:flex; justify-content:center; gap:12px; border-top:1px solid var(--brd); padding-top:8px; }
-    .p-btn { width:24px; height:24px; border-radius:4px; border:1px solid var(--brd); background:var(--in-bg); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--txt-2); font-size:10px; }
-    .p-btn:hover { color:var(--txt); } .p-btn.act { background:var(--prm); color:#fff; border-color:var(--prm); }
-    .empty { position:fixed; top:35%; left:50%; transform:translate(-50%,-50%); color:var(--txt-2); text-align:center; z-index:-1; pointer-events:none; }
+    .pos-bar { display:flex; justify-content:center; gap:12px; border-top:1px solid var(--border); padding-top:8px; }
+    .p-btn { width:24px; height:24px; border-radius:4px; border:1px solid var(--border); background:var(--input-bg); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:10px; }
+    .p-btn:hover { color:var(--text-main); } .p-btn.act { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .empty { position:fixed; top:35%; left:50%; transform:translate(-50%,-50%); color:var(--text-dim); text-align:center; z-index:-1; pointer-events:none; }
     .tip { font-size:12px; opacity:0.6; margin-top:16px; font-weight:normal; }
     code { background:rgba(127,127,127,0.2); padding:2px 4px; border-radius:3px; font-family:monospace; }
 </style>

@@ -502,8 +502,8 @@
             link.download = 'app-icon.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
-            if(window.app && window.app.showToast) {
-                window.app.showToast('下载已开始');
+            if (app && app.showToast) {
+                app.showToast('下载已开始');
             }
         }
 

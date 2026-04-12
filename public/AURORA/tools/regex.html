@@ -340,7 +340,7 @@ English test: Hello World
             _copyText: function(text) {
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(text).then(() => {
-                        if (window.app && app.showToast) app.showToast('已复制到剪贴板');
+                        if (app && app.showToast) app.showToast('已复制到剪贴板');
                     }).catch(() => {
                         const temp = document.createElement('textarea');
                         temp.value = text;
@@ -348,7 +348,7 @@ English test: Hello World
                         temp.select();
                         document.execCommand('copy');
                         temp.remove();
-                        if (window.app && app.showToast) app.showToast('已复制到剪贴板');
+                        if (app && app.showToast) app.showToast('已复制到剪贴板');
                     });
                     return;
                 }
@@ -358,11 +358,11 @@ English test: Hello World
                 temp.select();
                 document.execCommand('copy');
                 temp.remove();
-                if (window.app && app.showToast) app.showToast('已复制到剪贴板');
+                if (app && app.showToast) app.showToast('已复制到剪贴板');
             },
             copyMatches: function() {
                 if (!this._filteredMatches.length) {
-                    if (window.app && app.showToast) app.showToast('没有可复制的匹配', 'error');
+                    if (app && app.showToast) app.showToast('没有可复制的匹配', 'error');
                     return;
                 }
                 const text = this._filteredMatches.map(m => m.text).join('\n');

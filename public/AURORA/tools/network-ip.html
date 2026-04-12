@@ -90,12 +90,6 @@
             transform: rotate(180deg);
         }
         
-        /* Fix missing variable if not in global css */
-        :root {
-            --primary-rgb: 192, 132, 252;
-        }
-
-        
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -471,8 +465,8 @@
     <script src="../js/app.js"></script>
     <script src="../js/loader.js"></script>
     <script>
+        ResourceLoader.loadDeps('@icons').catch(() => {});
         document.addEventListener('DOMContentLoaded', function() {
-            ResourceLoader.loadDeps('@icons');
             const userIpElement = document.getElementById('user-ip');
             const loadingInfo = document.getElementById('loading-info');
             const ipInfo = document.getElementById('ip-info');

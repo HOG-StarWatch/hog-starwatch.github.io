@@ -173,10 +173,10 @@ const streamToBase64Chunks = async (readableStream, onData) => {
         newBuffer.set(value, buffer.length);
         buffer = newBuffer;
 
-        // Process full chunks
+        // Process full chunks (use slice for copy since we need to emit)
         while (buffer.length >= CHUNK_LIMIT) {
             const chunk = buffer.slice(0, CHUNK_LIMIT);
-            buffer = buffer.slice(CHUNK_LIMIT);
+            buffer = buffer.subarray(CHUNK_LIMIT); // subarray avoids copy, just moves view
             onData(bytesToBase64(chunk));
         }
     }
@@ -238,8 +238,6 @@ const compressBytes = async (bytes, fmt) => {
 
 // Manual Base64 encoding for better performance control in worker
 const bytesToBase64 = (bytes) => {
-    // Small chunks: use iteration or String.fromCharCode apply
-    // Large chunks: use FileReaderSync
     if (typeof FileReaderSync !== 'undefined') {
         const blob = new Blob([bytes]);
         const reader = new FileReaderSync();
@@ -255,78 +253,76 @@ const bytesToBase64 = (bytes) => {
     return btoa(binary);
 };
 
-    /**
-     * Decode JSON/Base64 to file blobs (returned as Buffers)
-     */
-    handlers.decode = async ({ jsonStr }) => {
-        let dataObj;
-        try {
-            dataObj = JSON.parse(jsonStr);
-        } catch(e) {
-            throw new Error("Invalid JSON format");
+/**
+ * Decode JSON/Base64 to file blobs (returned as Buffers)
+ */
+handlers.decode = async ({ jsonStr }) => {
+    let dataObj;
+    try {
+        dataObj = JSON.parse(jsonStr);
+    } catch(e) {
+        throw new Error("Invalid JSON format");
+    }
+    
+    if(!dataObj.files) throw new Error("JSON missing 'files' field");
+
+    const results = [];
+    
+    const decompressBytes = async (bytes, fmt) => {
+        if (fmt === 'brotli') {
+           const brotli = await ResourceLoader.import('brotli-wasm-esm');
+           await brotli.default(); 
+           return brotli.decompress(bytes);
         }
         
-        if(!dataObj.files) throw new Error("JSON missing 'files' field");
-
-        const results = [];
-        
-        const decompressBytes = async (bytes, fmt) => {
-            if (fmt === 'brotli') {
-               const brotli = await ResourceLoader.import('brotli-wasm-esm');
-               await brotli.default(); 
-               return brotli.decompress(bytes);
+        if (fmt === 'zstd') {
+            try {
+                const zstd = await ResourceLoader.import('zstd-wasm-esm');
+                await zstd.init();
+                return zstd.decompress(bytes);
+            } catch(e) {
+                await ResourceLoader.load('zstd-wasm');
+                await Zstd.init();
+                return Zstd.decompress(bytes);
             }
-            
-            if (fmt === 'zstd') {
-                try {
-                    const zstd = await ResourceLoader.import('zstd-wasm-esm');
-                    await zstd.init();
-                    return zstd.decompress(bytes);
-                } catch(e) {
-                    await ResourceLoader.load('zstd-wasm');
-                    await Zstd.init();
-                    return Zstd.decompress(bytes);
-                }
-            }
-
-            if (fmt === 'gzip' || fmt === 'deflate') {
-                if (typeof DecompressionStream === 'undefined') throw new Error("DecompressionStream unsupported");
-                const blob = new Blob([bytes]);
-                const ds = new DecompressionStream(fmt);
-                const stream = blob.stream().pipeThrough(ds);
-                const response = new Response(stream);
-                return new Uint8Array(await response.arrayBuffer());
-            }
-            return bytes;
-        };
-
-        for (const f of dataObj.files) {
-            self.postMessage({ type: 'status', msg: `Decoding ${f.name}...` });
-            
-            // Base64 to Bytes
-            const binString = atob(f.data);
-            const len = binString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binString.charCodeAt(i);
-            }
-            
-            let outBytes = bytes;
-            if (f.compression && f.compression !== 'none') {
-                self.postMessage({ type: 'status', msg: `Decompressing ${f.name} (${f.compression})...` });
-                outBytes = await decompressBytes(bytes, f.compression);
-            }
-            
-            results.push({
-                name: f.name,
-                type: f.type,
-                data: outBytes // Transferable? We'll send back as is
-            });
         }
-        
-        return results;
+
+        if (fmt === 'gzip' || fmt === 'deflate') {
+            if (typeof DecompressionStream === 'undefined') throw new Error("DecompressionStream unsupported");
+            const blob = new Blob([bytes]);
+            const ds = new DecompressionStream(fmt);
+            const stream = blob.stream().pipeThrough(ds);
+            const response = new Response(stream);
+            return new Uint8Array(await response.arrayBuffer());
+        }
+        return bytes;
     };
 
+    for (const f of dataObj.files) {
+        self.postMessage({ type: 'status', msg: `Decoding ${f.name}...` });
+        
+        const binString = atob(f.data);
+        const len = binString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binString.charCodeAt(i);
+        }
+        
+        let outBytes = bytes;
+        if (f.compression && f.compression !== 'none') {
+            self.postMessage({ type: 'status', msg: `Decompressing ${f.name} (${f.compression})...` });
+            outBytes = await decompressBytes(bytes, f.compression);
+        }
+        
+        results.push({
+            name: f.name,
+            type: f.type,
+            data: outBytes
+        });
+    }
+    
+    return results;
+};
 
 self.onmessage = async (e) => {
     const { id, action, payload } = e.data;
