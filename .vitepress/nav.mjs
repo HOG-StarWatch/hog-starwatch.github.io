@@ -18,6 +18,7 @@ export default [
         { text: 'HF-Space-AppConverter', link: '../../../hf-space-app-converter.html', target: '_self', },
         { text: '排序算法可视化', link: '../../../sorting_visualizer.html', target: '_self', },
         { text: '魔女之旅知识测试', link: '../../../ElenaTest.html', target: '_self', },
+        { text: 'SBTI', link: 'https://何意味.de5.net/', target: '_self', },
       ],
     },
     { text: '小工具',

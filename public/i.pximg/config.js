@@ -3,8 +3,13 @@
 const APP_CONFIG = {
     // 代理服务器列表
     proxies: [
-        { url: "https://prox.futa.de5.net/", label: "站长自建" },
-        { url: "https://prox.spacetimee.xyz/", label: "Github公开" }
+        { url: "https://prox.futa.de5.net/", label: "站长自建公益源" },
+        { url: "https://prox.spacetimee.xyz/", label: "GHST公益源" },
+        { url: "https://i.pixiv.re/", label: "pixiv.re" },
+        { url: "https://i.pixiv.nl/", label: "pixiv.nl" },
+        { url: "https://i.yuki.sh/", label: "yuki.sh" },
+        { url: "https://i.muxmus.com/", label: "muxmus" },
+        { url: "https://pximg.hakurei.cc/", label: "hakurei" }
     ],
     
     // 静态资源加速服务
