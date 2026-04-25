@@ -1,0 +1,1 @@
+请使用网页小工具栏[Base64储存文件](../File64.html)工具解码获取[TDL_GUI.exe.json](./TDL_GUI.exe.json)获取TDL_GUI.exe

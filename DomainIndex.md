@@ -19,14 +19,17 @@ lastUpdated: true
 10. [Ona-Dop-dnsr.019425.xyz](https://dnsr.019425.xyz)
 11. [Eaglercraft_IR_1.8.8wasm-mc.019425.xyz](https://mc.019425.xyz)
 12. [Clist-clist.019425.xyz](https://clist.019425.xyz)
-13. [Slug-slug.019425.xyz](https://slug.019425.xyz)
-14. [Openlist-Zeabur-op-sw--op.019425.xyz](https://op.019425.xyz)
-15. [m3u8-downloader-m3u8.019425.xyz](https://m3u8.019425.xyz)
-16. [github-repo-explorer-gh.0194925.xyz](https://gh.019425.xyz)
-17. [ScriptExecutor-se.019425.xyz](https://se.019425.xyz)
-18. [comix-comixpublic1]
-19. [sc2replay-online-analysis-rep.019425.xyz](https://rep.019425.xyz)
-20. [worldmonitor-wm.019425.xyz](https://wm.019425.xyz)
+13. [subscriptionmanager-clam.019425.xyz](https://clam.019425.xyz/)
+14. [Kvideo-kvideo.019425.xyz/premium](https://kvideo.019425.xyz/)
+15. [Slug-slug.019425.xyz](https://slug.019425.xyz)
+16. [Openlist-Zeabur-op-sw--op.019425.xyz](https://op.019425.xyz)
+17. [m3u8-downloader-m3u8.019425.xyz](https://m3u8.019425.xyz)
+18. [github-repo-explorer-gh.0194925.xyz](https://gh.019425.xyz)
+19. [ScriptExecutor-se.019425.xyz](https://se.019425.xyz)
+20. [comix-comixpublic1]
+21. [sc2replay-online-analysis-rep.019425.xyz](https://rep.019425.xyz)
+22. [worldmonitor-wm.019425.xyz](https://wm.019425.xyz)
+23. [FitTool-如何呢.又能怎.de5.net](https://xn--vqqy6jo2e.xn--foro9zwwz.de5.net/)
 
 ## cloudemail.ggff.net
 
@@ -50,5 +53,9 @@ ce725a92-690d-4f9f-af42-0bcba945bac0
 
 trahs.de5.net
 
+14d8b2a2-a7d3-43f7-b993-5e3d3cc430e7
+
+trahs.cc.cd
+
 ## SpaceTime Server
-1. [server-spacetimee-xyzui.pages.dev](https://server-spacetimee-xyzui.pages.dev/)
+1. [server-spacetimee-xyzui.pages.dev-sts.019425.xyz](https://server-spacetimee-xyzui.pages.dev/)
