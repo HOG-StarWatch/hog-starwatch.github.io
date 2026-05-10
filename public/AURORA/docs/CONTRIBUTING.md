@@ -171,7 +171,7 @@ AURORA/
 ## 七、获取帮助
 
 - 查看 [编码规范](./CODING_STANDARDS.md)
-- 查看 [工具模板](AURORA/docs/templates/tool-template.html)
+- 查看 [工具模板]/docs/templates/tool-template.html
 - 查看 [Worker 模板](./templates/worker-template.js)
 - 查看 [Worker 协议](./WORKER_PROTOCOL.md)
 

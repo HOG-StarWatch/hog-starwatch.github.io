@@ -247,7 +247,7 @@ if (window.app && window.app.showToast) window.app.showToast('完成');
 - [贡献指南](docs/CONTRIBUTING.md) - 如何参与开发
 - [Worker 协议](docs/WORKER_PROTOCOL.md) - Worker 通信规范
 - [开发检查清单](docs/TOOL_CHECKLIST.md) - 工具开发检查项
-- [工具模板](AURORA/docs/templates/tool-template.html) - 标准工具模板
+- [工具模板]/docs/templates/tool-template.html - 标准工具模板
 - [Worker 模板](docs/templates/worker-template.js) - 标准 Worker 模板
 
 ---
