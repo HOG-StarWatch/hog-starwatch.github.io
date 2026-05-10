@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SVG 工具箱</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/app.js"></script>
     <script src="../js/loader.js"></script>
     
     <style>
@@ -346,7 +347,7 @@
         .status-bar.error { background-color: #f87171; }
         .status-bar.success { background-color: var(--secondary); }
 
-        .control-group { display: flex; align-items: center; gap: 8px; }
+        .svgopt-control-group { display: flex; align-items: center; gap: 8px; }
         
         /* Batch View */
         #batch-view {
@@ -452,7 +453,7 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
 
     <div id="loading-mask" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-deep); z-index:99999; display:flex; justify-content:center; align-items:center; flex-direction:column; gap:10px;">
         <div style="width:30px; height:30px; border:3px solid rgba(255,255,255,0.1); border-top:3px solid var(--primary); border-radius:50%; animation:spin 1s linear infinite;"></div>
@@ -463,7 +464,7 @@
     <div id="drag-overlay">
         <div class="overlay-content">
             <h2>释放文件以打开</h2>
-            <button class="secondary" onclick="document.getElementById('file-input').click()">选择文件...</button>
+            <button class="secondary" id="btn-drag-select-file">选择文件...</button>
         </div>
     </div>
 
@@ -479,13 +480,13 @@
         </div>
         
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('editor')">编辑器</button>
-            <button class="tab-btn" onclick="switchTab('batch')">批量处理</button>
+            <button class="tab-btn active" id="tab-btn-editor" data-tab="editor">编辑器</button>
+            <button class="tab-btn" id="tab-btn-batch" data-tab="batch">批量处理</button>
         </div>
 
-        <div class="control-group" style="padding-right: 10px;">
-             <button class="secondary" onclick="window.open('https://thenounproject.com/', '_blank')">🌐 Noun Project</button>
-             <button onclick="downloadSVG()">💾 导出</button>
+        <div class="svgopt-control-group" style="padding-right: 10px;">
+             <button class="secondary" id="btn-noun-project">🌐 Noun Project</button>
+             <button id="btn-download-svg">💾 导出</button>
         </div>
     </header>
 
@@ -497,12 +498,12 @@
         <!-- Left: Code -->
         <div class="editor-pane">
             <div class="pane-header">
-                <div class="control-group">
+                <div class="svgopt-control-group">
                     <span>代码源</span>
-                    <button class="secondary" onclick="document.getElementById('file-input').click()" title="打开文件" style="padding: 2px 8px;">📂 打开</button>
-                    <input type="file" id="file-input" accept=".svg" onchange="loadFile(this.files[0])">
+                    <button class="secondary" id="btn-open-file" title="打开文件" style="padding: 2px 8px;">📂 打开</button>
+                    <input type="file" id="file-input" accept=".svg">
                 </div>
-                <button class="secondary icon-btn" onclick="formatCode()" title="格式化">Format</button>
+                <button class="secondary icon-btn" id="btn-format-code" title="格式化">Format</button>
             </div>
             <textarea id="code-input" placeholder="粘贴 SVG 代码..." spellcheck="false"></textarea>
         </div>
@@ -510,20 +511,20 @@
         <!-- Middle: Preview -->
         <div class="preview-pane">
             <div class="pane-header">
-                <div class="control-group">
+                <div class="svgopt-control-group">
                     <span>预览</span>
                     <span id="zoom-level" style="opacity: 0.6; font-size: 10px; margin-left: 5px;">100%</span>
-                    <button class="secondary icon-btn" onclick="resetZoom()" title="重置视图" style="padding: 2px 5px; height: 20px; font-size: 10px;">Reset</button>
+                    <button class="secondary icon-btn" id="btn-reset-zoom" title="重置视图" style="padding: 2px 5px; height: 20px; font-size: 10px;">Reset</button>
                 </div>
-                <div class="control-group">
-                     <button class="secondary icon-btn" onclick="toggleCenter()" title="显示中心点" style="padding: 2px 5px; height: 20px; font-size: 10px;">👁️ Center</button>
-                     <button class="warning" id="btn-remove-watermark" onclick="removeWatermark()" style="display:none; font-size: 10px; padding: 2px 6px;">✨ 去水印</button>
-                    <div class="bg-toggle" onclick="setBg('check')" title="透明" style="cursor:pointer; opacity:0.7;">🏁</div>
-                    <div class="bg-toggle" onclick="setBg('light')" title="浅色" style="cursor:pointer; opacity:0.7;">☀️</div>
-                    <div class="bg-toggle" onclick="setBg('dark')" title="深色" style="cursor:pointer; opacity:0.7;">🌙</div>
+                <div class="svgopt-control-group">
+                     <button class="secondary icon-btn" id="btn-toggle-center" title="显示中心点" style="padding: 2px 5px; height: 20px; font-size: 10px;">👁️ Center</button>
+                     <button class="warning" id="btn-remove-watermark" style="display:none; font-size: 10px; padding: 2px 6px;">✨ 去水印</button>
+                    <div class="bg-toggle" id="bg-check" data-bg="check" title="透明" style="cursor:pointer; opacity:0.7;">🏁</div>
+                    <div class="bg-toggle" id="bg-light" data-bg="light" title="浅色" style="cursor:pointer; opacity:0.7;">☀️</div>
+                    <div class="bg-toggle" id="bg-dark" data-bg="dark" title="深色" style="cursor:pointer; opacity:0.7;">🌙</div>
                 </div>
             </div>
-            <div id="preview-bg" class="preview-area" onwheel="handleWheel(event)" onmousedown="startPan(event)">
+            <div id="preview-bg" class="preview-area">
                 <div id="preview-viewport">
                     <div id="preview-content"></div>
                 </div>
@@ -555,14 +556,14 @@
             <div class="inspector-section">
                 <div class="section-title">全局操作</div>
                 <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                    <button class="secondary" onclick="optimizeSVG()" style="flex:1;">🚀 SVGO 压缩</button>
-                    <button class="secondary" onclick="showBase64()" style="flex:1;">Base64</button>
+                    <button class="secondary" id="btn-optimize-svg" style="flex:1;">🚀 SVGO 压缩</button>
+                    <button class="secondary" id="btn-show-base64" style="flex:1;">Base64</button>
                 </div>
                 <div style="display:flex; gap:5px; margin-top:5px;">
-                    <button class="secondary icon-btn" onclick="transformSVG('rotate', 90)" title="顺时针">↻</button>
-                    <button class="secondary icon-btn" onclick="flipSVG('h')" title="水平翻转">↔</button>
-                    <button class="secondary icon-btn" onclick="flipSVG('v')" title="垂直翻转">↕</button>
-                    <button class="secondary icon-btn" onclick="exportImage('png')" title="导出PNG">PNG</button>
+                    <button class="secondary icon-btn" id="btn-rotate" data-transform="rotate" data-val="90" title="顺时针">↻</button>
+                    <button class="secondary icon-btn" id="btn-flip-h" data-flip="h" title="水平翻转">↔</button>
+                    <button class="secondary icon-btn" id="btn-flip-v" data-flip="v" title="垂直翻转">↕</button>
+                    <button class="secondary icon-btn" id="btn-export-png" data-export="png" title="导出PNG">PNG</button>
                 </div>
             </div>
 
@@ -571,25 +572,25 @@
                 
                 <div class="prop-row">
                     <span class="prop-label">ID</span>
-                    <input type="text" class="prop-input" id="inp-id" onchange="updateAttr('id', this.value)">
+                    <input type="text" class="prop-input" id="inp-id" data-attr="id">
                 </div>
                 <div class="prop-row">
                     <span class="prop-label">Fill</span>
-                    <input type="color" class="prop-color" id="inp-fill-color" onchange="updateAttr('fill', this.value)">
-                    <input type="text" class="prop-input" id="inp-fill" onchange="updateAttr('fill', this.value)">
+                    <input type="color" class="prop-color" id="inp-fill-color" data-attr="fill">
+                    <input type="text" class="prop-input" id="inp-fill" data-attr="fill">
                 </div>
                 <div class="prop-row">
                     <span class="prop-label">Stroke</span>
-                    <input type="color" class="prop-color" id="inp-stroke-color" onchange="updateAttr('stroke', this.value)">
-                    <input type="text" class="prop-input" id="inp-stroke" onchange="updateAttr('stroke', this.value)">
+                    <input type="color" class="prop-color" id="inp-stroke-color" data-attr="stroke">
+                    <input type="text" class="prop-input" id="inp-stroke" data-attr="stroke">
                 </div>
                 <div class="prop-row">
                     <span class="prop-label">Width</span>
-                    <input type="number" class="prop-input" id="inp-stroke-width" step="0.5" onchange="updateAttr('stroke-width', this.value)">
+                    <input type="number" class="prop-input" id="inp-stroke-width" step="0.5" data-attr="stroke-width">
                 </div>
                 <div class="prop-row">
                     <span class="prop-label">Opacity</span>
-                    <input type="range" class="prop-input" id="inp-opacity" min="0" max="1" step="0.1" onchange="updateAttr('opacity', this.value)">
+                    <input type="range" class="prop-input" id="inp-opacity" min="0" max="1" step="0.1" data-attr="opacity">
                 </div>
             </div>
             
@@ -602,23 +603,23 @@
 
     <!-- Batch Tab -->
     <div id="batch-view" class="tab-content">
-        <div class="drop-zone" onclick="document.getElementById('batch-file-input').click()">
+        <div class="drop-zone" id="batch-drop-zone">
             <h3>批量处理模式</h3>
             <p>拖入多个 SVG 文件</p>
-            <input type="file" id="batch-file-input" multiple accept=".svg" onchange="handleBatchFiles(this.files)">
+            <input type="file" id="batch-file-input" multiple accept=".svg">
         </div>
         <div class="file-list" id="batch-list"></div>
-        <button id="btn-batch-download" disabled onclick="downloadBatchZip()" style="margin: 20px;">📦 下载全部</button>
+        <button id="btn-batch-download" disabled style="margin: 20px;">📦 下载全部</button>
     </div>
 
     <!-- Base64 Modal -->
-    <div id="base64-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
+    <div id="base64-modal" class="modal">
         <div class="modal-content">
             <h3>Base64 编码</h3>
             <textarea id="base64-output" readonly></textarea>
-            <div class="control-group" style="justify-content: flex-end;">
-                <button class="secondary" onclick="copyBase64()">复制</button>
-                <button onclick="document.getElementById('base64-modal').style.display='none'">关闭</button>
+            <div class="svgopt-control-group" style="justify-content: flex-end;">
+                <button class="secondary" id="btn-copy-base64">复制</button>
+                <button id="btn-close-base64-modal">关闭</button>
             </div>
         </div>
     </div>
@@ -672,581 +673,750 @@
                     window.svgo = svgoModule.default || svgoModule;
                 }
                 if (!window.svgo) {
-                    showNotification('SVGO 加载失败，压缩功能不可用', 'warning');
+                    svgOptTool.showNotification('SVGO 加载失败，压缩功能不可用', 'warning');
                 }
 
                 document.getElementById('loading-mask').style.display = 'none';
-                initApp();
+                svgOptTool.initApp();
             } catch (err) {
                 console.error('Resource loading failed:', err);
-                showNotification('资源加载失败，请刷新重试', 'error');
+                svgOptTool.showNotification('资源加载失败，请刷新重试', 'error');
                 document.getElementById('loading-mask').style.display = 'none';
-                initApp(); 
+                svgOptTool.initApp();
             }
         });
 
-        function initApp() {
-            // --- Init ---
-            codeInput.value = defaultSVG;
-            handleCodeChange(defaultSVG);
-            resetZoom();
+        const svgOptTool = {
+            initApp() {
+                        // --- Init ---
+                        codeInput.value = defaultSVG;
+                        this.handleCodeChange(defaultSVG);
+                        this.resetZoom();
 
-            // --- Event Listeners ---
-            codeInput.addEventListener('input', () => {
-                handleCodeChange(codeInput.value, false); 
-            });
+                        // --- Event Listeners ---
+                        codeInput.addEventListener('input', () => {
+                            this.handleCodeChange(codeInput.value, false); 
+                        });
 
-            previewContent.addEventListener('click', (e) => {
-                if (e.target.closest('svg')) {
-                    e.stopPropagation();
-                    selectElement(e.target);
-                }
-            });
+                        previewContent.addEventListener('click', (e) => {
+                            if (e.target.closest('svg')) {
+                                e.stopPropagation();
+                                this.selectElement(e.target);
+                            }
+                        });
 
-            // Drag & Drop
-            let dragCounter = 0;
-            document.addEventListener('dragenter', (e) => {
-                e.preventDefault();
-                dragCounter++;
-                dragOverlay.classList.add('active');
-            });
-            
-            document.addEventListener('dragover', (e) => { e.preventDefault(); });
-            
-            document.addEventListener('dragleave', (e) => { 
-                dragCounter--;
-                if (dragCounter <= 0) {
-                    dragCounter = 0;
-                    dragOverlay.classList.remove('active');
-                }
-            });
-            
-            document.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dragCounter = 0;
-                dragOverlay.classList.remove('active');
-                
-                const files = e.dataTransfer.files;
-                if (files.length === 0) return;
+                        // Drag & Drop
+                        let dragCounter = 0;
+                        document.addEventListener('dragenter', (e) => {
+                            e.preventDefault();
+                            dragCounter++;
+                            dragOverlay.classList.add('active');
+                        });
 
-                if (document.getElementById('batch-view').classList.contains('active') || files.length > 1) {
-                    switchTab('batch');
-                    handleBatchFiles(files);
-                } else {
-                    switchTab('editor');
-                    loadFile(files[0]);
-                }
-            });
-        }
+                        document.addEventListener('dragover', (e) => { e.preventDefault(); });
+
+                        document.addEventListener('dragleave', (e) => { 
+                            dragCounter--;
+                            if (dragCounter <= 0) {
+                                dragCounter = 0;
+                                dragOverlay.classList.remove('active');
+                            }
+                        });
+
+                        document.addEventListener('drop', (e) => {
+                            e.preventDefault();
+                            dragCounter = 0;
+                            dragOverlay.classList.remove('active');
+
+                            const files = e.dataTransfer.files;
+                            if (files.length === 0) return;
+
+                            if (document.getElementById('batch-view').classList.contains('active') || files.length > 1) {
+                                this.switchTab('batch');
+                                this.handleBatchFiles(files);
+                            } else {
+                                this.switchTab('editor');
+                                this.loadFile(files[0]);
+                            }
+                        });
+                    },
+            handleWheel(e) {
+                        e.preventDefault();
+
+                        const rect = previewBg.getBoundingClientRect();
+                        const mouseX = e.clientX - rect.left;
+                        const mouseY = e.clientY - rect.top;
+
+                        const delta = -e.deltaY;
+                        const zoomFactor = 1.1;
+                        const factor = delta > 0 ? zoomFactor : 1 / zoomFactor;
+
+                        const newScale = scale * factor;
+
+                        // Limit zoom
+                        if (newScale < 0.1 || newScale > 20) return;
+
+                        // Zoom point logic: 
+                        pointX = mouseX - (mouseX - pointX) * (newScale / scale);
+                        pointY = mouseY - (mouseY - pointY) * (newScale / scale);
+                        scale = newScale;
+
+                        this.updateTransform();
+                    },
+            startPan(e) {
+                        if (e.target.closest('.control-group') || e.target.closest('.pane-header')) return;
+
+                        isPanning = true;
+                        panStartX = e.clientX;
+                        panStartY = e.clientY;
+                        previewBg.style.cursor = 'grabbing';
+                        document.addEventListener('mousemove', this.pan.bind(this));
+                        document.addEventListener('mouseup', this.endPan.bind(this));
+                    },
+            pan(e) {
+                        if (!isPanning) return;
+                        e.preventDefault();
+                        const dx = e.clientX - panStartX;
+                        const dy = e.clientY - panStartY;
+
+                        pointX += dx;
+                        pointY += dy;
+
+                        panStartX = e.clientX;
+                        panStartY = e.clientY;
+
+                        this.updateTransform();
+                    },
+            endPan() {
+                        isPanning = false;
+                        previewBg.style.cursor = 'grab';
+                        document.removeEventListener('mousemove', this.pan);
+                        document.removeEventListener('mouseup', this.endPan);
+                    },
+            updateTransform() {
+                        previewViewport.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+                        zoomLevelDisplay.textContent = Math.round(scale * 100) + '%';
+                    },
+            toggleCenter() {
+                        showCenter = !showCenter;
+                        this.updateCenterMarker();
+                    },
+            updateCenterMarker() {
+                        let marker = document.getElementById('center-marker');
+                        if (showCenter) {
+                            if (!marker) {
+                                marker = document.createElement('div');
+                                marker.id = 'center-marker';
+                                const dot = document.createElement('div');
+                                dot.className = 'dot';
+                                marker.appendChild(dot);
+                                previewViewport.appendChild(marker);
+                            }
+                            marker.style.display = 'block';
+
+                            // Position at SVG center
+                            const svg = previewContent.querySelector('svg');
+                            if (svg) {
+                                const size = svgOptTool.getSVGSize(svg);
+                                marker.style.left = (size.w / 2) + 'px';
+                                marker.style.top = (size.h / 2) + 'px';
+                            } else {
+                                marker.style.left = '0px';
+                                marker.style.top = '0px';
+                            }
+                        } else {
+                            if (marker) marker.style.display = 'none';
+                        }
+                    },
+            resetZoom() {
+                        scale = 1;
+                        const bgRect = previewBg.getBoundingClientRect();
+                        const contentRect = previewContent.getBoundingClientRect(); 
+
+                        const svg = previewContent.querySelector('svg');
+                        if (svg) {
+                           const dim = svgOptTool.getSVGSize(svg);
+                           const svgW = dim.w;
+                           const svgH = dim.h;
+                           pointX = (bgRect.width - svgW) / 2;
+                           pointY = (bgRect.height - svgH) / 2;
+                        } else {
+                            pointX = (bgRect.width - 200) / 2;
+                            pointY = (bgRect.height - 200) / 2;
+                        }
+
+                        this.updateTransform();
+                    },
+            loadFile(file) {
+                        if (!file) return;
+                        fileName = file.name;
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const content = e.target.result;
+                            originalCode = content;
+                            codeInput.value = content;
+                            this.handleCodeChange(content);
+                            this.showNotification(`已加载: ${file.name}`, 'success');
+                            this.resetZoom();
+                        };
+                        reader.readAsText(file);
+                    },
+            handleCodeChange(code, updateEditor = true) {
+                        currentCode = code;
+                        if (!originalCode) originalCode = code;
+                        if (updateEditor) codeInput.value = code;
+
+                        this.updateSizeDisplay();
+
+                        // 使用 app.sanitizeSvg 净化 SVG 代码，防止 XSS
+                        previewContent.innerHTML = (typeof app !== 'undefined' && app.sanitizeSvg) ? app.sanitizeSvg(code) : code;
+                        const svg = previewContent.querySelector('svg');
+
+                        if (svg) {
+                            if (!svg.hasAttribute('width')) svg.setAttribute('width', '100%');
+                            if (!svg.hasAttribute('height')) svg.setAttribute('height', '100%');
+
+                            this.checkWatermark(code);
+                            this.buildTree(svg);
+                            this.updateCenterMarker(); 
+                        } else {
+                            domTree.innerHTML = '<div style="padding:10px; opacity:0.5;">No SVG detected</div>';
+                        }
+                    },
+            updateSizeDisplay() {
+                        const origBytes = new Blob([originalCode]).size;
+                        const currBytes = new Blob([currentCode]).size;
+                        const formatSize = (b) => {
+                            if (b < 1024) return b + ' B';
+                            return (b / 1024).toFixed(2) + ' KB';
+                        };
+
+                        document.getElementById('size-orig').textContent = formatSize(origBytes);
+                        document.getElementById('size-curr').textContent = formatSize(currBytes);
+
+                        if (origBytes > 0) {
+                            const saved = origBytes - currBytes;
+                            const percent = (saved / origBytes * 100).toFixed(1);
+                            const el = document.getElementById('size-saved');
+                            if (saved > 0) {
+                                el.textContent = `${percent}% (-${formatSize(saved)})`;
+                                el.style.color = 'var(--secondary)';
+                            } else if (saved < 0) {
+                                el.textContent = `${percent}% (+${formatSize(-saved)})`;
+                                el.style.color = '#f87171';
+                            } else {
+                                el.textContent = '0%';
+                                el.style.color = 'var(--text-dim)';
+                            }
+                        }
+                    },
+            buildTree(root) {
+                        domTree.innerHTML = '';
+                        function createNode(el, depth) {
+                            if (el.nodeType !== 1) return;
+                            const div = document.createElement('div');
+                            div.className = 'tree-item';
+                            div.style.paddingLeft = (depth * 15 + 10) + 'px';
+
+                            const tagName = document.createElement('span');
+                            tagName.className = 'tag';
+                            tagName.textContent = el.tagName;
+
+                            const idSpan = document.createElement('span');
+                            idSpan.className = 'id';
+                            if (el.id) idSpan.textContent = '#' + el.id;
+
+                            div.appendChild(tagName);
+                            div.appendChild(idSpan);
+                            div.addEventListener('click', (e) => { e.stopPropagation(); svgOptTool.selectElement(el); });
+                            el._treeNode = div; 
+                            domTree.appendChild(div);
+                            Array.from(el.children).forEach(child => createNode(child, depth + 1));
+                        }
+                        Array.from(root.children).forEach(child => createNode(child, 0));
+                    },
+            selectElement(el) {
+                        if (selectedElement) {
+                            selectedElement.classList.remove('selected-element');
+                            if (selectedElement._treeNode) selectedElement._treeNode.classList.remove('active');
+                        }
+                        if (el.tagName === 'svg') {
+                            selectedElement = null;
+                            attrEditor.style.display = 'none';
+                            return;
+                        }
+                        selectedElement = el;
+                        el.classList.add('selected-element');
+                        if (el._treeNode) {
+                            el._treeNode.classList.add('active');
+                            el._treeNode.scrollIntoView({ block: 'nearest' });
+                        }
+                        this.populateInspector(el);
+                        this.highlightInCode(el);
+                    },
+            highlightInCode(el) {
+                        if (!el) return;
+                        const code = codeInput.value;
+                        const tagName = el.tagName;
+
+                        if (el.id) {
+                            const idRegex = new RegExp(`<${tagName}[^>]*\\bid=["']${el.id}["'][^>]*>`, 'i');
+                            const match = idRegex.exec(code);
+                            if (match) {
+                                this.selectRange(match.index, match.index + match[0].length);
+                                return;
+                            }
+                        }
+
+                        const allTags = Array.from(previewContent.querySelectorAll(tagName));
+                        const index = allTags.indexOf(el);
+
+                        if (index !== -1) {
+                            const regex = new RegExp(`<${tagName}\\b`, 'gi');
+                            let match;
+                            let count = 0;
+                            while ((match = regex.exec(code)) !== null) {
+                                if (count === index) {
+                                    const start = match.index;
+                                    const endMatch = code.indexOf('>', start);
+                                    const end = (endMatch !== -1) ? endMatch + 1 : start + match[0].length;
+                                    this.selectRange(start, end);
+                                    return;
+                                }
+                                count++;
+                            }
+                        }
+                    },
+            selectRange(start, end) {
+                        codeInput.focus();
+                        codeInput.setSelectionRange(start, end);
+
+                        const fullText = codeInput.value;
+                        const textBefore = fullText.substr(0, start);
+                        const lineNum = textBefore.split('\n').length;
+
+                        const lineHeight = 18; 
+                        const visibleLines = codeInput.clientHeight / lineHeight;
+                        codeInput.scrollTop = Math.max(0, (lineNum - visibleLines / 2) * lineHeight);
+                    },
+            populateInspector(el) {
+                        attrEditor.style.display = 'block';
+                        document.getElementById('sel-tag').textContent = el.tagName;
+                        const getVal = (attr) => el.getAttribute(attr) || '';
+                        const getStyle = (prop) => el.style[prop] || '';
+
+                        document.getElementById('inp-id').value = el.id;
+                        const fill = getVal('fill') || getStyle('fill');
+                        document.getElementById('inp-fill').value = fill;
+                        document.getElementById('inp-fill-color').value = svgOptTool.rgb2hex(fill) || '#000000';
+                        const stroke = getVal('stroke') || getStyle('stroke');
+                        document.getElementById('inp-stroke').value = stroke;
+                        document.getElementById('inp-stroke-color').value = svgOptTool.rgb2hex(stroke) || '#000000';
+                        document.getElementById('inp-stroke-width').value = parseFloat(getVal('stroke-width')) || 1;
+                        document.getElementById('inp-opacity').value = getVal('opacity') || 1;
+                    },
+            updateAttr(attr, value) {
+                        if (!selectedElement) return;
+                        selectedElement.setAttribute(attr, value);
+                        this.syncCodeFromDOM();
+                    },
+            syncCodeFromDOM() {
+                        const svg = previewContent.querySelector('svg');
+                        if (!svg) return;
+                        const wasSelected = selectedElement;
+                        if (wasSelected) wasSelected.classList.remove('selected-element');
+                        const serializer = new XMLSerializer();
+                        let newCode = serializer.serializeToString(svg);
+                        if (wasSelected) wasSelected.classList.add('selected-element');
+                        codeInput.value = newCode;
+                        currentCode = newCode;
+                    },
+            rgb2hex(color) {
+                        if (!color) return null;
+                        if (color.startsWith('#')) return color;
+                        return '#000000'; 
+                    },
+            formatCode() {
+                        const source = codeInput.value;
+                        let formatted = '';
+                        let indent = 0;
+                        const tab = '  ';
+
+                        const parts = source.split(/(<[^>]+>)/g).filter(s => s.trim().length > 0);
+
+                        parts.forEach(part => {
+                            if (part.startsWith('</')) {
+                                indent = Math.max(0, indent - 1);
+                            }
+
+                            formatted += tab.repeat(indent) + part.trim() + '\n';
+
+                            if (part.startsWith('<') && !part.startsWith('</') && !part.endsWith('/>') && !part.startsWith('<?') && !part.startsWith('<!')) {
+                                const tagName = part.match(/<(\w+)/)[1];
+                                const voidTags = ['path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'image', 'use', 'stop', 'br', 'hr', 'img', 'input'];
+                                if (!voidTags.includes(tagName)) {
+                                    indent++;
+                                }
+                            }
+                        });
+
+                        this.handleCodeChange(formatted.trim());
+                    },
+            checkWatermark(code) {
+                        const hasWatermark = /<text[^>]*>.*?(Created by|Noun Project).*?<\/text>/gis.test(code);
+                        btnRemoveWatermark.style.display = hasWatermark ? 'inline-block' : 'none';
+                    },
+            removeWatermark() {
+                        const clean = currentCode.replace(/<text[^>]*>.*?(Created by|Noun Project).*?<\/text>/gis, '');
+                        this.handleCodeChange(clean);
+                        this.showNotification('水印已去除', 'success');
+                    },
+            optimizeSVG() {
+                         if (typeof svgo === 'undefined' && typeof window.svgo === 'undefined') { svgOptTool.showNotification('SVGO 未加载，请检查网络', 'error'); return; }
+                         const svgoLib = window.svgo || svgo;
+
+                         try {
+                             const res = svgoLib.optimize(currentCode, { multipass: true, plugins: ['preset-default', 'removeXMLNS'] });
+                             if (res.data) {
+                                 this.handleCodeChange(res.data);
+                                 this.showNotification('压缩完成', 'success');
+                             }
+                         } catch(e) { svgOptTool.showNotification('压缩出错: ' + e.message, 'error'); }
+                    },
+            getSVGSize(svg) {
+                        let w = parseFloat(svg.getAttribute('width'));
+                        let h = parseFloat(svg.getAttribute('height'));
+                        if (!w || !h || isNaN(w) || isNaN(h)) {
+                            const vb = svg.getAttribute('viewBox');
+                            if (vb) {
+                                const parts = vb.split(/[\s,]+/).map(parseFloat);
+                                if (parts.length === 4) {
+                                    w = parts[2];
+                                    h = parts[3];
+                                }
+                            }
+                        }
+                        return { w: w || 300, h: h || 150 };
+                    },
+            transformSVG(type, val1, val2) {
+                        const svg = previewContent.querySelector('svg');
+                        if (!svg) return;
+
+                        const size = svgOptTool.getSVGSize(svg);
+                        const cx = size.w / 2;
+                        const cy = size.h / 2;
+
+                        // Use 'root-transform' as wrapper
+                        let wrapper = svg.querySelector('g#root-transform');
+                        if (!wrapper) {
+                            wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                            wrapper.id = "root-transform";
+                            // Move all children to wrapper
+                            while (svg.firstChild) wrapper.appendChild(svg.firstChild);
+                            svg.appendChild(wrapper);
+                        }
+
+                        let currentTransform = wrapper.getAttribute('transform') || '';
+
+                        if (type === 'rotate') {
+                            currentTransform = `rotate(${val1}, ${cx}, ${cy}) ` + currentTransform;
+                        } else if (type === 'scale') {
+                            currentTransform = `translate(${cx}, ${cy}) scale(${val1}, ${val2}) translate(${-cx}, ${-cy}) ` + currentTransform;
+                        }
+
+                        wrapper.setAttribute('transform', currentTransform);
+                        this.syncCodeFromDOM();
+                        this.buildTree(svg);
+                    },
+            flipSVG(axis) {
+                        if (axis === 'h') svgOptTool.transformSVG('scale', -1, 1);
+                        if (axis === 'v') svgOptTool.transformSVG('scale', 1, -1);
+                    },
+            showBase64() {
+                        const b64 = btoa(unescape(encodeURIComponent(currentCode)));
+                        document.getElementById('base64-output').value = `data:image/svg+xml;base64,${b64}`;
+                        document.getElementById('base64-modal').style.display = 'flex';
+                    },
+            copyBase64() {
+                        document.getElementById('base64-output').select();
+                        document.execCommand('copy');
+                        this.showNotification('已复制', 'success');
+                    },
+            exportImage(fmt) {
+                        const blob = new Blob([currentCode], {type: 'image/svg+xml;charset=utf-8'});
+                        const url = URL.createObjectURL(blob);
+                        const img = new Image();
+                        img.onload = () => {
+                            const c = document.createElement('canvas');
+                            let w = parseInt(img.width) || 800;
+                            let h = parseInt(img.height) || 800;
+                            c.width = w; c.height = h;
+                            const ctx = c.getContext('2d');
+                            if (fmt === 'jpg') { ctx.fillStyle='white'; ctx.fillRect(0,0,w,h); }
+                            ctx.drawImage(img,0,0,w,h);
+                            c.toBlob(b => saveAs(b, `export.${fmt}`), `image/${fmt}`);
+                        };
+                        img.src = url;
+                    },
+            downloadSVG() {
+                        saveAs(new Blob([currentCode], {type: "image/svg+xml"}), fileName.replace('.svg', '_clean.svg'));
+                    },
+            switchTab(t) {
+                        document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+                        document.getElementById(t+'-view').classList.add('active');
+                        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+                        const btns = document.querySelectorAll('.tab-btn');
+                        if (t === 'editor') btns[0].classList.add('active');
+                        else btns[1].classList.add('active');
+                    },
+            setBg(t) {
+                        previewBg.className = 'preview-area';
+                        if (t === 'dark') previewBg.classList.add('dark');
+                        if (t === 'light') previewBg.classList.add('light');
+                        // check is default
+                    },
+            showNotification(msg, type='info') {
+                        notificationBar.textContent = msg;
+                        notificationBar.className = `status-bar ${type}`;
+                        notificationBar.style.display = 'flex';
+                        setTimeout(() => notificationBar.style.display = 'none', 3000);
+                    },
+            async handleBatchFiles(files) {
+                        const list = document.getElementById('batch-list');
+                        list.innerHTML = '';
+                        batchZip = new JSZip();
+                        let count = 0;
+                        const svgoLib = window.svgo || svgo;
+
+                        for (let f of files) {
+                            const d = document.createElement('div');
+                            d.className = 'file-item';
+                            d.textContent = `处理中: ${f.name}`;
+                            list.appendChild(d);
+                            try {
+                                let txt = await f.text();
+                                txt = txt.replace(/<text[^>]*>.*?(Created by|Noun Project).*?<\/text>/gis, '');
+                                if (svgoLib) txt = svgoLib.optimize(txt, {multipass:true}).data;
+                                batchZip.file(f.name.replace('.svg', '_clean.svg'), txt);
+                                d.textContent = `✅ ${f.name}`;
+                                d.style.color = 'var(--secondary)'; // Used secondary (teal) for success
+                                count++;
+                            } catch(e) { d.textContent = `❌ ${f.name}`; d.style.color = '#f87171'; }
+                        }
+                        if (count) {
+                            document.getElementById('btn-batch-download').disabled = false;
+                            this.showNotification(`已处理 ${count} 个文件`, 'success');
+                        }
+                    },
+            downloadBatchZip() {
+                        if(batchZip) batchZip.generateAsync({type:"blob"}).then(c => saveAs(c, "svg_batch.zip"));
+                    }
+        };
+
         
         // Pan & Zoom Logic
-        function handleWheel(e) {
-            e.preventDefault();
-            
-            const rect = previewBg.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            const delta = -e.deltaY;
-            const zoomFactor = 1.1;
-            const factor = delta > 0 ? zoomFactor : 1 / zoomFactor;
-            
-            const newScale = scale * factor;
-            
-            // Limit zoom
-            if (newScale < 0.1 || newScale > 20) return;
-
-            // Zoom point logic: 
-            pointX = mouseX - (mouseX - pointX) * (newScale / scale);
-            pointY = mouseY - (mouseY - pointY) * (newScale / scale);
-            scale = newScale;
-            
-            updateTransform();
-        }
-
-        function startPan(e) {
-            if (e.target.closest('.control-group') || e.target.closest('.pane-header')) return;
-            
-            isPanning = true;
-            panStartX = e.clientX;
-            panStartY = e.clientY;
-            previewBg.style.cursor = 'grabbing';
-            document.addEventListener('mousemove', pan);
-            document.addEventListener('mouseup', endPan);
-        }
-
-        function pan(e) {
-            if (!isPanning) return;
-            e.preventDefault();
-            const dx = e.clientX - panStartX;
-            const dy = e.clientY - panStartY;
-            
-            pointX += dx;
-            pointY += dy;
-            
-            panStartX = e.clientX;
-            panStartY = e.clientY;
-            
-            updateTransform();
-        }
-
-        function endPan() {
-            isPanning = false;
-            previewBg.style.cursor = 'grab';
-            document.removeEventListener('mousemove', pan);
-            document.removeEventListener('mouseup', endPan);
-        }
-
-        function updateTransform() {
-            previewViewport.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
-            zoomLevelDisplay.textContent = Math.round(scale * 100) + '%';
-        }
         
-        function toggleCenter() {
-            showCenter = !showCenter;
-            updateCenterMarker();
-        }
+
         
-        function updateCenterMarker() {
-            let marker = document.getElementById('center-marker');
-            if (showCenter) {
-                if (!marker) {
-                    marker = document.createElement('div');
-                    marker.id = 'center-marker';
-                    const dot = document.createElement('div');
-                    dot.className = 'dot';
-                    marker.appendChild(dot);
-                    previewViewport.appendChild(marker);
-                }
-                marker.style.display = 'block';
-                
-                // Position at SVG center
-                const svg = previewContent.querySelector('svg');
-                if (svg) {
-                    const size = getSVGSize(svg);
-                    marker.style.left = (size.w / 2) + 'px';
-                    marker.style.top = (size.h / 2) + 'px';
-                } else {
-                    marker.style.left = '0px';
-                    marker.style.top = '0px';
-                }
-            } else {
-                if (marker) marker.style.display = 'none';
-            }
-        }
 
-        function resetZoom() {
-            scale = 1;
-            const bgRect = previewBg.getBoundingClientRect();
-            const contentRect = previewContent.getBoundingClientRect(); 
-            
-            const svg = previewContent.querySelector('svg');
-            if (svg) {
-               const dim = getSVGSize(svg);
-               const svgW = dim.w;
-               const svgH = dim.h;
-               pointX = (bgRect.width - svgW) / 2;
-               pointY = (bgRect.height - svgH) / 2;
-            } else {
-                pointX = (bgRect.width - 200) / 2;
-                pointY = (bgRect.height - 200) / 2;
-            }
+        
 
-            updateTransform();
-        }
+        
+
+        
+        
+        
+        
+        
+
+        
 
         // --- Core Functions ---
 
-        function loadFile(file) {
-            if (!file) return;
-            fileName = file.name;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const content = e.target.result;
-                originalCode = content;
-                codeInput.value = content;
-                handleCodeChange(content);
-                showNotification(`已加载: ${file.name}`, 'success');
-                resetZoom();
-            };
-            reader.readAsText(file);
-        }
-
-        function handleCodeChange(code, updateEditor = true) {
-            currentCode = code;
-            if (!originalCode) originalCode = code;
-            if (updateEditor) codeInput.value = code;
-            
-            updateSizeDisplay();
-            
-            previewContent.innerHTML = code;
-            const svg = previewContent.querySelector('svg');
-            
-            if (svg) {
-                if (!svg.hasAttribute('width')) svg.setAttribute('width', '100%');
-                if (!svg.hasAttribute('height')) svg.setAttribute('height', '100%');
-                
-                checkWatermark(code);
-                buildTree(svg);
-                updateCenterMarker(); 
-            } else {
-                domTree.innerHTML = '<div style="padding:10px; opacity:0.5;">No SVG detected</div>';
-            }
-        }
-
-        function updateSizeDisplay() {
-            const origBytes = new Blob([originalCode]).size;
-            const currBytes = new Blob([currentCode]).size;
-            const formatSize = (b) => {
-                if (b < 1024) return b + ' B';
-                return (b / 1024).toFixed(2) + ' KB';
-            };
-            
-            document.getElementById('size-orig').textContent = formatSize(origBytes);
-            document.getElementById('size-curr').textContent = formatSize(currBytes);
-            
-            if (origBytes > 0) {
-                const saved = origBytes - currBytes;
-                const percent = (saved / origBytes * 100).toFixed(1);
-                const el = document.getElementById('size-saved');
-                if (saved > 0) {
-                    el.textContent = `${percent}% (-${formatSize(saved)})`;
-                    el.style.color = 'var(--secondary)';
-                } else if (saved < 0) {
-                    el.textContent = `${percent}% (+${formatSize(-saved)})`;
-                    el.style.color = '#f87171';
-                } else {
-                    el.textContent = '0%';
-                    el.style.color = 'var(--text-dim)';
-                }
-            }
-        }
-
-        function buildTree(root) {
-            domTree.innerHTML = '';
-            function createNode(el, depth) {
-                if (el.nodeType !== 1) return;
-                const div = document.createElement('div');
-                div.className = 'tree-item';
-                div.style.paddingLeft = (depth * 15 + 10) + 'px';
-                
-                const tagName = document.createElement('span');
-                tagName.className = 'tag';
-                tagName.textContent = el.tagName;
-                
-                const idSpan = document.createElement('span');
-                idSpan.className = 'id';
-                if (el.id) idSpan.textContent = '#' + el.id;
-                
-                div.appendChild(tagName);
-                div.appendChild(idSpan);
-                div.onclick = (e) => { e.stopPropagation(); selectElement(el); };
-                el._treeNode = div; 
-                domTree.appendChild(div);
-                Array.from(el.children).forEach(child => createNode(child, depth + 1));
-            }
-            Array.from(root.children).forEach(child => createNode(child, 0));
-        }
-
-        function selectElement(el) {
-            if (selectedElement) {
-                selectedElement.classList.remove('selected-element');
-                if (selectedElement._treeNode) selectedElement._treeNode.classList.remove('active');
-            }
-            if (el.tagName === 'svg') {
-                selectedElement = null;
-                attrEditor.style.display = 'none';
-                return;
-            }
-            selectedElement = el;
-            el.classList.add('selected-element');
-            if (el._treeNode) {
-                el._treeNode.classList.add('active');
-                el._treeNode.scrollIntoView({ block: 'nearest' });
-            }
-            populateInspector(el);
-            highlightInCode(el);
-        }
         
-        function highlightInCode(el) {
-            if (!el) return;
-            const code = codeInput.value;
-            const tagName = el.tagName;
-            
-            if (el.id) {
-                const idRegex = new RegExp(`<${tagName}[^>]*\\bid=["']${el.id}["'][^>]*>`, 'i');
-                const match = idRegex.exec(code);
-                if (match) {
-                    selectRange(match.index, match.index + match[0].length);
-                    return;
-                }
-            }
-            
-            const allTags = Array.from(previewContent.querySelectorAll(tagName));
-            const index = allTags.indexOf(el);
-            
-            if (index !== -1) {
-                const regex = new RegExp(`<${tagName}\\b`, 'gi');
-                let match;
-                let count = 0;
-                while ((match = regex.exec(code)) !== null) {
-                    if (count === index) {
-                        const start = match.index;
-                        const endMatch = code.indexOf('>', start);
-                        const end = (endMatch !== -1) ? endMatch + 1 : start + match[0].length;
-                        selectRange(start, end);
-                        return;
-                    }
-                    count++;
-                }
-            }
-        }
+
         
-        function selectRange(start, end) {
-            codeInput.focus();
-            codeInput.setSelectionRange(start, end);
-            
-            const fullText = codeInput.value;
-            const textBefore = fullText.substr(0, start);
-            const lineNum = textBefore.split('\n').length;
-            
-            const lineHeight = 18; 
-            const visibleLines = codeInput.clientHeight / lineHeight;
-            codeInput.scrollTop = Math.max(0, (lineNum - visibleLines / 2) * lineHeight);
-        }
 
-        function populateInspector(el) {
-            attrEditor.style.display = 'block';
-            document.getElementById('sel-tag').textContent = el.tagName;
-            const getVal = (attr) => el.getAttribute(attr) || '';
-            const getStyle = (prop) => el.style[prop] || '';
-            
-            document.getElementById('inp-id').value = el.id;
-            const fill = getVal('fill') || getStyle('fill');
-            document.getElementById('inp-fill').value = fill;
-            document.getElementById('inp-fill-color').value = rgb2hex(fill) || '#000000';
-            const stroke = getVal('stroke') || getStyle('stroke');
-            document.getElementById('inp-stroke').value = stroke;
-            document.getElementById('inp-stroke-color').value = rgb2hex(stroke) || '#000000';
-            document.getElementById('inp-stroke-width').value = parseFloat(getVal('stroke-width')) || 1;
-            document.getElementById('inp-opacity').value = getVal('opacity') || 1;
-        }
-
-        function updateAttr(attr, value) {
-            if (!selectedElement) return;
-            selectedElement.setAttribute(attr, value);
-            syncCodeFromDOM();
-        }
-
-        function syncCodeFromDOM() {
-            const svg = previewContent.querySelector('svg');
-            if (!svg) return;
-            const wasSelected = selectedElement;
-            if (wasSelected) wasSelected.classList.remove('selected-element');
-            const serializer = new XMLSerializer();
-            let newCode = serializer.serializeToString(svg);
-            if (wasSelected) wasSelected.classList.add('selected-element');
-            codeInput.value = newCode;
-            currentCode = newCode;
-        }
-
-        function rgb2hex(color) {
-            if (!color) return null;
-            if (color.startsWith('#')) return color;
-            return '#000000'; 
-        }
-
-        function formatCode() {
-            const source = codeInput.value;
-            let formatted = '';
-            let indent = 0;
-            const tab = '  ';
-            
-            const parts = source.split(/(<[^>]+>)/g).filter(s => s.trim().length > 0);
-            
-            parts.forEach(part => {
-                if (part.startsWith('</')) {
-                    indent = Math.max(0, indent - 1);
-                }
-                
-                formatted += tab.repeat(indent) + part.trim() + '\n';
-                
-                if (part.startsWith('<') && !part.startsWith('</') && !part.endsWith('/>') && !part.startsWith('<?') && !part.startsWith('<!')) {
-                    const tagName = part.match(/<(\w+)/)[1];
-                    const voidTags = ['path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'image', 'use', 'stop', 'br', 'hr', 'img', 'input'];
-                    if (!voidTags.includes(tagName)) {
-                        indent++;
-                    }
-                }
-            });
-            
-            handleCodeChange(formatted.trim());
-        }
-
-        function checkWatermark(code) {
-            const hasWatermark = /<text[^>]*>.*?(Created by|Noun Project).*?<\/text>/gis.test(code);
-            btnRemoveWatermark.style.display = hasWatermark ? 'inline-block' : 'none';
-        }
         
-        function removeWatermark() {
-            const clean = currentCode.replace(/<text[^>]*>.*?(Created by|Noun Project).*?<\/text>/gis, '');
-            handleCodeChange(clean);
-            showNotification('水印已去除', 'success');
-        }
 
-        function optimizeSVG() {
-             if (typeof svgo === 'undefined' && typeof window.svgo === 'undefined') { showNotification('SVGO 未加载，请检查网络', 'error'); return; }
-             const svgoLib = window.svgo || svgo;
-             
-             try {
-                 const res = svgoLib.optimize(currentCode, { multipass: true, plugins: ['preset-default', 'removeXMLNS'] });
-                 if (res.data) {
-                     handleCodeChange(res.data);
-                     showNotification('压缩完成', 'success');
-                 }
-             } catch(e) { showNotification('压缩出错: ' + e.message, 'error'); }
-        }
-
-        function getSVGSize(svg) {
-            let w = parseFloat(svg.getAttribute('width'));
-            let h = parseFloat(svg.getAttribute('height'));
-            if (!w || !h || isNaN(w) || isNaN(h)) {
-                const vb = svg.getAttribute('viewBox');
-                if (vb) {
-                    const parts = vb.split(/[\s,]+/).map(parseFloat);
-                    if (parts.length === 4) {
-                        w = parts[2];
-                        h = parts[3];
-                    }
-                }
-            }
-            return { w: w || 300, h: h || 150 };
-        }
-
-        function transformSVG(type, val1, val2) {
-            const svg = previewContent.querySelector('svg');
-            if (!svg) return;
-            
-            const size = getSVGSize(svg);
-            const cx = size.w / 2;
-            const cy = size.h / 2;
-
-            // Use 'root-transform' as wrapper
-            let wrapper = svg.querySelector('g#root-transform');
-            if (!wrapper) {
-                wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                wrapper.id = "root-transform";
-                // Move all children to wrapper
-                while (svg.firstChild) wrapper.appendChild(svg.firstChild);
-                svg.appendChild(wrapper);
-            }
-
-            let currentTransform = wrapper.getAttribute('transform') || '';
-            
-            if (type === 'rotate') {
-                currentTransform = `rotate(${val1}, ${cx}, ${cy}) ` + currentTransform;
-            } else if (type === 'scale') {
-                currentTransform = `translate(${cx}, ${cy}) scale(${val1}, ${val2}) translate(${-cx}, ${-cy}) ` + currentTransform;
-            }
-            
-            wrapper.setAttribute('transform', currentTransform);
-            syncCodeFromDOM();
-            buildTree(svg);
-        }
         
-        function flipSVG(axis) {
-            if (axis === 'h') transformSVG('scale', -1, 1);
-            if (axis === 'v') transformSVG('scale', 1, -1);
-        }
 
-        function showBase64() {
-            const b64 = btoa(unescape(encodeURIComponent(currentCode)));
-            document.getElementById('base64-output').value = `data:image/svg+xml;base64,${b64}`;
-            document.getElementById('base64-modal').style.display = 'flex';
-        }
         
-        function copyBase64() {
-            document.getElementById('base64-output').select();
-            document.execCommand('copy');
-            showNotification('已复制', 'success');
-        }
-
-        function exportImage(fmt) {
-            const blob = new Blob([currentCode], {type: 'image/svg+xml;charset=utf-8'});
-            const url = URL.createObjectURL(blob);
-            const img = new Image();
-            img.onload = () => {
-                const c = document.createElement('canvas');
-                let w = parseInt(img.width) || 800;
-                let h = parseInt(img.height) || 800;
-                c.width = w; c.height = h;
-                const ctx = c.getContext('2d');
-                if (fmt === 'jpg') { ctx.fillStyle='white'; ctx.fillRect(0,0,w,h); }
-                ctx.drawImage(img,0,0,w,h);
-                c.toBlob(b => saveAs(b, `export.${fmt}`), `image/${fmt}`);
-            };
-            img.src = url;
-        }
         
-        function downloadSVG() {
-            saveAs(new Blob([currentCode], {type: "image/svg+xml"}), fileName.replace('.svg', '_clean.svg'));
-        }
-
-        function switchTab(t) {
-            document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
-            document.getElementById(t+'-view').classList.add('active');
-            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-            const btns = document.querySelectorAll('.tab-btn');
-            if (t === 'editor') btns[0].classList.add('active');
-            else btns[1].classList.add('active');
-        }
         
-        function setBg(t) {
-            previewBg.className = 'preview-area';
-            if (t === 'dark') previewBg.classList.add('dark');
-            if (t === 'light') previewBg.classList.add('light');
-            // check is default
-        }
-
-        function showNotification(msg, type='info') {
-            notificationBar.textContent = msg;
-            notificationBar.className = `status-bar ${type}`;
-            notificationBar.style.display = 'flex';
-            setTimeout(() => notificationBar.style.display = 'none', 3000);
-        }
-
-        async function handleBatchFiles(files) {
-            const list = document.getElementById('batch-list');
-            list.innerHTML = '';
-            batchZip = new JSZip();
-            let count = 0;
-            const svgoLib = window.svgo || svgo;
-
-            for (let f of files) {
-                const d = document.createElement('div');
-                d.className = 'file-item';
-                d.textContent = `处理中: ${f.name}`;
-                list.appendChild(d);
-                try {
-                    let txt = await f.text();
-                    txt = txt.replace(/<text[^>]*>.*?(Created by|Noun Project).*?<\/text>/gis, '');
-                    if (svgoLib) txt = svgoLib.optimize(txt, {multipass:true}).data;
-                    batchZip.file(f.name.replace('.svg', '_clean.svg'), txt);
-                    d.textContent = `✅ ${f.name}`;
-                    d.style.color = 'var(--secondary)'; // Used secondary (teal) for success
-                    count++;
-                } catch(e) { d.textContent = `❌ ${f.name}`; d.style.color = '#f87171'; }
-            }
-            if (count) {
-                document.getElementById('btn-batch-download').disabled = false;
-                showNotification(`已处理 ${count} 个文件`, 'success');
-            }
-        }
         
-        function downloadBatchZip() {
-            if(batchZip) batchZip.generateAsync({type:"blob"}).then(c => saveAs(c, "svg_batch.zip"));
-        }
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        
+        
+
+        
+
+        
+
+        
+        
+        
+
+        
+        
+        
+
+        
+        
+        
+
+        
+        
+        
+
+        
+
+// Event listeners
+(function() {
+    // Tab buttons
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tab = this.dataset.tab;
+            if (tab) svgOptTool.switchTab(tab);
+        });
+    });
+
+    // Noun Project button
+    document.getElementById('btn-noun-project').addEventListener('click', function() {
+        window.open('https://thenounproject.com/', '_blank');
+    });
+
+    // Export SVG button
+    document.getElementById('btn-download-svg').addEventListener('click', function() {
+        svgOptTool.downloadSVG();
+    });
+
+    // Drag overlay select file button
+    document.getElementById('btn-drag-select-file').addEventListener('click', function() {
+        document.getElementById('file-input').click();
+    });
+
+    // Open file button
+    document.getElementById('btn-open-file').addEventListener('click', function() {
+        document.getElementById('file-input').click();
+    });
+
+    // File input change
+    document.getElementById('file-input').addEventListener('change', function() {
+        if (this.files[0]) svgOptTool.loadFile(this.files[0]);
+    });
+
+    // Format code button
+    document.getElementById('btn-format-code').addEventListener('click', function() {
+        svgOptTool.formatCode();
+    });
+
+    // Reset zoom button
+    document.getElementById('btn-reset-zoom').addEventListener('click', function() {
+        svgOptTool.resetZoom();
+    });
+
+    // Toggle center button
+    document.getElementById('btn-toggle-center').addEventListener('click', function() {
+        svgOptTool.toggleCenter();
+    });
+
+    // Remove watermark button
+    document.getElementById('btn-remove-watermark').addEventListener('click', function() {
+        svgOptTool.removeWatermark();
+    });
+
+    // Background toggles
+    document.querySelectorAll('.bg-toggle').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var bg = this.dataset.bg;
+            if (bg) svgOptTool.setBg(bg);
+        });
+    });
+
+    // Preview area - wheel and mousedown
+    document.getElementById('preview-bg').addEventListener('wheel', function(e) {
+        svgOptTool.handleWheel(e);
+    });
+    document.getElementById('preview-bg').addEventListener('mousedown', function(e) {
+        svgOptTool.startPan(e);
+    });
+
+    // Optimize SVG button
+    document.getElementById('btn-optimize-svg').addEventListener('click', function() {
+        svgOptTool.optimizeSVG();
+    });
+
+    // Show Base64 button
+    document.getElementById('btn-show-base64').addEventListener('click', function() {
+        svgOptTool.showBase64();
+    });
+
+    // Transform buttons
+    document.getElementById('btn-rotate').addEventListener('click', function() {
+        svgOptTool.transformSVG('rotate', 90);
+    });
+    document.getElementById('btn-flip-h').addEventListener('click', function() {
+        svgOptTool.flipSVG('h');
+    });
+    document.getElementById('btn-flip-v').addEventListener('click', function() {
+        svgOptTool.flipSVG('v');
+    });
+    document.getElementById('btn-export-png').addEventListener('click', function() {
+        svgOptTool.exportImage('png');
+    });
+
+    // Attribute inputs - use event delegation on the attr-editor section
+    document.getElementById('attr-editor').addEventListener('change', function(e) {
+        var target = e.target;
+        var attr = target.dataset.attr;
+        if (attr) svgOptTool.updateAttr(attr, target.value);
+    });
+
+    // Batch drop zone
+    document.getElementById('batch-drop-zone').addEventListener('click', function() {
+        document.getElementById('batch-file-input').click();
+    });
+
+    // Batch file input change
+    document.getElementById('batch-file-input').addEventListener('change', function() {
+        if (this.files) svgOptTool.handleBatchFiles(this.files);
+    });
+
+    // Batch download button
+    document.getElementById('btn-batch-download').addEventListener('click', function() {
+        svgOptTool.downloadBatchZip();
+    });
+
+    // Base64 modal - click outside to close
+    document.getElementById('base64-modal').addEventListener('click', function(e) {
+        if (e.target === this) this.style.display = 'none';
+    });
+
+    // Copy base64 button
+    document.getElementById('btn-copy-base64').addEventListener('click', function() {
+        svgOptTool.copyBase64();
+    });
+
+    // Close base64 modal button
+    document.getElementById('btn-close-base64-modal').addEventListener('click', function() {
+        document.getElementById('base64-modal').style.display = 'none';
+    });
+})();
 
     </script>
+<div id="toast"></div>
 </body>
 </html>

@@ -7,16 +7,16 @@
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/loader.js"></script>
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace layout-vertical">
-        <div class="sub-tab-group">
-            <div class="sub-tab active" onclick="transcoder.setMode('url', this)">URL</div>
-            <div class="sub-tab" onclick="transcoder.setMode('base64', this)">Base64 (UTF-8)</div>
-            <div class="sub-tab" onclick="transcoder.setMode('unicode', this)">Unicode (\u)</div>
-            <div class="sub-tab" onclick="transcoder.setMode('html', this)">HTML实体</div>
-            <div class="sub-tab" onclick="transcoder.setMode('hex', this)">Hex (16进制)</div>
-            <div class="sub-tab" onclick="transcoder.setMode('bin', this)">Binary (2进制)</div>
-            <div class="sub-tab" onclick="transcoder.setMode('punycode', this)">Punycode</div>
+        <div class="sub-tab-group" id="sub-tab-group">
+            <div class="sub-tab active" data-mode="url">URL</div>
+            <div class="sub-tab" data-mode="base64">Base64 (UTF-8)</div>
+            <div class="sub-tab" data-mode="unicode">Unicode (\u)</div>
+            <div class="sub-tab" data-mode="html">HTML实体</div>
+            <div class="sub-tab" data-mode="hex">Hex (16进制)</div>
+            <div class="sub-tab" data-mode="bin">Binary (2进制)</div>
+            <div class="sub-tab" data-mode="punycode">Punycode</div>
         </div>
 
         <div class="workspace">
@@ -24,7 +24,7 @@
                 <div class="panel-header">
                     <div class="panel-title">待转码</div>
                     <div class="panel-actions">
-                        <button class="btn btn-icon" onclick="app.clear('code')">清空</button>
+                        <button class="btn btn-icon" id="btn-clear-code">清空</button>
                     </div>
                 </div>
                 <textarea id="code-input" placeholder="输入内容..."></textarea>
@@ -33,9 +33,9 @@
             <div class="toolbar">
                 <div class="tool-group">
                     <div class="group-label">操作</div>
-                    <button class="btn btn-primary" onclick="transcoder.run('encode')">编码 (Encode) →</button>
-                    <button class="btn btn-primary" onclick="transcoder.run('decode')">解码 (Decode) ←</button>
-                    <button class="btn" onclick="transcoder.swap()">↕ 交换内容</button>
+                    <button class="btn btn-primary" id="btn-encode">编码 (Encode) →</button>
+                    <button class="btn btn-primary" id="btn-decode">解码 (Decode) ←</button>
+                    <button class="btn" id="btn-swap">↕ 交换内容</button>
                 </div>
                 <div class="tool-group">
                     <div class="group-label">说明</div>
@@ -51,7 +51,7 @@
                 <div class="panel-header">
                     <div class="panel-title">结果</div>
                     <div class="panel-actions">
-                        <button class="btn btn-icon btn-secondary" onclick="app.copy('code-output')">复制</button>
+                        <button class="btn btn-icon btn-secondary" id="btn-copy-code">复制</button>
                     </div>
                 </div>
                 <textarea id="code-output" readonly placeholder="转换结果..."></textarea>
@@ -139,6 +139,19 @@
                 [inp.value, out.value] = [out.value, inp.value];
             }
         };
+
+        // Event listeners
+        document.getElementById('sub-tab-group').addEventListener('click', function(e) {
+            const tab = e.target.closest('.sub-tab');
+            if (tab && tab.dataset.mode) {
+                transcoder.setMode(tab.dataset.mode, tab);
+            }
+        });
+        document.getElementById('btn-clear-code').addEventListener('click', function() { app.clear('code'); });
+        document.getElementById('btn-encode').addEventListener('click', function() { transcoder.run('encode'); });
+        document.getElementById('btn-decode').addEventListener('click', function() { transcoder.run('decode'); });
+        document.getElementById('btn-swap').addEventListener('click', function() { transcoder.swap(); });
+        document.getElementById('btn-copy-code').addEventListener('click', function() { app.copy('code-output'); });
     </script>
 </body>
 </html>

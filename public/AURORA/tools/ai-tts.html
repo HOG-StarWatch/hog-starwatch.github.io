@@ -92,13 +92,13 @@
         }
     </style>
 </head>
-<body style="padding: 1rem;">
+<body class="scroll-content">
     <div class="workspace tts-container">
         <div class="panel">
             <div class="panel-header">
                 <div class="panel-title">语音合成 (TTS)</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon" onclick="ttsTool.clear()">清空</button>
+                    <button class="btn btn-icon" id="btn-tts-clear">清空</button>
                 </div>
             </div>
             <textarea id="tts-input" placeholder="输入要朗读的文本..." style="min-height: 180px;"></textarea>
@@ -111,13 +111,13 @@
             <div class="panel-header">
                 <div class="panel-title">引擎与声音设置</div>
                 <div class="panel-actions">
-                    <button class="btn btn-secondary btn-sm" onclick="ttsTool.refreshVoices()">刷新声线</button>
+                    <button class="btn btn-secondary btn-sm" id="btn-tts-refresh">刷新声线</button>
                 </div>
             </div>
             <div class="tts-grid">
                 <div class="input-group">
                     <label for="engine-select">TTS 引擎</label>
-                    <select id="engine-select" onchange="ttsTool.onEngineChange()">
+                    <select id="engine-select">
                         <option value="webspeech">浏览器内置 (Web Speech)</option>
                         <option value="streamelements">StreamElements (免费)</option>
                         <option value="voicerss">VoiceRSS (需 Key)</option>
@@ -127,7 +127,7 @@
                 <div class="input-group">
                     <label for="voice-select">语音</label>
                     <div class="voice-row">
-                        <input type="text" id="voice-filter" placeholder="筛选语音，例如 zh、en-US、中文" oninput="ttsTool.filterVoices()">
+                        <input type="text" id="voice-filter" placeholder="筛选语音，例如 zh、en-US、中文">
                         <select id="voice-select"></select>
                     </div>
                 </div>
@@ -173,13 +173,13 @@
                 <div class="panel-title">控制</div>
             </div>
             <div class="tts-actions">
-                <button class="btn btn-primary" onclick="ttsTool.speak()">播放</button>
-                <button class="btn" onclick="ttsTool.pause()">暂停</button>
-                <button class="btn" onclick="ttsTool.resume()">继续</button>
-                <button class="btn btn-secondary" onclick="ttsTool.stop()">停止</button>
-                <button class="btn" id="tts-record-webspeech" onclick="ttsTool.recordWebSpeech()">录制 Web Speech</button>
-                <button class="btn" onclick="ttsTool.generate()">生成音频</button>
-                <button class="btn btn-secondary" onclick="ttsTool.download()">导出音频</button>
+                <button class="btn btn-primary" id="btn-tts-speak">播放</button>
+                <button class="btn" id="btn-tts-pause">暂停</button>
+                <button class="btn" id="btn-tts-resume">继续</button>
+                <button class="btn btn-secondary" id="btn-tts-stop">停止</button>
+                <button class="btn" id="tts-record-webspeech">录制 Web Speech</button>
+                <button class="btn" id="btn-tts-generate">生成音频</button>
+                <button class="btn btn-secondary" id="btn-tts-download">导出音频</button>
             </div>
             <div class="status-row" id="tts-status">状态：就绪</div>
             <div class="audio-preview" id="audio-preview">
@@ -195,7 +195,6 @@
 
     <div id="toast" class="toast">操作成功</div>
     <script src="../js/app.js"></script>
-    <script src="../js/loader.js"></script>
     <script>
         const ttsTool = {
             voices: [],
@@ -518,7 +517,9 @@
                     if (!res.ok) throw new Error('请求失败');
                     const blob = await res.blob();
                     this.lastAudioBlob = blob;
+                    if (audio.dataset.objectUrl) URL.revokeObjectURL(audio.dataset.objectUrl);
                     const objectUrl = URL.createObjectURL(blob);
+                    audio.dataset.objectUrl = objectUrl;
                     audio.src = objectUrl;
                     document.getElementById('audio-preview').style.display = 'block';
                     this.setStatus('就绪');
@@ -566,6 +567,20 @@
             }
         };
         ttsTool.init();
+
+        // Event listeners
+        document.getElementById('btn-tts-clear').addEventListener('click', () => ttsTool.clear());
+        document.getElementById('btn-tts-refresh').addEventListener('click', () => ttsTool.refreshVoices());
+        document.getElementById('btn-tts-speak').addEventListener('click', () => ttsTool.speak());
+        document.getElementById('btn-tts-pause').addEventListener('click', () => ttsTool.pause());
+        document.getElementById('btn-tts-resume').addEventListener('click', () => ttsTool.resume());
+        document.getElementById('btn-tts-stop').addEventListener('click', () => ttsTool.stop());
+        document.getElementById('tts-record-webspeech').addEventListener('click', () => ttsTool.recordWebSpeech());
+        document.getElementById('btn-tts-generate').addEventListener('click', () => ttsTool.generate());
+        document.getElementById('btn-tts-download').addEventListener('click', () => ttsTool.download());
+
+        document.getElementById('engine-select').addEventListener('change', function() { ttsTool.onEngineChange(); });
+        document.getElementById('voice-filter').addEventListener('input', function() { ttsTool.filterVoices(); });
     </script>
 </body>
 </html>

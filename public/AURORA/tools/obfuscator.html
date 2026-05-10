@@ -6,23 +6,23 @@
     <title>HTML混淆</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace">
         <div class="panel">
             <div class="panel-header">
                 <div class="panel-title">HTML 隐形加密器 (HTML Obfuscator)</div>
                 <div class="panel-actions">
-                     <button class="btn btn-icon" onclick="app.clear('obf')">清空</button>
+                     <button class="btn btn-icon" id="btn-clear-obf">清空</button>
                 </div>
             </div>
             <div style="padding: 1rem; flex: 1; display: flex; flex-direction: column; gap: 1rem;">
                 <textarea id="obf-input" placeholder="请在此粘贴您的 HTML 源代码..." style="flex:1; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2);"></textarea>
                 
                 <div class="toolbar" style="width:100%; flex-direction:row; height:auto; overflow:visible;">
-                    <button class="btn btn-primary" onclick="obfTool.encrypt('base64')">⚡ Base64 加密</button>
-                    <button class="btn btn-primary" onclick="obfTool.encrypt('hex')">🔢 Hex 编码</button>
-                    <button class="btn btn-primary" onclick="obfTool.encrypt('unicode')">🔣 Unicode 混淆</button>
-                    <button class="btn btn-primary" onclick="obfTool.encrypt('ascii')">🤖 ASCII 数组</button>
+                    <button class="btn btn-primary" id="btn-encrypt-base64">⚡ Base64 加密</button>
+                    <button class="btn btn-primary" id="btn-encrypt-hex">🔢 Hex 编码</button>
+                    <button class="btn btn-primary" id="btn-encrypt-unicode">🔣 Unicode 混淆</button>
+                    <button class="btn btn-primary" id="btn-encrypt-ascii">🤖 ASCII 数组</button>
                 </div>
             </div>
         </div>
@@ -31,7 +31,7 @@
             <div class="panel-header">
                 <div class="panel-title">加密结果 (可直接保存为 .html 运行)</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon btn-secondary" onclick="app.copy('obf-output')">复制</button>
+                    <button class="btn btn-icon btn-secondary" id="btn-copy-obf">复制</button>
                 </div>
             </div>
             <textarea id="obf-output" readonly placeholder="加密后的代码将显示在这里，肉眼无法识别内容..." style="padding: 1rem;"></textarea>
@@ -81,6 +81,13 @@
                 }
             }
         };
+        // Event listeners
+        document.getElementById('btn-clear-obf').addEventListener('click', () => app.clear('obf'));
+        document.getElementById('btn-encrypt-base64').addEventListener('click', () => obfTool.encrypt('base64'));
+        document.getElementById('btn-encrypt-hex').addEventListener('click', () => obfTool.encrypt('hex'));
+        document.getElementById('btn-encrypt-unicode').addEventListener('click', () => obfTool.encrypt('unicode'));
+        document.getElementById('btn-encrypt-ascii').addEventListener('click', () => obfTool.encrypt('ascii'));
+        document.getElementById('btn-copy-obf').addEventListener('click', () => app.copy('obf-output'));
     </script>
 </body>
 </html>

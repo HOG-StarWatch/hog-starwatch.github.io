@@ -330,11 +330,11 @@ self.onmessage = async (e) => {
     if (handlers[action]) {
         try {
             const result = await handlers[action](payload);
-            self.postMessage({ id, status: 'success', result });
+            self.postMessage({ type: 'success', requestId: id, result });
         } catch (error) {
-            self.postMessage({ id, status: 'error', error: error.message });
+            self.postMessage({ type: 'error', requestId: id, error: error.message });
         }
     } else {
-        self.postMessage({ id, status: 'error', error: `Unknown action: ${action}` });
+        self.postMessage({ type: 'error', requestId: id, error: `Unknown action: ${action}` });
     }
 };

@@ -38,10 +38,10 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="nav-pills">
-        <div class="nav-pill active" onclick="switchFunTool('phantom', this)">👻 幻影坦克</div>
-        <div class="nav-pill" onclick="switchFunTool('hybrid', this)">👁️ 视觉混合图</div>
+        <div class="nav-pill active" id="pill-phantom">👻 幻影坦克</div>
+        <div class="nav-pill" id="pill-hybrid">👁️ 视觉混合图</div>
     </div>
     
     <iframe id="fun-frame" class="content-frame" src="image-phantom.html"></iframe>
@@ -61,53 +61,60 @@
             }
         });
 
-        // Theme Propagation Helper
-        function propagateThemeToChild() {
-            const frame = document.getElementById('fun-frame');
-            if(!frame || !frame.contentWindow) return;
-            
-            const root = document.documentElement;
-            const vars = [
-                '--bg-deep', '--bg-panel', '--bg-header', '--primary', '--secondary', '--accent', 
-                '--text-main', '--text-dim', '--border', '--shadow', '--primary-contrast',
-                '--radius-lg', '--radius-md', '--radius-sm', '--font-main', '--font-mono',
-                '--input-bg', '--btn-bg', '--btn-hover-bg'
-            ];
-            
-            try {
-                const childRoot = frame.contentWindow.document.documentElement;
-                vars.forEach(v => {
-                    const val = getComputedStyle(root).getPropertyValue(v);
-                    if(val) childRoot.style.setProperty(v, val);
-                });
-            } catch(e) {
-                console.log('Cannot propagate theme to cross-origin frame');
+        const funTool = {
+            // Theme Propagation Helper
+            propagateThemeToChild() {
+                const frame = document.getElementById('fun-frame');
+                if(!frame || !frame.contentWindow) return;
+                
+                const root = document.documentElement;
+                const vars = [
+                    '--bg-deep', '--bg-panel', '--bg-header', '--primary', '--secondary', '--accent', 
+                    '--text-main', '--text-dim', '--border', '--shadow', '--primary-contrast',
+                    '--radius-lg', '--radius-md', '--radius-sm', '--font-main', '--font-mono',
+                    '--input-bg', '--btn-bg', '--btn-hover-bg'
+                ];
+                
+                try {
+                    const childRoot = frame.contentWindow.document.documentElement;
+                    vars.forEach(v => {
+                        const val = getComputedStyle(root).getPropertyValue(v);
+                        if(val) childRoot.style.setProperty(v, val);
+                    });
+                } catch(e) {
+                    console.log('Cannot propagate theme to cross-origin frame');
+                }
+            },
+
+            switchFunTool(tool, el) {
+                document.querySelectorAll('.nav-pill').forEach(t => t.classList.remove('active'));
+                el.classList.add('active');
+                
+                const frame = document.getElementById('fun-frame');
+                if (tool === 'phantom') {
+                    frame.src = 'image-phantom.html';
+                } else if (tool === 'hybrid') {
+                    frame.src = 'image-hybrid.html';
+                }
             }
-        }
+        };
 
         const funFrame = document.getElementById('fun-frame');
-        funFrame.addEventListener('load', propagateThemeToChild);
+        funFrame.addEventListener('load', () => funTool.propagateThemeToChild());
         
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    propagateThemeToChild();
+                    funTool.propagateThemeToChild();
                 }
             });
         });
         observer.observe(document.documentElement, { attributes: true });
-
-        function switchFunTool(tool, el) {
-            document.querySelectorAll('.nav-pill').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            
-            const frame = document.getElementById('fun-frame');
-            if (tool === 'phantom') {
-                frame.src = 'image-phantom.html';
-            } else if (tool === 'hybrid') {
-                frame.src = 'image-hybrid.html';
-            }
-        }
+        
+        // Nav pill event listeners
+        document.getElementById('pill-phantom').addEventListener('click', function() { funTool.switchFunTool('phantom', this); });
+        document.getElementById('pill-hybrid').addEventListener('click', function() { funTool.switchFunTool('hybrid', this); });
     </script>
+<div id="toast"></div>
 </body>
 </html>

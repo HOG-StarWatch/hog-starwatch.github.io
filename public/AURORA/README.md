@@ -210,11 +210,17 @@ const mod = await ResourceLoader.import('hash-wasm-esm');
 
 ## 📐 代码规范
 
+> 📖 详细规范请参阅 [docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md)
+
 ### 样式规范
 - ❌ 禁止重定义 `.btn`, `.panel` 等全局组件
 - ❌ 禁止 `body` 直接使用 `style="padding: ..."`，用 `.scroll-content`
 - ✅ 仅在 `<style>` 写工具特有样式
 - ✅ 使用 CSS 变量
+
+### HTML 结构规范
+- ✅ body 必须包含 `scroll-content` 类
+- ✅ ID 使用工具前缀命名 (如 `qrcode-content`, `hash-input`)
 
 ### Toast 调用
 ```javascript
@@ -229,10 +235,20 @@ if (window.app && window.app.showToast) window.app.showToast('完成');
 ```html
 <link rel="stylesheet" href="../css/style.css">
 <script src="../js/app.js"></script>
+<script src="../js/loader.js"></script>
+<script src="../js/tool-helpers.js"></script>
 ```
 
 ### ID 命名
 `id="qrcode-content"` `id="qrcode-canvas"` (前缀防冲突)
+
+### 相关文档
+- [编码规范](docs/CODING_STANDARDS.md) - 完整的代码风格指南
+- [贡献指南](docs/CONTRIBUTING.md) - 如何参与开发
+- [Worker 协议](docs/WORKER_PROTOCOL.md) - Worker 通信规范
+- [开发检查清单](docs/TOOL_CHECKLIST.md) - 工具开发检查项
+- [工具模板](docs/templates/tool-template.html) - 标准工具模板
+- [Worker 模板](docs/templates/worker-template.js) - 标准 Worker 模板
 
 ---
 

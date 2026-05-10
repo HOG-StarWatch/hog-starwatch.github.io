@@ -6,26 +6,31 @@
     <title>二维码生成器</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
+        /* ========================================
+           二维码生成器工具特有样式
+           注：公共组件样式已在 style.css 中定义
+           ======================================== */
+
         /* 布局重构：响应式流式布局 */
         .workspace-split {
             display: flex;
             flex-wrap: wrap;
             gap: 1.5rem;
-            align-items: flex-start; /* 顶部对齐 */
+            align-items: flex-start;
             max-width: 1600px;
             margin: 0 auto;
             padding-bottom: 2rem;
         }
 
         .settings-panel {
-            flex: 1 1 600px; /* 占据主要空间，基础宽600px */
+            flex: 1 1 600px;
             min-width: 300px;
             display: flex;
             flex-direction: column;
         }
 
         .preview-panel {
-            flex: 0 0 400px; /* 侧边固定宽度，避免浪费空间 */
+            flex: 0 0 400px;
             min-width: 300px;
             display: flex;
             flex-direction: column;
@@ -43,23 +48,9 @@
 
         .options-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 自适应多列 */
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
             margin-bottom: 1rem;
-        }
-
-        .color-picker-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .color-picker-wrapper input[type="color"] {
-            width: 40px;
-            height: 40px;
-            padding: 0;
-            border: none;
-            background: none;
-            cursor: pointer;
         }
 
         #qrcode-container {
@@ -93,37 +84,24 @@
             grid-column: span 2;
         }
         
-        /* 当列数变少时，full-width-col 也应该适应 */
+        /* 响应式调整 */
         @media (max-width: 500px) {
              .full-width-col {
                 grid-column: span 1;
             }
         }
 
-        /* 响应式调整 */
         @media (max-width: 1024px) {
             .workspace-split {
-                flex-direction: column-reverse; /* 平板/手机端：设置在上，预览在下? 不，预览应该置顶方便看结果？
-                                                 但是在移动端 sticky 会失效或占空间。
-                                                 通常表单在下，结果在上比较好。
-                                                 或者保持 HTML 顺序（设置在前），但视觉上调整。
-                                                 这里选择：Settings (Main) + Preview (Bottom/Top)
-                                                 如果用 column-reverse，Preview 在上。
-                                                 如果用 column，Preview 在下。
-                                                 
-                                                 试想：用户改了参数，想看结果。如果在下面，得滑下去。如果在上面，得滑上去。
-                                                 既然有 sticky，大屏很好。
-                                                 小屏时，sticky 可能占屏太大。
-                                                 我们让它在小屏时变成普通流，放在最前面（order: -1）。
-                                              */
+                flex-direction: column-reverse;
             }
             
             .preview-panel {
                 flex: 1 1 100%;
                 width: 100%;
-                position: static; /* 取消吸顶 */
-                order: -1; /* 让预览显示在最上方 */
-                flex-direction: row; /* 横向排列内容? 不，还是 column */
+                position: static;
+                order: -1;
+                flex-direction: row;
                 min-height: auto;
                 padding: 1rem;
             }
@@ -139,7 +117,7 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace"> <!-- 允许主workspace滚动 -->
         <div class="workspace-split">
             <!-- Left: Settings Panel -->
@@ -178,14 +156,14 @@
                             <label>前景色 (码)</label>
                             <div class="color-picker-wrapper">
                                 <input type="color" id="qr-color-dark" value="#000000">
-                                <input type="text" id="qr-color-dark-text" value="#000000" onchange="document.getElementById('qr-color-dark').value = this.value" style="flex:1; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.5rem;">
+                                <input type="text" id="qr-color-dark-text" value="#000000" style="flex:1; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.5rem;">
                             </div>
                         </div>
                         <div class="input-row">
                             <label>背景色</label>
                             <div class="color-picker-wrapper">
                                 <input type="color" id="qr-color-light" value="#ffffff">
-                                <input type="text" id="qr-color-light-text" value="#ffffff" onchange="document.getElementById('qr-color-light').value = this.value" style="flex:1; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.5rem;">
+                                <input type="text" id="qr-color-light-text" value="#ffffff" style="flex:1; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-main); padding: 0.5rem;">
                             </div>
                         </div>
 
@@ -210,7 +188,7 @@
 
                     <!-- Actions -->
                     <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                        <button class="btn btn-primary" onclick="generateQR()" style="flex: 1; justify-content: center;">生成/刷新</button>
+                        <button class="btn btn-primary" id="btn-generate-qr" style="flex: 1; justify-content: center;">生成/刷新</button>
                     </div>
                 </div>
             </div>
@@ -219,7 +197,7 @@
             <div class="preview-panel">
                 <div style="position: absolute; top: 1rem; left: 1rem; font-weight: 600; color: var(--text-dim);">预览</div>
                 <div style="position: absolute; top: 1rem; right: 1rem;">
-                     <button class="btn btn-secondary btn-sm" onclick="downloadQR()">下载 PNG</button>
+                     <button class="btn btn-secondary btn-sm" id="btn-download-qr">下载 PNG</button>
                 </div>
                 
                 <div id="qrcode-container"></div>
@@ -239,118 +217,129 @@
             document.getElementById('qr-color-light-text').value = e.target.value;
         });
 
-        let qrcodeObj = null;
-        let logoDataUrl = null;
+        const qrTool = (function() {
+            let qrcodeObj = null;
+            let logoDataUrl = null;
 
-        // Handle Logo Upload
-        document.getElementById('qr-logo-file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    logoDataUrl = evt.target.result;
-                    app.showToast('Logo 已加载，请点击生成');
-                    // Auto generate when logo loaded
-                    generateQR();
+            function generateQR() {
+                const text = document.getElementById('qr-text').value;
+                const width = parseInt(document.getElementById('qr-width').value) || 256;
+                const height = width;
+                const colorDark = document.getElementById('qr-color-dark').value;
+                const colorLight = document.getElementById('qr-color-light').value;
+                const correctLevel = document.getElementById('qr-correct').value;
+                const dotScale = parseFloat(document.getElementById('qr-dot-scale').value) || 1.0;
+                const quietZone = parseInt(document.getElementById('qr-quiet-zone').value) || 0;
+
+                const container = document.getElementById('qrcode-container');
+                container.innerHTML = ''; // Clear previous
+
+                if (!text) {
+                    // Don't toast on initial load empty, just return
+                    return;
+                }
+
+                if (typeof QRCode === 'undefined') {
+                    app.showToast('正在加载组件...', 'info');
+                    ResourceLoader.loadDeps('easyqrcodejs').then(() => {
+                        qrTool.generateQR(); // Retry after load
+                    });
+                    return;
+                }
+
+                const options = {
+                    text: text,
+                    width: width,
+                    height: height,
+                    colorDark: colorDark,
+                    colorLight: colorLight,
+                    correctLevel: QRCode.CorrectLevel[correctLevel],
+                    
+                    dotScale: dotScale,
+                    quietZone: quietZone,
+                    
+                    logo: logoDataUrl,
+                    logoWidth: width * 0.2, // Default logo size 20%
+                    logoHeight: width * 0.2,
+                    logoBackgroundColor: '#ffffff', // Optional: white bg for logo
+                    logoBackgroundTransparent: false
                 };
-                reader.readAsDataURL(file);
-            } else {
-                logoDataUrl = null;
-            }
-        });
-        
-        // Auto generate on input changes (debounce could be added but for local it's fast enough)
-        const inputs = document.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            if(input.type !== 'file') {
-                 input.addEventListener('change', () => generateQR());
-            }
-        });
 
-        function generateQR() {
-            const text = document.getElementById('qr-text').value;
-            const width = parseInt(document.getElementById('qr-width').value) || 256;
-            const height = width;
-            const colorDark = document.getElementById('qr-color-dark').value;
-            const colorLight = document.getElementById('qr-color-light').value;
-            const correctLevel = document.getElementById('qr-correct').value;
-            const dotScale = parseFloat(document.getElementById('qr-dot-scale').value) || 1.0;
-            const quietZone = parseInt(document.getElementById('qr-quiet-zone').value) || 0;
-
-            const container = document.getElementById('qrcode-container');
-            container.innerHTML = ''; // Clear previous
-
-            if (!text) {
-                // Don't toast on initial load empty, just return
-                return;
+                try {
+                    // EasyQRCodeJS
+                    qrcodeObj = new QRCode(container, options);
+                    
+                } catch (e) {
+                    console.error(e);
+                    app.showToast('生成失败: ' + e.message);
+                }
             }
 
-            if (typeof QRCode === 'undefined') {
-                app.showToast('正在加载组件...', 'info');
-                ResourceLoader.loadDeps('easyqrcodejs').then(() => {
-                    generateQR(); // Retry after load
-                });
-                return;
-            }
-
-            const options = {
-                text: text,
-                width: width,
-                height: height,
-                colorDark: colorDark,
-                colorLight: colorLight,
-                correctLevel: QRCode.CorrectLevel[correctLevel],
+            function downloadQR() {
+                const container = document.getElementById('qrcode-container');
+                const canvas = container.querySelector('canvas');
                 
-                dotScale: dotScale,
-                quietZone: quietZone,
-                
-                logo: logoDataUrl,
-                logoWidth: width * 0.2, // Default logo size 20%
-                logoHeight: width * 0.2,
-                logoBackgroundColor: '#ffffff', // Optional: white bg for logo
-                logoBackgroundTransparent: false
-            };
+                if (!canvas) {
+                    app.showToast('请先生成二维码');
+                    return;
+                }
 
-            try {
-                // EasyQRCodeJS
-                qrcodeObj = new QRCode(container, options);
-                
-            } catch (e) {
-                console.error(e);
-                app.showToast('生成失败: ' + e.message);
+                try {
+                    const link = document.createElement('a');
+                    link.download = 'qrcode.png';
+                    link.href = canvas.toDataURL("image/png");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    app.showToast('开始下载');
+                } catch(e) {
+                    app.showToast('下载失败，请尝试右键保存');
+                }
             }
-        }
 
-        function downloadQR() {
-            const container = document.getElementById('qrcode-container');
-            const canvas = container.querySelector('canvas');
+            // Handle Logo Upload
+            document.getElementById('qr-logo-file').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        logoDataUrl = evt.target.result;
+                        app.showToast('Logo 已加载，请点击生成');
+                        // Auto generate when logo loaded
+                        qrTool.generateQR();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    logoDataUrl = null;
+                }
+            });
             
-            if (!canvas) {
-                app.showToast('请先生成二维码');
-                return;
-            }
+            // Auto generate on input changes (debounce could be added but for local it's fast enough)
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if(input.type !== 'file') {
+                     input.addEventListener('change', () => qrTool.generateQR());
+                }
+            });
 
-            try {
-                const link = document.createElement('a');
-                link.download = 'qrcode.png';
-                link.href = canvas.toDataURL("image/png");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                app.showToast('开始下载');
-            } catch(e) {
-                app.showToast('下载失败，请尝试右键保存');
-            }
-        }
+            // Initialize on load
+            window.onload = function() {
+                // Mobile Optimization: Auto-adjust size
+                if (window.innerWidth < 600) {
+                    document.getElementById('qr-width').value = 250;
+                }
+                qrTool.generateQR();
+            };
+            
+            // Button event listeners
+            document.getElementById('btn-generate-qr').addEventListener('click', () => qrTool.generateQR());
+            document.getElementById('btn-download-qr').addEventListener('click', () => qrTool.downloadQR());
 
-        // Initialize on load
-        window.onload = function() {
-            // Mobile Optimization: Auto-adjust size
-            if (window.innerWidth < 600) {
-                document.getElementById('qr-width').value = 250;
-            }
-            generateQR();
-        };
+            return { generateQR, downloadQR };
+        })();
+        // Sync text inputs to color pickers
+        document.getElementById('qr-color-dark-text').addEventListener('change', function() { document.getElementById('qr-color-dark').value = this.value; });
+        document.getElementById('qr-color-light-text').addEventListener('change', function() { document.getElementById('qr-color-light').value = this.value; });
     </script>
 </body>
 </html>

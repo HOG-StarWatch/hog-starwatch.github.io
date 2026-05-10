@@ -76,7 +76,7 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace unit-container">
         <div class="type-selector" id="type-selector">
             <!-- Injected by JS -->
@@ -84,15 +84,15 @@
 
         <div class="converter-box">
             <div class="input-group">
-                <select id="unit-from" class="unit-select" onchange="convert('from')"></select>
-                <input type="number" id="val-from" class="value-input" placeholder="0" oninput="convert('from')">
+                <select id="unit-from" class="unit-select"></select>
+                <input type="number" id="val-from" class="value-input" placeholder="0">
             </div>
 
             <div class="equal-sign">=</div>
 
             <div class="input-group">
-                <select id="unit-to" class="unit-select" onchange="convert('from')"></select>
-                <input type="number" id="val-to" class="value-input" placeholder="0" oninput="convert('to')">
+                <select id="unit-to" class="unit-select"></select>
+                <input type="number" id="val-to" class="value-input" placeholder="0">
             </div>
         </div>
 
@@ -183,90 +183,107 @@
 
         let currentType = 'length';
 
-        function init() {
-            const selector = document.getElementById('type-selector');
-            Object.keys(units).forEach(key => {
-                const btn = document.createElement('button');
-                btn.className = `type-btn ${key === currentType ? 'active' : ''}`;
-                btn.innerText = units[key].name;
-                btn.onclick = () => switchType(key, btn);
-                selector.appendChild(btn);
-            });
-            renderOptions();
-        }
+        const unitTool = {
+            init() {
+                const selector = document.getElementById('type-selector');
+                Object.keys(units).forEach(key => {
+                    const btn = document.createElement('button');
+                    btn.className = `type-btn ${key === currentType ? 'active' : ''}`;
+                    btn.innerText = units[key].name;
+                    btn.addEventListener('click', function() { unitTool.switchType(key, btn); });
+                    selector.appendChild(btn);
+                });
+                unitTool.renderOptions();
+            },
 
-        function switchType(type, btn) {
-            currentType = type;
-            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderOptions();
-            document.getElementById('val-from').value = '';
-            document.getElementById('val-to').value = '';
-        }
+            switchType(type, btn) {
+                currentType = type;
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                unitTool.renderOptions();
+                document.getElementById('val-from').value = '';
+                document.getElementById('val-to').value = '';
+            },
 
-        function renderOptions() {
-            const fromSel = document.getElementById('unit-from');
-            const toSel = document.getElementById('unit-to');
-            fromSel.innerHTML = '';
-            toSel.innerHTML = '';
+            renderOptions() {
+                const fromSel = document.getElementById('unit-from');
+                const toSel = document.getElementById('unit-to');
+                fromSel.innerHTML = '';
+                toSel.innerHTML = '';
 
-            const unitData = units[currentType];
-            const keys = unitData.special ? ['c', 'f', 'k'] : Object.keys(unitData.rates);
-            const names = unitData.special ? { c: '摄氏度 (°C)', f: '华氏度 (°F)', k: '开尔文 (K)' } : unitData.names;
+                const unitData = units[currentType];
+                const keys = unitData.special ? ['c', 'f', 'k'] : Object.keys(unitData.rates);
+                const names = unitData.special ? { c: '摄氏度 (°C)', f: '华氏度 (°F)', k: '开尔文 (K)' } : unitData.names;
 
-            keys.forEach(k => {
-                const opt1 = new Option(names[k], k);
-                const opt2 = new Option(names[k], k);
-                fromSel.add(opt1);
-                toSel.add(opt2);
-            });
+                keys.forEach(k => {
+                    const opt1 = new Option(names[k], k);
+                    const opt2 = new Option(names[k], k);
+                    fromSel.add(opt1);
+                    toSel.add(opt2);
+                });
 
-            // Default selection
-            if(keys.length > 1) toSel.selectedIndex = 1;
-        }
+                // Default selection
+                if(keys.length > 1) toSel.selectedIndex = 1;
+            },
 
-        function convert(direction) {
-            const fromVal = parseFloat(document.getElementById(direction === 'from' ? 'val-from' : 'val-to').value);
-            if (isNaN(fromVal)) {
-                document.getElementById(direction === 'from' ? 'val-to' : 'val-from').value = '';
-                return;
+            convert(direction) {
+                const fromVal = parseFloat(document.getElementById(direction === 'from' ? 'val-from' : 'val-to').value);
+                if (isNaN(fromVal)) {
+                    document.getElementById(direction === 'from' ? 'val-to' : 'val-from').value = '';
+                    return;
+                }
+
+                const fromUnit = document.getElementById(direction === 'from' ? 'unit-from' : 'unit-to').value;
+                const toUnit = document.getElementById(direction === 'from' ? 'unit-to' : 'unit-from').value;
+                const targetInput = document.getElementById(direction === 'from' ? 'val-to' : 'val-from');
+
+                let result;
+
+                if (units[currentType].special && currentType === 'temperature') {
+                    // Temp conversion
+                    let celsius;
+                    // To Celsius
+                    if (fromUnit === 'c') celsius = fromVal;
+                    else if (fromUnit === 'f') celsius = (fromVal - 32) * 5/9;
+                    else if (fromUnit === 'k') celsius = fromVal - 273.15;
+
+                    // From Celsius
+                    if (toUnit === 'c') result = celsius;
+                    else if (toUnit === 'f') result = (celsius * 9/5) + 32;
+                    else if (toUnit === 'k') result = celsius + 273.15;
+                } else {
+                    // Standard rate conversion
+                    // base = val * rate[from]
+                    // res = base / rate[to]
+                    // Actually: base unit is the one with rate 1.
+                    // val in base = val * rate[from]
+                    // val in target = (val * rate[from]) / rate[to]
+                    const rates = units[currentType].rates;
+                    const baseVal = fromVal * rates[fromUnit];
+                    result = baseVal / rates[toUnit];
+                }
+
+                // Format result
+                targetInput.value = parseFloat(result.toPrecision(10)); // Avoid floating point errors
             }
+        };
 
-            const fromUnit = document.getElementById(direction === 'from' ? 'unit-from' : 'unit-to').value;
-            const toUnit = document.getElementById(direction === 'from' ? 'unit-to' : 'unit-from').value;
-            const targetInput = document.getElementById(direction === 'from' ? 'val-to' : 'val-from');
+        unitTool.init();
 
-            let result;
-
-            if (units[currentType].special && currentType === 'temperature') {
-                // Temp conversion
-                let celsius;
-                // To Celsius
-                if (fromUnit === 'c') celsius = fromVal;
-                else if (fromUnit === 'f') celsius = (fromVal - 32) * 5/9;
-                else if (fromUnit === 'k') celsius = fromVal - 273.15;
-
-                // From Celsius
-                if (toUnit === 'c') result = celsius;
-                else if (toUnit === 'f') result = (celsius * 9/5) + 32;
-                else if (toUnit === 'k') result = celsius + 273.15;
-            } else {
-                // Standard rate conversion
-                // base = val * rate[from]
-                // res = base / rate[to]
-                // Actually: base unit is the one with rate 1.
-                // val in base = val * rate[from]
-                // val in target = (val * rate[from]) / rate[to]
-                const rates = units[currentType].rates;
-                const baseVal = fromVal * rates[fromUnit];
-                result = baseVal / rates[toUnit];
-            }
-
-            // Format result
-            targetInput.value = parseFloat(result.toPrecision(10)); // Avoid floating point errors
-        }
-
-        init();
+        // Event listeners
+        document.getElementById('unit-from').addEventListener('change', function() {
+            unitTool.convert('from');
+        });
+        document.getElementById('unit-to').addEventListener('change', function() {
+            unitTool.convert('from');
+        });
+        document.getElementById('val-from').addEventListener('input', function() {
+            unitTool.convert('from');
+        });
+        document.getElementById('val-to').addEventListener('input', function() {
+            unitTool.convert('to');
+        });
     </script>
+<div id="toast"></div>
 </body>
 </html>

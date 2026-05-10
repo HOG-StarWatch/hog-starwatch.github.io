@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/loader.js"></script>
     <style>
-        .slider-row {
+        .gif-slider-row {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 8px;
         }
-        .slider-row label { flex: 1; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0; }
-        .slider-row span { font-size: 0.85rem; color: var(--secondary); width: 30px; text-align: right; }
+        .gif-slider-row label { flex: 1; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0; }
+        .gif-slider-row span { font-size: 0.85rem; color: var(--secondary); width: 30px; text-align: right; }
         
         .file-list {
             margin-top: 15px;
@@ -88,7 +88,7 @@
             <div id="file-list-container" class="control-group" style="display:none;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                     <label style="font-size:0.9rem; font-weight:600;">已选图片 <span id="file-count" style="font-weight:normal; color:var(--text-dim);">(0)</span></label>
-                    <button class="btn btn-sm" onclick="clearFiles()" style="padding: 2px 8px; font-size: 0.75rem;">清空</button>
+                    <button class="btn btn-sm" id="btn-clear-files" style="padding: 2px 8px; font-size: 0.75rem;">清空</button>
                 </div>
                 <div class="file-list" id="file-list">
                     <!-- File items will be added here -->
@@ -97,29 +97,29 @@
 
             <div class="control-group">
                 <div class="filter-title">参数设置</div>
-                <div class="slider-row">
+                <div class="gif-slider-row">
                     <label>宽度 (px)</label>
                     <input type="number" id="gif-width" placeholder="自动" style="width: 60px; padding: 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg);">
                 </div>
-                <div class="slider-row">
+                <div class="gif-slider-row">
                     <label>高度 (px)</label>
                     <input type="number" id="gif-height" placeholder="自动" style="width: 60px; padding: 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg);">
                 </div>
-                <div class="slider-row">
+                <div class="gif-slider-row">
                     <label>帧间隔 (ms)</label>
                     <input type="range" id="gif-delay" min="20" max="1000" value="200" step="10">
                     <span id="val-gif-delay">200</span>
                 </div>
-                <div class="slider-row">
+                <div class="gif-slider-row">
                     <label>质量 (1-10)</label>
                     <input type="range" id="gif-quality" min="1" max="30" value="10" step="1" title="越低越好">
                     <span id="val-gif-quality">10</span>
                 </div>
-                <div class="slider-row">
+                <div class="gif-slider-row">
                     <label>循环播放</label>
                     <input type="checkbox" id="gif-loop" checked>
                 </div>
-                <div class="slider-row">
+                <div class="gif-slider-row">
                     <label>透明背景</label>
                     <input type="checkbox" id="gif-transparent">
                 </div>
@@ -157,7 +157,7 @@
                 console.log('GIF.js loaded');
             } catch (err) {
                 console.error('Failed to load libraries:', err);
-                alert('资源加载失败，请检查网络连接');
+                if (app && app.showToast) app.showToast('', 'error');
             }
 
             initUI();
@@ -215,7 +215,7 @@
 
             const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
             if (newFiles.length === 0) {
-                alert('请上传有效的图片文件');
+                if (app && app.showToast) app.showToast('', 'error');
                 return;
             }
 
@@ -249,13 +249,14 @@
             uploadedFiles.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'file-item';
+                div.dataset.index = index;
                 div.innerHTML = `
                     <img src="${item.url}" alt="thumb">
                     <div class="info" title="${item.file.name}">${item.file.name}</div>
                     <div class="actions">
-                        <button onclick="moveFile(${index}, -1)" title="上移" ${index === 0 ? 'disabled' : ''}>↑</button>
-                        <button onclick="moveFile(${index}, 1)" title="下移" ${index === uploadedFiles.length - 1 ? 'disabled' : ''}>↓</button>
-                        <button onclick="removeFile(${index})" title="删除" style="color:var(--danger)">×</button>
+                        <button data-action="move-up" title="上移" ${index === 0 ? 'disabled' : ''}>↑</button>
+                        <button data-action="move-down" title="下移" ${index === uploadedFiles.length - 1 ? 'disabled' : ''}>↓</button>
+                        <button data-action="remove" title="删除" style="color:var(--danger)">×</button>
                     </div>
                 `;
                 list.appendChild(div);
@@ -291,7 +292,7 @@
 
         async function generateGIF() {
             if (uploadedFiles.length === 0) {
-                alert('请先上传图片');
+                if (app && app.showToast) app.showToast('', 'error');
                 return;
             }
 
@@ -382,7 +383,10 @@
                 });
 
                 gif.on('finished', (blob) => {
+                    const preview = document.getElementById('preview-img');
+                    if (preview.dataset.objectUrl) URL.revokeObjectURL(preview.dataset.objectUrl);
                     const url = URL.createObjectURL(blob);
+                    preview.dataset.objectUrl = url;
                     preview.src = url;
                     preview.style.display = 'block';
                     document.getElementById('placeholder-text').style.display = 'none';
@@ -402,11 +406,26 @@
 
             } catch (err) {
                 console.error(err);
-                alert('GIF 生成出错: ' + err.message);
+                if (app && app.showToast) app.showToast('GIF 生成出错: ' + err.message, 'error');
                 btn.disabled = false;
                 progressContainer.style.display = 'none';
             }
         }
+
+        // addEventListener bindings (migrated from inline onclick)
+        document.getElementById('btn-clear-files').addEventListener('click', clearFiles);
+        document.getElementById('file-list').addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const fileItem = btn.closest('.file-item');
+            if (!fileItem) return;
+            const index = parseInt(fileItem.dataset.index);
+            const action = btn.dataset.action;
+            if (action === 'move-up') moveFile(index, -1);
+            else if (action === 'move-down') moveFile(index, 1);
+            else if (action === 'remove') removeFile(index);
+        });
     </script>
+<div id="toast"></div>
 </body>
 </html>

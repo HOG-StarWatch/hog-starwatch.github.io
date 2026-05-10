@@ -77,41 +77,32 @@
             pixelValue.innerText = pixelSizeValue + 'px';
         });
 
-        uploadArea.addEventListener('click', () => imageUpload.click());
-        imageUpload.addEventListener('change', (e) => handleFile(e.target.files[0]));
-
-        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
-        uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border)'; });
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = 'var(--border)';
-            handleFile(e.dataTransfer.files[0]);
+        new DragDropHandler({
+            dropZone: uploadArea,
+            input: imageUpload,
+            onFile: handleFile,
+            accept: ['image/*'],
+            onError: (err) => { if (app && app.showToast) app.showToast(err.message, 'error'); }
         });
 
         function handleFile(file) {
             if(!file || !file.type.startsWith('image/')) return;
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    originalImage = img;
-                    processBtn.disabled = false;
-                    
-                    // Show original
-                    resizeCanvas(originalCanvas, img.width, img.height);
-                    originalCtx.drawImage(img, 0, 0);
-                    
-                    previewPlaceholder.style.display = 'none';
-                    originalCanvas.style.display = 'block';
-                    pixelatedCanvas.style.display = 'none';
-                    downloadBtn.disabled = true;
 
-                    if (app && app.showToast) app.showToast('图片已加载');
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            CanvasUtils.loadImage(file).then(img => {
+                originalImage = img;
+                processBtn.disabled = false;
+
+                // Show original
+                resizeCanvas(originalCanvas, img.width, img.height);
+                originalCtx.drawImage(img, 0, 0);
+
+                previewPlaceholder.style.display = 'none';
+                originalCanvas.style.display = 'block';
+                pixelatedCanvas.style.display = 'none';
+                downloadBtn.disabled = true;
+
+                if (app && app.showToast) app.showToast('图片已加载');
+            });
         }
 
         function resizeCanvas(canvas, w, h) {
@@ -154,10 +145,7 @@
         });
 
         downloadBtn.addEventListener('click', () => {
-            const link = document.createElement('a');
-            link.download = 'pixelated.png';
-            link.href = pixelatedCanvas.toDataURL();
-            link.click();
+            CanvasUtils.download(pixelatedCanvas.toDataURL(), 'pixelated.png');
         });
 
         resetBtn.addEventListener('click', () => {
@@ -173,5 +161,6 @@
             uploadArea.style.borderColor = 'var(--border)';
         });
     </script>
+<div id="toast"></div>
 </body>
 </html>

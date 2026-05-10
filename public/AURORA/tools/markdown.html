@@ -159,7 +159,7 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace">
         <div class="panel">
             <div class="panel-header">
@@ -167,13 +167,13 @@
                 <div class="panel-actions">
                     <div class="file-upload btn btn-icon" style="overflow:hidden">
                         <span>📂 上传MD</span>
-                        <input type="file" accept=".md,.txt" onchange="mdTool.loadFile(this)">
+                        <input type="file" id="md-file-input" accept=".md,.txt">
                     </div>
                     <div class="file-upload btn btn-icon" style="overflow:hidden">
                         <span>📂 导入Word转MD</span>
-                        <input type="file" accept=".docx" onchange="mdTool.importWord(this)">
+                        <input type="file" id="word-file-input" accept=".docx">
                     </div>
-                    <button class="btn btn-icon" onclick="app.clear('md')">清空</button>
+                    <button class="btn btn-icon" id="btn-clear-md">清空</button>
                 </div>
             </div>
             <textarea id="md-input" placeholder="# 标题&#10;**加粗**&#10;- 列表..."></textarea>
@@ -182,13 +182,13 @@
         <div class="toolbar">
             <div class="tool-group">
                 <div class="group-label">转换</div>
-                <button class="btn btn-primary" onclick="mdTool.renderPreview()">渲染预览 (MD) →</button>
-                <button class="btn btn-secondary" onclick="mdTool.htmlToMdInput()">HTML 转 MD ↺</button>
-                <button class="btn btn-secondary" onclick="mdTool.toHtml()">转 HTML 代码 →</button>
+                <button class="btn btn-primary" id="btn-render-preview">渲染预览 (MD) →</button>
+                <button class="btn btn-secondary" id="btn-html-to-md">HTML 转 MD ↺</button>
+                <button class="btn btn-secondary" id="btn-to-html">转 HTML 代码 →</button>
             </div>
             <div class="tool-group">
                 <div class="group-label">引擎</div>
-                <select id="md-engine" onchange="mdTool.onEngineChange()" style="font-size:0.8rem; padding:4px;">
+                <select id="md-engine" style="font-size:0.8rem; padding:4px;">
                     <option value="js">JavaScript (Regex)</option>
                     <option value="wasm">WebAssembly (High Perf)</option>
                 </select>
@@ -233,7 +233,7 @@
                     <div style="display:flex; justify-content:space-between;"><span>®</span> <span>&amp;reg; / &amp;#174;</span></div>
                     <div style="display:flex; justify-content:space-between;"><span>™</span> <span>&amp;trade; / &amp;#8482;</span></div>
                 </div>
-                <button class="btn btn-secondary btn-sm" style="margin-top:5px; width:100%" onclick="mdTool.showEntityModal()">查看完整列表</button>
+                <button class="btn btn-secondary btn-sm" style="margin-top:5px; width:100%" id="btn-show-entity">查看完整列表</button>
             </div>
         </div>
 
@@ -242,10 +242,10 @@
                 <div class="panel-title">结果</div>
                 <div class="panel-actions">
                     <div class="btn-group" style="display:flex; gap:2px; margin-right:8px;">
-                        <button class="btn btn-sm btn-primary" id="view-preview-btn" onclick="mdTool.switchView('preview')">预览</button>
-                        <button class="btn btn-sm btn-secondary" id="view-code-btn" onclick="mdTool.switchView('code')">源码</button>
+                        <button class="btn btn-sm btn-primary" id="view-preview-btn">预览</button>
+                        <button class="btn btn-sm btn-secondary" id="view-code-btn">源码</button>
                     </div>
-                    <button class="btn btn-icon btn-secondary" onclick="app.copy('md-output')">复制</button>
+                    <button class="btn btn-icon btn-secondary" id="btn-copy-md">复制</button>
                 </div>
             </div>
             <div id="md-preview" class="scroll-content" style="display:block; background:rgba(0,0,0,0.2);"></div>
@@ -256,11 +256,11 @@
     <div id="toast" class="toast">操作成功</div>
     
     <!-- Entity List Modal -->
-    <div id="entity-modal" class="modal-overlay" onclick="if(event.target===this) mdTool.closeEntityModal()">
+    <div id="entity-modal" class="modal-overlay">
         <div class="modal-container">
             <div class="modal-header">
                 <div class="modal-title">HTML 实体符号完整列表</div>
-                <div class="modal-close" onclick="mdTool.closeEntityModal()">&times;</div>
+                <div class="modal-close" id="btn-close-entity">&times;</div>
             </div>
             <div class="modal-body" id="entity-list-body">
                 <!-- Content will be injected by JS -->
@@ -726,6 +726,22 @@
                 win.document.close();
             }
         };
+
+        // Event listeners
+        document.getElementById('btn-clear-md').addEventListener('click', function() { app.clear('md'); });
+        document.getElementById('btn-render-preview').addEventListener('click', function() { mdTool.renderPreview(); });
+        document.getElementById('btn-html-to-md').addEventListener('click', function() { mdTool.htmlToMdInput(); });
+        document.getElementById('btn-to-html').addEventListener('click', function() { mdTool.toHtml(); });
+        document.getElementById('btn-show-entity').addEventListener('click', function() { mdTool.showEntityModal(); });
+        document.getElementById('view-preview-btn').addEventListener('click', function() { mdTool.switchView('preview'); });
+        document.getElementById('view-code-btn').addEventListener('click', function() { mdTool.switchView('code'); });
+        document.getElementById('btn-copy-md').addEventListener('click', function() { app.copy('md-output'); });
+        document.getElementById('entity-modal').addEventListener('click', function(event) { if (event.target === this) mdTool.closeEntityModal(); });
+        document.getElementById('btn-close-entity').addEventListener('click', function() { mdTool.closeEntityModal(); });
+
+        document.getElementById('md-file-input').addEventListener('change', function(e) { mdTool.loadFile(e.target); });
+        document.getElementById('word-file-input').addEventListener('change', function(e) { mdTool.importWord(e.target); });
+        document.getElementById('md-engine').addEventListener('change', function() { mdTool.onEngineChange(); });
     </script>
 </body>
 </html>

@@ -6,12 +6,12 @@
     <title>智能对比工具</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace layout-vertical">
         
         <div class="sub-tab-group">
-            <div class="sub-tab active" onclick="diffTool.setMode('text')" id="tab-text">文本对比 (Text)</div>
-            <div class="sub-tab" onclick="diffTool.setMode('json')" id="tab-json">JSON 结构化对比</div>
+            <div class="sub-tab active" id="tab-text">文本对比 (Text)</div>
+            <div class="sub-tab" id="tab-json">JSON 结构化对比</div>
         </div>
 
         <div class="layout-split">
@@ -19,10 +19,10 @@
                 <div class="panel-header">
                     <div class="panel-title">原文 (Old)</div>
                     <div class="panel-actions">
-                        <button class="btn btn-icon" onclick="document.getElementById('file-old').click()" title="加载文件">📂</button>
-                        <input type="file" id="file-old" style="display:none" onchange="diffTool.loadFile(this, 'diff-old')">
-                        <button class="btn btn-icon" onclick="diffTool.formatJSON('diff-old')" title="格式化 JSON" id="btn-fmt-old" style="display:none;">{}</button>
-                        <button class="btn btn-icon" onclick="document.getElementById('diff-old').value=''">清空</button>
+                        <button class="btn btn-icon" id="btn-load-old" title="加载文件">📂</button>
+                        <input type="file" id="file-old" style="display:none">
+                        <button class="btn btn-icon" id="btn-fmt-old" title="格式化 JSON" style="display:none;">{}</button>
+                        <button class="btn btn-icon" id="btn-clear-old">清空</button>
                     </div>
                 </div>
                 <textarea id="diff-old" placeholder="输入原始内容..."></textarea>
@@ -31,10 +31,10 @@
                 <div class="panel-header">
                     <div class="panel-title">新文 (New)</div>
                     <div class="panel-actions">
-                        <button class="btn btn-icon" onclick="document.getElementById('file-new').click()" title="加载文件">📂</button>
-                        <input type="file" id="file-new" style="display:none" onchange="diffTool.loadFile(this, 'diff-new')">
-                        <button class="btn btn-icon" onclick="diffTool.formatJSON('diff-new')" title="格式化 JSON" id="btn-fmt-new" style="display:none;">{}</button>
-                        <button class="btn btn-icon" onclick="document.getElementById('diff-new').value=''">清空</button>
+                        <button class="btn btn-icon" id="btn-load-new" title="加载文件">📂</button>
+                        <input type="file" id="file-new" style="display:none">
+                        <button class="btn btn-icon" id="btn-fmt-new" title="格式化 JSON" style="display:none;">{}</button>
+                        <button class="btn btn-icon" id="btn-clear-new">清空</button>
                     </div>
                 </div>
                 <textarea id="diff-new" placeholder="输入修改后的内容..."></textarea>
@@ -42,7 +42,7 @@
         </div>
         
         <div style="display: flex; gap: 1rem; align-items: center; padding: 0.5rem 0;">
-            <button class="btn btn-primary" onclick="diffTool.compare()">开始对比 (Compare)</button>
+            <button class="btn btn-primary" id="btn-compare">开始对比 (Compare)</button>
             <div style="font-size: 0.8rem; color: var(--text-dim);" id="legend-text">
                 <span class="legend-badge ins">新增</span>
                 <span class="legend-badge del">删除</span>
@@ -237,6 +237,20 @@
                 input.value = '';
             }
         };
+
+        // Event listeners
+        document.getElementById('tab-text').addEventListener('click', () => diffTool.setMode('text'));
+        document.getElementById('tab-json').addEventListener('click', () => diffTool.setMode('json'));
+        document.getElementById('btn-load-old').addEventListener('click', () => document.getElementById('file-old').click());
+        document.getElementById('btn-fmt-old').addEventListener('click', () => diffTool.formatJSON('diff-old'));
+        document.getElementById('btn-clear-old').addEventListener('click', () => { document.getElementById('diff-old').value = ''; });
+        document.getElementById('btn-load-new').addEventListener('click', () => document.getElementById('file-new').click());
+        document.getElementById('btn-fmt-new').addEventListener('click', () => diffTool.formatJSON('diff-new'));
+        document.getElementById('btn-clear-new').addEventListener('click', () => { document.getElementById('diff-new').value = ''; });
+        document.getElementById('btn-compare').addEventListener('click', () => diffTool.compare());
+
+        document.getElementById('file-old').addEventListener('change', function(e) { diffTool.loadFile(e.target, 'diff-old'); });
+        document.getElementById('file-new').addEventListener('change', function(e) { diffTool.loadFile(e.target, 'diff-new'); });
     </script>
 </body>
 </html>

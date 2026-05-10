@@ -75,7 +75,7 @@
         .status-msg.error { color: #f43f5e; }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace url-container">
         
         <div class="panel" style="height: auto;">
@@ -89,8 +89,8 @@
                         <input type="checkbox" id="auto-protocol" checked>
                         <label for="auto-protocol" style="font-size:0.9rem; color:var(--text-dim);">自动补全协议</label>
                     </div>
-                    <button class="btn btn-primary" onclick="parseUrl()">解析</button>
-                    <button class="btn" onclick="document.getElementById('url-input').value=''; parseUrl();">清空</button>
+                    <button class="btn btn-primary" id="btn-parse-url">解析</button>
+                    <button class="btn" id="btn-clear-url">清空</button>
                 </div>
 
                 <div id="result-area" style="display:none;">
@@ -121,70 +121,72 @@
     <div id="toast" class="toast">操作成功</div>
 
     <script>
-        function parseUrl() {
-            const input = document.getElementById('url-input');
-            const status = document.getElementById('status');
-            const resultArea = document.getElementById('result-area');
-            const resultGrid = document.getElementById('result-grid');
-            const querySection = document.getElementById('query-section');
-            const queryBody = document.getElementById('query-body');
-            
-            let raw = input.value.trim();
-            if (!raw) {
-                resultArea.style.display = 'none';
-                status.innerText = '请输入 URL';
-                status.classList.remove('error');
-                return;
-            }
-
-            if (document.getElementById('auto-protocol').checked && !/^https?:\/\//i.test(raw)) {
-                raw = 'https://' + raw;
-            }
-
-            try {
-                const url = new URL(raw);
+        const urlTool = {
+            parseUrl() {
+                const input = document.getElementById('url-input');
+                const status = document.getElementById('status');
+                const resultArea = document.getElementById('result-area');
+                const resultGrid = document.getElementById('result-grid');
+                const querySection = document.getElementById('query-section');
+                const queryBody = document.getElementById('query-body');
                 
-                // Build Grid Items
-                const items = [
-                    { label: '协议 Protocol', val: url.protocol.replace(':', '') },
-                    { label: '主机 Host', val: url.host },
-                    { label: '路径 Path', val: url.pathname },
-                    { label: '端口 Port', val: url.port || '80/443' },
-                    { label: '查询字符串', val: url.search || '-' },
-                    { label: '锚点 Hash', val: url.hash || '-' }
-                ];
-
-                resultGrid.innerHTML = items.map(item => `
-                    <div class="result-item">
-                        <strong>${item.label}</strong>
-                        <div onclick="app.copyText('${item.val}')" title="点击复制" style="cursor:pointer">${item.val}</div>
-                    </div>
-                `).join('');
-
-                // Query Params
-                const params = Array.from(url.searchParams.entries());
-                if (params.length > 0) {
-                    queryBody.innerHTML = params.map(([k, v]) => `
-                        <tr>
-                            <td>${k}</td>
-                            <td><div onclick="app.copyText('${v}')" title="点击复制" style="cursor:pointer">${v}</div></td>
-                        </tr>
-                    `).join('');
-                    querySection.style.display = 'block';
-                } else {
-                    querySection.style.display = 'none';
+                let raw = input.value.trim();
+                if (!raw) {
+                    resultArea.style.display = 'none';
+                    status.innerText = '请输入 URL';
+                    status.classList.remove('error');
+                    return;
                 }
 
-                resultArea.style.display = 'block';
-                status.innerText = '解析成功';
-                status.classList.remove('error');
+                if (document.getElementById('auto-protocol').checked && !/^https?:\/\//i.test(raw)) {
+                    raw = 'https://' + raw;
+                }
 
-            } catch (e) {
-                resultArea.style.display = 'none';
-                status.innerText = '无效的 URL 格式';
-                status.classList.add('error');
+                try {
+                    const url = new URL(raw);
+                    
+                    // Build Grid Items
+                    const items = [
+                        { label: '协议 Protocol', val: url.protocol.replace(':', '') },
+                        { label: '主机 Host', val: url.host },
+                        { label: '路径 Path', val: url.pathname },
+                        { label: '端口 Port', val: url.port || '80/443' },
+                        { label: '查询字符串', val: url.search || '-' },
+                        { label: '锚点 Hash', val: url.hash || '-' }
+                    ];
+
+                    resultGrid.innerHTML = items.map(item => `
+                        <div class="result-item">
+                            <strong>${item.label}</strong>
+                            <div data-copy="${item.val}" title="点击复制" style="cursor:pointer">${item.val}</div>
+                        </div>
+                    `).join('');
+
+                    // Query Params
+                    const params = Array.from(url.searchParams.entries());
+                    if (params.length > 0) {
+                        queryBody.innerHTML = params.map(([k, v]) => `
+                            <tr>
+                                <td>${k}</td>
+                                <td><div data-copy="${v}" title="点击复制" style="cursor:pointer">${v}</div></td>
+                            </tr>
+                        `).join('');
+                        querySection.style.display = 'block';
+                    } else {
+                        querySection.style.display = 'none';
+                    }
+
+                    resultArea.style.display = 'block';
+                    status.innerText = '解析成功';
+                    status.classList.remove('error');
+
+                } catch (e) {
+                    resultArea.style.display = 'none';
+                    status.innerText = '无效的 URL 格式';
+                    status.classList.add('error');
+                }
             }
-        }
+        };
         
         // Add copy helper if not in app.js
         if(!app.copyText) {
@@ -197,7 +199,22 @@
 
         // Trigger on Enter
         document.getElementById('url-input').addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') parseUrl();
+            if(e.key === 'Enter') urlTool.parseUrl();
+        });
+
+        // addEventListener bindings (migrated from inline onclick)
+        document.getElementById('btn-parse-url').addEventListener('click', () => urlTool.parseUrl());
+        document.getElementById('btn-clear-url').addEventListener('click', () => {
+            document.getElementById('url-input').value = '';
+            urlTool.parseUrl();
+        });
+        document.getElementById('result-grid').addEventListener('click', (e) => {
+            const copyEl = e.target.closest('[data-copy]');
+            if (copyEl) app.copyText(copyEl.dataset.copy);
+        });
+        document.getElementById('query-body').addEventListener('click', (e) => {
+            const copyEl = e.target.closest('[data-copy]');
+            if (copyEl) app.copyText(copyEl.dataset.copy);
         });
     </script>
 </body>

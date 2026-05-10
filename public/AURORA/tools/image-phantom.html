@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幻影坦克生成器</title>
+    <title>骞诲奖鍧﹀厠鐢熸垚鍣?/title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
         .scroll-content {
@@ -31,13 +31,13 @@
             flex-direction: column;
         }
 
-        .panel-header {
+        .phantom-panel-header {
             padding: 0;
             margin-bottom: 0.5rem;
             background: transparent;
         }
 
-        .panel-title {
+        .phantom-panel-title {
             font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-90);
@@ -107,7 +107,7 @@
             font-size: 0.95rem;
         }
 
-        .upload-area {
+        .phantom-upload-area {
             border: 2px dashed rgba(255, 255, 255, 0.15);
             border-radius: 1rem;
             background: rgba(0, 0, 0, 0.2);
@@ -122,7 +122,7 @@
             justify-content: center;
         }
 
-        .upload-area:hover {
+        .phantom-upload-area:hover {
             border-color: var(--primary);
             background: rgba(99, 102, 241, 0.05);
         }
@@ -136,7 +136,7 @@
             color: var(--text-50);
         }
 
-        .upload-area img {
+        .phantom-upload-area img {
             max-height: 80px;
             max-width: 100%;
             object-fit: contain;
@@ -144,7 +144,7 @@
             border-radius: 0.5rem;
         }
 
-        .upload-area img.is-visible {
+        .phantom-upload-area img.is-visible {
             display: block;
         }
 
@@ -242,7 +242,7 @@
             margin-top: -0.25rem;
         }
 
-        .btn-primary {
+        .phantom-btn-primary {
             background-color: var(--primary);
             color: #fff;
             border: none;
@@ -255,15 +255,15 @@
             box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
         }
 
-        .btn-primary:hover {
+        .phantom-btn-primary:hover {
             filter: brightness(1.1);
         }
 
-        .btn-primary:active {
+        .phantom-btn-primary:active {
             transform: scale(0.98);
         }
 
-        .btn-primary:disabled {
+        .phantom-btn-primary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
@@ -460,77 +460,77 @@
 <body class="scroll-content">
     <div class="layout-sidebar">
         <div class="controls">
-            <div class="panel-header">
-                <div class="panel-title">
-                    <i class="fas fa-ghost"></i> 幻影坦克
+            <div class="phantom-panel-header">
+                <div class="phantom-panel-title">
+                    <i class="fas fa-ghost"></i> 骞诲奖鍧﹀厠
                 </div>
             </div>
 
             <div class="mode-switch-container">
                 <div class="mode-switch-wrapper">
-                    <button type="button" id="btn-prism" class="mode-switch-btn is-active" onclick="setMode('prism')">
-                        光棱坦克
+                    <button type="button" id="btn-prism" class="mode-switch-btn is-active" data-mode="prism">
+                        鍏夋１鍧﹀厠
                     </button>
-                    <button type="button" id="btn-shadow" class="mode-switch-btn" onclick="setMode('shadow')">
-                        幻影坦克
+                    <button type="button" id="btn-shadow" class="mode-switch-btn" data-mode="shadow">
+                        骞诲奖鍧﹀厠
                     </button>
                 </div>
                 <p id="mode-description" class="mode-description"></p>
             </div>
 
             <div class="control-section">
-                <h3><i class="fas fa-upload"></i> 上传图片</h3>
+                <h3><i class="fas fa-upload"></i> 涓婁紶鍥剧墖</h3>
                 <p id="upload-hint" style="font-size: 0.8rem; color: var(--text-50); margin-bottom: 1rem;"></p>
 
                 <div class="control-group">
                     <span class="zone-label" id="source-label"></span>
-                    <div class="upload-area" onclick="document.getElementById('imgInput1').click()">
+                    <div class="phantom-upload-area" id="upload-area-1">
                         <div id="preview1-placeholder" class="upload-placeholder">
                             <span id="source-cta"></span>
                             <small id="source-hint"></small>
                         </div>
                         <img id="preview1">
                     </div>
-                    <input type="file" id="imgInput1" accept="image/*" hidden onchange="handleImage(this, 1)">
+                    <input type="file" id="imgInput1" accept="image/*" hidden>
                     <p id="preview1-info" class="upload-info hidden"></p>
                 </div>
 
                 <div class="control-group" style="margin-top: 1rem;">
                     <span class="zone-label" id="hidden-label"></span>
-                    <div class="upload-area" onclick="document.getElementById('imgInput2').click()">
+                    <div class="phantom-upload-area" id="upload-area-2">
                         <div id="preview2-placeholder" class="upload-placeholder">
                             <span id="hidden-cta"></span>
                             <small id="hidden-hint"></small>
                         </div>
                         <img id="preview2">
                     </div>
-                    <input type="file" id="imgInput2" accept="image/*" hidden onchange="handleImage(this, 2)">
+                    <input type="file" id="imgInput2" accept="image/*" hidden>
                     <p id="preview2-info" class="upload-info hidden"></p>
                 </div>
             </div>
 
             <div id="prism-controls" class="control-section">
-                <h3><i class="fas fa-sliders-h"></i> 参数与操作</h3>
+                <h3><i class="fas fa-sliders-h"></i> 鍙傛暟涓庢搷浣?/h3>
                 <div class="param-grid">
                     <div class="param-box">
-                        <h4>原图参数</h4>
+                        <h4>鍘熷浘鍙傛暟</h4>
                         <div class="param-row">
-                            <label><span>原图亮度提高 (%)</span><span id="source-brightness-val">100</span></label>
+                            <label><span>鍘熷浘浜害鎻愰珮 (%)</span><span id="source-brightness-val">100</span></label>
                             <input type="range" id="source-brightness" min="0" max="200" step="1" value="100">
                         </div>
                         <div class="param-row">
-                            <label><span>原图对比度 (%)</span><span id="source-contrast-val">20</span></label>
+                            <label><span>鍘熷浘瀵规瘮搴?(%)</span><span id="source-contrast-val">20</span></label>
                             <input type="range" id="source-contrast" min="10" max="300" step="1" value="20">
                         </div>
                     </div>
                     <div class="param-box">
-                        <h4>隐藏图参数</h4>
+                        <h4>闅愯棌鍥惧弬鏁?/h4>
                         <div class="param-row">
-                            <label><span>隐藏图亮度降低 (%)</span><span id="hidden-brightness-val">90</span></label>
+                            <label><span>闅愯棌鍥句寒搴﹂檷浣?(%)</span><span id="hidden-brightness-val">90</span></label>
                             <input type="range" id="hidden-brightness" min="0" max="100" step="1" value="90">
                         </div>
                         <div class="param-row">
-                            <label><span>隐藏图对比度 (%)</span><span id="hidden-contrast-val">100</span></label>
+                            <label><span>闅愯棌鍥惧姣斿害 (%)</span><span id="hidden-contrast-val">100</span></label>
                             <input type="range" id="hidden-contrast" min="10" max="300" step="1" value="100">
                         </div>
                     </div>
@@ -538,40 +538,40 @@
             </div>
 
             <div id="shadow-controls" class="control-section hidden">
-                <h3><i class="fas fa-sliders-h"></i> 参数与操作</h3>
+                <h3><i class="fas fa-sliders-h"></i> 鍙傛暟涓庢搷浣?/h3>
                 <div class="param-grid">
                     <div class="param-box">
                         <div class="checkbox-row" style="margin-bottom: 1rem;">
-                            <label>全彩输出</label>
+                            <label>鍏ㄥ僵杈撳嚭</label>
                             <input type="checkbox" id="shadow-is-colored" checked>
                         </div>
                         <div class="param-row">
-                            <label><span>黑底图缩放</span><span id="shadow-inner-scale-val">0.30</span></label>
+                            <label><span>榛戝簳鍥剧缉鏀?/span><span id="shadow-inner-scale-val">0.30</span></label>
                             <input type="range" id="shadow-inner-scale" min="0" max="1" step="0.02" value="0.30">
                         </div>
                         <div class="param-row">
-                            <label><span>黑底图去色</span><span id="shadow-inner-desat-val">0.00</span></label>
+                            <label><span>榛戝簳鍥惧幓鑹?/span><span id="shadow-inner-desat-val">0.00</span></label>
                             <input type="range" id="shadow-inner-desat" min="0" max="1" step="0.02" value="0.00">
                         </div>
                         <div class="param-row">
-                            <label><span>黑底图混合权重</span><span id="shadow-inner-weight-val">0.70</span></label>
+                            <label><span>榛戝簳鍥炬贩鍚堟潈閲?/span><span id="shadow-inner-weight-val">0.70</span></label>
                             <input type="range" id="shadow-inner-weight" min="0" max="1" step="0.02" value="0.70">
                         </div>
                     </div>
                     <div class="param-box">
                         <div class="param-row">
-                            <label><span>白底图缩放</span><span id="shadow-cover-scale-val">0.20</span></label>
+                            <label><span>鐧藉簳鍥剧缉鏀?/span><span id="shadow-cover-scale-val">0.20</span></label>
                             <input type="range" id="shadow-cover-scale" min="0" max="1" step="0.02" value="0.20">
                         </div>
                         <div class="param-row">
-                            <label><span>白底图去色</span><span id="shadow-cover-desat-val">0.00</span></label>
+                            <label><span>鐧藉簳鍥惧幓鑹?/span><span id="shadow-cover-desat-val">0.00</span></label>
                             <input type="range" id="shadow-cover-desat" min="0" max="1" step="0.02" value="0.00">
                         </div>
                         <div class="param-row">
-                            <label><span>最大输出尺寸</span><span id="shadow-max-size-val">1200</span></label>
+                            <label><span>鏈€澶ц緭鍑哄昂瀵?/span><span id="shadow-max-size-val">1200</span></label>
                             <input type="range" id="shadow-max-size" min="0" max="4096" step="1" value="1200">
                         </div>
-                        <p class="hint-text">0 表示不限制</p>
+                        <p class="hint-text">0 琛ㄧず涓嶉檺鍒?/p>
                     </div>
                 </div>
             </div>
@@ -579,11 +579,11 @@
             <div id="size-mismatch" class="size-mismatch-warning hidden"></div>
 
             <div class="action-buttons">
-                <button class="btn-primary" id="generate-btn" onclick="generateImage()" disabled>
-                    <i class="fas fa-magic"></i> 生成图像
+                <button class="phantom-btn-primary" id="generate-btn" disabled>
+                    <i class="fas fa-magic"></i> 鐢熸垚鍥惧儚
                 </button>
-                <button class="btn-success" id="download-btn" onclick="downloadImage()" disabled>
-                    <i class="fas fa-download"></i> 下载 PNG
+                <button class="btn-success" id="download-btn" disabled>
+                    <i class="fas fa-download"></i> 涓嬭浇 PNG
                 </button>
             </div>
         </div>
@@ -592,30 +592,30 @@
             <div class="canvas-container bg-checkerboard" id="canvasContainer">
                 <div id="resultPlaceholder" class="result-placeholder">
                     <i class="fas fa-image"></i>
-                    <div>生成结果将显示在这里</div>
-                    <div style="font-size:0.8rem; margin-top:5px;">请上传两张图片后生成</div>
+                    <div>鐢熸垚缁撴灉灏嗘樉绀哄湪杩欓噷</div>
+                    <div style="font-size:0.8rem; margin-top:5px;">璇蜂笂浼犱袱寮犲浘鐗囧悗鐢熸垚</div>
                 </div>
                 <canvas id="resultCanvas" style="display:none;"></canvas>
                 <div id="shadow-result-grid" class="shadow-result-grid hidden">
                     <div class="shadow-result-item white-bg">
-                        <p>白底预览</p>
-                        <img id="result-img-white" src="" alt="白底预览">
+                        <p>鐧藉簳棰勮</p>
+                        <img id="result-img-white" src="" alt="鐧藉簳棰勮">
                     </div>
                     <div class="shadow-result-item black-bg">
-                        <p>黑底预览</p>
-                        <img id="result-img-black" src="" alt="黑底预览">
+                        <p>榛戝簳棰勮</p>
+                        <img id="result-img-black" src="" alt="榛戝簳棰勮">
                     </div>
                 </div>
             </div>
 
             <div id="prism-result" class="preview-controls">
-                <label><input type="radio" name="bg" onclick="changeBg('white')"> 白底预览</label>
-                <label><input type="radio" name="bg" onclick="changeBg('black')"> 黑底预览</label>
-                <label><input type="radio" name="bg" onclick="changeBg('check')" checked> 透明预览</label>
+                <label><input type="radio" name="bg" id="bg-white" data-bg="white"> 鐧藉簳棰勮</label>
+                <label><input type="radio" name="bg" id="bg-black" data-bg="black"> 榛戝簳棰勮</label>
+                <label><input type="radio" name="bg" id="bg-check" data-bg="check" checked> 閫忔槑棰勮</label>
             </div>
 
             <div id="shadow-result" class="preview-controls hidden">
-                <span style="color: var(--text-50);">幻影坦克模式提供白底/黑底双预览</span>
+                <span style="color: var(--text-50);">骞诲奖鍧﹀厠妯″紡鎻愪緵鐧藉簳/榛戝簳鍙岄瑙?/span>
             </div>
 
             <div id="status-message" class="status-message"></div>
@@ -642,26 +642,26 @@
 
         const modeMetaMap = {
             prism: {
-                name: "光棱坦克",
-                description: "保留棋盘格幻影图算法，适合制作需要全局拉高亮度后才更容易识别隐藏图的 PNG。",
-                sourceLabel: "原图",
-                hiddenLabel: "隐藏图",
-                sourceCta: "点击上传原图",
-                hiddenCta: "点击上传隐藏图",
-                sourceHint: "支持常见图片格式，生成时将以这张图片的宽高作为最终输出尺寸。",
-                hiddenHint: "隐藏图会在生成时按原图尺寸统一缩放，并参与棋盘格交错合成。",
-                emptyResultHint: "尚未生成结果。上传两张图片并调整参数后，点击生成图像即可在此处预览并下载 PNG。",
+                name: "鍏夋１鍧﹀厠",
+                description: "淇濈暀妫嬬洏鏍煎够褰卞浘绠楁硶锛岄€傚悎鍒朵綔闇€瑕佸叏灞€鎷夐珮浜害鍚庢墠鏇村鏄撹瘑鍒殣钘忓浘鐨?PNG銆?,
+                sourceLabel: "鍘熷浘",
+                hiddenLabel: "闅愯棌鍥?,
+                sourceCta: "鐐瑰嚮涓婁紶鍘熷浘",
+                hiddenCta: "鐐瑰嚮涓婁紶闅愯棌鍥?,
+                sourceHint: "鏀寔甯歌鍥剧墖鏍煎紡锛岀敓鎴愭椂灏嗕互杩欏紶鍥剧墖鐨勫楂樹綔涓烘渶缁堣緭鍑哄昂瀵搞€?,
+                hiddenHint: "闅愯棌鍥句細鍦ㄧ敓鎴愭椂鎸夊師鍥惧昂瀵哥粺涓€缂╂斁锛屽苟鍙備笌妫嬬洏鏍间氦閿欏悎鎴愩€?,
+                emptyResultHint: "灏氭湭鐢熸垚缁撴灉銆備笂浼犱袱寮犲浘鐗囧苟璋冩暣鍙傛暟鍚庯紝鐐瑰嚮鐢熸垚鍥惧儚鍗冲彲鍦ㄦ澶勯瑙堝苟涓嬭浇 PNG銆?,
             },
             shadow: {
-                name: "幻影坦克",
-                description: "支持全彩输出、黑白双背景预览，以及亮度/去色/权重控制。",
-                sourceLabel: "白底图",
-                hiddenLabel: "黑底图",
-                sourceCta: "点击上传白底图",
-                hiddenCta: "点击上传黑底图",
-                sourceHint: "对应表图，会在生成时按黑底图的画幅进行居中裁切适配。",
-                hiddenHint: "对应里图，输出尺寸和最大尺寸缩放以这张图为基准。",
-                emptyResultHint: "尚未生成结果。上传白底图与黑底图后，点击生成图像即可查看同一 PNG 在白底/黑底下的差异。",
+                name: "骞诲奖鍧﹀厠",
+                description: "鏀寔鍏ㄥ僵杈撳嚭銆侀粦鐧藉弻鑳屾櫙棰勮锛屼互鍙婁寒搴?鍘昏壊/鏉冮噸鎺у埗銆?,
+                sourceLabel: "鐧藉簳鍥?,
+                hiddenLabel: "榛戝簳鍥?,
+                sourceCta: "鐐瑰嚮涓婁紶鐧藉簳鍥?,
+                hiddenCta: "鐐瑰嚮涓婁紶榛戝簳鍥?,
+                sourceHint: "瀵瑰簲琛ㄥ浘锛屼細鍦ㄧ敓鎴愭椂鎸夐粦搴曞浘鐨勭敾骞呰繘琛屽眳涓鍒囬€傞厤銆?,
+                hiddenHint: "瀵瑰簲閲屽浘锛岃緭鍑哄昂瀵稿拰鏈€澶у昂瀵哥缉鏀句互杩欏紶鍥句负鍩哄噯銆?,
+                emptyResultHint: "灏氭湭鐢熸垚缁撴灉銆備笂浼犵櫧搴曞浘涓庨粦搴曞浘鍚庯紝鐐瑰嚮鐢熸垚鍥惧儚鍗冲彲鏌ョ湅鍚屼竴 PNG 鍦ㄧ櫧搴?榛戝簳涓嬬殑宸紓銆?,
             },
         };
 
@@ -686,447 +686,463 @@
 
         let phantomWorker = null;
 
-        function initWorker() {
-            if (!window.Worker) return;
-            try {
-                phantomWorker = new Worker('../js/workers/phantom.worker.js');
-                phantomWorker.onmessage = (e) => {
-                    const { type, outputData, error, width, height } = e.data;
-                    if (type === 'success') {
+        const phantomTool = {
+            initWorker() {
+                        if (!window.Worker) return;
+                        try {
+                            phantomWorker = new Worker('../js/workers/phantom.worker.js');
+                            phantomWorker.onmessage = (e) => {
+                                const { type, outputData, error, width, height } = e.data;
+                                if (type === 'success') {
+                                    const cvs = document.getElementById('resultCanvas');
+                                    const ctx = cvs.getContext('2d');
+                                    const imgData = new ImageData(new Uint8ClampedArray(outputData), width, height);
+                                    ctx.putImageData(imgData, 0, 0);
+                                    (width, height);
+                                } else if (type === 'error') {
+                                    console.error('Worker Error:', error);
+                                    ('鐢熸垚澶辫触: ' + error);
+                                }
+                            };
+                            phantomWorker.onerror = (e) => {
+                                console.error('Worker Load Error', e);
+                                phantomWorker = null;
+                            };
+                        } catch (e) {
+                            console.error('Worker Init Failed', e);
+                            phantomWorker = null;
+                        }
+                    },
+            (nextMode) {
+                        mode = nextMode;
+                        ();
+                    },
+            () {
+                        const meta = modeMetaMap[mode];
+
+                        document.getElementById('btn-prism').classList.toggle('is-active', mode === 'prism');
+                        document.getElementById('btn-shadow').classList.toggle('is-active', mode === 'shadow');
+                        document.getElementById('mode-description').textContent = meta.description;
+
+                        document.getElementById('source-label').textContent = meta.sourceLabel;
+                        document.getElementById('hidden-label').textContent = meta.hiddenLabel;
+                        document.getElementById('source-cta').textContent = sourceImage ? `鏇存崲${meta.sourceLabel}` : meta.sourceCta;
+                        document.getElementById('hidden-cta').textContent = hiddenImage ? `鏇存崲${meta.hiddenLabel}` : meta.hiddenCta;
+                        document.getElementById('source-hint').textContent = meta.sourceHint;
+                        document.getElementById('hidden-hint').textContent = meta.hiddenHint;
+
+                        document.getElementById('upload-hint').textContent = mode === 'prism'
+                            ? "鍘熷浘浼氫綔涓鸿緭鍑哄昂瀵稿熀鍑嗭紱濡傛灉闅愯棌鍥惧昂瀵镐笉鍚岋紝鐢熸垚鏃朵細鑷姩缂╂斁鍒板師鍥惧昂瀵搞€?
+                            : "鐧藉簳鍥惧搴旇〃鍥撅紝榛戝簳鍥惧搴旈噷鍥撅紱浠ラ粦搴曞浘涓哄昂瀵稿熀鍑嗗苟瀵圭櫧搴曞浘鍋氬眳涓鍒囬€傞厤銆?;
+
+                        document.getElementById('prism-controls').classList.toggle('hidden', mode !== 'prism');
+                        document.getElementById('shadow-controls').classList.toggle('hidden', mode !== 'shadow');
+
+                        document.getElementById('prism-result').classList.toggle('hidden', mode !== 'prism');
+                        document.getElementById('shadow-result').classList.toggle('hidden', mode !== 'shadow');
+                        document.getElementById('shadow-result-grid').classList.toggle('hidden', mode !== 'shadow' || !currentResult);
+
+                        document.getElementById('resultPlaceholder').textContent = meta.emptyResultHint;
+                        document.getElementById('resultPlaceholder').innerHTML = `<i class="fas fa-image"></i><div>${meta.emptyResultHint}</div>`;
+
+                        ();
+                        ();
+                    },
+            () {
+                        document.getElementById('generate-btn').disabled = !sourceImage || !hiddenImage || isGenerating;
+                    },
+            () {
+                        const el = document.getElementById('size-mismatch');
+                        if (sourceImage && hiddenImage && (sourceImage.width !== hiddenImage.width || sourceImage.height !== hiddenImage.height)) {
+                            el.textContent = mode === 'prism'
+                                ? `妫€娴嬪埌涓ゅ紶鍥剧墖灏哄涓嶄竴鑷达細褰撳墠浼氭寜鍘熷浘灏哄 ${sourceImage.width} 脳 ${sourceImage.height} 缁熶竴缂╂斁闅愯棌鍥惧悗鍐嶇敓鎴愩€俙
+                                : `妫€娴嬪埌涓ゅ紶鍥剧墖灏哄涓嶄竴鑷达細褰撳墠鏆楀奖妯″紡浼氭寜榛戝簳鍥惧昂瀵稿熀鍑嗙敓鎴愶紝骞跺鐧藉簳鍥炬墽琛屽眳涓鍒囬€傞厤銆俙;
+                            el.classList.remove('hidden');
+                        } else {
+                            el.classList.add('hidden');
+                        }
+                    },
+            (message) {
+                        const el = document.getElementById('error-message');
+                        el.textContent = message;
+                        el.classList.remove('hidden');
+                        if (app && app.showToast) {
+                            app.showToast(message, 'error');
+                        }
+                    },
+            (message) {
+                        const el = document.getElementById('status-message');
+                        el.textContent = message;
+                    },
+            (value, min, max) {
+                        return Math.min(max, Math.max(min, value));
+                    },
+            (input, idx) {
+                        const file = input.files[0];
+                        if (!file) return;
+
+                        if (!file.type.startsWith('image/')) {
+                            ('浠呮敮鎸佷笂浼犲浘鐗囨枃浠躲€?);
+                            input.value = '';
+                            return;
+                        }
+
+                        CanvasUtils.loadImage(file).then(img => {
+                                const data = {
+                                    file: file,
+                                    name: file.name,
+                                    width: img.naturalWidth,
+                                    height: img.naturalHeight,
+                                    url: img.src,
+                                    image: img
+                                };
+
+                                if (idx === 1) {
+                                    sourceImage = data;
+                                    const preview = document.getElementById('preview1');
+                                    preview.src = img.src;
+                                    preview.classList.add('is-visible');
+                                    document.getElementById('preview1-placeholder').classList.add('hidden');
+                                    const info = document.getElementById('preview1-info');
+                                    info.textContent = `${file.name} (${img.naturalWidth} × ${img.naturalHeight})`;
+                                    info.classList.remove('hidden');
+                                } else {
+                                    hiddenImage = data;
+                                    const preview = document.getElementById('preview2');
+                                    preview.src = img.src;
+                                    preview.classList.add('is-visible');
+                                    document.getElementById('preview2-placeholder').classList.add('hidden');
+                                    const info = document.getElementById('preview2-info');
+                                    info.textContent = `${file.name} (${img.naturalWidth} × ${img.naturalHeight})`;
+                                    info.classList.remove('hidden');
+                                }
+
+                                ();
+                                ();
+                                (sourceImage && hiddenImage ? '' : '');
+                        });
+                    },
+            (width, height) {
+                        isGenerating = false;
+                        ();
+
+                        document.getElementById('download-btn').disabled = false;
+                        document.getElementById('resultPlaceholder').style.display = 'none';
+                        const canvas = document.getElementById('resultCanvas');
+                        canvas.style.display = 'block';
+
+                        if (mode === 'shadow') {
+                            const grid = document.getElementById('shadow-result-grid');
+                            grid.classList.remove('hidden');
+                            document.getElementById('result-img-white').src = canvas.toDataURL('image/png');
+                            document.getElementById('result-img-black').src = canvas.toDataURL('image/png');
+                            canvas.style.display = 'none';
+                        }
+
+                        const sizeInfo = document.getElementById('output-size');
+                        sizeInfo.textContent = `杈撳嚭灏哄锛?{width} 脳 ${height}`;
+                        sizeInfo.classList.remove('hidden');
+
+                        (mode === 'prism' ? '鐢熸垚瀹屾垚锛岃鍒囨崲鐧藉簳/榛戝簳棰勮鏌ョ湅闅愯棌鏁堟灉銆? : '鐢熸垚瀹屾垚锛屽凡鎻愪緵鐧藉簳/榛戝簳鍙岄瑙堛€?);
+
+                        if (app && app.showToast) {
+                            app.showToast('鐢熸垚鎴愬姛锛?);
+                        }
+
+                        setTimeout(() => {
+                            const height = document.body.scrollHeight;
+                            window.parent.postMessage({ type: 'resize', height: height }, '*');
+                        }, 100);
+                    },
+            () {
+                        if (!sourceImage || !hiddenImage) {
+                            ('璇峰厛涓婁紶涓ゅ紶鍥剧墖銆?);
+                            return;
+                        }
+
+                        isGenerating = true;
+                        ();
+                        document.getElementById('error-message').classList.add('hidden');
+
+                        if (mode === 'prism') {
+                            ();
+                        } else {
+                            ();
+                        }
+                    },
+            () {
+                        const w = sourceImage.width;
+                        const h = sourceImage.height;
+
+                        const cvs = document.getElementById('resultCanvas');
+                        cvs.width = w;
+                        cvs.height = h;
+                        const ctx = cvs.getContext('2d');
+
+                        const c1 = document.createElement('canvas'); c1.width = w; c1.height = h;
+                        const x1 = c1.getContext('2d');
+                        x1.drawImage(sourceImage.image, 0, 0, w, h);
+
+                        const c2 = document.createElement('canvas'); c2.width = w; c2.height = h;
+                        const x2 = c2.getContext('2d');
+                        x2.drawImage(hiddenImage.image, 0, 0, w, h);
+
+                        const d1 = x1.getImageData(0, 0, w, h).data;
+                        const d2 = x2.getImageData(0, 0, w, h).data;
+
+                        if (phantomWorker) {
+                            phantomWorker.postMessage({
+                                cmd: 'prism',
+                                imgFront: d1.buffer,
+                                imgBack: d2.buffer,
+                                width: w,
+                                height: h,
+                                sourceBrightness: sourceBrightness,
+                                sourceContrast: sourceContrast,
+                                hiddenBrightness: hiddenBrightness,
+                                hiddenContrast: hiddenContrast
+                            }, [d1.buffer, d2.buffer]);
+                        } else {
+                            (d1, d2, w, h);
+                        }
+                    },
+            (d1, d2, w, h) {
                         const cvs = document.getElementById('resultCanvas');
                         const ctx = cvs.getContext('2d');
-                        const imgData = new ImageData(new Uint8ClampedArray(outputData), width, height);
-                        ctx.putImageData(imgData, 0, 0);
-                        enableDownload(width, height);
-                    } else if (type === 'error') {
-                        console.error('Worker Error:', error);
-                        showError('生成失败: ' + error);
+                        const out = ctx.createImageData(w, h);
+                        const dOut = out.data;
+
+                        const originalBrightnessFactor = 1 + sourceBrightness / 100;
+                        const hiddenBrightnessFactor = 1 - hiddenBrightness / 100;
+                        const originalContrastFactor = sourceContrast / 100;
+                        const hiddenContrastFactor = hiddenContrast / 100;
+
+                        for (let i = 0; i < d1.length; i += 4) {
+                            const pixelIndex = i / 4;
+                            const x = pixelIndex % w;
+                            const y = Math.floor(pixelIndex / w);
+
+                            const adjustPixel = (r, g, b, brightnessFactor, contrastFactor) => {
+                                const brightR = r * brightnessFactor;
+                                const brightG = g * brightnessFactor;
+                                const brightB = b * brightnessFactor;
+                                const adjustContrast = (value) => phantomTool.clamp((value - 128) * contrastFactor + 128, 0, 255);
+                                return [adjustContrast(brightR), adjustContrast(brightG), adjustContrast(brightB)];
+                            };
+
+                            if ((x + y) % 2 === 0) {
+                                const pixel = adjustPixel(d1[i], d1[i + 1], d1[i + 2], originalBrightnessFactor, originalContrastFactor);
+                                dOut[i] = pixel[0];
+                                dOut[i + 1] = pixel[1];
+                                dOut[i + 2] = pixel[2];
+                            } else {
+                                const pixel = adjustPixel(d2[i], d2[i + 1], d2[i + 2], hiddenBrightnessFactor, hiddenContrastFactor);
+                                dOut[i] = pixel[0];
+                                dOut[i + 1] = pixel[1];
+                                dOut[i + 2] = pixel[2];
+                            }
+                            dOut[i + 3] = 255;
+                        }
+
+                        ctx.putImageData(out, 0, 0);
+                        (w, h);
+                    },
+            () {
+                        const innerImage = hiddenImage;
+                        const coverImage = sourceImage;
+
+                        let width = innerImage.width;
+                        let height = innerImage.height;
+                        const maxSize = Math.max(0, Math.floor(shadowMaxSize || 0));
+
+                        if (maxSize !== 0) {
+                            if (innerImage.width > innerImage.height) {
+                                width = maxSize;
+                                height = Math.ceil((innerImage.height * maxSize) / innerImage.width);
+                            } else {
+                                height = maxSize;
+                                width = Math.ceil((innerImage.width * maxSize) / innerImage.height);
+                            }
+                        }
+
+                        const cvs = document.getElementById('resultCanvas');
+                        cvs.width = width;
+                        cvs.height = height;
+                        const ctx = cvs.getContext('2d');
+
+                        const c1 = document.createElement('canvas'); c1.width = width; c1.height = height;
+                        const x1 = c1.getContext('2d');
+                        x1.drawImage(innerImage.image, 0, 0, width, height);
+
+                        const coverRatio = coverImage.width / coverImage.height;
+                        const targetRatio = width / height;
+                        let drawX = 0, drawY = 0, drawWidth = width, drawHeight = height;
+
+                        if (coverRatio < targetRatio) {
+                            drawHeight = Math.ceil(width / coverRatio);
+                            drawY = Math.ceil((height - drawHeight) / 2);
+                        } else {
+                            drawWidth = Math.ceil(height * coverRatio);
+                            drawX = Math.ceil((width - drawWidth) / 2);
+                        }
+
+                        const c2 = document.createElement('canvas'); c2.width = width; c2.height = height;
+                        const x2 = c2.getContext('2d');
+                        x2.drawImage(coverImage.image, drawX, drawY, drawWidth, drawHeight);
+
+                        const d1 = x1.getImageData(0, 0, width, height).data;
+                        const d2 = x2.getImageData(0, 0, width, height).data;
+
+                        if (phantomWorker) {
+                            phantomWorker.postMessage({
+                                cmd: 'shadow',
+                                imgFront: d2.buffer,
+                                imgBack: d1.buffer,
+                                width: width,
+                                height: height,
+                                isColored: shadowIsColored,
+                                scaleInner: shadowInnerScale,
+                                scaleCover: shadowCoverScale,
+                                desatInner: shadowInnerDesat,
+                                desatCover: shadowCoverDesat,
+                                weightInner: shadowInnerWeight
+                            }, [d1.buffer, d2.buffer]);
+                        } else {
+                            (d1, d2, width, height);
+                        }
+                    },
+            (d1, d2, width, height) {
+                        const cvs = document.getElementById('resultCanvas');
+                        const ctx = cvs.getContext('2d');
+                        const outputData = new Uint8ClampedArray(d1.length);
+
+                        const innerPixels = d1;
+                        const coverPixels = d2;
+                        const innerGray = new Uint8ClampedArray(d1.length / 4);
+                        const coverGray = new Uint8ClampedArray(d2.length / 4);
+
+                        for (let i = 0; i < d1.length; i += 4) {
+                            const idx = i >> 2;
+                            innerGray[idx] = 0.299 * d1[i] + 0.587 * d1[i + 1] + 0.114 * d1[i + 2];
+                            coverGray[idx] = 0.299 * d2[i] + 0.587 * d2[i + 1] + 0.114 * d2[i + 2];
+                        }
+
+                        const innerScale = shadowInnerScale;
+                        const coverScale = 1 - shadowCoverScale;
+
+                        if (shadowIsColored) {
+                            const innerCache = new Uint8ClampedArray(innerPixels.length);
+                            const coverCache = new Uint8ClampedArray(coverPixels.length);
+                            const alphaCache = new Float32Array(innerGray.length);
+
+                            for (let i = 0; i < innerPixels.length; i += 4) {
+                                const gray = innerGray[i >> 2] * innerScale;
+                                const r = innerPixels[i] * innerScale;
+                                const g = innerPixels[i + 1] * innerScale;
+                                const b = innerPixels[i + 2] * innerScale;
+                                innerCache[i] = r + (gray - r) * shadowInnerDesat;
+                                innerCache[i + 1] = g + (gray - g) * shadowInnerDesat;
+                                innerCache[i + 2] = b + (gray - b) * shadowInnerDesat;
+                            }
+
+                            for (let i = 0; i < coverPixels.length; i += 4) {
+                                const gray = 255 - (255 - coverGray[i >> 2]) * coverScale;
+                                const r = 255 - (255 - coverPixels[i]) * coverScale;
+                                const g = 255 - (255 - coverPixels[i + 1]) * coverScale;
+                                const b = 255 - (255 - coverPixels[i + 2]) * coverScale;
+                                coverCache[i] = r + (gray - r) * shadowCoverDesat;
+                                coverCache[i + 1] = g + (gray - g) * shadowCoverDesat;
+                                coverCache[i + 2] = b + (gray - b) * shadowCoverDesat;
+                            }
+
+                            for (let i = 0; i < innerGray.length; i++) {
+                                alphaCache[i] = Math.min(Math.max((255 + innerGray[i] * innerScale - (255 - (255 - coverGray[i]) * coverScale)) / 255, 0), 1);
+                            }
+
+                            for (let i = 0; i < innerPixels.length; i += 4) {
+                                const alpha = alphaCache[i >> 2];
+                                const alphaColor = 255 * alpha;
+                                const safeAlpha = Math.max(alpha, 0.0001);
+                                outputData[i] = phantomTool.clamp(((innerCache[i] - alphaColor + 255 - coverCache[i]) * shadowInnerWeight + alphaColor - 255 + coverCache[i]) / safeAlpha, 0, 255);
+                                outputData[i + 1] = phantomTool.clamp(((innerCache[i + 1] - alphaColor + 255 - coverCache[i + 1]) * shadowInnerWeight + alphaColor - 255 + coverCache[i + 1]) / safeAlpha, 0, 255);
+                                outputData[i + 2] = phantomTool.clamp(((innerCache[i + 2] - alphaColor + 255 - coverCache[i + 2]) * shadowInnerWeight + alphaColor - 255 + coverCache[i + 2]) / safeAlpha, 0, 255);
+                                outputData[i + 3] = phantomTool.clamp(255 * alpha, 0, 255);
+                            }
+                        } else {
+                            for (let i = 0; i < innerGray.length; i++) {
+                                const inner = innerGray[i] * innerScale;
+                                const alpha = 255 + inner - (255 - (255 - coverGray[i]) * coverScale);
+                                const safeAlpha = Math.max(alpha, 0.0001);
+                                const color = phantomTool.clamp((255 * inner) / safeAlpha, 0, 255);
+                                outputData[i << 2] = color;
+                                outputData[(i << 2) + 1] = color;
+                                outputData[(i << 2) + 2] = color;
+                                outputData[(i << 2) + 3] = phantomTool.clamp(alpha, 0, 255);
+                            }
+                        }
+
+                        ctx.putImageData(new ImageData(outputData, width, height), 0, 0);
+                        (width, height);
+                    },
+            (type) {
+                        const c = document.getElementById('canvasContainer');
+                        c.classList.remove('bg-white-preview', 'bg-black-preview');
+                        if (type === 'white') c.classList.add('bg-white-preview');
+                        else if (type === 'black') c.classList.add('bg-black-preview');
+                    },
+            () {
+                        const canvas = document.getElementById('resultCanvas');
+                        const dlName = mode === 'prism' ? 'prism-tank.png' : 'shadow-tank.png';
+                        CanvasUtils.download(canvas.toDataURL('image/png'), dlName);
                     }
-                };
-                phantomWorker.onerror = (e) => {
-                    console.error('Worker Load Error', e);
-                    phantomWorker = null;
-                };
-            } catch (e) {
-                console.error('Worker Init Failed', e);
-                phantomWorker = null;
-            }
-        }
-
-        initWorker();
-
-        function setMode(nextMode) {
-            mode = nextMode;
-            updateUI();
-        }
-
-        function updateUI() {
-            const meta = modeMetaMap[mode];
-
-            document.getElementById('btn-prism').classList.toggle('is-active', mode === 'prism');
-            document.getElementById('btn-shadow').classList.toggle('is-active', mode === 'shadow');
-            document.getElementById('mode-description').textContent = meta.description;
-
-            document.getElementById('source-label').textContent = meta.sourceLabel;
-            document.getElementById('hidden-label').textContent = meta.hiddenLabel;
-            document.getElementById('source-cta').textContent = sourceImage ? `更换${meta.sourceLabel}` : meta.sourceCta;
-            document.getElementById('hidden-cta').textContent = hiddenImage ? `更换${meta.hiddenLabel}` : meta.hiddenCta;
-            document.getElementById('source-hint').textContent = meta.sourceHint;
-            document.getElementById('hidden-hint').textContent = meta.hiddenHint;
-
-            document.getElementById('upload-hint').textContent = mode === 'prism'
-                ? "原图会作为输出尺寸基准；如果隐藏图尺寸不同，生成时会自动缩放到原图尺寸。"
-                : "白底图对应表图，黑底图对应里图；以黑底图为尺寸基准并对白底图做居中裁切适配。";
-
-            document.getElementById('prism-controls').classList.toggle('hidden', mode !== 'prism');
-            document.getElementById('shadow-controls').classList.toggle('hidden', mode !== 'shadow');
-
-            document.getElementById('prism-result').classList.toggle('hidden', mode !== 'prism');
-            document.getElementById('shadow-result').classList.toggle('hidden', mode !== 'shadow');
-            document.getElementById('shadow-result-grid').classList.toggle('hidden', mode !== 'shadow' || !currentResult);
-
-            document.getElementById('resultPlaceholder').textContent = meta.emptyResultHint;
-            document.getElementById('resultPlaceholder').innerHTML = `<i class="fas fa-image"></i><div>${meta.emptyResultHint}</div>`;
-
-            updateGenerateButton();
-            updateSizeMismatch();
-        }
-
-        function updateGenerateButton() {
-            document.getElementById('generate-btn').disabled = !sourceImage || !hiddenImage || isGenerating;
-        }
-
-        function updateSizeMismatch() {
-            const el = document.getElementById('size-mismatch');
-            if (sourceImage && hiddenImage && (sourceImage.width !== hiddenImage.width || sourceImage.height !== hiddenImage.height)) {
-                el.textContent = mode === 'prism'
-                    ? `检测到两张图片尺寸不一致：当前会按原图尺寸 ${sourceImage.width} × ${sourceImage.height} 统一缩放隐藏图后再生成。`
-                    : `检测到两张图片尺寸不一致：当前暗影模式会按黑底图尺寸基准生成，并对白底图执行居中裁切适配。`;
-                el.classList.remove('hidden');
-            } else {
-                el.classList.add('hidden');
-            }
-        }
-
-        function showError(message) {
-            const el = document.getElementById('error-message');
-            el.textContent = message;
-            el.classList.remove('hidden');
-            if (app && app.showToast) {
-                app.showToast(message, 'error');
-            }
-        }
-
-        function showStatus(message) {
-            const el = document.getElementById('status-message');
-            el.textContent = message;
-        }
-
-        function clamp(value, min, max) {
-            return Math.min(max, Math.max(min, value));
-        }
-
-        function handleImage(input, idx) {
-            const file = input.files[0];
-            if (!file) return;
-
-            if (!file.type.startsWith('image/')) {
-                showError('仅支持上传图片文件。');
-                input.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const data = {
-                        file: file,
-                        name: file.name,
-                        width: img.naturalWidth,
-                        height: img.naturalHeight,
-                        url: e.target.result,
-                        image: img
-                    };
-
-                    if (idx === 1) {
-                        sourceImage = data;
-                        const preview = document.getElementById('preview1');
-                        preview.src = e.target.result;
-                        preview.classList.add('is-visible');
-                        document.getElementById('preview1-placeholder').classList.add('hidden');
-                        const info = document.getElementById('preview1-info');
-                        info.textContent = `${file.name} (${img.naturalWidth} × ${img.naturalHeight})`;
-                        info.classList.remove('hidden');
-                    } else {
-                        hiddenImage = data;
-                        const preview = document.getElementById('preview2');
-                        preview.src = e.target.result;
-                        preview.classList.add('is-visible');
-                        document.getElementById('preview2-placeholder').classList.add('hidden');
-                        const info = document.getElementById('preview2-info');
-                        info.textContent = `${file.name} (${img.naturalWidth} × ${img.naturalHeight})`;
-                        info.classList.remove('hidden');
-                    }
-
-                    updateGenerateButton();
-                    updateSizeMismatch();
-                    showStatus(sourceImage && hiddenImage ? '图片已加载，可点击生成图像。' : '请继续上传另一张图片。');
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function enableDownload(width, height) {
-            isGenerating = false;
-            updateGenerateButton();
-
-            document.getElementById('download-btn').disabled = false;
-            document.getElementById('resultPlaceholder').style.display = 'none';
-            const canvas = document.getElementById('resultCanvas');
-            canvas.style.display = 'block';
-
-            if (mode === 'shadow') {
-                const grid = document.getElementById('shadow-result-grid');
-                grid.classList.remove('hidden');
-                document.getElementById('result-img-white').src = canvas.toDataURL('image/png');
-                document.getElementById('result-img-black').src = canvas.toDataURL('image/png');
-                canvas.style.display = 'none';
-            }
-
-            const sizeInfo = document.getElementById('output-size');
-            sizeInfo.textContent = `输出尺寸：${width} × ${height}`;
-            sizeInfo.classList.remove('hidden');
-
-            showStatus(mode === 'prism' ? '生成完成，请切换白底/黑底预览查看隐藏效果。' : '生成完成，已提供白底/黑底双预览。');
-
-            if (app && app.showToast) {
-                app.showToast('生成成功！');
-            }
-
-            setTimeout(() => {
-                const height = document.body.scrollHeight;
-                window.parent.postMessage({ type: 'resize', height: height }, '*');
-            }, 100);
-        }
-
-        function generateImage() {
-            if (!sourceImage || !hiddenImage) {
-                showError('请先上传两张图片。');
-                return;
-            }
-
-            isGenerating = true;
-            updateGenerateButton();
-            document.getElementById('error-message').classList.add('hidden');
-
-            if (mode === 'prism') {
-                generatePrismImage();
-            } else {
-                generateShadowImage();
-            }
-        }
-
-        function generatePrismImage() {
-            const w = sourceImage.width;
-            const h = sourceImage.height;
-
-            const cvs = document.getElementById('resultCanvas');
-            cvs.width = w;
-            cvs.height = h;
-            const ctx = cvs.getContext('2d');
-
-            const c1 = document.createElement('canvas'); c1.width = w; c1.height = h;
-            const x1 = c1.getContext('2d');
-            x1.drawImage(sourceImage.image, 0, 0, w, h);
-
-            const c2 = document.createElement('canvas'); c2.width = w; c2.height = h;
-            const x2 = c2.getContext('2d');
-            x2.drawImage(hiddenImage.image, 0, 0, w, h);
-
-            const d1 = x1.getImageData(0, 0, w, h).data;
-            const d2 = x2.getImageData(0, 0, w, h).data;
-
-            if (phantomWorker) {
-                phantomWorker.postMessage({
-                    cmd: 'prism',
-                    imgFront: d1.buffer,
-                    imgBack: d2.buffer,
-                    width: w,
-                    height: h,
-                    sourceBrightness: sourceBrightness,
-                    sourceContrast: sourceContrast,
-                    hiddenBrightness: hiddenBrightness,
-                    hiddenContrast: hiddenContrast
-                }, [d1.buffer, d2.buffer]);
-            } else {
-                processPrismMain(d1, d2, w, h);
-            }
-        }
-
-        function processPrismMain(d1, d2, w, h) {
-            const cvs = document.getElementById('resultCanvas');
-            const ctx = cvs.getContext('2d');
-            const out = ctx.createImageData(w, h);
-            const dOut = out.data;
-
-            const originalBrightnessFactor = 1 + sourceBrightness / 100;
-            const hiddenBrightnessFactor = 1 - hiddenBrightness / 100;
-            const originalContrastFactor = sourceContrast / 100;
-            const hiddenContrastFactor = hiddenContrast / 100;
-
-            for (let i = 0; i < d1.length; i += 4) {
-                const pixelIndex = i / 4;
-                const x = pixelIndex % w;
-                const y = Math.floor(pixelIndex / w);
-
-                const adjustPixel = (r, g, b, brightnessFactor, contrastFactor) => {
-                    const brightR = r * brightnessFactor;
-                    const brightG = g * brightnessFactor;
-                    const brightB = b * brightnessFactor;
-                    const adjustContrast = (value) => clamp((value - 128) * contrastFactor + 128, 0, 255);
-                    return [adjustContrast(brightR), adjustContrast(brightG), adjustContrast(brightB)];
-                };
-
-                if ((x + y) % 2 === 0) {
-                    const pixel = adjustPixel(d1[i], d1[i + 1], d1[i + 2], originalBrightnessFactor, originalContrastFactor);
-                    dOut[i] = pixel[0];
-                    dOut[i + 1] = pixel[1];
-                    dOut[i + 2] = pixel[2];
-                } else {
-                    const pixel = adjustPixel(d2[i], d2[i + 1], d2[i + 2], hiddenBrightnessFactor, hiddenContrastFactor);
-                    dOut[i] = pixel[0];
-                    dOut[i + 1] = pixel[1];
-                    dOut[i + 2] = pixel[2];
-                }
-                dOut[i + 3] = 255;
-            }
-
-            ctx.putImageData(out, 0, 0);
-            enableDownload(w, h);
-        }
-
-        function generateShadowImage() {
-            const innerImage = hiddenImage;
-            const coverImage = sourceImage;
-
-            let width = innerImage.width;
-            let height = innerImage.height;
-            const maxSize = Math.max(0, Math.floor(shadowMaxSize || 0));
-
-            if (maxSize !== 0) {
-                if (innerImage.width > innerImage.height) {
-                    width = maxSize;
-                    height = Math.ceil((innerImage.height * maxSize) / innerImage.width);
-                } else {
-                    height = maxSize;
-                    width = Math.ceil((innerImage.width * maxSize) / innerImage.height);
-                }
-            }
-
-            const cvs = document.getElementById('resultCanvas');
-            cvs.width = width;
-            cvs.height = height;
-            const ctx = cvs.getContext('2d');
-
-            const c1 = document.createElement('canvas'); c1.width = width; c1.height = height;
-            const x1 = c1.getContext('2d');
-            x1.drawImage(innerImage.image, 0, 0, width, height);
-
-            const coverRatio = coverImage.width / coverImage.height;
-            const targetRatio = width / height;
-            let drawX = 0, drawY = 0, drawWidth = width, drawHeight = height;
-
-            if (coverRatio < targetRatio) {
-                drawHeight = Math.ceil(width / coverRatio);
-                drawY = Math.ceil((height - drawHeight) / 2);
-            } else {
-                drawWidth = Math.ceil(height * coverRatio);
-                drawX = Math.ceil((width - drawWidth) / 2);
-            }
-
-            const c2 = document.createElement('canvas'); c2.width = width; c2.height = height;
-            const x2 = c2.getContext('2d');
-            x2.drawImage(coverImage.image, drawX, drawY, drawWidth, drawHeight);
-
-            const d1 = x1.getImageData(0, 0, width, height).data;
-            const d2 = x2.getImageData(0, 0, width, height).data;
-
-            if (phantomWorker) {
-                phantomWorker.postMessage({
-                    cmd: 'shadow',
-                    imgFront: d2.buffer,
-                    imgBack: d1.buffer,
-                    width: width,
-                    height: height,
-                    isColored: shadowIsColored,
-                    scaleInner: shadowInnerScale,
-                    scaleCover: shadowCoverScale,
-                    desatInner: shadowInnerDesat,
-                    desatCover: shadowCoverDesat,
-                    weightInner: shadowInnerWeight
-                }, [d1.buffer, d2.buffer]);
-            } else {
-                processShadowMain(d1, d2, width, height);
-            }
-        }
-
-        function processShadowMain(d1, d2, width, height) {
-            const cvs = document.getElementById('resultCanvas');
-            const ctx = cvs.getContext('2d');
-            const outputData = new Uint8ClampedArray(d1.length);
-
-            const innerPixels = d1;
-            const coverPixels = d2;
-            const innerGray = new Uint8ClampedArray(d1.length / 4);
-            const coverGray = new Uint8ClampedArray(d2.length / 4);
-
-            for (let i = 0; i < d1.length; i += 4) {
-                const idx = i >> 2;
-                innerGray[idx] = 0.299 * d1[i] + 0.587 * d1[i + 1] + 0.114 * d1[i + 2];
-                coverGray[idx] = 0.299 * d2[i] + 0.587 * d2[i + 1] + 0.114 * d2[i + 2];
-            }
-
-            const innerScale = shadowInnerScale;
-            const coverScale = 1 - shadowCoverScale;
-
-            if (shadowIsColored) {
-                const innerCache = new Uint8ClampedArray(innerPixels.length);
-                const coverCache = new Uint8ClampedArray(coverPixels.length);
-                const alphaCache = new Float32Array(innerGray.length);
-
-                for (let i = 0; i < innerPixels.length; i += 4) {
-                    const gray = innerGray[i >> 2] * innerScale;
-                    const r = innerPixels[i] * innerScale;
-                    const g = innerPixels[i + 1] * innerScale;
-                    const b = innerPixels[i + 2] * innerScale;
-                    innerCache[i] = r + (gray - r) * shadowInnerDesat;
-                    innerCache[i + 1] = g + (gray - g) * shadowInnerDesat;
-                    innerCache[i + 2] = b + (gray - b) * shadowInnerDesat;
-                }
-
-                for (let i = 0; i < coverPixels.length; i += 4) {
-                    const gray = 255 - (255 - coverGray[i >> 2]) * coverScale;
-                    const r = 255 - (255 - coverPixels[i]) * coverScale;
-                    const g = 255 - (255 - coverPixels[i + 1]) * coverScale;
-                    const b = 255 - (255 - coverPixels[i + 2]) * coverScale;
-                    coverCache[i] = r + (gray - r) * shadowCoverDesat;
-                    coverCache[i + 1] = g + (gray - g) * shadowCoverDesat;
-                    coverCache[i + 2] = b + (gray - b) * shadowCoverDesat;
-                }
-
-                for (let i = 0; i < innerGray.length; i++) {
-                    alphaCache[i] = Math.min(Math.max((255 + innerGray[i] * innerScale - (255 - (255 - coverGray[i]) * coverScale)) / 255, 0), 1);
-                }
-
-                for (let i = 0; i < innerPixels.length; i += 4) {
-                    const alpha = alphaCache[i >> 2];
-                    const alphaColor = 255 * alpha;
-                    const safeAlpha = Math.max(alpha, 0.0001);
-                    outputData[i] = clamp(((innerCache[i] - alphaColor + 255 - coverCache[i]) * shadowInnerWeight + alphaColor - 255 + coverCache[i]) / safeAlpha, 0, 255);
-                    outputData[i + 1] = clamp(((innerCache[i + 1] - alphaColor + 255 - coverCache[i + 1]) * shadowInnerWeight + alphaColor - 255 + coverCache[i + 1]) / safeAlpha, 0, 255);
-                    outputData[i + 2] = clamp(((innerCache[i + 2] - alphaColor + 255 - coverCache[i + 2]) * shadowInnerWeight + alphaColor - 255 + coverCache[i + 2]) / safeAlpha, 0, 255);
-                    outputData[i + 3] = clamp(255 * alpha, 0, 255);
-                }
-            } else {
-                for (let i = 0; i < innerGray.length; i++) {
-                    const inner = innerGray[i] * innerScale;
-                    const alpha = 255 + inner - (255 - (255 - coverGray[i]) * coverScale);
-                    const safeAlpha = Math.max(alpha, 0.0001);
-                    const color = clamp((255 * inner) / safeAlpha, 0, 255);
-                    outputData[i << 2] = color;
-                    outputData[(i << 2) + 1] = color;
-                    outputData[(i << 2) + 2] = color;
-                    outputData[(i << 2) + 3] = clamp(alpha, 0, 255);
-                }
-            }
-
-            ctx.putImageData(new ImageData(outputData, width, height), 0, 0);
-            enableDownload(width, height);
-        }
-
-        function changeBg(type) {
-            const c = document.getElementById('canvasContainer');
-            c.classList.remove('bg-white-preview', 'bg-black-preview');
-            if (type === 'white') c.classList.add('bg-white-preview');
-            else if (type === 'black') c.classList.add('bg-black-preview');
-        }
-
-        function downloadImage() {
-            const canvas = document.getElementById('resultCanvas');
-            if (canvas.style.display === 'none' && mode === 'shadow') {
-                const link = document.createElement('a');
-                link.download = 'shadow-tank.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            } else {
-                const link = document.createElement('a');
-                link.download = mode === 'prism' ? 'prism-tank.png' : 'shadow-tank.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            }
-        }
+        };
+
+
+        phantomTool.initWorker();
+
+        // Event listeners
+        document.getElementById('btn-prism').addEventListener('click', function() {
+            phantomTool.setMode(this.dataset.mode);
+        });
+        document.getElementById('btn-shadow').addEventListener('click', function() {
+            phantomTool.setMode(this.dataset.mode);
+        });
+
+        new DragDropHandler({
+            dropZone: document.getElementById('upload-area-1'),
+            input: document.getElementById('imgInput1'),
+            onFile: (file) => {
+                // Create a synthetic input-like object for handleImage
+                const fakeInput = { files: [file] };
+                phantomTool.handleImage(fakeInput, 1);
+            },
+            accept: ['image/*'],
+            onError: (err) => { if (app && app.showToast) app.showToast(err.message, 'error'); }
+        });
+
+        new DragDropHandler({
+            dropZone: document.getElementById('upload-area-2'),
+            input: document.getElementById('imgInput2'),
+            onFile: (file) => {
+                const fakeInput = { files: [file] };
+                phantomTool.handleImage(fakeInput, 2);
+            },
+            accept: ['image/*'],
+            onError: (err) => { if (app && app.showToast) app.showToast(err.message, 'error'); }
+        });
+
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            phantomTool.generateImage();
+        });
+        document.getElementById('download-btn').addEventListener('click', function() {
+            phantomTool.downloadImage();
+        });
+
+        document.querySelectorAll('input[name="bg"]').forEach(function(radio) {
+            radio.addEventListener('click', function() {
+                phantomTool.changeBg(this.dataset.bg);
+            });
+        });
 
         document.getElementById('source-brightness').addEventListener('input', (e) => {
             sourceBrightness = parseInt(e.target.value);
@@ -1182,7 +1198,19 @@
             document.getElementById('shadow-max-size-val').textContent = shadowMaxSize;
         });
 
-        updateUI();
+        phantomTool.updateUI();
+    
+        // Cleanup Worker on page unload
+        window.addEventListener('beforeunload', function() {
+            if (typeof phantomWorker !== 'undefined' && phantomWorker) {
+                if (typeof app !== 'undefined' && app.releaseWorker) {
+                    app.releaseWorker('../js/workers/phantom.worker.js');
+                } else {
+                    phantomWorker.terminate();
+                }
+            }
+        });
     </script>
+    <div id="toast"></div>
 </body>
 </html>

@@ -62,7 +62,7 @@
                 <div class="panel-title">图标设置</div>
                 <div class="panel-actions">
                     <span class="stat-badge">Lite</span>
-                    <button class="btn btn-icon btn-secondary" onclick="resetDefaults()" title="重置">↺</button>
+                    <button class="btn btn-icon btn-secondary" id="btn-reset" title="重置">↺</button>
                 </div>
             </div>
 
@@ -92,8 +92,8 @@
                 <div class="control-group">
                     <label>内容设置</label>
                     <div class="sub-tab-group">
-                        <button class="sub-tab active" onclick="switchTab('text')" id="tab-text">文字</button>
-                        <button class="sub-tab" onclick="switchTab('image')" id="tab-image">图片</button>
+                        <button class="sub-tab active" id="tab-text">文字</button>
+                        <button class="sub-tab" id="tab-image">图片</button>
                     </div>
 
                     <!-- Text Mode -->
@@ -132,7 +132,7 @@
                         <div class="upload-area" id="uploadArea" style="padding: 1rem; margin-bottom: 10px;">
                             <i style="font-size: 1.5rem;">📁</i>
                             <div style="font-size: 0.8rem; color: var(--text-dim);">点击或拖拽上传图片</div>
-                            <input type="file" id="imageInput" accept="image/*" style="position:absolute; width:100%; height:100%; opacity:0; top:0; left:0; cursor:pointer;">
+                            <input type="file" id="imageInput" accept="image/*" hidden>
                         </div>
                         <div class="input-row">
                             <label>缩放 (%)</label>
@@ -206,281 +206,224 @@
 
     <script src="../js/app.js"></script>
     <script>
-        // State
-        const defaultState = {
-            size: 1024,
-            bgColor: '#3b82f6',
-            borderRadius: 22,
-            mode: 'text',
-            text: 'A',
-            textSize: 600,
-            textColor: '#ffffff',
-            font: 'Arial',
-            image: null,
-            imageScale: 80,
-            offsetY: 0,
-            shadowColor: '#000000',
-            shadowBlur: 0,
-            shadowOffsetX: 0,
-            shadowOffsetY: 0,
-            borderWidth: 0,
-            borderColor: '#000000'
-        };
+        const appIconTool = (() => {
+            // State
+            const defaultState = {
+                size: 1024,
+                bgColor: '#3b82f6',
+                borderRadius: 22,
+                mode: 'text',
+                text: 'A',
+                textSize: 600,
+                textColor: '#ffffff',
+                font: 'Arial',
+                image: null,
+                imageScale: 80,
+                offsetY: 0,
+                shadowColor: '#000000',
+                shadowBlur: 0,
+                shadowOffsetX: 0,
+                shadowOffsetY: 0,
+                borderWidth: 0,
+                borderColor: '#000000'
+            };
 
-        let state = { ...defaultState };
+            let state = { ...defaultState };
 
-        // Elements
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Inputs map
-        const inputs = {
-            size: document.getElementById('sizeInput'),
-            bgColor: document.getElementById('bgColor'),
-            borderRadius: document.getElementById('borderRadius'),
-            textInput: document.getElementById('textInput'),
-            textSize: document.getElementById('textSize'),
-            textColor: document.getElementById('textColor'),
-            fontFamily: document.getElementById('fontFamily'),
-            imageInput: document.getElementById('imageInput'),
-            imageScale: document.getElementById('imageScale'),
-            offsetY: document.getElementById('offsetY'),
-            shadowColor: document.getElementById('shadowColor'),
-            shadowBlur: document.getElementById('shadowBlur'),
-            shadowOffsetX: document.getElementById('shadowOffsetX'),
-            shadowOffsetY: document.getElementById('shadowOffsetY'),
-            borderWidth: document.getElementById('borderWidth'),
-            borderColor: document.getElementById('borderColor'),
-            downloadBtn: document.getElementById('downloadBtn')
-        };
+            // Elements
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Inputs map
+            const inputs = {
+                size: document.getElementById('sizeInput'),
+                bgColor: document.getElementById('bgColor'),
+                borderRadius: document.getElementById('borderRadius'),
+                textInput: document.getElementById('textInput'),
+                textSize: document.getElementById('textSize'),
+                textColor: document.getElementById('textColor'),
+                fontFamily: document.getElementById('fontFamily'),
+                imageInput: document.getElementById('imageInput'),
+                imageScale: document.getElementById('imageScale'),
+                offsetY: document.getElementById('offsetY'),
+                shadowColor: document.getElementById('shadowColor'),
+                shadowBlur: document.getElementById('shadowBlur'),
+                shadowOffsetX: document.getElementById('shadowOffsetX'),
+                shadowOffsetY: document.getElementById('shadowOffsetY'),
+                borderWidth: document.getElementById('borderWidth'),
+                borderColor: document.getElementById('borderColor'),
+                downloadBtn: document.getElementById('downloadBtn')
+            };
 
-        // Helper to update color labels
-        function updateColorLabel(id, val) {
-            const el = document.getElementById(id + 'Val');
-            if(el) el.innerText = val;
-        }
+            // Helper to update color labels
+            function updateColorLabel(id, val) {
+                const el = document.getElementById(id + 'Val');
+                if(el) el.innerText = val;
+            }
 
-        // Initialize listeners
-        function initListeners() {
-            inputs.size.addEventListener('input', (e) => {
-                state.size = parseInt(e.target.value) || 1024;
-                document.getElementById('outputSizeDisplay').innerText = `${state.size}x${state.size}`;
-                render();
-            });
+            // Initialize listeners
+            function initListeners() {
+                inputs.size.addEventListener('input', (e) => {
+                    state.size = parseInt(e.target.value) || 1024;
+                    document.getElementById('outputSizeDisplay').innerText = `${state.size}x${state.size}`;
+                    appIconTool.render();
+                });
 
-            inputs.bgColor.addEventListener('input', (e) => {
-                state.bgColor = e.target.value;
-                updateColorLabel('bgColor', state.bgColor);
-                render();
-            });
+                inputs.bgColor.addEventListener('input', (e) => {
+                    state.bgColor = e.target.value;
+                    appIconTool.updateColorLabel('bgColor', state.bgColor);
+                    appIconTool.render();
+                });
 
-            inputs.borderRadius.addEventListener('input', (e) => {
-                state.borderRadius = parseInt(e.target.value);
-                document.getElementById('borderRadiusVal').innerText = `${state.borderRadius}%`;
-                render();
-            });
+                inputs.borderRadius.addEventListener('input', (e) => {
+                    state.borderRadius = parseInt(e.target.value);
+                    document.getElementById('borderRadiusVal').innerText = `${state.borderRadius}%`;
+                    appIconTool.render();
+                });
 
-            inputs.textInput.addEventListener('input', (e) => {
-                state.text = e.target.value;
-                render();
-            });
+                inputs.textInput.addEventListener('input', (e) => {
+                    state.text = e.target.value;
+                    appIconTool.render();
+                });
 
-            inputs.textSize.addEventListener('input', (e) => {
-                state.textSize = parseInt(e.target.value);
-                render();
-            });
+                inputs.textSize.addEventListener('input', (e) => {
+                    state.textSize = parseInt(e.target.value);
+                    appIconTool.render();
+                });
 
-            inputs.textColor.addEventListener('input', (e) => {
-                state.textColor = e.target.value;
-                updateColorLabel('textColor', state.textColor);
-                render();
-            });
+                inputs.textColor.addEventListener('input', (e) => {
+                    state.textColor = e.target.value;
+                    appIconTool.updateColorLabel('textColor', state.textColor);
+                    appIconTool.render();
+                });
 
-            inputs.fontFamily.addEventListener('change', (e) => {
-                state.font = e.target.value;
-                render();
-            });
+                inputs.fontFamily.addEventListener('change', (e) => {
+                    state.font = e.target.value;
+                    appIconTool.render();
+                });
 
-            inputs.imageInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            state.image = img;
-                            render();
-                            app.showToast('图片已加载');
+                new DragDropHandler({
+                    dropZone: document.getElementById('uploadArea'),
+                    input: inputs.imageInput,
+                    onFile: (file) => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                state.image = img;
+                                appIconTool.render();
+                                app.showToast('图片已加载');
+                            };
+                            img.src = event.target.result;
                         };
-                        img.src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
+                        reader.readAsDataURL(file);
+                    },
+                    accept: ['image/*'],
+                    onError: (err) => { if (app && app.showToast) app.showToast(err.message, 'error'); }
+                });
 
-            inputs.imageScale.addEventListener('input', (e) => {
-                state.imageScale = parseInt(e.target.value);
-                render();
-            });
+                inputs.imageScale.addEventListener('input', (e) => {
+                    state.imageScale = parseInt(e.target.value);
+                    appIconTool.render();
+                });
 
-            inputs.offsetY.addEventListener('input', (e) => {
-                state.offsetY = parseInt(e.target.value);
-                render();
-            });
+                inputs.offsetY.addEventListener('input', (e) => {
+                    state.offsetY = parseInt(e.target.value);
+                    appIconTool.render();
+                });
 
-            inputs.shadowColor.addEventListener('input', (e) => {
-                state.shadowColor = e.target.value;
-                updateColorLabel('shadowColor', state.shadowColor);
-                render();
-            });
+                inputs.shadowColor.addEventListener('input', (e) => {
+                    state.shadowColor = e.target.value;
+                    appIconTool.updateColorLabel('shadowColor', state.shadowColor);
+                    appIconTool.render();
+                });
 
-            inputs.shadowBlur.addEventListener('input', (e) => {
-                state.shadowBlur = parseInt(e.target.value);
-                render();
-            });
+                inputs.shadowBlur.addEventListener('input', (e) => {
+                    state.shadowBlur = parseInt(e.target.value);
+                    appIconTool.render();
+                });
 
-            inputs.shadowOffsetX.addEventListener('input', (e) => {
-                state.shadowOffsetX = parseInt(e.target.value);
-                render();
-            });
+                inputs.shadowOffsetX.addEventListener('input', (e) => {
+                    state.shadowOffsetX = parseInt(e.target.value);
+                    appIconTool.render();
+                });
 
-            inputs.shadowOffsetY.addEventListener('input', (e) => {
-                state.shadowOffsetY = parseInt(e.target.value);
-                render();
-            });
+                inputs.shadowOffsetY.addEventListener('input', (e) => {
+                    state.shadowOffsetY = parseInt(e.target.value);
+                    appIconTool.render();
+                });
 
-            inputs.borderWidth.addEventListener('input', (e) => {
-                state.borderWidth = parseInt(e.target.value);
-                render();
-            });
+                inputs.borderWidth.addEventListener('input', (e) => {
+                    state.borderWidth = parseInt(e.target.value);
+                    appIconTool.render();
+                });
 
-            inputs.borderColor.addEventListener('input', (e) => {
-                state.borderColor = e.target.value;
-                updateColorLabel('borderColor', state.borderColor);
-                render();
-            });
+                inputs.borderColor.addEventListener('input', (e) => {
+                    state.borderColor = e.target.value;
+                    appIconTool.updateColorLabel('borderColor', state.borderColor);
+                    appIconTool.render();
+                });
 
-            inputs.downloadBtn.addEventListener('click', download);
-        }
-
-        // Tab Switching
-        window.switchTab = (tab) => {
-            state.mode = tab;
-            
-            document.getElementById('tab-text').classList.remove('active');
-            document.getElementById('tab-image').classList.remove('active');
-            document.getElementById(`tab-${tab}`).classList.add('active');
-
-            document.getElementById('textContent').style.display = 'none';
-            document.getElementById('imageContent').style.display = 'none';
-            
-            if (tab === 'text') {
-                document.getElementById('textContent').style.display = 'block';
-            } else {
-                document.getElementById('imageContent').style.display = 'block';
+                inputs.downloadBtn.addEventListener('click', appIconTool.download);
             }
-            render();
-        };
 
-        window.resetDefaults = () => {
-            state = { ...defaultState };
-            // Reset Inputs
-            inputs.size.value = state.size;
-            inputs.bgColor.value = state.bgColor;
-            inputs.borderRadius.value = state.borderRadius;
-            inputs.textInput.value = state.text;
-            inputs.textSize.value = state.textSize;
-            inputs.textColor.value = state.textColor;
-            inputs.imageScale.value = state.imageScale;
-            inputs.offsetY.value = state.offsetY;
-            inputs.shadowColor.value = state.shadowColor;
-            inputs.shadowBlur.value = state.shadowBlur;
-            inputs.shadowOffsetX.value = state.shadowOffsetX;
-            inputs.shadowOffsetY.value = state.shadowOffsetY;
-            inputs.borderWidth.value = state.borderWidth;
-            inputs.borderColor.value = state.borderColor;
-            
-            // Update UI Labels
-            updateColorLabel('bgColor', state.bgColor);
-            updateColorLabel('textColor', state.textColor);
-            updateColorLabel('shadowColor', state.shadowColor);
-            updateColorLabel('borderColor', state.borderColor);
-            document.getElementById('borderRadiusVal').innerText = `${state.borderRadius}%`;
-            document.getElementById('outputSizeDisplay').innerText = `${state.size}x${state.size}`;
-            
-            switchTab('text');
-            app.showToast('已重置');
-        };
-
-        // Render Function
-        function render() {
-            canvas.width = state.size;
-            canvas.height = state.size;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Background (Rounded Rect)
-            const r = (state.borderRadius / 100) * state.size / 2;
-            
-            ctx.beginPath();
-            ctx.moveTo(r, 0);
-            ctx.lineTo(state.size - r, 0);
-            ctx.quadraticCurveTo(state.size, 0, state.size, r);
-            ctx.lineTo(state.size, state.size - r);
-            ctx.quadraticCurveTo(state.size, state.size, state.size - r, state.size);
-            ctx.lineTo(r, state.size);
-            ctx.quadraticCurveTo(0, state.size, 0, state.size - r);
-            ctx.lineTo(0, r);
-            ctx.quadraticCurveTo(0, 0, r, 0);
-            ctx.closePath();
-            
-            ctx.fillStyle = state.bgColor;
-            ctx.fill();
-
-            // Clip for content
-            ctx.save();
-            ctx.clip();
-
-            const centerX = state.size / 2;
-            const centerY = state.size / 2 + (state.offsetY * (state.size / 1024));
-
-            // Shadow
-            const scaleFactor = state.size / 1024;
-            ctx.shadowColor = state.shadowColor;
-            ctx.shadowBlur = state.shadowBlur * scaleFactor;
-            ctx.shadowOffsetX = state.shadowOffsetX * scaleFactor;
-            ctx.shadowOffsetY = state.shadowOffsetY * scaleFactor;
-
-            if (state.mode === 'text') {
-                const fontSize = state.textSize * scaleFactor;
-                ctx.font = `bold ${fontSize}px ${state.font}`;
-                ctx.fillStyle = state.textColor;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(state.text, centerX, centerY + (fontSize * 0.05));
-            } else if (state.mode === 'image' && state.image) {
-                const scale = state.imageScale / 100;
-                const imgW = state.image.width;
-                const imgH = state.image.height;
-                const aspect = imgW / imgH;
+            // Tab Switching
+            function switchTab(tab) {
+                state.mode = tab;
                 
-                let drawW, drawH;
-                if (aspect > 1) {
-                    drawW = state.size * scale;
-                    drawH = drawW / aspect;
+                document.getElementById('tab-text').classList.remove('active');
+                document.getElementById('tab-image').classList.remove('active');
+                document.getElementById(`tab-${tab}`).classList.add('active');
+
+                document.getElementById('textContent').style.display = 'none';
+                document.getElementById('imageContent').style.display = 'none';
+                
+                if (tab === 'text') {
+                    document.getElementById('textContent').style.display = 'block';
                 } else {
-                    drawH = state.size * scale;
-                    drawW = drawH * aspect;
+                    document.getElementById('imageContent').style.display = 'block';
                 }
-                ctx.drawImage(state.image, centerX - drawW / 2, centerY - drawH / 2, drawW, drawH);
+                appIconTool.render();
             }
 
-            ctx.restore();
+            function resetDefaults() {
+                state = { ...defaultState };
+                // Reset Inputs
+                inputs.size.value = state.size;
+                inputs.bgColor.value = state.bgColor;
+                inputs.borderRadius.value = state.borderRadius;
+                inputs.textInput.value = state.text;
+                inputs.textSize.value = state.textSize;
+                inputs.textColor.value = state.textColor;
+                inputs.imageScale.value = state.imageScale;
+                inputs.offsetY.value = state.offsetY;
+                inputs.shadowColor.value = state.shadowColor;
+                inputs.shadowBlur.value = state.shadowBlur;
+                inputs.shadowOffsetX.value = state.shadowOffsetX;
+                inputs.shadowOffsetY.value = state.shadowOffsetY;
+                inputs.borderWidth.value = state.borderWidth;
+                inputs.borderColor.value = state.borderColor;
+                
+                // Update UI Labels
+                appIconTool.updateColorLabel('bgColor', state.bgColor);
+                appIconTool.updateColorLabel('textColor', state.textColor);
+                appIconTool.updateColorLabel('shadowColor', state.shadowColor);
+                appIconTool.updateColorLabel('borderColor', state.borderColor);
+                document.getElementById('borderRadiusVal').innerText = `${state.borderRadius}%`;
+                document.getElementById('outputSizeDisplay').innerText = `${state.size}x${state.size}`;
+                
+                appIconTool.switchTab('text');
+                app.showToast('已重置');
+            }
 
-            // Border
-            if (state.borderWidth > 0) {
-                const bw = state.borderWidth * (state.size / 1024);
-                ctx.lineWidth = bw;
-                ctx.strokeStyle = state.borderColor;
+            // Render Function
+            function render() {
+                canvas.width = state.size;
+                canvas.height = state.size;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw Background (Rounded Rect)
+                const r = (state.borderRadius / 100) * state.size / 2;
                 
                 ctx.beginPath();
                 ctx.moveTo(r, 0);
@@ -493,23 +436,96 @@
                 ctx.lineTo(0, r);
                 ctx.quadraticCurveTo(0, 0, r, 0);
                 ctx.closePath();
-                ctx.stroke();
+                
+                ctx.fillStyle = state.bgColor;
+                ctx.fill();
+
+                // Clip for content
+                ctx.save();
+                ctx.clip();
+
+                const centerX = state.size / 2;
+                const centerY = state.size / 2 + (state.offsetY * (state.size / 1024));
+
+                // Shadow
+                const scaleFactor = state.size / 1024;
+                ctx.shadowColor = state.shadowColor;
+                ctx.shadowBlur = state.shadowBlur * scaleFactor;
+                ctx.shadowOffsetX = state.shadowOffsetX * scaleFactor;
+                ctx.shadowOffsetY = state.shadowOffsetY * scaleFactor;
+
+                if (state.mode === 'text') {
+                    const fontSize = state.textSize * scaleFactor;
+                    ctx.font = `bold ${fontSize}px ${state.font}`;
+                    ctx.fillStyle = state.textColor;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(state.text, centerX, centerY + (fontSize * 0.05));
+                } else if (state.mode === 'image' && state.image) {
+                    const scale = state.imageScale / 100;
+                    const imgW = state.image.width;
+                    const imgH = state.image.height;
+                    const aspect = imgW / imgH;
+                    
+                    let drawW, drawH;
+                    if (aspect > 1) {
+                        drawW = state.size * scale;
+                        drawH = drawW / aspect;
+                    } else {
+                        drawH = state.size * scale;
+                        drawW = drawH * aspect;
+                    }
+                    ctx.drawImage(state.image, centerX - drawW / 2, centerY - drawH / 2, drawW, drawH);
+                }
+
+                ctx.restore();
+
+                // Border
+                if (state.borderWidth > 0) {
+                    const bw = state.borderWidth * (state.size / 1024);
+                    ctx.lineWidth = bw;
+                    ctx.strokeStyle = state.borderColor;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(r, 0);
+                    ctx.lineTo(state.size - r, 0);
+                    ctx.quadraticCurveTo(state.size, 0, state.size, r);
+                    ctx.lineTo(state.size, state.size - r);
+                    ctx.quadraticCurveTo(state.size, state.size, state.size - r, state.size);
+                    ctx.lineTo(r, state.size);
+                    ctx.quadraticCurveTo(0, state.size, 0, state.size - r);
+                    ctx.lineTo(0, r);
+                    ctx.quadraticCurveTo(0, 0, r, 0);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
             }
-        }
 
-        function download() {
-            const link = document.createElement('a');
-            link.download = 'app-icon.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            if (app && app.showToast) {
-                app.showToast('下载已开始');
+            function download() {
+                const link = document.createElement('a');
+                link.download = 'app-icon.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                if (app && app.showToast) {
+                    app.showToast('下载已开始');
+                }
             }
-        }
 
-        initListeners();
-        render();
+            // Mount to window for external access
+            window.switchTab = appIconTool.switchTab.bind(appIconTool);
+            window.resetDefaults = appIconTool.resetDefaults.bind(appIconTool);
 
+            appIconTool.initListeners();
+            appIconTool.render();
+            
+            // Event listeners
+            document.getElementById('btn-reset').addEventListener('click', appIconTool.resetDefaults);
+            document.getElementById('tab-text').addEventListener('click', function() { appIconTool.switchTab('text'); });
+            document.getElementById('tab-image').addEventListener('click', function() { appIconTool.switchTab('image'); });
+
+            return { updateColorLabel, initListeners, render, download, switchTab, resetDefaults };
+        })();
     </script>
+<div id="toast"></div>
 </body>
 </html>

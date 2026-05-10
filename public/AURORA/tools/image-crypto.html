@@ -128,8 +128,8 @@
             gap: 20px;
         }
 
-        .control-group { margin-bottom: 20px; }
-        .control-group label { display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem; }
+        .crypto-control-group { margin-bottom: 20px; }
+        .crypto-control-group label { display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem; }
         
         input[type="text"], input[type="number"], select {
             width: 100%;
@@ -175,11 +175,10 @@
             vertical-align: middle;
         }
 
-        .btn-success { background: #10b981; color: white; text-decoration: none; justify-content: center; }
-        .btn-success:hover { background: #059669; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dim); justify-content: center; }
-        .btn-outline:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(255,255,255,0.05); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .crypto-btn-success { background: #10b981; color: white; text-decoration: none; justify-content: center; }
+        .crypto-btn-success:hover { background: #059669; }
+        .crypto-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dim); justify-content: center; }
+        .crypto-btn-outline:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(255,255,255,0.05); }
 
         .file-upload {
             border: 2px dashed var(--border);
@@ -280,7 +279,7 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
 
 <!-- Navbar -->
 <div class="navbar">
@@ -288,13 +287,13 @@
         <span>🛡️</span> 图片加密工具箱
     </div>
     <div style="display:flex; gap:10px; overflow-x:auto;">
-        <button class="nav-btn active" onclick="showTool('gilbert')">
+        <button class="nav-btn active" id="btn-nav-gilbert">
             <span>🍅</span> 吉尔伯特混淆
         </button>
-        <button class="nav-btn" onclick="showTool('visual')">
+        <button class="nav-btn" id="btn-nav-visual">
             <span>🔐</span> 视觉加密
         </button>
-        <button class="nav-btn" onclick="showTool('diff')">
+        <button class="nav-btn" id="btn-nav-diff">
             <span>🌓</span> 差值分离
         </button>
     </div>
@@ -311,14 +310,14 @@
         <p class="subtitle">基于 <strong>Chaos Theory (混沌理论)</strong> 与 <strong>Space-Filling Curves (空间填充曲线)</strong> 的无损像素置乱算法。</p>
         
         <div class="card">
-            <div class="control-group">
+            <div class="crypto-control-group">
                 <label>加密密钥 (Seed Key)</label>
                 <input type="number" id="gb-key" value="123456" placeholder="请输入数字密钥 (Enter numeric seed)...">
             </div>
             
             <div class="grid-2">
                 <button class="btn btn-primary" id="gb-btn-enc">🔒 加密图片 (Encrypt)</button>
-                <button class="btn btn-outline" id="gb-btn-dec">🔓 解密图片 (Decrypt)</button>
+                <button class="btn crypto-btn-outline" id="gb-btn-dec">🔓 解密图片 (Decrypt)</button>
             </div>
         </div>
 
@@ -331,7 +330,7 @@
             <div class="preview-container">
                 <img id="gb-img-preview" class="preview-img" style="display: none;">
                 <div id="gb-loading" style="display:none; color: var(--primary);">Processing...</div>
-                <a id="gb-download" class="btn btn-success" style="display: none;">💾 保存图片 (Save Image)</a>
+                <a id="gb-download" class="btn crypto-btn-success" style="display: none;">💾 保存图片 (Save Image)</a>
             </div>
         </div>
     </div>
@@ -344,8 +343,8 @@
         <p class="subtitle">基于 <strong>Visual Secret Sharing (视觉秘密共享)</strong> 方案。</p>
 
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('visual', 'enc')">加密 (Encryption / Split)</div>
-            <div class="tab" onclick="switchTab('visual', 'dec')">解密 (Decryption / Merge)</div>
+            <div class="tab active" id="tab-visual-enc">加密 (Encryption / Split)</div>
+            <div class="tab" id="tab-visual-dec">解密 (Decryption / Merge)</div>
         </div>
 
         <!-- Encrypt Tab -->
@@ -354,14 +353,14 @@
 
             <div class="card grid-2">
                 <div>
-                    <div class="control-group">
+                    <div class="crypto-control-group">
                         <label>核心算法 (Core Algorithm)</label>
                         <select id="vs-algo">
                             <option value="arithmetic">标准视觉加密 (Arithmetic - 无损)</option>
                             <option value="xor">异或视觉加密 (XOR - 无损)</option>
                         </select>
                     </div>
-                    <div class="control-group">
+                    <div class="crypto-control-group">
                         <label>视觉层样式 (Mask Style)</label>
                         <select id="vs-style">
                             <option value="mosaic">马赛克 (Mosaic / Pixelation)</option>
@@ -375,11 +374,11 @@
                     </div>
                 </div>
                 <div>
-                    <div class="control-group">
+                    <div class="crypto-control-group">
                         <label>样式强度 (Kernel Size / Radius): <span id="vs-val-1">10</span></label>
                         <input type="range" id="vs-param-1" min="1" max="50" value="10">
                     </div>
-                    <div class="control-group">
+                    <div class="crypto-control-group">
                         <label>加密/噪点强度 (Noise Intensity): <span id="vs-val-2">30</span></label>
                         <input type="range" id="vs-param-2" min="0" max="100" value="30">
                     </div>
@@ -401,12 +400,12 @@
                     <div class="preview-container">
                         <h3>视觉掩码 (Visual Mask / Surface)</h3>
                         <img id="vs-img-b" class="preview-img" style="display: none;">
-                        <a id="vs-dl-b" class="btn btn-success" style="display: none;">下载掩码 (Download Mask)</a>
+                        <a id="vs-dl-b" class="btn crypto-btn-success" style="display: none;">下载掩码 (Download Mask)</a>
                     </div>
                     <div class="preview-container">
                         <h3>加密秘钥 (Hidden Key / Latent)</h3>
                         <img id="vs-img-c" class="preview-img" style="display: none;">
-                        <a id="vs-dl-c" class="btn btn-success" style="display: none;">下载秘钥 (Download Key)</a>
+                        <a id="vs-dl-c" class="btn crypto-btn-success" style="display: none;">下载秘钥 (Download Key)</a>
                     </div>
                 </div>
             </div>
@@ -415,7 +414,7 @@
         <!-- Decrypt Tab -->
         <div id="visual-dec" class="visual-tab-content" style="display: none;">
             <div class="card">
-                <div class="control-group">
+                <div class="crypto-control-group">
                     <label>解密算法 (Decryption Algorithm)</label>
                     <select id="vs-algo-dec">
                         <option value="arithmetic">标准视觉加密 (Arithmetic)</option>
@@ -447,7 +446,7 @@
                 <div class="preview-container">
                     <h3>还原结果 A (Restored Result)</h3>
                     <img id="vs-img-result" class="preview-img" style="display: none;">
-                    <a id="vs-dl-result" class="btn btn-success" style="display: none;">下载还原图 (Download Result)</a>
+                    <a id="vs-dl-result" class="btn crypto-btn-success" style="display: none;">下载还原图 (Download Result)</a>
                 </div>
             </div>
         </div>
@@ -461,8 +460,8 @@
         <p class="subtitle">将图片拆分为两个层，通过<strong>差值混合模式</strong>还原。支持<strong>局部涂抹加密</strong>与<strong>参考图诱导</strong>功能。</p>
 
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('diff', 'enc')">加密 (Encrypt / Split)</div>
-            <div class="tab" onclick="switchTab('diff', 'dec')">解密 (Decrypt / Restore)</div>
+            <div class="tab active" id="tab-diff-enc">加密 (Encrypt / Split)</div>
+            <div class="tab" id="tab-diff-dec">解密 (Decrypt / Restore)</div>
         </div>
 
         <!-- Diff Encrypt -->
@@ -479,9 +478,9 @@
                         </div>
                         <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                             <input type="file" id="diff-file-enc" accept="image/*" style="display:none;">
-                            <button class="btn btn-outline" onclick="document.getElementById('diff-file-enc').click()">📁 选择图片</button>
-                            <button class="btn btn-outline" id="diff-undo-btn">↩️ 撤回涂抹</button>
-                            <button class="btn btn-outline" id="diff-clear-btn">🗑️ 清空涂抹</button>
+                            <button class="btn crypto-btn-outline" id="btn-select-enc">📁 选择图片</button>
+                            <button class="btn crypto-btn-outline" id="diff-undo-btn">↩️ 撤回涂抹</button>
+                            <button class="btn crypto-btn-outline" id="diff-clear-btn">🗑️ 清空涂抹</button>
                         </div>
                         <div style="margin-top: 10px; display: flex; gap: 15px; justify-content: center; align-items: center;">
                             <label style="margin:0;">🖌️ 大小: <input id="diff-brush-size" type="range" min="2" max="100" value="30" style="width: 100px;"></label>
@@ -498,7 +497,7 @@
                         </div>
                         <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center; flex-direction: column;">
                             <input type="file" id="diff-file-ref" accept="image/*" style="display:none;">
-                            <button class="btn btn-outline" onclick="document.getElementById('diff-file-ref').click()">📁 选择参考图 (Optional)</button>
+                            <button class="btn crypto-btn-outline" id="btn-select-ref">📁 选择参考图 (Optional)</button>
                             <label style="display:flex; align-items:center; gap:8px; justify-content: center; color: var(--text-main);">
                                 <input type="checkbox" id="diff-use-guided"> 启用参考图诱导 (Enable Guided Mode)
                             </label>
@@ -508,7 +507,7 @@
             </div>
 
             <div class="card">
-                <div class="control-group">
+                <div class="crypto-control-group">
                     <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
                         <div style="flex: 1;">
                             <label>输出格式 (Format)</label>
@@ -537,12 +536,12 @@
                     <div class="preview-container">
                         <h4>层 A (Layer A)</h4>
                         <img id="diff-img-res-a" class="preview-img">
-                        <a id="diff-dl-a" class="btn btn-success">⬇️ 下载层 A</a>
+                        <a id="diff-dl-a" class="btn crypto-btn-success">⬇️ 下载层 A</a>
                     </div>
                     <div class="preview-container">
                         <h4>层 B (Layer B)</h4>
                         <img id="diff-img-res-b" class="preview-img">
-                        <a id="diff-dl-b" class="btn btn-success">⬇️ 下载层 B</a>
+                        <a id="diff-dl-b" class="btn crypto-btn-success">⬇️ 下载层 B</a>
                     </div>
                 </div>
 
@@ -550,7 +549,7 @@
                 <div id="diff-result-merged" class="preview-container" style="display:none;">
                     <h4>合并结果 (Merged Result)</h4>
                     <img id="diff-img-res-merged" class="preview-img">
-                    <a id="diff-dl-merged" class="btn btn-success">⬇️ 下载合并图</a>
+                    <a id="diff-dl-merged" class="btn crypto-btn-success">⬇️ 下载合并图</a>
                 </div>
             </div>
         </div>
@@ -563,20 +562,20 @@
                         <h3>第一张图片 / 左半部分</h3>
                         <canvas id="diff-preview-dec-a"></canvas>
                         <input type="file" id="diff-file-dec-a" accept="image/*" style="display:none;">
-                        <button class="btn btn-outline" onclick="document.getElementById('diff-file-dec-a').click()">📁 选择图片 A</button>
+                        <button class="btn crypto-btn-outline" id="btn-select-dec-a">📁 选择图片 A</button>
                     </div>
                     <div class="preview-container">
                         <h3>第二张图片 / 右半部分</h3>
                         <canvas id="diff-preview-dec-b"></canvas>
                         <input type="file" id="diff-file-dec-b" accept="image/*" style="display:none;">
-                        <button class="btn btn-outline" onclick="document.getElementById('diff-file-dec-b').click()">📁 选择图片 B</button>
+                        <button class="btn crypto-btn-outline" id="btn-select-dec-b">📁 选择图片 B</button>
                     </div>
                 </div>
                 <p class="helper-text" style="text-align: center; margin: 10px 0;">提示：如果只上传一张图片，工具将尝试将其左右拆分为两部分进行解密。</p>
             </div>
 
             <div class="card">
-                <div class="control-group">
+                <div class="crypto-control-group">
                     <div style="display: flex; gap: 20px;">
                         <div style="flex: 1;">
                             <label>输出格式 (Format)</label>
@@ -602,14 +601,14 @@ class CryptoWorker {
         this.worker = (window.app && app.getWorker) ? app.getWorker('../js/workers/crypto.worker.js') : new Worker('../js/workers/crypto.worker.js');
         this.callbacks = new Map();
         this.worker.onmessage = (e) => {
-            const { id, success, error, progress, ...data } = e.data;
-            if (this.callbacks.has(id)) {
-                const task = this.callbacks.get(id);
-                if (progress !== undefined) {
+            const { type, requestId, error, progress, ...data } = e.data;
+            if (this.callbacks.has(requestId)) {
+                const task = this.callbacks.get(requestId);
+                if (type === 'progress') {
                     if (task.onProgress) task.onProgress(progress);
                 } else {
-                    this.callbacks.delete(id);
-                    if (success) {
+                    this.callbacks.delete(requestId);
+                    if (type === 'success') {
                         task.resolve(data);
                     } else {
                         console.error('Worker Task Failed:', error);
@@ -633,25 +632,26 @@ class CryptoWorker {
 const worker = new CryptoWorker();
 
 // --- Navigation ---
-function showTool(id) {
-    document.querySelectorAll('.tool-section').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById('tool-' + id).classList.add('active');
-    
-    const btns = document.querySelectorAll('.nav-btn');
-    if(id === 'gilbert') btns[0].classList.add('active');
-    if(id === 'visual') btns[1].classList.add('active');
-    if(id === 'diff') btns[2].classList.add('active');
-}
+const cryptoUITool = {
+    showTool(id) {
+        document.querySelectorAll('.tool-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('tool-' + id).classList.add('active');
+        
+        const btns = document.querySelectorAll('.nav-btn');
+        if(id === 'gilbert') btns[0].classList.add('active');
+        if(id === 'visual') btns[1].classList.add('active');
+        if(id === 'diff') btns[2].classList.add('active');
+    },
 
-function switchTab(tool, mode) {
-    const container = document.getElementById('tool-' + tool);
-    container.querySelectorAll(`.${tool}-tab-content`).forEach(el => el.style.display = 'none');
-    container.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-    
-    document.getElementById(`${tool}-${mode}`).style.display = 'block';
-    event.currentTarget.classList.add('active');
-}
+    switchTab(tool, mode) {
+        const container = document.getElementById('tool-' + tool);
+        container.querySelectorAll(`.${tool}-tab-content`).forEach(el => el.style.display = 'none');
+        container.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`${tool}-${mode}`).style.display = 'block';
+    }
+};
 
 // ==========================================
 // TOOL 1: Gilbert Shuffle
@@ -676,7 +676,7 @@ function switchTab(tool, mode) {
     });
 
     async function process(isEncrypt) {
-        if (!currentImg) return alert("请先上传图片");
+        if (!currentImg) if (app && app.showToast) { app.showToast('', 'error'); return; }
         
         loading.style.display = 'block';
         imgPreview.style.opacity = '0.5';
@@ -709,15 +709,15 @@ function switchTab(tool, mode) {
             currentImg.src = url;
 
         } catch (e) {
-            alert('Error: ' + e.message);
+            if (app && app.showToast) app.showToast('Error: ' + e.message, 'error');
         } finally {
             loading.style.display = 'none';
             imgPreview.style.opacity = '1';
         }
     }
 
-    document.getElementById("gb-btn-enc").onclick = () => process(true);
-    document.getElementById("gb-btn-dec").onclick = () => process(false);
+    document.getElementById("gb-btn-enc").addEventListener('click', function() { process(true); });
+    document.getElementById("gb-btn-dec").addEventListener('click', function() { process(false); });
 })();
 
 // ==========================================
@@ -729,8 +729,8 @@ function switchTab(tool, mode) {
     const v1 = document.getElementById('vs-val-1');
     const v2 = document.getElementById('vs-val-2');
     
-    p1.oninput = () => v1.innerText = p1.value;
-    p2.oninput = () => v2.innerText = p2.value;
+    p1.addEventListener('input', function() { v1.innerText = p1.value; });
+    p2.addEventListener('input', function() { v2.innerText = p2.value; });
 
     let sourceImg = null;
     let decB = null, decC = null;
@@ -826,7 +826,7 @@ function switchTab(tool, mode) {
 
         } catch (e) {
             console.error(e);
-            alert('Processing failed: ' + e.message);
+            if (app && app.showToast) app.showToast('Processing failed: ' + e.message, 'error');
         } finally {
             setTimeout(() => progDiv.style.display = 'none', 1000);
         }
@@ -869,7 +869,7 @@ function switchTab(tool, mode) {
         }
     });
 
-    document.getElementById('vs-btn-dec').onclick = async () => {
+    document.getElementById('vs-btn-dec').addEventListener('click', async function() {
         if (!decB || !decC) return;
         
         const progDiv = document.getElementById('vs-progress-dec');
@@ -906,7 +906,7 @@ function switchTab(tool, mode) {
                 window.parent.app.showToast('解密完成！');
             }
         } catch(e) {
-            alert('Decrypt failed: ' + e.message);
+            if (app && app.showToast) app.showToast('Decrypt failed: ' + e.message, 'error');
         } finally {
             setTimeout(() => progDiv.style.display = 'none', 1000);
         }
@@ -935,7 +935,7 @@ function switchTab(tool, mode) {
     const cvsDecB = document.getElementById('diff-preview-dec-b');
 
     // --- Encrypt Handlers ---
-    document.getElementById('diff-file-enc').onchange = async (e) => {
+    document.getElementById('diff-file-enc').addEventListener('change', async function(e) {
         if(!e.target.files[0]) return;
         targetImg = await CanvasUtils.loadImage(e.target.files[0]);
         // Resize canvas
@@ -944,20 +944,20 @@ function switchTab(tool, mode) {
         overlayCvs.style.display = 'block';
         ctxEnc.drawImage(targetImg, 0, 0);
         overlayCtx.clearRect(0, 0, targetImg.width, targetImg.height);
-    };
+    });
 
-    document.getElementById('diff-file-ref').onchange = async (e) => {
+    document.getElementById('diff-file-ref').addEventListener('change', async function(e) {
         if(!e.target.files[0]) return;
         refImg = await CanvasUtils.loadImage(e.target.files[0]);
         cvsRef.width = refImg.width; cvsRef.height = refImg.height;
         ctxRef.drawImage(refImg, 0, 0);
-    };
+    });
 
     // Painting Logic
-    overlayCvs.onmousedown = (e) => { isDrawing = true; paint(e); };
-    overlayCvs.onmousemove = (e) => { if(isDrawing) paint(e); };
-    overlayCvs.onmouseup = () => { isDrawing = false; pushHistory(); };
-    overlayCvs.onmouseout = () => { isDrawing = false; };
+    overlayCvs.addEventListener('mousedown', function(e) { isDrawing = true; paint(e); });
+    overlayCvs.addEventListener('mousemove', function(e) { if(isDrawing) paint(e); });
+    overlayCvs.addEventListener('mouseup', function() { isDrawing = false; pushHistory(); });
+    overlayCvs.addEventListener('mouseout', function() { isDrawing = false; });
 
     function paint(e) {
         const rect = overlayCvs.getBoundingClientRect();
@@ -977,7 +977,7 @@ function switchTab(tool, mode) {
         if (history.length > 5) history.shift();
         history.push(overlayCtx.getImageData(0,0, overlayCvs.width, overlayCvs.height));
     }
-    document.getElementById('diff-undo-btn').onclick = () => {
+    document.getElementById('diff-undo-btn').addEventListener('click', function() {
         if(history.length > 0) {
             history.pop();
             const prev = history[history.length-1];
@@ -985,14 +985,14 @@ function switchTab(tool, mode) {
             if(prev) overlayCtx.putImageData(prev, 0, 0);
         }
     };
-    document.getElementById('diff-clear-btn').onclick = () => {
+    document.getElementById('diff-clear-btn').addEventListener('click', function() {
         overlayCtx.clearRect(0,0, overlayCvs.width, overlayCvs.height);
         history = [];
     };
 
     // Process Encrypt
-    document.getElementById('diff-start-enc').onclick = async () => {
-        if(!targetImg) return alert('请先选择目标图片');
+    document.getElementById('diff-start-enc').addEventListener('click', async function() {
+        if(!targetImg) if (app && app.showToast) { app.showToast('', 'error'); return; }
         
         const w = targetImg.width, h = targetImg.height;
         const format = document.getElementById('diff-format-enc').value;
@@ -1078,13 +1078,13 @@ function switchTab(tool, mode) {
             resCard.scrollIntoView({ behavior: 'smooth' });
 
         } catch (e) {
-            alert('Error: ' + e.message);
+            if (app && app.showToast) app.showToast('Error: ' + e.message, 'error');
         }
     };
 
     // --- Decrypt Handlers ---
-    document.getElementById('diff-file-dec-a').onchange = async (e) => handleDecFile(e, 'A');
-    document.getElementById('diff-file-dec-b').onchange = async (e) => handleDecFile(e, 'B');
+    document.getElementById('diff-file-dec-a').addEventListener('change', async function(e) { handleDecFile(e, 'A'); });
+    document.getElementById('diff-file-dec-b').addEventListener('change', async function(e) { handleDecFile(e, 'B'); });
 
     async function handleDecFile(e, type) {
         if(!e.target.files[0]) return;
@@ -1095,8 +1095,8 @@ function switchTab(tool, mode) {
         if(type === 'A') decImgA = img; else decImgB = img;
     }
 
-    document.getElementById('diff-start-dec').onclick = async () => {
-        if(!decImgA) return alert('请至少上传一张图片');
+    document.getElementById('diff-start-dec').addEventListener('click', async function() {
+        if(!decImgA) if (app && app.showToast) { app.showToast('', 'error'); return; }
         
         let w, h, dataA, dataB;
         
@@ -1112,7 +1112,7 @@ function switchTab(tool, mode) {
             dataB = tctx.getImageData(w, 0, w, h).data;
         } else if (decImgA && decImgB) {
              if(decImgA.width !== decImgB.width || decImgA.height !== decImgB.height)
-                return alert('两张图片尺寸必须一致');
+                if (app && app.showToast) { app.showToast('', 'error'); return; }
              w = decImgA.width; h = decImgA.height;
              const t1 = document.createElement('canvas'); t1.width=w; t1.height=h;
              t1.getContext('2d').drawImage(decImgA, 0, 0);
@@ -1136,10 +1136,35 @@ function switchTab(tool, mode) {
 
             CanvasUtils.download(CanvasUtils.pixelsToDataURL(result.pixels, w, h, "image/"+format), `diff_restored_${Date.now()}.${format}`);
         } catch (e) {
-            alert('Decrypt Error: ' + e.message);
+            if (app && app.showToast) app.showToast('Decrypt Error: ' + e.message, 'error');
         }
     };
 })();
+    
+    // Cleanup Worker on page unload
+    window.addEventListener('beforeunload', () => {
+        if (typeof cryptoWorker !== 'undefined' && cryptoWorker) {
+            if (app && app.releaseWorker) {
+                app.releaseWorker('../js/workers/crypto.worker.js');
+            } else {
+                cryptoWorker.terminate();
+            }
+        }
+    });
+
+    // Event listeners
+    document.getElementById('btn-nav-gilbert').addEventListener('click', () => cryptoUITool.showTool('gilbert'));
+    document.getElementById('btn-nav-visual').addEventListener('click', () => cryptoUITool.showTool('visual'));
+    document.getElementById('btn-nav-diff').addEventListener('click', () => cryptoUITool.showTool('diff'));
+    document.getElementById('tab-visual-enc').addEventListener('click', function() { cryptoUITool.switchTab('visual', 'enc'); this.classList.add('active'); });
+    document.getElementById('tab-visual-dec').addEventListener('click', function() { cryptoUITool.switchTab('visual', 'dec'); this.classList.add('active'); });
+    document.getElementById('tab-diff-enc').addEventListener('click', function() { cryptoUITool.switchTab('diff', 'enc'); this.classList.add('active'); });
+    document.getElementById('tab-diff-dec').addEventListener('click', function() { cryptoUITool.switchTab('diff', 'dec'); this.classList.add('active'); });
+    document.getElementById('btn-select-enc').addEventListener('click', () => document.getElementById('diff-file-enc').click());
+    document.getElementById('btn-select-ref').addEventListener('click', () => document.getElementById('diff-file-ref').click());
+    document.getElementById('btn-select-dec-a').addEventListener('click', () => document.getElementById('diff-file-dec-a').click());
+    document.getElementById('btn-select-dec-b').addEventListener('click', () => document.getElementById('diff-file-dec-b').click());
 </script>
+<div id="toast"></div>
 </body>
 </html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{工具名称} - Aurora Toolbox</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <!--
+        工具特定样式说明:
+        1. 仅定义本工具独有的样式
+        2. 禁止重定义全局组件 (.btn, .panel 等)
+        3. 使用 CSS 变量，避免硬编码颜色
+        4. 命名格式: .tool-{name}-{component}
+    -->
+    <style>
+        /* ========================================
+           {工具名称} 特有样式
+           ======================================== */
+        
+        /* 示例：工具特有容器 */
+        .tool-{name}-container {
+            /* 使用 CSS 变量 */
+        }
+        
+        /* 示例：工具特有组件 */
+        .tool-{name}-result {
+            /* 使用 CSS 变量 */
+        }
+    </style>
+</head>
+<body class="scroll-content">
+    <!--
+        布局选择:
+        - layout-sidebar: 侧边栏布局 (左侧控制面板 350px + 右侧预览区)
+        - workspace: 三栏布局 (左面板 + 工具栏 + 右面板)
+        - layout-split: 等分两栏
+        - layout-vertical: 垂直堆叠
+    -->
+    <div class="layout-sidebar">
+        <!-- 控制面板 -->
+        <div class="controls panel">
+            <h2>{工具名称}</h2>
+            
+            <!-- 上传区域示例 -->
+            <div class="control-group">
+                <label class="zone-label">上传文件</label>
+                <div class="upload-area" id="{name}-upload-zone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>点击或拖拽文件到此处</p>
+                    <input type="file" id="{name}-file-input" accept="image/*" hidden>
+                </div>
+            </div>
+            
+            <!-- 参数控制示例 -->
+            <div class="control-group">
+                <label>参数设置</label>
+                <div class="slider-row">
+                    <label>阈值</label>
+                    <input type="range" id="{name}-threshold" min="0" max="100" value="50">
+                    <span id="{name}-threshold-value">50</span>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="control-group">
+                <button class="btn btn-primary" id="{name}-process-btn">处理</button>
+                <button class="btn btn-secondary" id="{name}-download-btn" disabled>下载</button>
+            </div>
+        </div>
+        
+        <!-- 预览区域 -->
+        <div class="preview-area">
+            <canvas id="{name}-canvas"></canvas>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">操作成功</div>
+    
+    <script src="../js/app.js"></script>
+    <script src="../js/loader.js"></script>
+    <script>
+        /**
+         * {工具名称} 工具模块
+         * @description {工具描述}
+         */
+        const {ToolName}Tool = {
+            // ==================== 配置常量 ====================
+            DEFAULT_THRESHOLD: 50,
+            
+            // ==================== 状态变量 ====================
+            _worker: null,
+            _initialized: false,
+            _currentFile: null,
+            
+            // ==================== 初始化 ====================
+            
+            /**
+             * 初始化工具
+             */
+            init: function() {
+                this.bindEvents();
+                this.initWorker();
+                this._initialized = true;
+            },
+            
+            /**
+             * 绑定事件
+             */
+            bindEvents: function() {
+                // 文件上传
+                const uploadZone = document.getElementById('{name}-upload-zone');
+                const fileInput = document.getElementById('{name}-file-input');
+                
+                if (uploadZone && fileInput) {
+                    uploadZone.addEventListener('click', () => fileInput.click());
+                    fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+                    
+                    // 拖拽支持
+                    uploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.add('drag-active');
+                    });
+                    uploadZone.addEventListener('dragleave', () => {
+                        uploadZone.classList.remove('drag-active');
+                    });
+                    uploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.remove('drag-active');
+                        if (e.dataTransfer.files.length) {
+                            this.handleFile(e.dataTransfer.files[0]);
+                        }
+                    });
+                }
+                
+                // 参数滑块
+                const thresholdSlider = document.getElementById('{name}-threshold');
+                if (thresholdSlider) {
+                    thresholdSlider.addEventListener('input', (e) => {
+                        document.getElementById('{name}-threshold-value').textContent = e.target.value;
+                    });
+                }
+                
+                // 处理按钮
+                const processBtn = document.getElementById('{name}-process-btn');
+                if (processBtn) {
+                    processBtn.addEventListener('click', () => this.process());
+                }
+                
+                // 下载按钮
+                const downloadBtn = document.getElementById('{name}-download-btn');
+                if (downloadBtn) {
+                    downloadBtn.addEventListener('click', () => this.download());
+                }
+            },
+            
+            /**
+             * 初始化 Worker
+             */
+            initWorker: function() {
+                if (!window.Worker) return;
+                
+                const workerUrl = '../js/workers/{name}.worker.js';
+                
+                try {
+                    this._worker = (app && app.getWorker)
+                        ? app.getWorker(workerUrl)
+                        : new Worker(workerUrl);
+                    
+                    if (this._worker) {
+                        this._worker.onmessage = (e) => this.handleWorkerMessage(e);
+                        this._worker.onerror = (e) => this.handleWorkerError(e);
+                    }
+                } catch (e) {
+                    console.error('[{ToolName}] Worker init failed:', e);
+                    this._worker = null;
+                }
+            },
+            
+            // ==================== 文件处理 ====================
+            
+            /**
+             * 处理文件选择
+             * @param {Event} e - change 事件
+             */
+            handleFileSelect: function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    this.handleFile(file);
+                }
+            },
+            
+            /**
+             * 处理文件
+             * @param {File} file - 文件对象
+             */
+            handleFile: function(file) {
+                this._currentFile = file;
+                if (app && app.showToast) {
+                    app.showToast('文件已加载: ' + file.name);
+                }
+            },
+            
+            // ==================== 核心处理 ====================
+            
+            /**
+             * 执行处理
+             */
+            process: function() {
+                if (!this._currentFile) {
+                    if (app && app.showToast) {
+                        app.showToast('请先选择文件', 'error');
+                    }
+                    return;
+                }
+                
+                const threshold = parseInt(document.getElementById('{name}-threshold').value);
+                
+                // 读取文件
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.processImage(img, threshold);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(this._currentFile);
+            },
+            
+            /**
+             * 处理图像
+             * @param {HTMLImageElement} img - 图像
+             * @param {number} threshold - 阈值
+             */
+            processImage: function(img, threshold) {
+                const canvas = document.getElementById('{name}-canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                if (this._worker) {
+                    // 使用 Worker 处理
+                    const buffer = imageData.data.buffer;
+                    this._worker.postMessage({
+                        type: 'process',
+                        data: buffer,
+                        width: canvas.width,
+                        height: canvas.height,
+                        threshold: threshold
+                    }, [buffer]);
+                } else {
+                    // 主线程降级处理
+                    this.processMainThread(imageData, threshold);
+                }
+            },
+            
+            /**
+             * 主线程处理（降级方案）
+             * @param {ImageData} imageData - 图像数据
+             * @param {number} threshold - 阈值
+             */
+            processMainThread: function(imageData, threshold) {
+                const data = imageData.data;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    // 示例：灰度处理
+                    const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                    const value = gray > threshold ? 255 : 0;
+                    data[i] = data[i + 1] = data[i + 2] = value;
+                }
+                
+                const canvas = document.getElementById('{name}-canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.putImageData(imageData, 0, 0);
+                
+                this.handleComplete(canvas.width, canvas.height);
+            },
+            
+            // ==================== Worker 消息处理 ====================
+            
+            /**
+             * 处理 Worker 消息
+             * @param {MessageEvent} e - 消息事件
+             */
+            handleWorkerMessage: function(e) {
+                const { type, outputData, error, width, height } = e.data;
+                
+                if (type === 'success' || type === 'complete') {
+                    const canvas = document.getElementById('{name}-canvas');
+                    const ctx = canvas.getContext('2d');
+                    const imgData = new ImageData(new Uint8ClampedArray(outputData), width, height);
+                    ctx.putImageData(imgData, 0, 0);
+                    this.handleComplete(width, height);
+                } else if (type === 'error') {
+                    this.handleError(error);
+                }
+            },
+            
+            /**
+             * 处理 Worker 错误
+             * @param {ErrorEvent} e - 错误事件
+             */
+            handleWorkerError: function(e) {
+                console.error('[{ToolName}] Worker error:', e);
+                this.handleError(e.message || 'Worker 处理失败');
+            },
+            
+            // ==================== 结果处理 ====================
+            
+            /**
+             * 处理完成
+             * @param {number} width - 宽度
+             * @param {number} height - 高度
+             */
+            handleComplete: function(width, height) {
+                document.getElementById('{name}-download-btn').disabled = false;
+                if (app && app.showToast) {
+                    app.showToast('处理完成');
+                }
+            },
+            
+            /**
+             * 处理错误
+             * @param {string} message - 错误信息
+             */
+            handleError: function(message) {
+                if (app && app.showToast) {
+                    app.showToast('处理失败: ' + message, 'error');
+                }
+            },
+            
+            // ==================== 下载 ====================
+            
+            /**
+             * 下载结果
+             */
+            download: function() {
+                const canvas = document.getElementById('{name}-canvas');
+                const link = document.createElement('a');
+                link.download = '{name}-result.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                if (app && app.showToast) {
+                    app.showToast('下载成功');
+                }
+            },
+            
+            // ==================== 清理 ====================
+            
+            /**
+             * 清理资源
+             */
+            destroy: function() {
+                if (this._worker) {
+                    const workerUrl = '../js/workers/{name}.worker.js';
+                    if (app && app.releaseWorker) {
+                        app.releaseWorker(workerUrl);
+                    } else {
+                        this._worker.terminate();
+                    }
+                    this._worker = null;
+                }
+            }
+        };
+
+        // ==================== 初始化 ====================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            {ToolName}Tool.init();
+        });
+        
+        // ==================== 清理 ====================
+        
+        window.addEventListener('beforeunload', function() {
+            {ToolName}Tool.destroy();
+        });
+    </script>
+</body>
+</html>

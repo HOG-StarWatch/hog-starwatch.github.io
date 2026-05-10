@@ -12,7 +12,7 @@
             <div class="panel-header">
                 <div class="panel-title">输入</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon" onclick="app.clear('text'); textTool.updateStats();">清空</button>
+                    <button class="btn btn-icon" id="btn-clear-input">清空</button>
                 </div>
             </div>
             <textarea id="text-input" placeholder="在此输入文本..." style="min-height: 220px;"></textarea>
@@ -28,27 +28,27 @@
         <div class="toolbar">
             <div class="tool-group">
                 <div class="group-label">基础</div>
-                <button class="btn" onclick="textTool.process('upper')">全大写 <span>AA</span></button>
-                <button class="btn" onclick="textTool.process('lower')">全小写 <span>aa</span></button>
-                <button class="btn" onclick="textTool.process('title')">首字母大写 <span>Aa</span></button>
+                <button class="btn" id="btn-upper">全大写 <span>AA</span></button>
+                <button class="btn" id="btn-lower">全小写 <span>aa</span></button>
+                <button class="btn" id="btn-title">首字母大写 <span>Aa</span></button>
             </div>
             <div class="tool-group">
                 <div class="group-label">格式</div>
-                <button class="btn" onclick="textTool.process('trim')">去首尾空 <span>|__|</span></button>
-                <button class="btn" onclick="textTool.process('nospace')">去所有空格 <span>><</span></button>
-                <button class="btn" onclick="textTool.process('oneline')">合并为一行 <span>—</span></button>
+                <button class="btn" id="btn-trim">去首尾空 <span>|__|</span></button>
+                <button class="btn" id="btn-nospace">去所有空格 <span>><</span></button>
+                <button class="btn" id="btn-oneline">合并为一行 <span>—</span></button>
             </div>
             <div class="tool-group">
                 <div class="group-label">高级</div>
-                <button class="btn" onclick="textTool.process('snake')">Snake Case</button>
-                <button class="btn" onclick="textTool.process('camel')">Camel Case</button>
-                <button class="btn" onclick="textTool.process('dedupe')">去重行</button>
-                <button class="btn" onclick="textTool.process('sort')">排序</button>
+                <button class="btn" id="btn-snake">Snake Case</button>
+                <button class="btn" id="btn-camel">Camel Case</button>
+                <button class="btn" id="btn-dedupe">去重行</button>
+                <button class="btn" id="btn-sort">排序</button>
             </div>
             <div class="tool-group">
                 <div class="group-label">中文</div>
-                <button class="btn" onclick="textTool.process('sc2tc')">转繁体</button>
-                <button class="btn" onclick="textTool.process('tc2sc')">转简体</button>
+                <button class="btn" id="btn-sc2tc">转繁体</button>
+                <button class="btn" id="btn-tc2sc">转简体</button>
             </div>
         </div>
 
@@ -56,7 +56,7 @@
             <div class="panel-header">
                 <div class="panel-title">结果 <span class="stat-badge" id="text-out-stat">0 字符</span></div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon btn-secondary" onclick="app.copy('text-output')">复制</button>
+                    <button class="btn btn-icon btn-secondary" id="btn-copy-output">复制</button>
                 </div>
             </div>
             <textarea id="text-output" readonly placeholder="处理结果..." style="min-height: 220px;"></textarea>
@@ -124,6 +124,25 @@
         if(txtInput) {
             txtInput.addEventListener('input', () => textTool.updateStats());
         }
+
+        // Event listeners
+        document.getElementById('btn-clear-input').addEventListener('click', function() {
+            app.clear('text');
+            textTool.updateStats();
+        });
+        document.getElementById('btn-upper').addEventListener('click', function() { textTool.process('upper'); });
+        document.getElementById('btn-lower').addEventListener('click', function() { textTool.process('lower'); });
+        document.getElementById('btn-title').addEventListener('click', function() { textTool.process('title'); });
+        document.getElementById('btn-trim').addEventListener('click', function() { textTool.process('trim'); });
+        document.getElementById('btn-nospace').addEventListener('click', function() { textTool.process('nospace'); });
+        document.getElementById('btn-oneline').addEventListener('click', function() { textTool.process('oneline'); });
+        document.getElementById('btn-snake').addEventListener('click', function() { textTool.process('snake'); });
+        document.getElementById('btn-camel').addEventListener('click', function() { textTool.process('camel'); });
+        document.getElementById('btn-dedupe').addEventListener('click', function() { textTool.process('dedupe'); });
+        document.getElementById('btn-sort').addEventListener('click', function() { textTool.process('sort'); });
+        document.getElementById('btn-sc2tc').addEventListener('click', function() { textTool.process('sc2tc'); });
+        document.getElementById('btn-tc2sc').addEventListener('click', function() { textTool.process('tc2sc'); });
+        document.getElementById('btn-copy-output').addEventListener('click', function() { app.copy('text-output'); });
     </script>
 </body>
 </html>

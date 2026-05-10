@@ -38,8 +38,7 @@ Object.assign(app, {
     switchTab: function(tabId) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-        const btn = document.querySelector(`.tab-btn[data-target="${tabId}"]`) ||
-                    document.querySelector(`.tab-btn[onclick*="'${tabId}'"]`);
+        const btn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
         if (btn) btn.classList.add('active');
         const pane = document.getElementById(`tab-${tabId}`);
         if (pane) pane.classList.add('active');
@@ -183,15 +182,32 @@ Object.assign(app, {
     migrateInlineEvents: function(root) {
         if (!root || !root.querySelectorAll) return;
         const map = this._inlineHandlerMap || (this._inlineHandlerMap = new WeakMap());
+        // 安全的事件代码白名单 - 只允许简单的函数调用
+        const ALLOWED_PATTERN = /^(\w+\s*\([^)]*\)|switchTab\s*\([^)]*\)|app\.\w+\s*\([^)]*\)|window\.\w+\s*\([^)]*\))\s*;?$/;
+        // 禁止的危险模式
+        const DANGEROUS_PATTERN = /(eval|Function|setTimeout|setInterval|import|fetch|XMLHttpRequest|WebSocket|Worker|navigator|document|window\[)/i;
+        
         root.querySelectorAll('*').forEach(el => {
             if (!el.attributes) return;
             const attrs = Array.from(el.attributes);
             attrs.forEach(attr => {
                 const name = String(attr.name || '').toLowerCase();
                 if (!name.startsWith('on')) return;
-                const code = String(attr.value || '');
+                const code = String(attr.value || '').trim();
                 const type = name.slice(2);
                 if (!type) {
+                    el.removeAttribute(attr.name);
+                    return;
+                }
+                // 安全检查：拒绝包含危险模式的代码
+                if (DANGEROUS_PATTERN.test(code)) {
+                    console.warn('[Security] Blocked potentially dangerous inline event:', code);
+                    el.removeAttribute(attr.name);
+                    return;
+                }
+                // 只允许白名单中的简单模式
+                if (!ALLOWED_PATTERN.test(code)) {
+                    console.warn('[Security] Blocked non-whitelisted inline event:', code);
                     el.removeAttribute(attr.name);
                     return;
                 }
@@ -320,6 +336,19 @@ const CanvasUtils = {
  * DragDropHandler - 拖拽文件处理
  */
 class DragDropHandler {
+    /**
+     * 格式化文件大小
+     * @param {number} bytes
+     * @returns {string}
+     */
+    static formatSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
     constructor({ dropZone, input, onFile, accept, maxSize, onError }) {
         this.dropZone = dropZone;
         this.input = input;
@@ -352,11 +381,6 @@ class DragDropHandler {
         this.dropZone.addEventListener('drop', (e) => this.handleDrop(e), false);
     }
 
-    preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
     highlight() {
         this.dropZone.classList.add('drag-active');
     }
@@ -384,18 +408,10 @@ class DragDropHandler {
             }
         }
         if (this.maxSize && file.size > this.maxSize) {
-            this.onError(new Error(`文件过大 (最大 ${this.formatSize(this.maxSize)})`));
+            this.onError(new Error(`文件过大 (最大 ${DragDropHandler.formatSize(this.maxSize)})`));
             return;
         }
         this.onFile(file);
-    }
-
-    formatSize(bytes) {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 }
 
@@ -409,7 +425,7 @@ const WorkerUtils = {
         
         const handleMessage = (e) => {
             const { type, outputData, error, progress, width, height, imageData } = e.data;
-            if (type === 'success' || type === 'complete') {
+            if (type === 'success') {
                 retryCount = 0;
                 if (onComplete) {
                     if (outputData) {
@@ -486,7 +502,7 @@ const WorkerUtils = {
     createWorkerCallback(canvas, onComplete) {
         return (e) => {
             const { type, outputData, error, width, height } = e.data;
-            if (type === 'success' || type === 'complete') {
+            if (type === 'success') {
                 const ctx = canvas.getContext('2d');
                 if (outputData) {
                     const imgData = new ImageData(new Uint8ClampedArray(outputData), width, height);

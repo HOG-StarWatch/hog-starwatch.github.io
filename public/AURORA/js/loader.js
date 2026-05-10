@@ -223,6 +223,10 @@ const ResourceLoader = {
         ]
     },
 
+    'google-fonts-inter-jetbrains': [
+        'https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap'
+    ],
+
     // Track loaded libraries to avoid duplicates
     loaded: new Set(),
     secure: true,

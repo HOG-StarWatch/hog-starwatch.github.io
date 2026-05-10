@@ -119,14 +119,14 @@
         }
     </style>
 </head>
-<body class="scroll-content" style="padding: 1rem;">
+<body class="scroll-content">
     <div class="workspace translate-container">
         <div class="translate-top">
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">智能翻译</div>
                     <div class="panel-actions">
-                        <button class="btn btn-icon" onclick="translateTool.clear()">清空</button>
+                        <button class="btn btn-icon" id="btn-clear">清空</button>
                     </div>
                 </div>
                 <textarea id="translate-input" placeholder="输入需要翻译的文本..." style="min-height: 220px;"></textarea>
@@ -167,13 +167,13 @@
                     </div>
                     <div class="input-group">
                         <label>快捷操作</label>
-                        <button class="btn" onclick="translateTool.swap()">交换语言</button>
+                        <button class="btn" id="btn-swap">交换语言</button>
                     </div>
                 </div>
                 <div class="translate-actions">
-                    <button class="btn btn-primary" onclick="translateTool.translate()">开始翻译</button>
-                    <button class="btn btn-secondary" onclick="app.copy('translate-output')">复制结果</button>
-                    <button class="btn btn-secondary" onclick="translateTool.openMicrosoftTranslator()">微软翻译</button>
+                    <button class="btn btn-primary" id="btn-translate">开始翻译</button>
+                    <button class="btn btn-secondary" id="btn-copy">复制结果</button>
+                    <button class="btn btn-secondary" id="btn-ms-translate">微软翻译</button>
                 </div>
                 <div class="api-note">翻译接口：MyMemory (api.mymemory.translated.net)；网页同步：Bing Translator</div>
                 <textarea id="translate-output" placeholder="翻译结果将在这里显示..." readonly></textarea>
@@ -184,8 +184,8 @@
             <div class="panel-header">
                 <div class="panel-title">微软翻译</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon" onclick="translateTool.openMicrosoftTranslator()">同步</button>
-                    <button class="btn btn-icon" onclick="translateTool.openMicrosoftTranslator(true)">打开网页</button>
+                    <button class="btn btn-icon" id="btn-sync">同步</button>
+                    <button class="btn btn-icon" id="btn-open-web">打开网页</button>
                 </div>
             </div>
             <div style="padding: 0 1rem 1rem;">
@@ -348,6 +348,15 @@
             }
         };
         translateTool.init();
+
+        // Event listeners
+        document.getElementById('btn-clear').addEventListener('click', function() { translateTool.clear(); });
+        document.getElementById('btn-swap').addEventListener('click', function() { translateTool.swap(); });
+        document.getElementById('btn-translate').addEventListener('click', function() { translateTool.translate(); });
+        document.getElementById('btn-copy').addEventListener('click', function() { app.copy('translate-output'); });
+        document.getElementById('btn-ms-translate').addEventListener('click', function() { translateTool.openMicrosoftTranslator(); });
+        document.getElementById('btn-sync').addEventListener('click', function() { translateTool.openMicrosoftTranslator(); });
+        document.getElementById('btn-open-web').addEventListener('click', function() { translateTool.openMicrosoftTranslator(true); });
     </script>
 </body>
 </html>

@@ -62,7 +62,7 @@ self.onmessage = function(e) {
                 }
             }
 
-            self.postMessage({ type: 'complete', imageData: imageData }, [imageData.data.buffer]);
+            self.postMessage({ type: 'success', imageData: imageData }, [imageData.data.buffer]);
 
         } catch (error) {
             self.postMessage({ type: 'error', error: error.message });

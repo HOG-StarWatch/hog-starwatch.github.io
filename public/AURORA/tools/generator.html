@@ -6,7 +6,7 @@
     <title>生成器</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace">
         <div class="panel">
             <div class="panel-header">
@@ -15,7 +15,7 @@
             <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; flex: 1; min-height: 0; overflow-y: auto;">
                 <div class="input-row">
                     <label>长度: <span id="pwd-len-val" style="color:var(--primary); font-weight:bold;">16</span></label>
-                    <input type="range" id="pwd-len" min="4" max="64" value="16" oninput="document.getElementById('pwd-len-val').innerText = this.value">
+                    <input type="range" id="pwd-len" min="4" max="64" value="16">
                 </div>
                 <div class="checkbox-group">
                     <label><input type="checkbox" id="pwd-upper" checked> A-Z</label>
@@ -23,13 +23,13 @@
                     <label><input type="checkbox" id="pwd-num" checked> 0-9</label>
                     <label><input type="checkbox" id="pwd-sym" checked> !@#</label>
                 </div>
-                <button class="btn btn-primary" style="justify-content:center" onclick="genTool.password()">生成密码</button>
+                <button class="btn btn-primary" style="justify-content:center" id="btn-gen-pwd">生成密码</button>
                 <div class="result-box">
                     <input type="text" id="pwd-result" readonly placeholder="生成的密码...">
-                    <button class="btn btn-icon" onclick="app.copy('pwd-result')">复制</button>
+                    <button class="btn btn-icon" id="btn-copy-pwd">复制</button>
                 </div>
                 <textarea id="pwd-batch" readonly placeholder="批量生成结果 (10个)..." style="min-height: 150px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top:10px;"></textarea>
-                <button class="btn btn-secondary" style="justify-content:center" onclick="genTool.passwordBatch()">批量生成 (10个)</button>
+                <button class="btn btn-secondary" style="justify-content:center" id="btn-gen-pwd-batch">批量生成 (10个)</button>
             </div>
         </div>
 
@@ -40,7 +40,7 @@
             <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; flex: 1; min-height: 0; overflow-y: auto;">
                 <div class="input-row">
                     <label>版本:</label>
-                    <select id="uuid-version" onchange="genTool.updateUuidUI()">
+                    <select id="uuid-version">
                         <option value="v4">v4 (随机)</option>
                         <option value="v1">v1 (时间戳)</option>
                         <option value="v3">v3 (MD5 命名空间)</option>
@@ -51,7 +51,7 @@
                 <div id="uuid-ns-group" style="display:none">
                     <div class="input-row">
                         <label>空间:</label>
-                        <select id="uuid-ns-type" onchange="genTool.updateNsUI()">
+                        <select id="uuid-ns-type">
                             <option value="url">URL</option>
                             <option value="dns">DNS</option>
                             <option value="oid">OID</option>
@@ -69,13 +69,13 @@
                     </div>
                 </div>
 
-                <button class="btn btn-primary" style="justify-content:center" onclick="genTool.uuid()">生成 UUID</button>
+                <button class="btn btn-primary" style="justify-content:center" id="btn-gen-uuid">生成 UUID</button>
                 <div class="result-box">
                     <input type="text" id="uuid-result" readonly placeholder="生成的 UUID...">
-                    <button class="btn btn-icon" onclick="app.copy('uuid-result')">复制</button>
+                    <button class="btn btn-icon" id="btn-copy-uuid">复制</button>
                 </div>
                 <textarea id="uuid-batch" readonly placeholder="批量生成结果 (10个)..." style="flex: 1; min-height: 150px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top:10px;"></textarea>
-                <button class="btn btn-secondary" style="justify-content:center" onclick="genTool.uuidBatch()">批量生成 (10个)</button>
+                <button class="btn btn-secondary" style="justify-content:center" id="btn-gen-uuid-batch">批量生成 (10个)</button>
             </div>
         </div>
     </div>
@@ -213,6 +213,32 @@
                 });
             }
         };
+
+        // Event listeners
+        document.getElementById('btn-gen-pwd').addEventListener('click', function() {
+            genTool.password();
+        });
+        document.getElementById('btn-copy-pwd').addEventListener('click', function() {
+            app.copy('pwd-result');
+        });
+        document.getElementById('btn-gen-pwd-batch').addEventListener('click', function() {
+            genTool.passwordBatch();
+        });
+        document.getElementById('btn-gen-uuid').addEventListener('click', function() {
+            genTool.uuid();
+        });
+        document.getElementById('btn-copy-uuid').addEventListener('click', function() {
+            app.copy('uuid-result');
+        });
+        document.getElementById('btn-gen-uuid-batch').addEventListener('click', function() {
+            genTool.uuidBatch();
+        });
+
+        document.getElementById('pwd-len').addEventListener('input', function() {
+            document.getElementById('pwd-len-val').innerText = this.value;
+        });
+        document.getElementById('uuid-version').addEventListener('change', function() { genTool.updateUuidUI(); });
+        document.getElementById('uuid-ns-type').addEventListener('change', function() { genTool.updateNsUI(); });
     </script>
 </body>
 </html>

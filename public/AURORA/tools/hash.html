@@ -7,6 +7,11 @@
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/loader.js"></script>
     <style>
+        /* ========================================
+           哈希计算工具特有样式
+           注：公共组件样式已在 style.css 中定义
+           ======================================== */
+
         .file-info {
             display: none;
             align-items: center;
@@ -27,38 +32,6 @@
             flex-direction: column;
             gap: 8px;
         }
-        .file-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            background: rgba(0,0,0,0.2);
-        }
-        .file-item span {
-            color: var(--text-main);
-            font-size: 0.9rem;
-            word-break: break-all;
-        }
-        .result-card {
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 10px 12px;
-            background: rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .result-title {
-            color: var(--text-main);
-            font-weight: 600;
-        }
-        .result-grid {
-            display: grid;
-            gap: 8px;
-        }
         .hash-grid {
             display: grid;
             gap: 12px;
@@ -71,30 +44,30 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace">
         <div class="panel">
             <div class="panel-header">
                 <div class="panel-title">哈希计算 (Hash Calculation) 
-                    <span id="engine-badge" class="stat-badge" style="margin-left:10px; background:#f59e0b; color:#fff; cursor:pointer;" onclick="hashTool.toggleEngine()" title="点击切换引擎 (Click to Toggle Engine)">Engine: JS (Fallback)</span>
+                    <span id="engine-badge" class="stat-badge" style="margin-left:10px; background:#f59e0b; color:#fff; cursor:pointer;" title="点击切换引擎 (Click to Toggle Engine)">Engine: JS (Fallback)</span>
                 </div>
                 <div class="panel-actions">
-                     <button class="btn btn-icon" onclick="app.clear('hash')">清空</button>
+                     <button id="btn-clear" class="btn btn-icon">清空</button>
                 </div>
             </div>
             <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem; height: 100%; overflow-y: auto;">
                 
                 <div class="hash-grid">
                     <div class="hash-panel">
-                        <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                        <div id="upload-area" class="upload-area">
                             <i class="fas fa-file-upload" style="font-size: 2rem; margin-bottom: 10px; color: var(--text-dim);"></i>
                             <p style="color: var(--text-dim); margin:0;">点击或拖拽文件到此处</p>
-                            <input type="file" id="file-input" multiple onchange="hashTool.handleFile(this)" style="display:none;">
+                            <input type="file" id="file-input" multiple style="display:none;">
                         </div>
 
                         <div id="file-info" class="file-info">
                             <span id="file-info-text"></span>
-                            <button class="btn btn-secondary btn-sm" onclick="hashTool.clearFile()">移除文件</button>
+                            <button id="btn-remove-file" class="btn btn-secondary btn-sm">移除文件</button>
                         </div>
                         <div id="file-list" class="file-list"></div>
                     </div>
@@ -122,7 +95,7 @@
                      <input type="text" id="hash-hmac-key" placeholder="HMAC 算法需要密钥">
                 </div>
 
-                <button class="btn btn-primary" onclick="hashTool.calc()">计算哈希</button>
+                <button id="btn-calc" class="btn btn-primary">计算哈希</button>
                 
                 <div id="hash-results" class="results-list">
                 </div>
@@ -228,11 +201,11 @@
                     if (requestId && this.workerRequests[requestId]) {
                         const { resolve, reject } = this.workerRequests[requestId];
                         delete this.workerRequests[requestId];
-                        if (type === 'result') resolve(results);
+                        if (type === 'success') resolve(results);
                         else reject(error || '未知错误');
                         return;
                     }
-                    if (type === 'result') {
+                    if (type === 'success') {
                         this.displayResults(results);
                         app.showToast('计算完成');
                         this.setLoading(false);
@@ -447,7 +420,7 @@
                     const btn = document.createElement('button');
                     btn.className = 'btn btn-icon';
                     btn.textContent = '📋';
-                    btn.onclick = () => app.copy(id);
+                    btn.addEventListener('click', function() { app.copy(id); });
                     
                     div.appendChild(label);
                     div.appendChild(input);
@@ -560,6 +533,25 @@
                 document.getElementById('hash-key-row').style.display = hmacSelected ? 'flex' : 'none';
             }
         });
+        
+        // Cleanup Worker on page unload
+        window.addEventListener('beforeunload', () => {
+            if (hashTool.worker) {
+                if (app && app.releaseWorker) {
+                    app.releaseWorker('../js/workers/hash.worker.js');
+                } else {
+                    hashTool.worker.terminate();
+                }
+            }
+        });
+
+        // Event listeners
+        document.getElementById('file-input').addEventListener('change', function(e) { hashTool.handleFile(e.target); });
+        document.getElementById('engine-badge').addEventListener('click', () => hashTool.toggleEngine());
+        document.getElementById('btn-clear').addEventListener('click', () => app.clear('hash'));
+        document.getElementById('upload-area').addEventListener('click', () => document.getElementById('file-input').click());
+        document.getElementById('btn-remove-file').addEventListener('click', () => hashTool.clearFile());
+        document.getElementById('btn-calc').addEventListener('click', () => hashTool.calc());
     </script>
 </body>
 </html>

@@ -406,7 +406,7 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="container">
         <div style="flex: 1;">
             <header>
@@ -534,7 +534,7 @@
                     <h2>更多功能</h2>
                 </div>
                 <div class="card-body">
-                    <button class="btn" onclick="window.location.href='image-svg-painter.html'" style="width: 100%;">SVG 矢量画板</button>
+                    <button class="btn" id="btn-svg-painter" style="width: 100%;">SVG 矢量画板</button>
                 </div>
             </div>
         </div>
@@ -868,26 +868,29 @@
             const generatePaletteBtn = document.getElementById('generatePaletteBtn');
             const imageColorPalette = document.getElementById('imageColorPalette');
             
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
+            new DragDropHandler({
+                dropZone: document.querySelector('.file-input-wrapper'),
+                input: fileInput,
+                onFile: (file) => {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         imagePreview.src = e.target.result;
                         imagePreview.style.display = 'block';
                     };
                     reader.readAsDataURL(file);
-                }
+                },
+                accept: ['image/*'],
+                onError: (err) => { if (app && app.showToast) app.showToast(err.message, 'error'); }
             });
             
             generatePaletteBtn.addEventListener('click', function() {
                 if (!imagePreview.src || imagePreview.src === '') {
-                    alert('请先上传一张图片');
+                    if (app && app.showToast) app.showToast('', 'error');
                     return;
                 }
                 
                 if (!imagePreview.complete) {
-                    alert('图片尚未加载完成，请稍后再试');
+                    if (app && app.showToast) app.showToast('', 'error');
                     return;
                 }
                 
@@ -896,7 +899,7 @@
                     displayImageColorPalette(palette);
                 } catch (error) {
                     console.error('提取颜色失败:', error);
-                    alert('无法从图片中提取颜色，请尝试其他图片');
+                    if (app && app.showToast) app.showToast('', 'error');
                 }
             });
             
@@ -1013,6 +1016,12 @@
                 }).join('');
             }
         });
+        
+        // Event listeners
+        document.getElementById('btn-svg-painter').addEventListener('click', () => {
+            window.location.href = 'image-svg-painter.html';
+        });
     </script>
+<div id="toast"></div>
 </body>
 </html>

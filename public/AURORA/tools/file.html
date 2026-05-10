@@ -6,11 +6,11 @@
     <title>文件处理</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace" style="flex-direction: column;">
         <div class="sub-tab-group">
-            <div class="sub-tab active" onclick="fileTool.switchSubTab('zip', this)">ZIP 打包</div>
-            <div class="sub-tab" onclick="fileTool.switchSubTab('corrupt', this)">文件破坏</div>
+            <div class="sub-tab active" id="tab-zip">ZIP 打包</div>
+            <div class="sub-tab" id="tab-corrupt">文件破坏</div>
         </div>
 
         <!-- External Tool Container (Iframe) -->
@@ -31,7 +31,7 @@
                             <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
                             <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">点击或拖拽文件/文件夹到此处</div>
                             <div style="color: var(--text-dim); font-size: 0.9rem;">支持多文件选择，将自动打包为 ZIP</div>
-                            <input type="file" id="file-picker" multiple style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="fileTool.handleFiles(this.files)">
+                            <input type="file" id="file-picker" multiple style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
                         </div>
 
                         <div id="file-list" style="width: 100%; max-width: 500px; max-height: 200px; overflow-y: auto; display: none; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem;">
@@ -52,7 +52,7 @@
                                 <label>文件名:</label>
                                 <input type="text" id="zip-name" value="archive.zip" placeholder="archive.zip">
                             </div>
-                            <button class="btn btn-primary" style="justify-content: center; padding: 1rem;" onclick="fileTool.createZip()">
+                            <button class="btn btn-primary" style="justify-content: center; padding: 1rem;" id="btn-create-zip">
                                 <span id="zip-btn-text">开始打包下载</span>
                             </button>
                         </div>
@@ -65,7 +65,7 @@
                     <div class="panel-header">
                         <div class="panel-title">文件破坏 (File Corruptor)</div>
                         <div class="panel-actions">
-                             <button class="btn btn-icon" onclick="fileTool.clearCorrupt()">清空</button>
+                             <button class="btn btn-icon" id="btn-clear-corrupt">清空</button>
                         </div>
                     </div>
                     <div style="padding:1rem; flex:1; display:flex; flex-direction:column; gap:1rem; overflow:hidden;">
@@ -73,7 +73,7 @@
                              <div style="margin-bottom:1rem; font-size:3rem;">🗑️</div>
                              <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">拖拽文件到此处 或 点击选择</div>
                              <div style="color: var(--text-dim); font-size: 0.9rem;">警告：此操作不可逆（虽然这里只是生成副本），请谨慎使用</div>
-                             <input type="file" id="corrupt-file-input" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;" onchange="fileTool.handleCorruptFile(this.files[0])">
+                             <input type="file" id="corrupt-file-input" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;">
                         </div>
                         
                         <div id="corrupt-settings" style="display:none; flex-direction:column; gap:1.5rem; max-width: 600px; margin: 0 auto; width: 100%;">
@@ -97,10 +97,10 @@
                                     <label>破坏程度 (Intensity):</label>
                                     <span id="corrupt-val" style="font-weight: bold; color: var(--primary);">5%</span>
                                 </div>
-                                <input type="range" id="corrupt-amount" min="1" max="100" value="5" style="width: 100%;" oninput="document.getElementById('corrupt-val').innerText = this.value + '%'">
+                                <input type="range" id="corrupt-amount" min="1" max="100" value="5" style="width: 100%;">
                              </div>
                              
-                             <button class="btn btn-primary" style="justify-content: center; padding: 1rem;" onclick="fileTool.execCorrupt()">☠️ 开始破坏并下载</button>
+                             <button class="btn btn-primary" style="justify-content: center; padding: 1rem;" id="btn-exec-corrupt">☠️ 开始破坏并下载</button>
                         </div>
                     </div>
                 </div>
@@ -296,6 +296,26 @@
                 }
             }
         };
+
+        // Event listeners
+        document.getElementById('file-picker').addEventListener('change', function(e) { fileTool.handleFiles(e.target.files); });
+        document.getElementById('corrupt-file-input').addEventListener('change', function(e) { fileTool.handleCorruptFile(e.target.files[0]); });
+        document.getElementById('corrupt-amount').addEventListener('input', function() { document.getElementById('corrupt-val').innerText = this.value + '%'; });
+        document.getElementById('tab-zip').addEventListener('click', function() {
+            fileTool.switchSubTab('zip', this);
+        });
+        document.getElementById('tab-corrupt').addEventListener('click', function() {
+            fileTool.switchSubTab('corrupt', this);
+        });
+        document.getElementById('btn-create-zip').addEventListener('click', function() {
+            fileTool.createZip();
+        });
+        document.getElementById('btn-clear-corrupt').addEventListener('click', function() {
+            fileTool.clearCorrupt();
+        });
+        document.getElementById('btn-exec-corrupt').addEventListener('click', function() {
+            fileTool.execCorrupt();
+        });
     </script>
 </body>
 </html>

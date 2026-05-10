@@ -24,15 +24,15 @@ self.onmessage = async function(e) {
         const svgstr = ImageTracer.imagedataToSVG(imageData, options);
 
         self.postMessage({
-            id: id,
-            status: 'success',
+            type: 'success',
+            requestId: id,
             svgContent: svgstr
         });
 
     } catch (error) {
         self.postMessage({
-            id: id,
-            status: 'error',
+            type: 'error',
+            requestId: id,
             error: error.message || 'Unknown error during SVG tracing'
         });
     }

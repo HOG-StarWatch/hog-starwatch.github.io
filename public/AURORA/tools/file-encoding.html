@@ -32,7 +32,7 @@
             background: var(--accent);
             color: #fff;
         }
-        
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -53,7 +53,7 @@
             border-color: var(--primary);
             background: rgba(255,255,255,0.02);
         }
-        
+
         .file-list-widget {
             margin-top: 1rem;
             border: 1px solid var(--border);
@@ -63,7 +63,7 @@
             overflow-y: auto;
             display: none; /* Hidden by default */
         }
-        
+
         .file-list-item {
             display: flex;
             justify-content: space-between;
@@ -94,7 +94,7 @@
             font-size: 0.75rem;
             color: var(--text-dim);
         }
-        
+
         .remove-btn {
             background: none;
             border: none;
@@ -116,35 +116,35 @@
             margin-top: 1rem;
             align-items: center;
         }
-        
+
         @media (max-width: 600px) {
             .control-grid {
                 grid-template-columns: 1fr;
             }
         }
-        
+
         #file-b64enc-view, #file-b64dec-view {
             display: none;
             flex-direction: column;
             height: 100%;
         }
-        
+
         /* Ensure the active one is displayed correctly if JS misses it (though JS sets display:flex) */
         #file-b64enc-view {
             display: flex; /* Default active */
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace" style="flex-direction: column;">
-        <div class="sub-tab-group">
-            <div class="sub-tab active" onclick="fileEncTool.switchSubTab('b64enc', this)">文件转 Base64/JSON</div>
-            <div class="sub-tab" onclick="fileEncTool.switchSubTab('b64dec', this)">Base64 还原下载</div>
+        <div class="sub-tab-group" id="sub-tab-group">
+            <div class="sub-tab active" data-subtab="b64enc">文件转 Base64/JSON</div>
+            <div class="sub-tab" data-subtab="b64dec">Base64 还原下载</div>
         </div>
 
         <div class="workspace" id="inline-workspace">
             <div class="panel">
-                
+
                 <!-- Base64 Encode SubTab -->
                 <div id="file-b64enc-view">
                      <div class="panel-header">
@@ -156,18 +156,18 @@
                             </div>
                         </div>
                         <div class="panel-actions">
-                            <button class="btn btn-icon" onclick="fileEncTool.clearAllFiles()" title="清空文件列表">清空</button>
+                            <button class="btn btn-icon" id="btn-clear-all-files" title="清空文件列表">清空</button>
                         </div>
                     </div>
-                    
+
                     <div style="padding:1.5rem; flex:1; display:flex; flex-direction:column; gap:1.5rem; overflow-y:auto;">
-                        
+
                         <!-- Drop Zone -->
-                        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input-hidden').click()">
+                        <div class="drop-zone" id="drop-zone">
                             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📄</div>
                             <div style="font-weight: 600; font-size: 1.1rem;">点击选择或拖拽文件到此处</div>
                             <div style="color: var(--text-dim); font-size: 0.9rem;">支持多文件批量处理</div>
-                            <input type="file" id="file-input-hidden" multiple style="display:none;" onchange="fileEncTool.handleB64Files(this.files)">
+                            <input type="file" id="file-input-hidden" multiple style="display:none;">
                         </div>
 
                         <!-- File List Widget -->
@@ -187,18 +187,18 @@
                                     <option value="zstd">Zstd (Wasm)</option>
                                 </select>
                             </div>
-                            <button class="btn btn-primary" onclick="fileEncTool.encodeB64()" style="height: 100%; padding: 0 2rem; font-weight: 800; text-shadow: none;">
+                            <button class="btn btn-primary" id="btn-encode-b64" style="height: 100%; padding: 0 2rem; font-weight: 800; text-shadow: none;">
                                 <span style="font-size:1.1rem;">🚀 生成 JSON</span>
                             </button>
                         </div>
-                        
+
                         <!-- Output Area -->
                         <div style="display:flex; flex-direction:column; gap:0.5rem; flex:1; min-height: 200px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                                 <label style="font-size:0.9rem;">输出结果 (Output):</label>
                                 <div class="toolbar" style="width:auto; height:auto; padding:0; background:none; border:none; gap:10px;">
-                                     <button class="btn btn-sm btn-secondary" onclick="app.copy('b64-out')" style="min-width:80px;">📋 复制</button>
-                                     <button class="btn btn-sm btn-secondary" onclick="fileEncTool.downloadB64Json()" style="min-width:100px; color:var(--primary); border-color:var(--primary);">💾 下载 .json</button>
+                                     <button class="btn btn-sm btn-secondary" id="btn-copy-b64" style="min-width:80px;">📋 复制</button>
+                                     <button class="btn btn-sm btn-secondary" id="btn-download-b64-json" style="min-width:100px; color:var(--primary); border-color:var(--primary);">💾 下载 .json</button>
                                 </div>
                             </div>
                             <textarea id="b64-out" placeholder="生成的 JSON 结果将显示在这里..." style="flex:1; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); padding: 1rem; font-family: monospace; font-size: 0.85rem;"></textarea>
@@ -212,20 +212,20 @@
                     <div class="panel-header">
                         <div class="panel-title">Base64 / JSON 还原文件</div>
                         <div class="panel-actions">
-                             <button class="btn btn-icon" onclick="document.getElementById('b64-in').value=''; document.getElementById('b64-restore-list').innerHTML='';">清空</button>
+                             <button class="btn btn-icon" id="btn-clear-dec">清空</button>
                         </div>
                     </div>
                     <div style="padding:1.5rem; flex:1; display:flex; flex-direction:column; gap:1.5rem; overflow:hidden;">
                         <!-- Drop Zone for JSON Restore -->
-                        <div class="upload-area" id="restore-drop-zone" onclick="document.getElementById('file-restore-input').click()">
+                        <div class="upload-area" id="restore-drop-zone">
                             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📂</div>
                             <div style="font-weight: 600; font-size: 1.1rem;">点击或拖拽 JSON 文件到此处</div>
                             <div style="color: var(--text-dim); font-size: 0.9rem;">支持 .json, .txt 文件</div>
-                            <input type="file" id="file-restore-input" accept=".json,.txt" style="display:none;" onchange="fileEncTool.loadJsonFile(this)">
+                            <input type="file" id="file-restore-input" accept=".json,.txt" style="display:none;">
                         </div>
-                        
+
                          <textarea id="b64-in" placeholder="在此粘贴 Base64 字符串 或 之前生成的 JSON..." style="min-height:150px; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2); padding:1rem;"></textarea>
-                         
+
                          <!-- Manual Base64 Restore Options -->
                          <div id="manual-b64-opts" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; border-top:1px solid var(--border); padding-top:1rem;">
                             <span style="font-size:0.8rem; color:var(--secondary); font-weight:600;">单文件手动还原:</span>
@@ -237,9 +237,9 @@
                                 <option value="application/pdf">PDF</option>
                                 <option value="text/plain">TXT</option>
                             </select>
-                            <button class="btn btn-sm" onclick="fileEncTool.downloadManual()">下载</button>
+                            <button class="btn btn-sm" id="btn-download-manual">下载</button>
                             <div style="flex:1; text-align:right;">
-                                <button class="btn btn-primary btn-sm" onclick="fileEncTool.restoreB64()">🚀 解析并还原</button>
+                                <button class="btn btn-primary btn-sm" id="btn-restore-b64">🚀 解析并还原</button>
                             </div>
                          </div>
 
@@ -264,13 +264,13 @@
             b64Files: [], // Array of File objects
             worker: null,
             currentJsonBlob: null,
-            
+
             initWorker: function() {
                 if(this.worker) return;
                 this.worker = (window.app && app.getWorker) ? app.getWorker('../js/workers/file-enc.worker.js') : new Worker('../js/workers/file-enc.worker.js');
                 this.worker.onmessage = (e) => {
-                    const { id, status, result, error, type, msg, data } = e.data;
-                    
+                    const { requestId, result, error, type, msg, data } = e.data;
+
                     // Handle status updates
                     if (type === 'status') {
                         app.showToast(msg, 'info');
@@ -283,20 +283,20 @@
 
                     // Handle chunks
                     if (type === 'chunk') {
-                        if (this.pendingTasks[id] && this.pendingTasks[id].onChunk) {
-                            this.pendingTasks[id].onChunk(data);
+                        if (this.pendingTasks[requestId] && this.pendingTasks[requestId].onChunk) {
+                            this.pendingTasks[requestId].onChunk(data);
                         }
                         return;
                     }
 
                     // Handle task completion
-                    if (this.pendingTasks[id]) {
-                        if (status === 'success') {
-                            this.pendingTasks[id].resolve(result);
+                    if (this.pendingTasks[requestId]) {
+                        if (type === 'success') {
+                            this.pendingTasks[requestId].resolve(result);
                         } else {
-                            this.pendingTasks[id].reject(new Error(error));
+                            this.pendingTasks[requestId].reject(new Error(error));
                         }
-                        delete this.pendingTasks[id];
+                        delete this.pendingTasks[requestId];
                     }
                 };
                 this.pendingTasks = {};
@@ -314,47 +314,47 @@
             switchSubTab: function(id, el) {
                 document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
                 el.classList.add('active');
-                
+
                 const inlineWs = document.getElementById('inline-workspace');
                 inlineWs.style.display = 'flex';
 
                 document.getElementById('file-b64enc-view').style.display = 'none';
                 document.getElementById('file-b64dec-view').style.display = 'none';
-                
+
                 const view = document.getElementById(`file-${id}-view`);
                 if (view) {
                     view.style.display = 'flex';
                 }
             },
-            
+
             // --- Base64 / JSON Features ---
-            
+
             handleB64Files: function(files) {
                 // Append new files to existing list
                 const newFiles = Array.from(files);
                 this.b64Files = [...this.b64Files, ...newFiles];
-                
+
                 this.updateFileListUI();
                 app.showToast(`添加了 ${newFiles.length} 个文件`);
             },
-            
+
             removeFile: function(index) {
                 this.b64Files.splice(index, 1);
                 this.updateFileListUI();
             },
-            
+
             clearAllFiles: function() {
                 this.b64Files = [];
                 this.updateFileListUI();
                 // Also reset input to allow re-selecting same file
                 document.getElementById('file-input-hidden').value = '';
             },
-            
+
             updateFileListUI: function() {
                 const container = document.getElementById('file-list-widget');
                 const dropZone = document.getElementById('drop-zone');
                 const restoreDropZone = document.getElementById('restore-drop-zone');
-                
+
                 // Helper for DnD
                 const setupDnD = (el, handler) => {
                     if(!el) return;
@@ -377,7 +377,7 @@
                         }
                     });
                 };
-                
+
                 setupDnD(dropZone, (files) => this.handleB64Files(files));
                 setupDnD(restoreDropZone, (files) => {
                     // Wrap single file in mock input object for existing loadJsonFile
@@ -385,14 +385,14 @@
                 });
 
                 container.innerHTML = '';
-                
+
                 if (this.b64Files.length === 0) {
                     container.style.display = 'none';
                     return;
                 }
-                
+
                 container.style.display = 'block';
-                
+
                 this.b64Files.forEach((file, index) => {
                     const div = document.createElement('div');
                     div.className = 'file-list-item';
@@ -401,18 +401,18 @@
                             <span class="file-name" title="${file.name}">${file.name}</span>
                             <span class="file-meta">${(file.size / 1024).toFixed(1)} KB | ${file.type || 'Unknown'}</span>
                         </div>
-                        <button class="remove-btn" onclick="fileEncTool.removeFile(${index})" title="移除文件">✕</button>
+                        <button class="remove-btn" data-remove-index="${index}" title="移除文件">✕</button>
                     `;
                     container.appendChild(div);
                 });
             },
-            
+
             updateBadge: function(type, status) {
                 const badge = document.getElementById(`badge-${type}`);
                 if(!badge) return;
-                
+
                 badge.className = 'status-badge'; // Reset
-                
+
                 if(status === 'loading') {
                     badge.classList.add('loading');
                     badge.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)}: 加载中...`;
@@ -432,9 +432,9 @@
                     app.showToast('请先选择文件', 'error');
                     return;
                 }
-                
+
                 const compressFmt = document.getElementById('b64-compress').value;
-                
+
                 // Update badges
                 if (compressFmt === 'brotli') this.updateBadge('brotli', 'loading');
                 if (compressFmt === 'zstd') this.updateBadge('zstd', 'loading');
@@ -442,7 +442,7 @@
                 app.showToast('正在处理...', 'info');
                 document.getElementById('b64-out').value = '正在生成...';
                 this.currentJsonBlob = null;
-                
+
                 try {
                     const chunks = [];
                     // Use streaming
@@ -452,9 +452,9 @@
                     }, (chunk) => {
                         chunks.push(chunk);
                     });
-                    
+
                     this.currentJsonBlob = new Blob(chunks, {type: 'application/json'});
-                    
+
                     // Check size for preview (Limit 2MB)
                     if (this.currentJsonBlob.size < 2 * 1024 * 1024) {
                          const text = await this.currentJsonBlob.text();
@@ -464,7 +464,7 @@
                     }
 
                     app.showToast('生成成功');
-                    
+
                     if (compressFmt === 'brotli') this.updateBadge('brotli', 'ready');
                     if (compressFmt === 'zstd') this.updateBadge('zstd', 'ready');
                 } catch (e) {
@@ -475,7 +475,7 @@
                     if (compressFmt === 'zstd') this.updateBadge('zstd', 'error');
                 }
             },
-            
+
             downloadB64Json: function() {
                 if (this.currentJsonBlob) {
                      saveAs(this.currentJsonBlob, `filebundle_${new Date().getTime()}.json`);
@@ -489,7 +489,7 @@
                 const blob = new Blob([content], {type: 'application/json'});
                 saveAs(blob, `filebundle_${new Date().getTime()}.json`);
             },
-            
+
             loadJsonFile: function(input) {
                 const file = input.files[0];
                 if(!file) return;
@@ -500,21 +500,21 @@
                 };
                 reader.readAsText(file);
             },
-            
+
             restoreB64: async function() {
                 const inputVal = document.getElementById('b64-in').value.trim();
                 if(!inputVal) return;
-                
+
                 const listEl = document.getElementById('b64-restore-list');
                 listEl.innerHTML = '';
-                
+
                 app.showToast('正在解析并还原...', 'info');
-                
+
                 try {
                     const results = await this.runWorkerTask('decode', {
                         jsonStr: inputVal
                     });
-                    
+
                     for (const f of results) {
                         const blob = new Blob([f.data], {type: f.type});
                         const item = document.createElement('div');
@@ -525,12 +525,12 @@
                                 <div style="font-size:0.8rem; color:var(--text-dim)">${(f.data.length/1024).toFixed(1)} KB | ${f.type || 'Unknown'}</div>
                             </div>
                         `;
-                        
+
                         const btn = document.createElement('button');
                         btn.className = 'btn btn-sm btn-secondary';
                         btn.innerText = '下载';
-                        btn.onclick = () => saveAs(blob, f.name);
-                        
+                        btn.addEventListener('click', function() { saveAs(blob, f.name); });
+
                         item.appendChild(btn);
                         listEl.appendChild(item);
                     }
@@ -540,17 +540,17 @@
                     app.showToast('还原失败: ' + e.message, 'error');
                 }
             },
-            
+
             downloadManual: function() {
                 const b64 = document.getElementById('b64-in').value.trim();
                 if(!b64) {
                     app.showToast('请先输入 Base64 数据', 'error');
                     return;
                 }
-                
+
                 // Strip data: prefix if present
                 const cleanB64 = b64.replace(/^data:.*?;base64,/, '');
-                
+
                 try {
                     const binString = atob(cleanB64);
                     const len = binString.length;
@@ -558,10 +558,10 @@
                     for (let i = 0; i < len; i++) {
                         bytes[i] = binString.charCodeAt(i);
                     }
-                    
+
                     const mime = document.getElementById('manual-mime').value;
                     const name = document.getElementById('manual-name').value || 'download.bin';
-                    
+
                     const blob = new Blob([bytes], {type: mime});
                     saveAs(blob, name);
                 } catch(e) {
@@ -569,6 +569,71 @@
                 }
             }
         };
+
+        // Cleanup Worker on page unload
+        window.addEventListener('beforeunload', () => {
+            if (fileEncTool.worker) {
+                if (app && app.releaseWorker) {
+                    app.releaseWorker('../js/workers/file-enc.worker.js');
+                } else {
+                    fileEncTool.worker.terminate();
+                }
+            }
+        });
+
+        // Event listeners
+        // Sub-tab switching via event delegation (uses this, so function())
+        document.getElementById('sub-tab-group').addEventListener('click', function(e) {
+            const tab = e.target.closest('.sub-tab');
+            if (!tab) return;
+            fileEncTool.switchSubTab(tab.dataset.subtab, tab);
+        });
+
+        document.getElementById('btn-clear-all-files').addEventListener('click', function() { fileEncTool.clearAllFiles(); });
+
+        // Drop zone click -> trigger hidden file input
+        document.getElementById('drop-zone').addEventListener('click', function() {
+            document.getElementById('file-input-hidden').click();
+        });
+
+        // Hidden file input change
+        document.getElementById('file-input-hidden').addEventListener('change', function() {
+            fileEncTool.handleB64Files(this.files);
+        });
+
+        document.getElementById('btn-encode-b64').addEventListener('click', function() { fileEncTool.encodeB64(); });
+
+        document.getElementById('btn-copy-b64').addEventListener('click', function() { app.copy('b64-out'); });
+        document.getElementById('btn-download-b64-json').addEventListener('click', function() { fileEncTool.downloadB64Json(); });
+
+        // Decode sub-tab clear button
+        document.getElementById('btn-clear-dec').addEventListener('click', function() {
+            document.getElementById('b64-in').value = '';
+            document.getElementById('b64-restore-list').innerHTML = '';
+        });
+
+        // Restore drop zone click -> trigger hidden file input
+        document.getElementById('restore-drop-zone').addEventListener('click', function() {
+            document.getElementById('file-restore-input').click();
+        });
+
+        // Restore file input change
+        document.getElementById('file-restore-input').addEventListener('change', function() {
+            fileEncTool.loadJsonFile(this);
+        });
+
+        document.getElementById('btn-download-manual').addEventListener('click', function() { fileEncTool.downloadManual(); });
+        document.getElementById('btn-restore-b64').addEventListener('click', function() { fileEncTool.restoreB64(); });
+
+        // Event delegation for dynamically generated remove-btn in file list
+        document.getElementById('file-list-widget').addEventListener('click', function(e) {
+            const btn = e.target.closest('.remove-btn');
+            if (!btn) return;
+            const index = parseInt(btn.dataset.removeIndex, 10);
+            if (!isNaN(index)) {
+                fileEncTool.removeFile(index);
+            }
+        });
     </script>
 </body>
 </html>

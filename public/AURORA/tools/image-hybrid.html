@@ -48,7 +48,7 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="layout-sidebar">
         <div class="controls panel">
             <h2 style="margin:0 0 15px 0; color:var(--primary); font-size:1.5rem;">视觉混合图</h2>
@@ -56,32 +56,32 @@
             <div class="control-group">
                 <span class="zone-label">1. 近看图 (细节/High Freq)</span>
                 <input type="file" id="input-near" accept="image/*" style="display: none;">
-                <div class="upload-area upload-zone-preview" onclick="document.getElementById('input-near').click()">
+                <div class="upload-area upload-zone-preview" id="btn-upload-near">
                     <div id="preview1-placeholder" class="upload-placeholder">点击上传近看图</div>
                     <img id="img-near">
                 </div>
                 <div style="margin-top: 10px;">
                     <label style="font-size:0.8rem; color:var(--text-dim);">保留细节量 (High Pass): <span id="val-hp">15</span></label>
-                    <input type="range" id="range-hp" min="1" max="50" value="15" style="width:100%" oninput="document.getElementById('val-hp').innerText=this.value">
+                    <input type="range" id="range-hp" min="1" max="50" value="15" style="width:100%">
                 </div>
             </div>
 
             <div class="control-group">
                 <span class="zone-label">2. 远看图 (轮廓/Low Freq)</span>
                 <input type="file" id="input-far" accept="image/*" style="display: none;">
-                <div class="upload-area upload-zone-preview" onclick="document.getElementById('input-far').click()">
+                <div class="upload-area upload-zone-preview" id="btn-upload-far">
                     <div id="preview2-placeholder" class="upload-placeholder">点击上传远看图</div>
                     <img id="img-far">
                 </div>
                 <div style="margin-top: 10px;">
                     <label style="font-size:0.8rem; color:var(--text-dim);">模糊程度 (Low Pass): <span id="val-lp">10</span></label>
-                    <input type="range" id="range-lp" min="1" max="50" value="10" style="width:100%" oninput="document.getElementById('val-lp').innerText=this.value">
+                    <input type="range" id="range-lp" min="1" max="50" value="10" style="width:100%">
                 </div>
             </div>
 
             <div class="control-group">
                 <label><span>混合平衡 (0=远, 1=近)</span> <span id="val-bal">0.5</span></label>
-                <input type="range" id="range-bal" min="0" max="1" step="0.1" value="0.5" style="width:100%" oninput="document.getElementById('val-bal').innerText=this.value">
+                <input type="range" id="range-bal" min="0" max="1" step="0.1" value="0.5" style="width:100%">
             </div>
 
             <div class="control-group">
@@ -97,10 +97,10 @@
             </div>
 
             <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px;">
-                <button class="btn btn-primary" onclick="generateHybrid()" style="justify-content:center">
+                <button class="btn btn-primary" id="btn-generate" style="justify-content:center">
                     <i class="fas fa-magic"></i> 生成混合图
                 </button>
-                <button class="btn btn-success" onclick="downloadImage()" id="dlBtn" disabled style="justify-content:center">
+                <button class="btn btn-success" id="dlBtn" disabled style="justify-content:center">
                     <i class="fas fa-download"></i> 下载图片
                 </button>
             </div>
@@ -108,9 +108,9 @@
 
         <div class="preview-area">
             <div class="sub-tab-group" style="margin-bottom: 15px; width: 100%; justify-content: center;">
-                <div class="sub-tab active" onclick="setViewSize(1, this)">100% (近看)</div>
-                <div class="sub-tab" onclick="setViewSize(0.25, this)">25% (模拟远看)</div>
-                <div class="sub-tab" onclick="setViewSize(0.1, this)">10% (很远)</div>
+                <div class="sub-tab active" id="tab-100">100% (近看)</div>
+                <div class="sub-tab" id="tab-25">25% (模拟远看)</div>
+                <div class="sub-tab" id="tab-10">10% (很远)</div>
             </div>
 
             <div style="flex:1; display:flex; justify-content:center; align-items:center; width:100%; overflow:hidden;">
@@ -126,44 +126,67 @@
 
     <script src="../js/app.js"></script>
     <script>
-        const cvs = document.getElementById('result-cvs');
-        const ctx = cvs.getContext('2d');
-        let imgNear = null, imgFar = null;
-        let hybridWorker = null;
+        const hybridTool = (() => {
+            const cvs = document.getElementById('result-cvs');
+            const ctx = cvs.getContext('2d');
+            let imgNear = null, imgFar = null;
+            let hybridWorker = null;
+            const WORKER_URL = '../js/workers/hybrid.worker.js';
 
-        if (window.Worker) {
-            hybridWorker = new Worker('../js/workers/hybrid.worker.js');
-            hybridWorker.onmessage = (e) => {
-                const { type, outputData, error } = e.data;
-                if (type === 'complete') {
-                    const imgData = new ImageData(new Uint8ClampedArray(outputData), cvs.width, cvs.height);
-                    ctx.putImageData(imgData, 0, 0);
-                    document.getElementById('resultPlaceholder').style.display = 'none';
-                    cvs.style.display = 'block';
-                    document.getElementById('dlBtn').disabled = false;
-                    if (app && app.showToast) app.showToast('生成完成');
-                notifyParentResize();
-                } else if (type === 'error') {
-                    console.error('Worker Error:', error);
-                    if (app && app.showToast) app.showToast('生成失败: ' + error, 'error');
+            if (window.Worker) {
+                hybridWorker = (app && app.getWorker) ? app.getWorker(WORKER_URL) : new Worker(WORKER_URL);
+                hybridWorker.onmessage = (e) => {
+                    const { type, outputData, error } = e.data;
+                    if (type === 'success') {
+                        const imgData = new ImageData(new Uint8ClampedArray(outputData), cvs.width, cvs.height);
+                        ctx.putImageData(imgData, 0, 0);
+                        document.getElementById('resultPlaceholder').style.display = 'none';
+                        cvs.style.display = 'block';
+                        document.getElementById('dlBtn').disabled = false;
+                        if (app && app.showToast) app.showToast('生成完成');
+                    hybridTool.notifyParentResize();
+                    } else if (type === 'error') {
+                        console.error('Worker Error:', error);
+                        if (app && app.showToast) app.showToast('生成失败: ' + error, 'error');
+                    }
+                };
+                hybridWorker.onerror = (e) => {
+                    console.error('Worker Load Error', e);
+                    hybridWorker = null;
+                };
+            }
+            
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', () => {
+                if(hybridWorker) {
+                    if(app && app.releaseWorker) {
+                        app.releaseWorker(WORKER_URL);
+                    } else {
+                        hybridWorker.terminate();
+                    }
                 }
-            };
-            hybridWorker.onerror = (e) => {
-                console.error('Worker Load Error', e);
-                hybridWorker = null;
-            };
-        }
+            });
 
-        document.getElementById('input-near').addEventListener('change', (e) => handleImage(e.target, 'near'));
-        document.getElementById('input-far').addEventListener('change', (e) => handleImage(e.target, 'far'));
+            new DragDropHandler({
+                dropZone: document.getElementById('btn-upload-near'),
+                input: document.getElementById('input-near'),
+                onFile: (file) => hybridTool.handleImage({ files: [file] }, 'near'),
+                accept: ['image/*'],
+                onError: (err) => { if (app && app.showToast) app.showToast(err.message, 'error'); }
+            });
 
-        function handleImage(input, type) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
+            new DragDropHandler({
+                dropZone: document.getElementById('btn-upload-far'),
+                input: document.getElementById('input-far'),
+                onFile: (file) => hybridTool.handleImage({ files: [file] }, 'far'),
+                accept: ['image/*'],
+                onError: (err) => { if (app && app.showToast) app.showToast(err.message, 'error'); }
+            });
+
+            function handleImage(input, type) {
+                const file = input.files[0];
+                if(!file) return;
+                CanvasUtils.loadImage(file).then(img => {
                     if(type === 'near') {
                         imgNear = img;
                         document.getElementById('img-near').src = img.src;
@@ -175,129 +198,144 @@
                         document.getElementById('img-far').style.display = 'block';
                         document.getElementById('preview2-placeholder').style.display = 'none';
                     }
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function generateHybrid() {
-            if(!imgNear || !imgFar) {
-                if (app && app.showToast) app.showToast('请先上传两张图片', 'error');
-                else alert('请先上传两张图片');
-                return;
+                });
             }
 
-            const w = imgNear.width;
-            const h = imgNear.height;
-            cvs.width = w;
-            cvs.height = h;
+            function generateHybrid() {
+                if(!imgNear || !imgFar) {
+                    if (app && app.showToast) app.showToast('请先上传两张图片', 'error');
+                    else if (app && app.showToast) app.showToast('', 'error');
+                    return;
+                }
 
-            const dN = ctx.createImageData(0, 0).data;
-            const dNB = ctx.createImageData(0, 0).data;
-            const dFB = ctx.createImageData(0, 0).data;
+                const w = imgNear.width;
+                const h = imgNear.height;
+                cvs.width = w;
+                cvs.height = h;
 
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = w;
-            tempCanvas.height = h;
-            const tempCtx = tempCanvas.getContext('2d');
+                const dN = ctx.createImageData(0, 0).data;
+                const dNB = ctx.createImageData(0, 0).data;
+                const dFB = ctx.createImageData(0, 0).data;
 
-            tempCtx.drawImage(imgNear, 0, 0, w, h);
-            const dataNear = tempCtx.getImageData(0, 0, w, h);
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = w;
+                tempCanvas.height = h;
+                const tempCtx = tempCanvas.getContext('2d');
 
-            const blurSize = parseInt(document.getElementById('range-hp').value);
-            tempCtx.filter = `blur(${blurSize}px)`;
-            tempCtx.drawImage(imgNear, 0, 0, w, h);
-            const dataNearBlur = tempCtx.getImageData(0, 0, w, h);
-            tempCtx.filter = 'none';
+                tempCtx.drawImage(imgNear, 0, 0, w, h);
+                const dataNear = tempCtx.getImageData(0, 0, w, h);
 
-            const lpSize = parseInt(document.getElementById('range-lp').value);
-            tempCtx.filter = `blur(${lpSize}px)`;
-            tempCtx.drawImage(imgFar, 0, 0, w, h);
-            const dataFarBlur = tempCtx.getImageData(0, 0, w, h);
-            tempCtx.filter = 'none';
+                const blurSize = parseInt(document.getElementById('range-hp').value);
+                tempCtx.filter = `blur(${blurSize}px)`;
+                tempCtx.drawImage(imgNear, 0, 0, w, h);
+                const dataNearBlur = tempCtx.getImageData(0, 0, w, h);
+                tempCtx.filter = 'none';
 
-            const rangeBalValue = parseFloat(document.getElementById('range-bal').value);
-            const isGray = document.getElementById('chk-gray').checked;
+                const lpSize = parseInt(document.getElementById('range-lp').value);
+                tempCtx.filter = `blur(${lpSize}px)`;
+                tempCtx.drawImage(imgFar, 0, 0, w, h);
+                const dataFarBlur = tempCtx.getImageData(0, 0, w, h);
+                tempCtx.filter = 'none';
 
-            if (hybridWorker) {
-                hybridWorker.postMessage({
-                    type: 'process',
-                    dN: dataNear.data.buffer,
-                    dNB: dataNearBlur.data.buffer,
-                    dFB: dataFarBlur.data.buffer,
-                    config: {
-                        rangeBalValue: rangeBalValue,
-                        isGray: isGray
-                    }
-                }, [dataNear.data.buffer, dataNearBlur.data.buffer, dataFarBlur.data.buffer]);
-            } else {
-                processHybridMain(dataNear.data, dataNearBlur.data, dataFarBlur.data, w, h, rangeBalValue, isGray);
-            }
-        }
+                const rangeBalValue = parseFloat(document.getElementById('range-bal').value);
+                const isGray = document.getElementById('chk-gray').checked;
 
-        function processHybridMain(dN, dNB, dFB, w, h, rangeBalValue, isGray) {
-            const outputData = new Uint8ClampedArray(dN.length);
-
-            for (let i = 0; i < dN.length; i += 4) {
-                if (isGray) {
-                    const lN = 0.299*dN[i] + 0.587*dN[i+1] + 0.114*dN[i+2];
-                    const lNB = 0.299*dNB[i] + 0.587*dNB[i+1] + 0.114*dNB[i+2];
-                    const lFB = 0.299*dFB[i] + 0.587*dFB[i+1] + 0.114*dFB[i+2];
-
-                    const highFreq = lN - lNB;
-                    const lowFreq = lFB;
-
-                    const hStrength = rangeBalValue * 3.0;
-                    let val = lowFreq + highFreq * hStrength;
-                    val = Math.min(255, Math.max(0, val));
-
-                    outputData[i] = val;
-                    outputData[i+1] = val;
-                    outputData[i+2] = val;
-                    outputData[i+3] = 255;
+                if (hybridWorker) {
+                    hybridWorker.postMessage({
+                        type: 'process',
+                        dN: dataNear.data.buffer,
+                        dNB: dataNearBlur.data.buffer,
+                        dFB: dataFarBlur.data.buffer,
+                        config: {
+                            rangeBalValue: rangeBalValue,
+                            isGray: isGray
+                        }
+                    }, [dataNear.data.buffer, dataNearBlur.data.buffer, dataFarBlur.data.buffer]);
                 } else {
-                    for (let c = 0; c < 3; c++) {
-                        const highFreq = dN[i+c] - dNB[i+c];
-                        const lowFreq = dFB[i+c];
-
-                        const hStrength = rangeBalValue * 3.0;
-                        let val = lowFreq + highFreq * hStrength;
-
-                        outputData[i+c] = Math.min(255, Math.max(0, val));
-                    }
-                    outputData[i+3] = 255;
+                    hybridTool.processHybridMain(dataNear.data, dataNearBlur.data, dataFarBlur.data, w, h, rangeBalValue, isGray);
                 }
             }
 
-            const imgData = new ImageData(outputData, w, h);
-            ctx.putImageData(imgData, 0, 0);
-            document.getElementById('resultPlaceholder').style.display = 'none';
-            cvs.style.display = 'block';
-            document.getElementById('dlBtn').disabled = false;
-            if (app && app.showToast) app.showToast('生成完成');
-            notifyParentResize();
-        }
+            function processHybridMain(dN, dNB, dFB, w, h, rangeBalValue, isGray) {
+                const outputData = new Uint8ClampedArray(dN.length);
 
-        function setViewSize(scale, btn) {
-            document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            cvs.style.width = (scale * 100) + '%';
-        }
+                for (let i = 0; i < dN.length; i += 4) {
+                    if (isGray) {
+                        const lN = 0.299*dN[i] + 0.587*dN[i+1] + 0.114*dN[i+2];
+                        const lNB = 0.299*dNB[i] + 0.587*dNB[i+1] + 0.114*dNB[i+2];
+                        const lFB = 0.299*dFB[i] + 0.587*dFB[i+1] + 0.114*dFB[i+2];
 
-        function downloadImage() {
-            const link = document.createElement('a');
-            link.download = 'hybrid_image.png';
-            link.href = cvs.toDataURL();
-            link.click();
-        }
+                        const highFreq = lN - lNB;
+                        const lowFreq = lFB;
 
-        function notifyParentResize() {
-            setTimeout(() => {
-                const height = document.body.scrollHeight;
-                window.parent.postMessage({ type: 'resize', height: height }, '*');
-            }, 100);
-        }
+                        const hStrength = rangeBalValue * 3.0;
+                        let val = lowFreq + highFreq * hStrength;
+                        val = Math.min(255, Math.max(0, val));
+
+                        outputData[i] = val;
+                        outputData[i+1] = val;
+                        outputData[i+2] = val;
+                        outputData[i+3] = 255;
+                    } else {
+                        for (let c = 0; c < 3; c++) {
+                            const highFreq = dN[i+c] - dNB[i+c];
+                            const lowFreq = dFB[i+c];
+
+                            const hStrength = rangeBalValue * 3.0;
+                            let val = lowFreq + highFreq * hStrength;
+
+                            outputData[i+c] = Math.min(255, Math.max(0, val));
+                        }
+                        outputData[i+3] = 255;
+                    }
+                }
+
+                const imgData = new ImageData(outputData, w, h);
+                ctx.putImageData(imgData, 0, 0);
+                document.getElementById('resultPlaceholder').style.display = 'none';
+                cvs.style.display = 'block';
+                document.getElementById('dlBtn').disabled = false;
+                if (app && app.showToast) app.showToast('生成完成');
+                hybridTool.notifyParentResize();
+            }
+
+            function setViewSize(scale, btn) {
+                document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                cvs.style.width = (scale * 100) + '%';
+            }
+
+            function downloadImage() {
+                CanvasUtils.download(cvs.toDataURL(), 'hybrid_image.png');
+            }
+
+            function notifyParentResize() {
+                setTimeout(() => {
+                    const height = document.body.scrollHeight;
+                    window.parent.postMessage({ type: 'resize', height: height }, '*');
+                }, 100);
+            }
+
+            // Event listeners
+            document.getElementById('btn-generate').addEventListener('click', hybridTool.generateHybrid);
+            document.getElementById('dlBtn').addEventListener('click', hybridTool.downloadImage);
+            document.getElementById('tab-100').addEventListener('click', function() { hybridTool.setViewSize(1, this); });
+            document.getElementById('tab-25').addEventListener('click', function() { hybridTool.setViewSize(0.25, this); });
+            document.getElementById('tab-10').addEventListener('click', function() { hybridTool.setViewSize(0.1, this); });
+
+            document.getElementById('range-hp').addEventListener('input', function() {
+                document.getElementById('val-hp').innerText = this.value;
+            });
+            document.getElementById('range-lp').addEventListener('input', function() {
+                document.getElementById('val-lp').innerText = this.value;
+            });
+            document.getElementById('range-bal').addEventListener('input', function() {
+                document.getElementById('val-bal').innerText = this.value;
+            });
+
+            return { handleImage, generateHybrid, processHybridMain, setViewSize, downloadImage, notifyParentResize };
+        })();
     </script>
+<div id="toast"></div>
 </body>
 </html>

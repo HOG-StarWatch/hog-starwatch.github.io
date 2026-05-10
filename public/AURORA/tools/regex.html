@@ -197,13 +197,13 @@
         }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="regex-page">
         <div class="panel">
             <div class="panel-header">
                 <div class="panel-title">正则实验室</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon" onclick="regexTool.clearAll()">清空</button>
+                    <button class="btn btn-icon" id="btn-clear-all">清空</button>
                 </div>
             </div>
             <div class="regex-controls">
@@ -219,14 +219,14 @@
                         <label><input type="checkbox" id="flag-i"> insensitive (i)</label>
                     </div>
                 </div>
-                <div class="quick-ref">
-                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('\\d+')">数字 \\d</button>
-                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('\\w+')">单词 \\w</button>
-                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('[a-z]')">小写 [a-z]</button>
-                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('^...$')">整行 ^$</button>
-                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('(...)')">分组 ()</button>
-                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('[\\\\u4e00-\\\\u9fa5]')">中文</button>
-                    <button class="ref-chip" type="button" onclick="regexTool.insertRegex('((?=.*\\\\d)(?=.*[a-z]).{8,})')">强密码</button>
+                <div class="quick-ref" id="quick-ref">
+                    <button class="ref-chip" type="button" data-regex="\d+">数字 \\d</button>
+                    <button class="ref-chip" type="button" data-regex="\w+">单词 \\w</button>
+                    <button class="ref-chip" type="button" data-regex="[a-z]">小写 [a-z]</button>
+                    <button class="ref-chip" type="button" data-regex="^...$">整行 ^$</button>
+                    <button class="ref-chip" type="button" data-regex="(...)">分组 ()</button>
+                    <button class="ref-chip" type="button" data-regex="[\\u4e00-\\u9fa5]">中文</button>
+                    <button class="ref-chip" type="button" data-regex="((?=.*\\d)(?=.*[a-z]).{8,})">强密码</button>
                 </div>
             </div>
         </div>
@@ -238,7 +238,7 @@
                     <div class="toolbar-split">
                         <input id="match-filter" class="mini-input" placeholder="筛选匹配">
                         <label class="mini-toggle"><input type="checkbox" id="only-groups">仅含分组</label>
-                        <button class="btn btn-icon" onclick="regexTool.copyMatches()">复制</button>
+                        <button class="btn btn-icon" id="btn-copy-matches">复制</button>
                         <span id="match-count" style="color:var(--secondary)">0 matches</span>
                     </div>
                     <div class="toolbar-split">
@@ -251,7 +251,7 @@
                 <div class="editor-box">
                     <div class="box-header">
                         测试文本
-                        <button class="btn btn-sm btn-icon" onclick="regexTool.clearInput()">×</button>
+                        <button class="btn btn-sm btn-icon" id="btn-clear-input">×</button>
                     </div>
                     <div style="position:relative; flex:1; overflow:hidden;">
                         <div id="regex-highlight" class="text-layer highlight-layer"></div>
@@ -273,7 +273,6 @@ English test: Hello World
 
     <div id="toast" class="toast">操作成功</div>
     <script src="../js/app.js"></script>
-    <script src="../js/loader.js"></script>
     <script>
         const regexTool = {
             _regexRaf: null,
@@ -585,6 +584,17 @@ English test: Hello World
             regexTool.autoResize();
             window.addEventListener('resize', () => regexTool.autoResize());
         };
+
+        // Event listeners
+        document.getElementById('btn-clear-all').addEventListener('click', function() { regexTool.clearAll(); });
+        document.getElementById('btn-copy-matches').addEventListener('click', function() { regexTool.copyMatches(); });
+        document.getElementById('btn-clear-input').addEventListener('click', function() { regexTool.clearInput(); });
+        document.getElementById('quick-ref').addEventListener('click', function(e) {
+            const chip = e.target.closest('.ref-chip');
+            if (chip && chip.dataset.regex) {
+                regexTool.insertRegex(chip.dataset.regex);
+            }
+        });
 
         bindRegexEvents();
     </script>

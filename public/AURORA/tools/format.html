@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="../css/style.css">
     <script src="../js/loader.js"></script>
 </head>
-<body>
+<body class="scroll-content">
     <div class="workspace">
         <div class="panel">
             <div class="panel-header">
                 <div class="panel-title">源码输入</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon" onclick="app.clear('fmt')">清空</button>
+                    <button class="btn btn-icon" id="btn-clear-fmt">清空</button>
                 </div>
             </div>
             <textarea id="fmt-input" placeholder="粘贴 JSON, HTML, CSS, JS 代码..."></textarea>
@@ -22,19 +22,19 @@
         <div class="toolbar">
             <div class="tool-group">
                 <div class="group-label">JSON</div>
-                <button class="btn" onclick="fmtTool.format('json')">格式化 JSON</button>
-                <button class="btn" onclick="fmtTool.minify('json')">压缩 JSON</button>
+                <button class="btn" id="btn-fmt-json">格式化 JSON</button>
+                <button class="btn" id="btn-min-json">压缩 JSON</button>
             </div>
             <div class="tool-group">
                 <div class="group-label">Web</div>
-                <button class="btn" onclick="fmtTool.format('html')">格式化 HTML</button>
-                <button class="btn" onclick="fmtTool.format('css')">格式化 CSS</button>
-                <button class="btn" onclick="fmtTool.format('js')">格式化 JS</button>
+                <button class="btn" id="btn-fmt-html">格式化 HTML</button>
+                <button class="btn" id="btn-fmt-css">格式化 CSS</button>
+                <button class="btn" id="btn-fmt-js">格式化 JS</button>
             </div>
             <div class="tool-group">
                 <div class="group-label">Other</div>
-                <button class="btn" onclick="fmtTool.minify('xml')">XML 压缩</button>
-                <button class="btn" onclick="fmtTool.minify('sql')">SQL 压缩</button>
+                <button class="btn" id="btn-min-xml">XML 压缩</button>
+                <button class="btn" id="btn-min-sql">SQL 压缩</button>
             </div>
         </div>
 
@@ -42,7 +42,7 @@
             <div class="panel-header">
                 <div class="panel-title">格式化结果</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon btn-secondary" onclick="app.copy('fmt-output')">复制</button>
+                    <button class="btn btn-icon btn-secondary" id="btn-copy-fmt">复制</button>
                 </div>
             </div>
             <textarea id="fmt-output" readonly placeholder="结果..."></textarea>
@@ -105,6 +105,17 @@
                 }
             }
         };
+
+        // Event listeners
+        document.getElementById('btn-clear-fmt').addEventListener('click', () => app.clear('fmt'));
+        document.getElementById('btn-fmt-json').addEventListener('click', () => fmtTool.format('json'));
+        document.getElementById('btn-min-json').addEventListener('click', () => fmtTool.minify('json'));
+        document.getElementById('btn-fmt-html').addEventListener('click', () => fmtTool.format('html'));
+        document.getElementById('btn-fmt-css').addEventListener('click', () => fmtTool.format('css'));
+        document.getElementById('btn-fmt-js').addEventListener('click', () => fmtTool.format('js'));
+        document.getElementById('btn-min-xml').addEventListener('click', () => fmtTool.minify('xml'));
+        document.getElementById('btn-min-sql').addEventListener('click', () => fmtTool.minify('sql'));
+        document.getElementById('btn-copy-fmt').addEventListener('click', () => app.copy('fmt-output'));
     </script>
 </body>
 </html>

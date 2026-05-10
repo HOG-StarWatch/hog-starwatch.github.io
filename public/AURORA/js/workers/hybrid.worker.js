@@ -44,7 +44,7 @@ self.onmessage = function(e) {
                 }
             }
 
-            self.postMessage({ type: 'complete', outputData: outputData.buffer }, [outputData.buffer]);
+            self.postMessage({ type: 'success', outputData: outputData.buffer }, [outputData.buffer]);
         } catch (error) {
             self.postMessage({ type: 'error', error: error.message });
         }

@@ -76,9 +76,9 @@
 </head>
 <body class="scroll-content">
     <div class="sub-tab-group">
-        <div class="sub-tab active" onclick="switchSubTab('format', this)">格式转换</div>
-        <div class="sub-tab" onclick="switchSubTab('resize', this)">尺寸调整</div>
-        <div class="sub-tab" onclick="switchSubTab('base64', this)">Base64 转换</div>
+        <div class="sub-tab active" id="tab-btn-format" data-tab="format">格式转换</div>
+        <div class="sub-tab" id="tab-btn-resize" data-tab="resize">尺寸调整</div>
+        <div class="sub-tab" id="tab-btn-base64" data-tab="base64">Base64 转换</div>
     </div>
 
     <div class="workspace">
@@ -101,13 +101,13 @@
                     </div>
                     <div style="flex: 1; min-width: 200px;">
                         <label>质量 (JPEG/WEBP)</label>
-                        <input type="range" id="target-quality" min="0.1" max="1.0" step="0.1" value="0.9" oninput="document.getElementById('quality-val').innerText = Math.round(this.value * 100) + '%'">
+                        <input type="range" id="target-quality" min="0.1" max="1.0" step="0.1" value="0.9">
                         <span id="quality-val" style="font-size: 0.8rem; color: var(--primary);">90%</span>
                     </div>
                 </div>
 
                 <!-- Upload -->
-                <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                <div class="upload-area" id="drop-zone">
                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">📂</div>
                     <div>点击或拖拽图片到此处</div>
                     <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">支持 PNG, JPG, WEBP, BMP, GIF 等</div>
@@ -116,8 +116,8 @@
 
                 <!-- Actions -->
                 <div style="display: flex; gap: 1rem;">
-                    <button class="btn btn-primary" onclick="imgConverter.convertAll()">全部转换</button>
-                    <button class="btn btn-secondary" onclick="imgConverter.clearAll()">清空列表</button>
+                    <button class="btn btn-primary" id="btn-convert-all">全部转换</button>
+                    <button class="btn btn-secondary" id="btn-clear-all">清空列表</button>
                 </div>
 
                 <!-- Preview List -->
@@ -132,10 +132,10 @@
             <div class="panel-title">图片尺寸调整</div>
             
             <!-- Upload Area -->
-            <div class="upload-area" id="resize-drop-zone" onclick="document.getElementById('resize-file-input').click()" style="margin-bottom: 1.5rem;">
+            <div class="upload-area" id="resize-drop-zone" style="margin-bottom: 1.5rem;">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">📐</div>
                 <div>点击或拖拽图片到此处</div>
-                <input type="file" id="resize-file-input" accept="image/*" style="display: none;" onchange="resizeTool.handleFile(this.files[0])">
+                <input type="file" id="resize-file-input" accept="image/*" style="display: none;">
             </div>
 
             <!-- Workspace (Hidden until file loaded) -->
@@ -181,8 +181,8 @@
                         </div>
 
                         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                            <button class="btn btn-primary" onclick="resizeTool.process()" style="flex: 1;">应用并预览</button>
-                            <button class="btn btn-secondary" id="resize-download-btn" disabled onclick="resizeTool.download()" style="flex: 1;">下载图片</button>
+                            <button class="btn btn-primary" id="btn-resize-process" style="flex: 1;">应用并预览</button>
+                            <button class="btn btn-secondary" id="resize-download-btn" disabled style="flex: 1;">下载图片</button>
                         </div>
                     </div>
 
@@ -201,17 +201,17 @@
             <div class="panel-title">Base64 图片转换</div>
             
             <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-                <button class="mode-btn active" id="mode-to-base64" onclick="base64Tool.switchMode('toBase64')">图片转 Base64</button>
-                <button class="mode-btn" id="mode-to-image" onclick="base64Tool.switchMode('toImage')">Base64 转图片</button>
+                <button class="mode-btn active" id="mode-to-base64">图片转 Base64</button>
+                <button class="mode-btn" id="mode-to-image">Base64 转图片</button>
             </div>
 
             <!-- Image to Base64 -->
             <div id="view-to-base64" class="tab-content">
-                <div class="upload-area" id="b64-drop-zone" onclick="document.getElementById('b64-file-input').click()">
+                <div class="upload-area" id="b64-drop-zone">
                     <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.8;">🖼️</div>
                     <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 0.5rem;">点击或拖拽图片到此处</div>
                     <div style="font-size: 0.85rem; color: var(--text-dim); opacity: 0.7;">支持 PNG, JPG, WEBP, GIF (自动转换为 Base64)</div>
-                    <input type="file" id="b64-file-input" accept="image/*" style="display: none;" onchange="base64Tool.handleFile(this.files[0])">
+                    <input type="file" id="b64-file-input" accept="image/*" style="display: none;">
                 </div>
                 
                 <div id="b64-result-area" style="display:none; margin-top:1.5rem;">
@@ -220,9 +220,9 @@
                         <textarea id="b64-output" style="width:100%; min-height:150px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); padding:0.8rem;" readonly></textarea>
                     </div>
                     <div style="display:flex; gap:1rem; margin-top:1rem;">
-                        <button class="btn btn-primary" onclick="app.copy('b64-output')">复制结果</button>
-                        <button class="btn btn-secondary" onclick="base64Tool.copyAsCSS()">复制为 CSS</button>
-                        <button class="btn btn-secondary" onclick="base64Tool.copyAsHTML()">复制为 HTML img</button>
+                        <button class="btn btn-primary" id="btn-copy-b64">复制结果</button>
+                        <button class="btn btn-secondary" id="btn-copy-css">复制为 CSS</button>
+                        <button class="btn btn-secondary" id="btn-copy-html">复制为 HTML img</button>
                     </div>
                     <div style="margin-top:1rem; text-align:center;">
                         <img id="b64-preview-img" style="max-width:100%; max-height:200px; border-radius:var(--radius-md); box-shadow:0 4px 10px rgba(0,0,0,0.3);">
@@ -237,12 +237,12 @@
                     <label>Base64 字符串</label>
                     <textarea id="b64-input" spellcheck="false" placeholder="粘贴 Base64 字符串..." style="width:100%; min-height:150px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-main); padding:0.8rem;"></textarea>
                 </div>
-                <button class="btn btn-primary" onclick="base64Tool.decode()" style="margin-top:1rem;">解码并预览</button>
+                <button class="btn btn-primary" id="btn-b64-decode" style="margin-top:1rem;">解码并预览</button>
                 
                 <div id="decode-result-area" style="display:none; margin-top:1.5rem; text-align:center;">
                     <img id="decode-preview-img" style="max-width:100%; max-height:300px; border-radius:var(--radius-md); box-shadow:0 4px 10px rgba(0,0,0,0.3);">
                     <div style="margin-top:1rem;">
-                        <button class="btn btn-secondary" onclick="base64Tool.download()">下载图片</button>
+                        <button class="btn btn-secondary" id="btn-b64-download">下载图片</button>
                     </div>
                 </div>
             </div>
@@ -617,7 +617,7 @@
                     <div class="file-info">${(item.file.size / 1024).toFixed(1)} KB</div>
                     <div class="action-row">
                         <span class="status-badge" style="font-size: 0.8rem; color: var(--secondary);">待转换</span>
-                        <button class="btn btn-icon btn-sm" onclick="imgConverter.removeItem('${item.id}')" title="删除">✕</button>
+                        <button class="btn btn-icon btn-sm btn-remove-item" data-item-id="${item.id}" title="删除">✕</button>
                     </div>
                 `;
                 list.appendChild(div);
@@ -677,7 +677,7 @@
                                 btn.className = 'btn btn-secondary btn-sm btn-download';
                                 btn.innerText = `下载 .${ext}`;
                                 btn.style.marginTop = '0.5rem';
-                                btn.onclick = () => this.download(item, ext);
+                                btn.addEventListener('click', function() { this.download(item, ext); }.bind(this));
                                 el.appendChild(btn);
                             }
                         }
@@ -700,6 +700,50 @@
                 document.body.removeChild(link);
             }
         };
+
+        // Event listeners
+        document.getElementById('tab-btn-format').addEventListener('click', function() { switchSubTab('format', this); });
+        document.getElementById('tab-btn-resize').addEventListener('click', function() { switchSubTab('resize', this); });
+        document.getElementById('tab-btn-base64').addEventListener('click', function() { switchSubTab('base64', this); });
+
+        document.getElementById('drop-zone').addEventListener('click', function() { document.getElementById('file-input').click(); });
+        document.getElementById('btn-convert-all').addEventListener('click', function() { imgConverter.convertAll(); });
+        document.getElementById('btn-clear-all').addEventListener('click', function() { imgConverter.clearAll(); });
+
+        document.getElementById('resize-drop-zone').addEventListener('click', function() { document.getElementById('resize-file-input').click(); });
+        document.getElementById('btn-resize-process').addEventListener('click', function() { resizeTool.process(); });
+        document.getElementById('resize-download-btn').addEventListener('click', function() { resizeTool.download(); });
+
+        document.getElementById('mode-to-base64').addEventListener('click', function() { base64Tool.switchMode('toBase64'); });
+        document.getElementById('mode-to-image').addEventListener('click', function() { base64Tool.switchMode('toImage'); });
+
+        document.getElementById('b64-drop-zone').addEventListener('click', function() { document.getElementById('b64-file-input').click(); });
+        document.getElementById('btn-copy-b64').addEventListener('click', function() { app.copy('b64-output'); });
+        document.getElementById('btn-copy-css').addEventListener('click', function() { base64Tool.copyAsCSS(); });
+        document.getElementById('btn-copy-html').addEventListener('click', function() { base64Tool.copyAsHTML(); });
+
+        document.getElementById('btn-b64-decode').addEventListener('click', function() { base64Tool.decode(); });
+        document.getElementById('btn-b64-download').addEventListener('click', function() { base64Tool.download(); });
+
+        document.getElementById('target-quality').addEventListener('input', function() {
+            document.getElementById('quality-val').innerText = Math.round(this.value * 100) + '%';
+        });
+
+        document.getElementById('resize-file-input').addEventListener('change', function(e) {
+            resizeTool.handleFile(e.target.files[0]);
+        });
+
+        document.getElementById('b64-file-input').addEventListener('change', function(e) {
+            base64Tool.handleFile(e.target.files[0]);
+        });
+
+        // Event delegation for dynamically generated remove buttons
+        document.getElementById('preview-list').addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-remove-item');
+            if (btn) {
+                imgConverter.removeItem(btn.dataset.itemId);
+            }
+        });
 
         // Initialize
         window.onload = function() {

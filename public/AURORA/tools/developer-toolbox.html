@@ -382,64 +382,64 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
 .close-modal { float: right; cursor: pointer; font-size: 24px; color: #aaa; }
 </style>
 </head>
-<body>
+<body class="scroll-content">
 
 <!-- Top Navbar -->
 <div class="navbar">
-    <button class="mobile-menu-btn" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+    <button id="btn-mobile-menu" class="mobile-menu-btn">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
     </button>
     <div class="nav-links">
-        <div class="nav-item active" onclick="switchTab('social')">
+        <div class="nav-item active" data-tab="social">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
             <div class="nav-text">
                 <span class="nav-en">Social Preview</span>
                 <span class="nav-cn">社交预览</span>
             </div>
         </div>
-        <div class="nav-item" onclick="switchTab('badge')">
+        <div class="nav-item" data-tab="badge">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.9V17L12 22l-9-4.9V7z"/></svg>
             <div class="nav-text">
                 <span class="nav-en">Badge Designer</span>
                 <span class="nav-cn">徽章设计</span>
             </div>
         </div>
-        <div class="nav-item" onclick="switchTab('icon')">
+        <div class="nav-item" data-tab="icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <div class="nav-text">
                 <span class="nav-en">Icon Explorer</span>
                 <span class="nav-cn">图标搜索</span>
             </div>
         </div>
-        <div class="nav-item" onclick="switchTab('favicon')">
+        <div class="nav-item" data-tab="favicon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             <div class="nav-text">
                 <span class="nav-en">Favicon Grabber</span>
                 <span class="nav-cn">图标获取</span>
             </div>
         </div>
-        <div class="nav-item" onclick="switchTab('chart')">
+        <div class="nav-item" data-tab="chart">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="11" x2="8" y2="16"/><line x1="16" y1="13" x2="16" y2="16"/></svg>
             <div class="nav-text">
                 <span class="nav-en">Quick Chart</span>
                 <span class="nav-cn">图表生成</span>
             </div>
         </div>
-        <div class="nav-item" onclick="switchTab('mock')">
+        <div class="nav-item" data-tab="mock">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <div class="nav-text">
                 <span class="nav-en">Mock User</span>
                 <span class="nav-cn">模拟用户</span>
             </div>
         </div>
-        <div class="nav-item" onclick="switchTab('lorem')">
+        <div class="nav-item" data-tab="lorem">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             <div class="nav-text">
                 <span class="nav-en">Lorem Ipsum</span>
                 <span class="nav-cn">乱数假文</span>
             </div>
         </div>
-        <div class="nav-item" onclick="switchTab('placehold')">
+        <div class="nav-item" data-tab="placehold">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <div class="nav-text">
                 <span class="nav-en">Placeholder</span>
@@ -458,35 +458,35 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
             <div class="panel config-panel">
                 <h2>
                     配置 Meta
-                    <button class="btn btn-sm btn-outline" onclick="openModal('social-help')">帮助</button>
+                    <button class="btn btn-sm btn-outline">帮助</button>
                 </h2>
                 <div class="group">
                     <label>网站标题</label>
-                    <input type="text" id="sp-title" value="My Awesome Project" oninput="updateSP()">
+                    <input type="text" id="sp-title" value="My Awesome Project">
                 </div>
                 <div class="group">
                     <label>描述</label>
-                    <textarea id="sp-desc" oninput="updateSP()">Build faster with this amazing tool. It optimizes your workflow like never before.</textarea>
+                    <textarea id="sp-desc">Build faster with this amazing tool. It optimizes your workflow like never before.</textarea>
                 </div>
                 <div class="group">
                     <label>图片链接</label>
-                    <input type="text" id="sp-img" value="https://placehold.co/1200x630/302b63/ffffff?text=Preview+Image" oninput="updateSP()">
+                    <input type="text" id="sp-img" value="https://placehold.co/1200x630/302b63/ffffff?text=Preview+Image">
                 </div>
                 <div class="group">
                     <label>网站域名</label>
-                    <input type="text" id="sp-domain" value="example.com" oninput="updateSP()">
+                    <input type="text" id="sp-domain" value="example.com">
                 </div>
                 <div class="group">
                     <label>主题色</label>
-                    <input type="color" id="sp-color" value="#00b0f4" oninput="updateSP()" style="height:40px; padding:0;">
+                    <input type="color" id="sp-color" value="#00b0f4" style="height:40px; padding:0;">
                 </div>
             </div>
             
             <div class="panel preview-panel">
                 <div class="preview-mode-tabs">
-                    <div class="tab-btn active" onclick="setSPMode('fb', this)">Facebook/OpenGraph</div>
-                    <div class="tab-btn" onclick="setSPMode('tw', this)">Twitter Large</div>
-                    <div class="tab-btn" onclick="setSPMode('dc', this)">Discord Embed</div>
+                    <div class="tab-btn active" data-sp-mode="fb">Facebook/OpenGraph</div>
+                    <div class="tab-btn" data-sp-mode="tw">Twitter Large</div>
+                    <div class="tab-btn" data-sp-mode="dc">Discord Embed</div>
                 </div>
 
                 <div id="sp-preview-container">
@@ -494,7 +494,7 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
                 </div>
 
                 <div class="code-box">
-                    <button class="btn btn-sm copy-btn" onclick="copyCode('sp-code')">复制</button>
+                    <button class="btn btn-sm copy-btn" data-copy-target="sp-code">复制</button>
                     <pre id="sp-code"></pre>
                 </div>
             </div>
@@ -507,24 +507,24 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
             <div class="panel config-panel">
                 <h2>
                     设计徽章
-                    <button class="btn btn-sm btn-outline" onclick="openModal('badge-help')">帮助</button>
+                    <button class="btn btn-sm btn-outline">帮助</button>
                 </h2>
                 <div class="group">
                     <label>左侧文字</label>
-                    <input type="text" id="bd-label" value="build" oninput="updateBD()">
+                    <input type="text" id="bd-label" value="build">
                 </div>
                 <div class="group">
                     <label>右侧文字</label>
-                    <input type="text" id="bd-msg" value="passing" oninput="updateBD()">
+                    <input type="text" id="bd-msg" value="passing">
                 </div>
                 <div class="group">
                     <label>颜色</label>
-                    <input type="text" id="bd-color" value="brightgreen" oninput="updateBD()">
+                    <input type="text" id="bd-color" value="brightgreen">
                     <div class="color-grid" id="bd-cgrid"></div>
                 </div>
                 <div class="group">
                     <label>样式</label>
-                    <select id="bd-style" onchange="updateBD()">
+                    <select id="bd-style">
                         <option value="flat">Flat</option>
                         <option value="flat-square">Flat Square</option>
                         <option value="plastic">Plastic</option>
@@ -534,25 +534,25 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
                 </div>
                 <div class="group">
                     <label>Logo (SimpleIcons)</label>
-                    <input type="text" id="bd-logo" placeholder="github, react..." oninput="updateBD()">
+                    <input type="text" id="bd-logo" placeholder="github, react...">
                 </div>
                 <div class="group">
                     <label>Logo 颜色</label>
-                    <input type="text" id="bd-logo-col" placeholder="white" oninput="updateBD()">
+                    <input type="text" id="bd-logo-col" placeholder="white">
                 </div>
             </div>
             
             <div class="panel preview-panel">
                 <div class="badge-preview-area">
-                    <img id="bd-preview" src="" style="cursor:pointer" onclick="window.open(this.src, '_blank')">
+                    <img id="bd-preview" src="" style="cursor:pointer">
                 </div>
                 
                 <div class="code-box">
-                    <button class="btn btn-sm copy-btn" onclick="copyCode('bd-code-md')">复制 Markdown</button>
+                    <button class="btn btn-sm copy-btn" data-copy-target="bd-code-md">复制 Markdown</button>
                     <pre id="bd-code-md"></pre>
                 </div>
                 <div class="code-box">
-                    <button class="btn btn-sm copy-btn" onclick="copyCode('bd-code-html')">复制 HTML</button>
+                    <button class="btn btn-sm copy-btn" data-copy-target="bd-code-html">复制 HTML</button>
                     <pre id="bd-code-html"></pre>
                 </div>
             </div>
@@ -565,24 +565,24 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
             <div class="panel config-panel">
                 <h2>
                     Icon Explorer
-                    <button class="btn btn-sm btn-outline" onclick="openModal('icon-help')">帮助</button>
+                    <button class="btn btn-sm btn-outline">帮助</button>
                 </h2>
                 <div class="group icon-search-box">
                     <label>关键词</label>
-                    <input type="text" id="icon-query" placeholder="home, user, cloud..." onkeypress="if(event.key==='Enter') searchIcons()">
+                    <input type="text" id="icon-query" placeholder="home, user, cloud...">
                     <svg class="search-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 </div>
-                <button class="btn" style="width:100%" onclick="searchIcons()">搜索图标</button>
+                <button id="btn-search-icons" class="btn" style="width:100%">搜索图标</button>
                 
                 <div class="group" style="margin-top:30px">
                     <label>预览颜色</label>
-                    <input type="color" id="icon-color" value="#ffffff" oninput="updateIconStyle()" style="height:40px; padding:0">
+                    <input type="color" id="icon-color" value="#ffffff" style="height:40px; padding:0">
                 </div>
                 
                 <div class="group">
                     <label>已选图标代码</label>
                     <textarea id="icon-code" readonly placeholder="点击右侧图标获取代码..."></textarea>
-                    <button class="btn btn-sm" style="width:100%; margin-top:10px" onclick="copyCode('icon-code')">复制 SVG 代码</button>
+                    <button class="btn btn-sm" style="width:100%; margin-top:10px" data-copy-target="icon-code">复制 SVG 代码</button>
                 </div>
             </div>
             
@@ -603,18 +603,18 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
             <div class="panel config-panel">
                 <h2>
                     Favicon Grabber
-                    <button class="btn btn-sm btn-outline" onclick="openModal('fav-help')">帮助</button>
+                    <button class="btn btn-sm btn-outline">帮助</button>
                 </h2>
                 <div class="group">
                     <label>网站域名</label>
-                    <input type="text" id="fav-domain" placeholder="example.com" value="google.com" oninput="updateFav()">
+                    <input type="text" id="fav-domain" placeholder="example.com" value="google.com">
                 </div>
-                <button class="btn" style="width:100%" onclick="updateFav()">获取图标</button>
+                <button id="btn-update-fav" class="btn" style="width:100%">获取图标</button>
                 
                 <div class="group" style="margin-top:30px">
                     <label>代码 (HTML)</label>
                     <textarea id="fav-code" readonly></textarea>
-                    <button class="btn btn-sm" style="width:100%; margin-top:10px" onclick="copyCode('fav-code')">复制代码</button>
+                    <button class="btn btn-sm" style="width:100%; margin-top:10px" data-copy-target="fav-code">复制代码</button>
                 </div>
             </div>
             
@@ -633,11 +633,11 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
             <div class="panel config-panel">
                 <h2>
                     Quick Chart
-                    <button class="btn btn-sm btn-outline" onclick="openModal('chart-help')">帮助</button>
+                    <button class="btn btn-sm btn-outline">帮助</button>
                 </h2>
                 <div class="group">
                     <label>类型</label>
-                    <select id="qc-type" onchange="updateChart()">
+                    <select id="qc-type">
                         <option value="bar">Bar (柱状图)</option>
                         <option value="line">Line (折线图)</option>
                         <option value="pie">Pie (饼图)</option>
@@ -647,22 +647,22 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
                 </div>
                 <div class="group">
                     <label>标题</label>
-                    <input type="text" id="qc-title" value="Monthly Users" oninput="updateChart()">
+                    <input type="text" id="qc-title" value="Monthly Users">
                 </div>
                 <div class="group">
                     <label>标签 (逗号分隔)</label>
-                    <input type="text" id="qc-labels" value="Jan,Feb,Mar,Apr,May" oninput="updateChart()">
+                    <input type="text" id="qc-labels" value="Jan,Feb,Mar,Apr,May">
                 </div>
                 <div class="group">
                     <label>数据 (逗号分隔)</label>
-                    <input type="text" id="qc-data" value="50,60,70,180,190" oninput="updateChart()">
+                    <input type="text" id="qc-data" value="50,60,70,180,190">
                 </div>
-                <button class="btn" style="width:100%" onclick="updateChart()">生成图表</button>
+                <button id="btn-update-chart" class="btn" style="width:100%">生成图表</button>
 
                 <div class="group" style="margin-top:20px">
                     <label>图片链接</label>
-                    <input type="text" id="qc-url" readonly onclick="this.select()">
-                    <button class="btn btn-sm" style="width:100%; margin-top:10px" onclick="copyCode('qc-url')">复制链接</button>
+                    <input type="text" id="qc-url" readonly class="select-on-click">
+                    <button class="btn btn-sm" style="width:100%; margin-top:10px">复制链接</button>
                 </div>
             </div>
             
@@ -679,7 +679,7 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
             <div class="panel config-panel">
                 <h2>
                     Mock User
-                    <button class="btn btn-sm btn-outline" onclick="openModal('mock-help')">帮助</button>
+                    <button class="btn btn-sm btn-outline">帮助</button>
                 </h2>
                 <div class="group">
                     <label>性别</label>
@@ -701,7 +701,7 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
                         <option value="jp">JP (Japan)</option>
                     </select>
                 </div>
-                <button class="btn" style="width:100%" onclick="fetchMockUser()">生成随机用户</button>
+                <button id="btn-fetch-mock" class="btn" style="width:100%">生成随机用户</button>
             </div>
             
             <div class="panel preview-panel">
@@ -712,7 +712,7 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
                 <div class="json-box" id="mu-json">
 // JSON 数据将显示在这里...
                 </div>
-                <button class="btn btn-sm" style="margin-top:10px" onclick="copyCode('mu-json')">复制 JSON</button>
+                <button class="btn btn-sm" style="margin-top:10px" data-copy-target="mu-json">复制 JSON</button>
             </div>
         </div>
     </div>
@@ -723,7 +723,7 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
             <div class="panel config-panel">
                 <h2>
                     Lorem Ipsum
-                    <button class="btn btn-sm btn-outline" onclick="openModal('lorem-help')">帮助</button>
+                    <button class="btn btn-sm btn-outline">帮助</button>
                 </h2>
                 <div class="group">
                     <label>段落数量</label>
@@ -736,12 +736,12 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
                         <option value="meat-and-filler">Meat and Filler</option>
                     </select>
                 </div>
-                <button class="btn" style="width:100%" onclick="fetchLorem()">生成文本</button>
+                <button id="btn-fetch-lorem" class="btn" style="width:100%">生成文本</button>
             </div>
             
             <div class="panel preview-panel">
                 <div class="code-box" style="margin-top:0; height:100%; background:#fff; color:#333; font-family:serif; font-size:16px; line-height:1.6;">
-                    <button class="btn btn-sm copy-btn" onclick="copyCode('li-text')">复制</button>
+                    <button class="btn btn-sm copy-btn" data-copy-target="li-text">复制</button>
                     <div id="li-text" style="height:100%; overflow:auto; padding:20px; white-space:pre-wrap;">点击生成按钮获取文本...</div>
                 </div>
             </div>
@@ -754,47 +754,47 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
             <div class="panel config-panel">
                 <h2>
                     Placeholder
-                    <button class="btn btn-sm btn-outline" onclick="openModal('ph-help')">帮助</button>
+                    <button class="btn btn-sm btn-outline">帮助</button>
                 </h2>
                 <div class="group" style="display:flex; gap:10px">
                     <div style="flex:1">
                         <label>宽</label>
-                        <input type="number" id="ph-w" value="600" oninput="updatePlacehold()">
+                        <input type="number" id="ph-w" value="600">
                     </div>
                     <div style="flex:1">
                         <label>高</label>
-                        <input type="number" id="ph-h" value="400" oninput="updatePlacehold()">
+                        <input type="number" id="ph-h" value="400">
                     </div>
                 </div>
                 <div class="group">
                     <label>文字</label>
-                    <input type="text" id="ph-text" placeholder="Hello World" oninput="updatePlacehold()">
+                    <input type="text" id="ph-text" placeholder="Hello World">
                 </div>
                 <div class="group" style="display:flex; gap:10px">
                     <div style="flex:1">
                         <label>背景色</label>
-                        <input type="color" id="ph-bg" value="#302b63" oninput="updatePlacehold()" style="height:40px; padding:0">
+                        <input type="color" id="ph-bg" value="#302b63" style="height:40px; padding:0">
                     </div>
                     <div style="flex:1">
                         <label>文字色</label>
-                        <input type="color" id="ph-fg" value="#ffffff" oninput="updatePlacehold()" style="height:40px; padding:0">
+                        <input type="color" id="ph-fg" value="#ffffff" style="height:40px; padding:0">
                     </div>
                 </div>
                 <div class="group">
                     <label>格式</label>
-                    <select id="ph-fmt" onchange="updatePlacehold()">
+                    <select id="ph-fmt">
                         <option value="png">PNG</option>
                         <option value="svg">SVG</option>
                         <option value="jpg">JPG</option>
                         <option value="webp">WEBP</option>
                     </select>
                 </div>
-                <button class="btn" style="width:100%" onclick="updatePlacehold()">刷新</button>
+                <button id="btn-update-ph" class="btn" style="width:100%">刷新</button>
 
                 <div class="group" style="margin-top:20px">
                     <label>链接</label>
-                    <input type="text" id="ph-url" readonly onclick="this.select()">
-                    <button class="btn btn-sm" style="width:100%; margin-top:10px" onclick="copyCode('ph-url')">复制链接</button>
+                    <input type="text" id="ph-url" readonly class="select-on-click">
+                    <button class="btn btn-sm" style="width:100%; margin-top:10px">复制链接</button>
                 </div>
             </div>
             
@@ -803,7 +803,7 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
                     <img id="ph-preview" style="max-width:100%; height:auto; display:block">
                 </div>
                 <div class="code-box">
-                     <button class="btn btn-sm copy-btn" onclick="copyCode('ph-html')">复制 HTML</button>
+                     <button class="btn btn-sm copy-btn" data-copy-target="ph-html">复制 HTML</button>
                      <pre id="ph-html"></pre>
                 </div>
             </div>
@@ -813,52 +813,52 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
 </div>
 
 <!-- Modals -->
-<div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this) closeModal()">
+<div id="modal-overlay" class="modal-overlay">
     <!-- Social Help -->
     <div id="social-help" class="modal" style="display:none">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <span class="close-modal">&times;</span>
         <h3>Social Preview 帮助</h3>
         <p>此工具帮助你生成和预览网站的 Social Meta Tags (Open Graph, Twitter Cards)。</p>
     </div>
     <!-- Badge Help -->
     <div id="badge-help" class="modal" style="display:none">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <span class="close-modal">&times;</span>
         <h3>Badge Designer 帮助</h3>
         <p>基于 <code>Shields.io</code> 的徽章生成器。常用于 GitHub README。</p>
     </div>
     <!-- Icon Help -->
     <div id="icon-help" class="modal" style="display:none">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <span class="close-modal">&times;</span>
         <h3>Icon Explorer 帮助</h3>
         <p>基于 <code>Iconify</code> 的图标搜索工具。</p>
     </div>
     <!-- Favicon Help -->
     <div id="fav-help" class="modal" style="display:none">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <span class="close-modal">&times;</span>
         <h3>Favicon Grabber 帮助</h3>
         <p>基于 <code>Icon Horse</code> 的 Favicon 获取工具。</p>
     </div>
     <!-- Chart Help -->
     <div id="chart-help" class="modal" style="display:none">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <span class="close-modal">&times;</span>
         <h3>Quick Chart 帮助</h3>
         <p>基于 <code>QuickChart.io</code> 的图表生成工具。</p>
     </div>
     <!-- Mock Help -->
     <div id="mock-help" class="modal" style="display:none">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <span class="close-modal">&times;</span>
         <h3>Mock User 帮助</h3>
         <p>基于 <code>RandomUser.me</code> 的随机用户数据生成器。</p>
     </div>
     <!-- Lorem Help -->
     <div id="lorem-help" class="modal" style="display:none">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <span class="close-modal">&times;</span>
         <h3>Lorem Ipsum 帮助</h3>
         <p>基于 <code>baconipsum.com</code> 的乱数假文生成器。</p>
     </div>
     <!-- Placeholder Help -->
     <div id="ph-help" class="modal" style="display:none">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <span class="close-modal">&times;</span>
         <h3>Placeholder 帮助</h3>
         <p>基于 <code>placehold.co</code> 的占位图生成服务。</p>
     </div>
@@ -873,337 +873,472 @@ label { display: block; font-size: 12px; text-transform: uppercase; letter-spaci
 </script>
 <script>
 /* --- Core Logic --- */
-function switchTab(tabId) {
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll(`.nav-item[onclick="switchTab('${tabId}')"]`).forEach(el => el.classList.add('active'));
-    
-    document.querySelectorAll('.module-view').forEach(el => el.classList.remove('active'));
-    document.getElementById(`view-${tabId}`).classList.add('active');
+const devTool = {
+    switchTab(tabId) {
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll(`.nav-item[]`).forEach(el => el.classList.add('active'));
 
-    // Close mobile menu if open
-    if (window.innerWidth <= 768) {
-        document.querySelector('.nav-links').classList.remove('open');
+        document.querySelectorAll('.module-view').forEach(el => el.classList.remove('active'));
+        document.getElementById(`view-${tabId}`).classList.add('active');
+
+        // Close mobile menu if open
+        if (window.innerWidth <= 768) {
+            document.querySelector('.nav-links').classList.remove('open');
+        }
+    },
+    openModal(id) {
+        document.querySelectorAll('.modal').forEach(el => el.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+        document.getElementById('modal-overlay').classList.add('open');
+    },
+    closeModal() {
+        document.getElementById('modal-overlay').classList.remove('open');
+    },
+    copyCode(id) {
+        const el = document.getElementById(id);
+        const text = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value : el.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            // Simple toast or alert
+            const btn = document.activeElement;
+            const original = btn.innerText;
+            btn.innerText = '已复制!';
+            setTimeout(() => btn.innerText = original, 1000);
+        });
+    },
+    setSPMode(mode, btn) {
+        spMode = mode;
+        document.querySelectorAll('.preview-mode-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        devTool.updateSP();
+    },
+    updateSP() {
+        const title = document.getElementById('sp-title').value;
+        const desc = document.getElementById('sp-desc').value;
+        const img = document.getElementById('sp-img').value;
+        const domain = document.getElementById('sp-domain').value;
+        const color = document.getElementById('sp-color').value;
+
+        const container = document.getElementById('sp-preview-container');
+        let html = '';
+
+        if(spMode === 'fb') {
+            html = `
+                <div class="card">
+                    <img src="${img}" class="card-img">
+                    <div class="card-content">
+                        <div class="card-domain">${domain}</div>
+                        <div class="card-title">${title}</div>
+                        <div class="card-desc">${desc}</div>
+                    </div>
+                </div>
+            `;
+        } else if (spMode === 'tw') {
+            html = `
+                <div class="card twitter">
+                    <img src="${img}" class="card-img">
+                    <div class="card-content">
+                        <div class="card-title">${title}</div>
+                        <div class="card-desc">${desc}</div>
+                        <div class="card-domain" style="margin-top:4px">🔗 ${domain}</div>
+                    </div>
+                </div>
+            `;
+        } else if (spMode === 'dc') {
+            html = `
+                <div class="card discord" style="border-left-color:${color}">
+                    <div class="card-content">
+                        <div class="card-site-name">${domain}</div>
+                        <div class="card-title" style="color:#00b0f4">${title}</div>
+                        <div class="card-desc">${desc}</div>
+                        <img src="${img}" class="card-img">
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+
+        // Generate Code
+        const meta = `
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://${domain}/">
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${desc}">
+    <meta property="og:image" content="${img}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://${domain}/">
+    <meta property="twitter:title" content="${title}">
+    <meta property="twitter:description" content="${desc}">
+    <meta property="twitter:image" content="${img}">
+        `.trim();
+        document.getElementById('sp-code').innerText = meta;
+    },
+    initBD() {
+        const colors = ['brightgreen','green','yellowgreen','yellow','orange','red','blue','lightgrey','success','important','critical','informational','inactive','blueviolet','ff69b4','9cf'];
+        const grid = document.getElementById('bd-cgrid');
+        colors.forEach(c => {
+            const d = document.createElement('div');
+            d.className = 'c-btn';
+            d.style.backgroundColor = c.startsWith('#') ? c : devTool.getShieldColor(c);
+            d.addEventListener('click', function() {
+                document.getElementById('bd-color').value = c;
+                devTool.updateBD();
+            });
+            grid.appendChild(d);
+        });
+    },
+    getShieldColor(name) {
+        const map = { brightgreen:'#4c1', green:'#97ca00', yellowgreen:'#a4a61d', yellow:'#dfb317', orange:'#fe7d37', red:'#e05d44', blue:'#007ec6', lightgrey:'#9f9f9f', success:'#4c1', important:'#fe7d37', critical:'#e05d44', informational:'#007ec6', inactive:'#9f9f9f', blueviolet:'#8a2be2' };
+        return map[name] || '#ccc';
+    },
+    updateBD() {
+        const label = document.getElementById('bd-label').value.trim() || 'Label';
+        const msg = document.getElementById('bd-msg').value.trim() || 'Message';
+        let color = document.getElementById('bd-color').value.trim();
+        if (color.startsWith('#')) color = color.substring(1);
+
+        const style = document.getElementById('bd-style').value;
+        const logo = document.getElementById('bd-logo').value.trim();
+        const logoCol = document.getElementById('bd-logo-col').value.trim();
+
+        const params = new URLSearchParams();
+        params.append('label', label);
+        params.append('message', msg);
+        params.append('color', color);
+
+        if(style) params.append('style', style);
+        if(logo) params.append('logo', logo);
+        if(logoCol) params.append('logoColor', logoCol);
+
+        const url = `https://img.shields.io/static/v1?${params.toString()}`;
+
+        document.getElementById('bd-preview').src = url;
+        document.getElementById('bd-code-md').innerText = `![${label}](${url})`;
+        document.getElementById('bd-code-html').innerText = `<img src="${url}" alt="${label}">`;
+    },
+    async searchIcons() {
+        const q = document.getElementById('icon-query').value.trim();
+        if(!q) return;
+
+        const loader = document.getElementById('icon-loading');
+        const resDiv = document.getElementById('icon-results');
+
+        loader.style.display = 'block';
+        resDiv.innerHTML = '';
+
+        try {
+            const req = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(q)}&limit=60`);
+            const data = await req.json();
+
+            loader.style.display = 'none';
+
+            if(!data.icons || data.icons.length === 0) {
+                resDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-dim)">未找到相关图标</div>';
+                return;
+            }
+
+            data.icons.forEach(iconStr => {
+                const [prefix, name] = iconStr.split(':');
+                const url = `https://api.iconify.design/${prefix}/${name}.svg`;
+
+                const div = document.createElement('div');
+                div.className = 'icon-item';
+                div.innerHTML = `<img src="${url}" loading="lazy" width="24" height="24"><div class="icon-name">${name}</div>`;
+                div.addEventListener('click', function() { devTool.selectIcon(prefix, name); });
+                resDiv.appendChild(div);
+            });
+
+        } catch(e) {
+            loader.style.display = 'none';
+            resDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red">搜索失败，请检查网络</div>';
+        }
+    },
+    async selectIcon(prefix, name) {
+        const url = `https://api.iconify.design/${prefix}/${name}.svg`;
+        try {
+            const req = await fetch(url);
+            const svg = await req.text();
+            document.getElementById('icon-code').value = svg;
+        } catch(e) {
+            document.getElementById('icon-code').value = `<img src="${url}">`;
+        }
+    },
+    updateIconStyle() {},
+    updateFav() {
+        let domain = document.getElementById('fav-domain').value.trim();
+        if (!domain) return;
+        domain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const url = `https://icon.horse/icon/${domain}`;
+        document.getElementById('fav-img').src = url;
+        document.getElementById('fav-code').value = `<img src="${url}" alt="${domain} favicon">`;
+    },
+    updateChart() {
+        const type = document.getElementById('qc-type').value;
+        const title = document.getElementById('qc-title').value;
+        const labels = document.getElementById('qc-labels').value.split(',');
+        const data = document.getElementById('qc-data').value.split(',').map(Number);
+
+        const config = {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: title,
+                    data: data,
+                    backgroundColor: 'rgba(179, 136, 255, 0.5)',
+                    borderColor: '#b388ff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                title: { display: true, text: title }
+            }
+        };
+
+        const url = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(config))}&width=500&height=300&bkg=white`;
+        document.getElementById('qc-img').src = url;
+        document.getElementById('qc-url').value = url;
+    },
+    async fetchMockUser() {
+        const gender = document.getElementById('mu-gender').value;
+        const nat = document.getElementById('mu-nat').value;
+
+        let url = 'https://randomuser.me/api/?results=1';
+        if(gender) url += `&gender=${gender}`;
+        if(nat) url += `&nat=${nat}`;
+
+        const btn = document.querySelector('#view-mock .btn');
+        const originalText = btn.innerText;
+        btn.innerText = 'Loading...';
+
+        try {
+            const req = await fetch(url);
+            const data = await req.json();
+            const user = data.results[0];
+
+            document.getElementById('mu-json').innerText = JSON.stringify(user, null, 2);
+
+            const card = `
+                <div class="user-card">
+                    <img src="${user.picture.large}" class="user-avatar">
+                    <div class="user-info">
+                        <h3>${user.name.first} ${user.name.last}</h3>
+                        <p>${user.email}</p>
+                        <p>${user.location.city}, ${user.location.country}</p>
+                        <div class="tag">${user.login.username}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('mu-card-container').innerHTML = card;
+
+        } catch(e) {
+            if (app && app.showToast) app.showToast('获取失败', 'error');
+        }
+
+        btn.innerText = originalText;
+    },
+    async fetchLorem() {
+        const paras = document.getElementById('li-paras').value;
+        const type = document.getElementById('li-type').value;
+
+        const btn = document.querySelector('#view-lorem .btn');
+        const originalText = btn.innerText;
+        btn.innerText = 'Generating...';
+
+        try {
+            const req = await fetch(`https://baconipsum.com/api/?type=${type}&paras=${paras}`);
+            const data = await req.json();
+            document.getElementById('li-text').innerText = data.join('\n\n');
+        } catch(e) {
+            document.getElementById('li-text').innerText = '生成失败';
+        }
+
+        btn.innerText = originalText;
+    },
+    updatePlacehold() {
+        const w = document.getElementById('ph-w').value || 600;
+        const h = document.getElementById('ph-h').value || 400;
+        const bg = document.getElementById('ph-bg').value.replace('#', '');
+        const fg = document.getElementById('ph-fg').value.replace('#', '');
+        const text = document.getElementById('ph-text').value;
+        const fmt = document.getElementById('ph-fmt').value;
+
+        let url = `https://placehold.co/${w}x${h}/${bg}/${fg}.${fmt}`;
+        if (text) url += `?text=${encodeURIComponent(text)}`;
+
+        document.getElementById('ph-preview').src = url;
+        document.getElementById('ph-url').value = url;
+        document.getElementById('ph-html').innerText = `<img src="${url}" alt="${text || 'placeholder'}">`;
     }
-}
+};
 
-function openModal(id) {
-    document.querySelectorAll('.modal').forEach(el => el.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    document.getElementById('modal-overlay').classList.add('open');
-}
-function closeModal() {
-    document.getElementById('modal-overlay').classList.remove('open');
-}
-
-function copyCode(id) {
-    const el = document.getElementById(id);
-    const text = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value : el.innerText;
-    navigator.clipboard.writeText(text).then(() => {
-        // Simple toast or alert
-        const btn = document.activeElement;
-        const original = btn.innerText;
-        btn.innerText = '已复制!';
-        setTimeout(() => btn.innerText = original, 1000);
-    });
-}
 
 /* --- Social Preview Logic --- */
 let spMode = 'fb';
-function setSPMode(mode, btn) {
-    spMode = mode;
-    document.querySelectorAll('.preview-mode-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    updateSP();
-}
 
-function updateSP() {
-    const title = document.getElementById('sp-title').value;
-    const desc = document.getElementById('sp-desc').value;
-    const img = document.getElementById('sp-img').value;
-    const domain = document.getElementById('sp-domain').value;
-    const color = document.getElementById('sp-color').value;
-
-    const container = document.getElementById('sp-preview-container');
-    let html = '';
-
-    if(spMode === 'fb') {
-        html = `
-            <div class="card">
-                <img src="${img}" class="card-img">
-                <div class="card-content">
-                    <div class="card-domain">${domain}</div>
-                    <div class="card-title">${title}</div>
-                    <div class="card-desc">${desc}</div>
-                </div>
-            </div>
-        `;
-    } else if (spMode === 'tw') {
-        html = `
-            <div class="card twitter">
-                <img src="${img}" class="card-img">
-                <div class="card-content">
-                    <div class="card-title">${title}</div>
-                    <div class="card-desc">${desc}</div>
-                    <div class="card-domain" style="margin-top:4px">🔗 ${domain}</div>
-                </div>
-            </div>
-        `;
-    } else if (spMode === 'dc') {
-        html = `
-            <div class="card discord" style="border-left-color:${color}">
-                <div class="card-content">
-                    <div class="card-site-name">${domain}</div>
-                    <div class="card-title" style="color:#00b0f4">${title}</div>
-                    <div class="card-desc">${desc}</div>
-                    <img src="${img}" class="card-img">
-                </div>
-            </div>
-        `;
-    }
-
-    container.innerHTML = html;
-
-    // Generate Code
-    const meta = `
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://${domain}/">
-<meta property="og:title" content="${title}">
-<meta property="og:description" content="${desc}">
-<meta property="og:image" content="${img}">
-
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="https://${domain}/">
-<meta property="twitter:title" content="${title}">
-<meta property="twitter:description" content="${desc}">
-<meta property="twitter:image" content="${img}">
-    `.trim();
-    document.getElementById('sp-code').innerText = meta;
-}
 
 /* --- Badge Designer Logic --- */
-function initBD() {
-    const colors = ['brightgreen','green','yellowgreen','yellow','orange','red','blue','lightgrey','success','important','critical','informational','inactive','blueviolet','ff69b4','9cf'];
-    const grid = document.getElementById('bd-cgrid');
-    colors.forEach(c => {
-        const d = document.createElement('div');
-        d.className = 'c-btn';
-        d.style.backgroundColor = c.startsWith('#') ? c : getShieldColor(c);
-        d.onclick = () => {
-            document.getElementById('bd-color').value = c;
-            updateBD();
-        };
-        grid.appendChild(d);
-    });
-}
-function getShieldColor(name) {
-    const map = { brightgreen:'#4c1', green:'#97ca00', yellowgreen:'#a4a61d', yellow:'#dfb317', orange:'#fe7d37', red:'#e05d44', blue:'#007ec6', lightgrey:'#9f9f9f', success:'#4c1', important:'#fe7d37', critical:'#e05d44', informational:'#007ec6', inactive:'#9f9f9f', blueviolet:'#8a2be2' };
-    return map[name] || '#ccc';
-}
 
-function updateBD() {
-    const label = document.getElementById('bd-label').value.trim() || 'Label';
-    const msg = document.getElementById('bd-msg').value.trim() || 'Message';
-    let color = document.getElementById('bd-color').value.trim();
-    if (color.startsWith('#')) color = color.substring(1);
-    
-    const style = document.getElementById('bd-style').value;
-    const logo = document.getElementById('bd-logo').value.trim();
-    const logoCol = document.getElementById('bd-logo-col').value.trim();
-
-    const params = new URLSearchParams();
-    params.append('label', label);
-    params.append('message', msg);
-    params.append('color', color);
-    
-    if(style) params.append('style', style);
-    if(logo) params.append('logo', logo);
-    if(logoCol) params.append('logoColor', logoCol);
-
-    const url = `https://img.shields.io/static/v1?${params.toString()}`;
-
-    document.getElementById('bd-preview').src = url;
-    document.getElementById('bd-code-md').innerText = `![${label}](${url})`;
-    document.getElementById('bd-code-html').innerText = `<img src="${url}" alt="${label}">`;
-}
 
 /* --- Icon Explorer Logic --- */
-async function searchIcons() {
-    const q = document.getElementById('icon-query').value.trim();
-    if(!q) return;
+async 
 
-    const loader = document.getElementById('icon-loading');
-    const resDiv = document.getElementById('icon-results');
-    
-    loader.style.display = 'block';
-    resDiv.innerHTML = '';
-    
-    try {
-        const req = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(q)}&limit=60`);
-        const data = await req.json();
-        
-        loader.style.display = 'none';
-        
-        if(!data.icons || data.icons.length === 0) {
-            resDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-dim)">未找到相关图标</div>';
-            return;
-        }
-        
-        data.icons.forEach(iconStr => {
-            const [prefix, name] = iconStr.split(':');
-            const url = `https://api.iconify.design/${prefix}/${name}.svg`;
-            
-            const div = document.createElement('div');
-            div.className = 'icon-item';
-            div.innerHTML = `<img src="${url}" loading="lazy" width="24" height="24"><div class="icon-name">${name}</div>`;
-            div.onclick = () => selectIcon(prefix, name);
-            resDiv.appendChild(div);
-        });
-        
-    } catch(e) {
-        loader.style.display = 'none';
-        resDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red">搜索失败，请检查网络</div>';
-    }
-}
-
-async function selectIcon(prefix, name) {
-    const url = `https://api.iconify.design/${prefix}/${name}.svg`;
-    try {
-        const req = await fetch(url);
-        const svg = await req.text();
-        document.getElementById('icon-code').value = svg;
-    } catch(e) {
-        document.getElementById('icon-code').value = `<img src="${url}">`;
-    }
-}
-
-function updateIconStyle() {}
 
 /* --- Favicon Grabber Logic --- */
-function updateFav() {
-    let domain = document.getElementById('fav-domain').value.trim();
-    if (!domain) return;
-    domain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const url = `https://icon.horse/icon/${domain}`;
-    document.getElementById('fav-img').src = url;
-    document.getElementById('fav-code').value = `<img src="${url}" alt="${domain} favicon">`;
-}
+
 
 /* --- Quick Chart Logic --- */
-function updateChart() {
-    const type = document.getElementById('qc-type').value;
-    const title = document.getElementById('qc-title').value;
-    const labels = document.getElementById('qc-labels').value.split(',');
-    const data = document.getElementById('qc-data').value.split(',').map(Number);
-    
-    const config = {
-        type: type,
-        data: {
-            labels: labels,
-            datasets: [{
-                label: title,
-                data: data,
-                backgroundColor: 'rgba(179, 136, 255, 0.5)',
-                borderColor: '#b388ff',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            title: { display: true, text: title }
-        }
-    };
-    
-    const url = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(config))}&width=500&height=300&bkg=white`;
-    document.getElementById('qc-img').src = url;
-    document.getElementById('qc-url').value = url;
-}
+
 
 /* --- Mock User Logic --- */
-async function fetchMockUser() {
-    const gender = document.getElementById('mu-gender').value;
-    const nat = document.getElementById('mu-nat').value;
-    
-    let url = 'https://randomuser.me/api/?results=1';
-    if(gender) url += `&gender=${gender}`;
-    if(nat) url += `&nat=${nat}`;
-    
-    const btn = document.querySelector('#view-mock .btn');
-    const originalText = btn.innerText;
-    btn.innerText = 'Loading...';
-    
-    try {
-        const req = await fetch(url);
-        const data = await req.json();
-        const user = data.results[0];
-        
-        document.getElementById('mu-json').innerText = JSON.stringify(user, null, 2);
-        
-        const card = `
-            <div class="user-card">
-                <img src="${user.picture.large}" class="user-avatar">
-                <div class="user-info">
-                    <h3>${user.name.first} ${user.name.last}</h3>
-                    <p>${user.email}</p>
-                    <p>${user.location.city}, ${user.location.country}</p>
-                    <div class="tag">${user.login.username}</div>
-                </div>
-            </div>
-        `;
-        document.getElementById('mu-card-container').innerHTML = card;
-        
-    } catch(e) {
-        alert('获取失败');
-    }
-    
-    btn.innerText = originalText;
-}
-
 /* --- Lorem Ipsum Logic --- */
-async function fetchLorem() {
-    const paras = document.getElementById('li-paras').value;
-    const type = document.getElementById('li-type').value;
-    
-    const btn = document.querySelector('#view-lorem .btn');
-    const originalText = btn.innerText;
-    btn.innerText = 'Generating...';
-    
-    try {
-        const req = await fetch(`https://baconipsum.com/api/?type=${type}&paras=${paras}`);
-        const data = await req.json();
-        document.getElementById('li-text').innerText = data.join('\n\n');
-    } catch(e) {
-        document.getElementById('li-text').innerText = '生成失败';
-    }
-    
-    btn.innerText = originalText;
-}
-
 /* --- Placeholder Logic --- */
-function updatePlacehold() {
-    const w = document.getElementById('ph-w').value || 600;
-    const h = document.getElementById('ph-h').value || 400;
-    const bg = document.getElementById('ph-bg').value.replace('#', '');
-    const fg = document.getElementById('ph-fg').value.replace('#', '');
-    const text = document.getElementById('ph-text').value;
-    const fmt = document.getElementById('ph-fmt').value;
 
-    let url = `https://placehold.co/${w}x${h}/${bg}/${fg}.${fmt}`;
-    if (text) url += `?text=${encodeURIComponent(text)}`;
-
-    document.getElementById('ph-preview').src = url;
-    document.getElementById('ph-url').value = url;
-    document.getElementById('ph-html').innerText = `<img src="${url}" alt="${text || 'placeholder'}">`;
-}
 
 // Initialize
-initBD();
-updateBD();
-updateSP();
-updateFav();
-updateChart();
-updatePlacehold();
+
+        // Event listeners
+        // Mobile menu toggle
+        document.getElementById('btn-mobile-menu').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('open');
+        });
+
+        // Nav tab switching (event delegation)
+        document.querySelectorAll('.nav-item[data-tab]').forEach(function(item) {
+            item.addEventListener('click', function() {
+                devTool.switchTab(this.dataset.tab);
+            });
+        });
+
+        // Help buttons
+        document.querySelectorAll('.btn-help').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                devTool.openModal(this.dataset.modal);
+            });
+        });
+
+        // Social Preview inputs
+        ['sp-title', 'sp-desc', 'sp-img', 'sp-domain', 'sp-color'].forEach(function(id) {
+            document.getElementById(id).addEventListener('input', function() {
+                devTool.updateSP();
+            });
+        });
+
+        // Social Preview tab buttons
+        document.querySelectorAll('.tab-btn[data-sp-mode]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                devTool.setSPMode(this.dataset.spMode, this);
+            });
+        });
+
+        // Copy buttons (event delegation)
+        document.addEventListener('click', function(e) {
+            var copyBtn = e.target.closest('[data-copy-target]');
+            if (copyBtn) {
+                devTool.copyCode(copyBtn.dataset.copyTarget);
+            }
+        });
+
+        // Badge Designer inputs
+        ['bd-label', 'bd-msg', 'bd-color', 'bd-logo', 'bd-logo-col'].forEach(function(id) {
+            document.getElementById(id).addEventListener('input', function() {
+                devTool.updateBD();
+            });
+        });
+        document.getElementById('bd-style').addEventListener('change', function() {
+            devTool.updateBD();
+        });
+
+        // Badge preview open in new tab
+        document.getElementById('bd-preview').addEventListener('click', function() {
+            if (this.src) window.open(this.src, '_blank');
+        });
+
+        // Icon search
+        document.getElementById('icon-query').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') devTool.searchIcons();
+        });
+        document.getElementById('btn-search-icons').addEventListener('click', function() {
+            devTool.searchIcons();
+        });
+        document.getElementById('icon-color').addEventListener('input', function() {
+            devTool.updateIconStyle();
+        });
+
+        // Favicon
+        document.getElementById('fav-domain').addEventListener('input', function() {
+            devTool.updateFav();
+        });
+        document.getElementById('btn-update-fav').addEventListener('click', function() {
+            devTool.updateFav();
+        });
+
+        // Quick Chart
+        document.getElementById('qc-type').addEventListener('change', function() {
+            devTool.updateChart();
+        });
+        ['qc-title', 'qc-labels', 'qc-data'].forEach(function(id) {
+            document.getElementById(id).addEventListener('input', function() {
+                devTool.updateChart();
+            });
+        });
+        document.getElementById('btn-update-chart').addEventListener('click', function() {
+            devTool.updateChart();
+        });
+
+        // Select on click for readonly inputs
+        document.querySelectorAll('.select-on-click').forEach(function(input) {
+            input.addEventListener('click', function() {
+                this.select();
+            });
+        });
+
+        // Mock User
+        document.getElementById('btn-fetch-mock').addEventListener('click', function() {
+            devTool.fetchMockUser();
+        });
+
+        // Lorem Ipsum
+        document.getElementById('btn-fetch-lorem').addEventListener('click', function() {
+            devTool.fetchLorem();
+        });
+
+        // Placeholder
+        ['ph-w', 'ph-h', 'ph-text', 'ph-bg', 'ph-fg'].forEach(function(id) {
+            document.getElementById(id).addEventListener('input', function() {
+                devTool.updatePlacehold();
+            });
+        });
+        document.getElementById('ph-fmt').addEventListener('change', function() {
+            devTool.updatePlacehold();
+        });
+        document.getElementById('btn-update-ph').addEventListener('click', function() {
+            devTool.updatePlacehold();
+        });
+
+        // Modal overlay close on backdrop click
+        document.getElementById('modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) devTool.closeModal();
+        });
+
+        // Modal close buttons
+        document.querySelectorAll('.close-modal').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                devTool.closeModal();
+            });
+        });
+
+devTool.initBD();
+devTool.updateBD();
+devTool.updateSP();
+devTool.updateFav();
+devTool.updateChart();
+devTool.updatePlacehold();
 
 </script>
+<div id="toast"></div>
 </body>
 </html>

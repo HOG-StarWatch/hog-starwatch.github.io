@@ -56,10 +56,10 @@ self.onmessage = function(e) {
                 rawText += lineText + '\n';
             }
 
-            self.postMessage({ 
-                type: 'complete', 
-                html: htmlOutput, 
-                text: rawText 
+            self.postMessage({
+                type: 'success',
+                html: htmlOutput,
+                text: rawText
             });
 
         } catch (error) {

@@ -4,6 +4,20 @@
  * @ts-check
  */
 
+// Secure random number generator using crypto.getRandomValues
+function secureRandom() {
+    const arr = new Uint32Array(1);
+    self.crypto.getRandomValues(arr);
+    return arr[0] / 0xFFFFFFFF;
+}
+
+// Generate secure random byte (0-255)
+function secureRandomByte() {
+    const arr = new Uint8Array(1);
+    self.crypto.getRandomValues(arr);
+    return arr[0];
+}
+
 self.onmessage = function(e) {
     const { command, id, ...args } = e.data;
     
@@ -39,11 +53,11 @@ self.onmessage = function(e) {
         if (result.pixelsA) transferables.push(result.pixelsA.buffer);
         if (result.pixelsB) transferables.push(result.pixelsB.buffer);
 
-        self.postMessage({ id, success: true, ...result }, transferables);
+        self.postMessage({ type: 'success', requestId: id, ...result }, transferables);
 
     } catch (err) {
         console.error(err);
-        self.postMessage({ id, success: false, error: err.message });
+        self.postMessage({ type: 'error', requestId: id, error: err.message });
     }
 };
 
@@ -163,7 +177,7 @@ function visualEncrypt(srcPixels, w, h, style, param, algo, seed, id) {
     };
 
     const reportProgress = (percent) => {
-        if (id) self.postMessage({ id, progress: percent });
+        if (id) self.postMessage({ type: 'progress', requestId: id, progress: percent });
     };
 
     // --- Phase 1: Generate Visual Style (Share B) ---
@@ -303,7 +317,7 @@ function visualDecrypt(bPixels, cPixels, w, h, algo, seed, id) {
     const chunkSize = Math.max(2000, Math.floor(totalPixels / 100));
 
     const reportProgress = (percent) => {
-        if (id) self.postMessage({ id, progress: percent });
+        if (id) self.postMessage({ type: 'progress', requestId: id, progress: percent });
     };
 
     const useXor = (algo === 'lsb' || algo === 'xor');
@@ -357,16 +371,16 @@ function diffEncrypt({ targetPixels, refPixels, overlayPixels, useGuided, width,
         let A, B;
 
         if (isMasked) {
-            // High security masking
-            if (Math.random() < 0.5) {
-                A = [Math.random()*255, Math.random()*255, Math.random()*255];
+            // High security masking - use secure random
+            if (secureRandom() < 0.5) {
+                A = [secureRandomByte(), secureRandomByte(), secureRandomByte()];
                 B = [
                     (A[0] - O[0] + 255) % 256,
                     (A[1] - O[1] + 255) % 256,
                     (A[2] - O[2] + 255) % 256
                 ];
             } else {
-                B = [Math.random()*255, Math.random()*255, Math.random()*255];
+                B = [secureRandomByte(), secureRandomByte(), secureRandomByte()];
                 A = [
                     (B[0] + O[0]) % 256,
                     (B[1] + O[1]) % 256,
@@ -389,7 +403,7 @@ function diffEncrypt({ targetPixels, refPixels, overlayPixels, useGuided, width,
                 let lowVal  = Math.round(X - Ov / 2.0);
                 let highVal = Math.round(X + Ov / 2.0);
 
-                if (Math.random() < 0.5) { A[c] = lowVal; B[c] = highVal; }
+                if (secureRandom() < 0.5) { A[c] = lowVal; B[c] = highVal; }
                 else { A[c] = highVal; B[c] = lowVal; }
             }
         } else {
@@ -397,8 +411,8 @@ function diffEncrypt({ targetPixels, refPixels, overlayPixels, useGuided, width,
             A = [0,0,0]; B = [0,0,0];
             let L = (O[0]+O[1]+O[2])/3.0/255.0;
             let modeBrightProb = L / 2 + 0.5;
-            let modeBright = Math.random() < modeBrightProb;
-            let specialChannel = Math.floor(Math.random() * 3);
+            let modeBright = secureRandom() < modeBrightProb;
+            let specialChannel = Math.floor(secureRandom() * 3);
             for (let c=0;c<3;c++){
                 if(modeBright){
                     if(c===specialChannel){ A[c]=0; B[c]=O[c]; }
@@ -408,7 +422,7 @@ function diffEncrypt({ targetPixels, refPixels, overlayPixels, useGuided, width,
                     else { A[c]=0; B[c]=O[c]; }
                 }
             }
-            if (Math.random() < 0.5) { const t=A; A=B; B=t; }
+            if (secureRandom() < 0.5) { const t=A; A=B; B=t; }
         }
 
         resultA[idx] = A[0]; resultA[idx+1] = A[1]; resultA[idx+2] = A[2]; resultA[idx+3] = 255;

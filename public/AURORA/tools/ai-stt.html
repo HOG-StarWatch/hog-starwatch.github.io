@@ -41,7 +41,7 @@
             padding: 10px 12px;
             font-size: 0.95rem;
         }
-        .upload-area {
+        .stt-upload-area {
             border: 1px dashed var(--border);
             border-radius: 12px;
             padding: 18px;
@@ -99,13 +99,13 @@
         }
     </style>
 </head>
-<body style="padding: 1rem;">
+<body class="scroll-content">
     <div class="workspace stt-container">
         <div class="panel">
             <div class="panel-header">
                 <div class="panel-title">语音转文本 (STT)</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon" onclick="sttTool.clear()">清空</button>
+                    <button class="btn btn-icon" id="btn-clear">清空</button>
                 </div>
             </div>
             <div class="stt-grid">
@@ -156,21 +156,21 @@
                 </div>
             </div>
             <div class="stt-actions">
-                <button class="btn btn-primary" onclick="sttTool.start()">开始识别</button>
-                <button class="btn" onclick="sttTool.stop()">停止</button>
-                <button class="btn btn-primary" id="stt-upload-btn" onclick="sttTool.recognizeUpload()" disabled>识别上传音频</button>
-                <button class="btn btn-primary" id="stt-playback-btn" onclick="sttTool.playbackRecognize()" disabled>播放并识别</button>
-                <button class="btn btn-secondary" onclick="app.copy('stt-output')">复制文本</button>
+                <button class="btn btn-primary" id="btn-start">开始识别</button>
+                <button class="btn" id="btn-stop">停止</button>
+                <button class="btn btn-primary" id="stt-upload-btn" disabled>识别上传音频</button>
+                <button class="btn btn-primary" id="stt-playback-btn" disabled>播放并识别</button>
+                <button class="btn btn-secondary" id="btn-copy">复制文本</button>
             </div>
             <div class="upload-block" id="stt-upload-block">
-                <div class="upload-area" onclick="document.getElementById('stt-file-input').click()">
+                <div class="stt-upload-area" id="stt-upload-area">
                     <i class="fas fa-file-audio" style="font-size: 2rem; margin-bottom: 10px; color: var(--text-dim);"></i>
                     <p style="color: var(--text-dim); margin:0;">点击或拖拽音频文件到此处</p>
-                    <input type="file" id="stt-file-input" accept="audio/*" onchange="sttTool.handleFile(this)" style="display:none;">
+                    <input type="file" id="stt-file-input" accept="audio/*" style="display:none;">
                 </div>
                 <div id="stt-file-info" class="file-info">
                     <span id="stt-file-text"></span>
-                    <button class="btn btn-secondary btn-sm" onclick="sttTool.clearFile()">移除文件</button>
+                    <button class="btn btn-secondary btn-sm" id="btn-clear-file">移除文件</button>
                 </div>
                 <audio id="stt-audio" controls></audio>
             </div>
@@ -283,7 +283,9 @@
                 document.getElementById('stt-file-text').innerText = `${file.name} (${file.size} bytes)`;
                 document.getElementById('stt-file-info').style.display = 'flex';
                 const audio = document.getElementById('stt-audio');
-                audio.src = URL.createObjectURL(file);
+                if (audio.dataset.objectUrl) URL.revokeObjectURL(audio.dataset.objectUrl);
+                audio.dataset.objectUrl = URL.createObjectURL(file);
+                audio.src = audio.dataset.objectUrl;
                 document.getElementById('stt-upload-btn').disabled = false;
                 if (document.getElementById('stt-source').value === 'playback') {
                     document.getElementById('stt-playback-btn').disabled = false;
@@ -393,6 +395,18 @@
             }
         };
         sttTool.init();
+
+        // Event listeners
+        document.getElementById('btn-clear').addEventListener('click', function() { sttTool.clear(); });
+        document.getElementById('btn-start').addEventListener('click', function() { sttTool.start(); });
+        document.getElementById('btn-stop').addEventListener('click', function() { sttTool.stop(); });
+        document.getElementById('stt-upload-btn').addEventListener('click', function() { sttTool.recognizeUpload(); });
+        document.getElementById('stt-playback-btn').addEventListener('click', function() { sttTool.playbackRecognize(); });
+        document.getElementById('btn-copy').addEventListener('click', function() { app.copy('stt-output'); });
+        document.getElementById('stt-upload-area').addEventListener('click', function() { document.getElementById('stt-file-input').click(); });
+        document.getElementById('btn-clear-file').addEventListener('click', function() { sttTool.clearFile(); });
+
+        document.getElementById('stt-file-input').addEventListener('change', function(e) { sttTool.handleFile(e.target); });
     </script>
 </body>
 </html>

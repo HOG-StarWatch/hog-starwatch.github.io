@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -66,10 +66,10 @@
             box-shadow: 0 4px 15px rgba(192, 132, 252, 0.3);
         }
 
-        .control-group {
+        .qrcode-control-group {
             margin-bottom: 20px;
         }
-        .control-group label {
+        .qrcode-control-group label {
             display: block;
             margin-bottom: 8px;
             color: var(--text-main);
@@ -101,7 +101,7 @@
             font-size: 0.95rem;
         }
         
-        .btn {
+        .qrcode-btn {
             width: 100%;
             padding: 12px;
             border-radius: var(--radius-md);
@@ -115,11 +115,11 @@
             align-items: center;
             gap: 8px;
         }
-        .btn-primary { 
+        .qrcode-btn-primary { 
             background: linear-gradient(135deg, var(--primary), var(--accent));
             color: white; 
         }
-        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+        .qrcode-btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
 
         .progress-wrap {
             margin-top: 15px;
@@ -245,7 +245,7 @@
         .remove-btn:hover { color: #ef4444; background: rgba(255,255,255,0.1); }
     </style>
 </head>
-<body>
+<body class="scroll-content">
 
     <div class="container">
         <div class="header-section">
@@ -253,8 +253,8 @@
         </div>
         
         <div class="sub-tab-group">
-            <div class="sub-tab active" onclick="switchTab('embed')">🔐 文件嵌入 (Embed)</div>
-            <div class="sub-tab" onclick="switchTab('extract')">📥 文件提取 (Extract)</div>
+            <div id="tab-embed" class="sub-tab active">🔐 文件嵌入 (Embed)</div>
+            <div id="tab-extract" class="sub-tab">📥 文件提取 (Extract)</div>
         </div>
 
         <!-- EMBED SECTION -->
@@ -262,10 +262,10 @@
             <div class="split-layout">
                 <!-- Left Column: Inputs -->
                 <div class="left-col">
-                    <div class="control-group">
+                    <div class="qrcode-control-group">
                         <label>1. 选择文件 (可多选)</label>
                         <input type="file" id="filesInput" multiple style="display: none;">
-                        <div class="upload-box" id="drop-zone" onclick="document.getElementById('filesInput').click()">
+                        <div class="upload-box" id="drop-zone">
                             <i class="fas fa-file-import" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-dim);"></i>
                             <div style="font-size: 1rem;">点击选择或拖拽文件</div>
                             <div style="color: var(--text-dim); font-size: 0.8rem; margin-top:5px;">支持多文件批量处理</div>
@@ -274,7 +274,7 @@
                         <div id="file-list-widget" class="file-list-widget"></div>
                     </div>
 
-                    <div class="control-group">
+                    <div class="qrcode-control-group">
                         <label>2. 嵌入策略</label>
                         <select id="embedMode">
                             <option value="anticomp" selected>超抗压缩 (B站/视频推荐, 2bit/px)</option>
@@ -284,16 +284,16 @@
                         <p class="info-note">"超抗压缩"模式可以抵抗视频二压，但体积利用率较低。</p>
                     </div>
 
-                    <div class="control-group">
+                    <div class="qrcode-control-group">
                         <label>3. 扫码跳转链接</label>
-                        <select id="qrLinkSelect" onchange="toggleCustomLink()">
+                        <select id="qrLinkSelect">
                             <option value="https://hog-starwatch.github.io/File2QRcode" selected>Github 解密页 (默认)</option>
                             <option value="custom">自定义链接</option>
                         </select>
                         <input type="text" id="customLinkInput" placeholder="输入链接 (http://...)" style="display:none; margin-top:10px;">
                     </div>
 
-                    <div class="control-group">
+                    <div class="qrcode-control-group">
                         <label style="display: flex; align-items: center; cursor: pointer;">
                             <input type="checkbox" id="convertToJpg" style="margin-right: 8px;"> 
                             将图片转为 JPG (减小体积)
@@ -307,9 +307,9 @@
                         </div>
                     </div>
 
-                    <div class="control-group">
+                    <div class="qrcode-control-group">
                         <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="checkbox" id="extraInfoToggle" onchange="toggleExtraInfo()" style="margin-right: 8px;"> 
+                            <input type="checkbox" id="extraInfoToggle" style="margin-right: 8px;"> 
                             附加可视描述 (图片/文字)
                         </label>
                         <div id="extraInfoContainer" style="display: none; margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px;">
@@ -323,7 +323,7 @@
 
                 <!-- Right Column: Action & Preview -->
                 <div class="right-col">
-                    <button class="btn btn-primary" id="generateButton">⚡ 生成二维码图像</button>
+                    <button class="qrcode-btn qrcode-btn-primary" id="generateButton">⚡ 生成二维码图像</button>
                     
                     <div id="encodeProgressWrap" class="progress-wrap">
                         <div id="encodeProgressText" class="progress-text">准备中...</div>
@@ -336,7 +336,7 @@
                             <div>预览区域</div>
                         </div>
                     </div>
-                    <a id="downloadLink" class="btn btn-primary" style="background: var(--secondary); display: none; margin-top: 15px;">💾 下载图片</a>
+                    <a id="downloadLink" class="qrcode-btn qrcode-btn-primary" style="background: var(--secondary); display: none; margin-top: 15px;">💾 下载图片</a>
                 </div>
             </div>
         </div>
@@ -345,15 +345,15 @@
         <div id="section-extract" class="panel" style="display: none;">
             <div class="split-layout">
                 <div class="left-col">
-                    <div class="control-group">
+                    <div class="qrcode-control-group">
                         <label>选择包含数据的二维码图片</label>
                         <input type="file" id="imageInput" accept="image/*" style="display: none;">
-                        <div class="upload-box" onclick="document.getElementById('imageInput').click()">
+                        <div id="upload-box-extract" class="upload-box">
                             <i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-dim);"></i>
                             <span id="imageInputName">点击上传图片...</span>
                         </div>
                     </div>
-                    <button class="btn btn-primary" id="decodeButton">🔓 提取文件</button>
+                    <button class="qrcode-btn qrcode-btn-primary" id="decodeButton">🔓 提取文件</button>
                 </div>
                 
                 <div class="right-col">
@@ -371,7 +371,8 @@
     </div>
 
     <script>
-        let selectedFiles = [];
+        const fileQRTool = (() => {
+            let selectedFiles = [];
 
         // --- Tab Switching ---
         function switchTab(tab) {
@@ -396,16 +397,16 @@
             document.getElementById('extraInfoContainer').style.display = 
                 document.getElementById('extraInfoToggle').checked ? 'block' : 'none';
         }
-        document.getElementById('convertToJpg').onchange = (e) => {
+        document.getElementById('convertToJpg').addEventListener('change', function(e) {
             document.getElementById('jpgQualityContainer').style.display = e.target.checked ? 'block' : 'none';
-        };
+        });
 
         // --- File Inputs & List Handling ---
         const filesInput = document.getElementById('filesInput');
-        filesInput.onchange = (e) => {
-            handleFiles(e.target.files);
+        filesInput.addEventListener('change', function(e) {
+            fileQRTool.handleFiles(e.target.files);
             filesInput.value = ''; // Reset to allow re-selecting same files
-        };
+        });
 
         const dropZone = document.getElementById('drop-zone');
         dropZone.addEventListener('dragover', (e) => {
@@ -423,19 +424,19 @@
             dropZone.style.borderColor = 'var(--border)';
             dropZone.style.background = 'rgba(0,0,0,0.2)';
             if(e.dataTransfer.files.length > 0) {
-                handleFiles(e.dataTransfer.files);
+                fileQRTool.handleFiles(e.dataTransfer.files);
             }
         });
 
         function handleFiles(files) {
             const newFiles = Array.from(files);
             selectedFiles = [...selectedFiles, ...newFiles];
-            updateFileListUI();
+            fileQRTool.updateFileListUI();
         }
 
         function removeFile(index) {
             selectedFiles.splice(index, 1);
-            updateFileListUI();
+            fileQRTool.updateFileListUI();
         }
 
         function updateFileListUI() {
@@ -457,16 +458,16 @@
                         <span class="file-name" title="${file.name}">${file.name}</span>
                         <span class="file-meta">${(file.size / 1024).toFixed(1)} KB | ${file.type || 'Unknown'}</span>
                     </div>
-                    <button class="remove-btn" onclick="removeFile(${index})" title="移除文件">✕</button>
+                    <button class="remove-btn" data-index="${index}" title="移除文件">✕</button>
                 `;
                 container.appendChild(div);
             });
         }
 
-        document.getElementById('imageInput').onchange = (e) => {
+        document.getElementById('imageInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             document.getElementById('imageInputName').innerText = file ? file.name : '点击上传图片...';
-        };
+        });
 
         // --- Core Logic ---
         const setProgress = (type, pct, text) => {
@@ -480,8 +481,8 @@
         const uiTick = () => new Promise(r => setTimeout(r, 0));
 
         // ================= EMBED LOGIC =================
-        document.getElementById("generateButton").onclick = async function () {
-            if (selectedFiles.length === 0) return alert("请选择文件");
+        document.getElementById("generateButton").addEventListener('click', async function () {
+            if (selectedFiles.length === 0) if (app && app.showToast) { app.showToast('', 'error'); return; }
 
             const button = document.getElementById("generateButton");
             button.disabled = true;
@@ -490,10 +491,10 @@
             try {
                 if(app && app.showToast) app.showToast('正在加载组件...', 'info');
                 await ResourceLoader.loadDeps('@file-qrcode');
-                await generateDataQRCodeFromFiles(selectedFiles);
+                await fileQRTool.generateDataQRCodeFromFiles(selectedFiles);
             } catch (err) {
                 console.error(err);
-                alert("处理失败：" + err.message);
+                if (app && app.showToast) app.showToast("处理失败：" + err.message, 'error');
             }
 
             button.disabled = false;
@@ -663,7 +664,7 @@
             
             // 6. Composition (Extra Info)
             setProgress("encode", 90, "合成最终图片...");
-            const finalCanvas = await composeFinal(canvas);
+            const finalCanvas = await fileQRTool.composeFinal(canvas);
             
             // Display
             const container = document.getElementById('qrPreviewContainer');
@@ -729,8 +730,8 @@
         }
 
         // ================= DECODE LOGIC =================
-        document.getElementById("decodeButton").onclick = () => {
-             alert("解码功能在此版本暂未移植 (TODO: Port Decode Logic)");
+        document.getElementById("decodeButton").addEventListener('click', function() {
+             if (app && app.showToast) app.showToast('', 'error');
         };
 
         // Theme Propagation Listener
@@ -743,6 +744,27 @@
             }
         });
 
+        // Event listeners
+        document.getElementById('tab-embed').addEventListener('click', () => fileQRTool.switchTab('embed'));
+        document.getElementById('tab-extract').addEventListener('click', () => fileQRTool.switchTab('extract'));
+        document.getElementById('drop-zone').addEventListener('click', () => document.getElementById('filesInput').click());
+        document.getElementById('upload-box-extract').addEventListener('click', () => document.getElementById('imageInput').click());
+
+        // Event delegation for dynamically generated remove buttons
+        document.getElementById('file-list-widget').addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-btn');
+            if (btn && btn.dataset.index !== undefined) {
+                fileQRTool.removeFile(parseInt(btn.dataset.index, 10));
+            }
+        });
+
+        document.getElementById('qrLinkSelect').addEventListener('change', function() { fileQRTool.toggleCustomLink(); });
+        document.getElementById('extraInfoToggle').addEventListener('change', function() { fileQRTool.toggleExtraInfo(); });
+
+        return { switchTab, toggleCustomLink, toggleExtraInfo, handleFiles, removeFile, updateFileListUI, generateDataQRCodeFromFiles, composeFinal };
+        })();
+
     </script>
+    <div id="toast"></div>
 </body>
 </html>

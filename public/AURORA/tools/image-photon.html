@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>通用图片滤镜</title>
     <link rel="stylesheet" href="../css/style.css">
-    <script src="../js/loader.js"></script>
     <script src="../js/perf-monitor.js"></script>
     <style>
         body { padding: 1rem; display: flex; flex-direction: column; height: 100vh; overflow: auto; }
@@ -16,7 +15,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body>
+<body class="scroll-content">
     <div class="panel-header">
         <div class="panel-title">
             通用图片滤镜 (General Filters)
@@ -26,7 +25,7 @@
             </div>
         </div>
         <div class="panel-actions">
-            <button class="btn btn-icon" onclick="photonTool.download()">💾 保存</button>
+            <button class="btn btn-icon" id="btn-save-header">💾 保存</button>
         </div>
     </div>
 
@@ -37,16 +36,16 @@
                 <div class="upload-area" id="uploadArea">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <div style="font-size: 0.8rem;">点击或拖放图片</div>
-                    <input type="file" id="imageUpload" accept="image/*" hidden onchange="photonTool.handleFile(this.files[0])">
+                    <input type="file" id="imageUpload" accept="image/*" hidden>
                 </div>
             </div>
 
             <!-- Tabs -->
             <div class="sub-tab-group">
-                <div class="sub-tab active" data-tab="filters" onclick="photonTool.switchTab('filters')">滤镜</div>
-                <div class="sub-tab" data-tab="adjust" onclick="photonTool.switchTab('adjust')">色彩</div>
-                <div class="sub-tab" data-tab="transform" onclick="photonTool.switchTab('transform')">变换</div>
-                <div class="sub-tab" data-tab="export" onclick="photonTool.switchTab('export')">导出</div>
+                <div class="sub-tab active" data-tab="filters">滤镜</div>
+                <div class="sub-tab" data-tab="adjust">色彩</div>
+                <div class="sub-tab" data-tab="transform">变换</div>
+                <div class="sub-tab" data-tab="export">导出</div>
             </div>
 
             <!-- Tab: Filters -->
@@ -54,36 +53,36 @@
                 <div class="control-group">
                     <div class="filter-title">基础 (Basic)</div>
                     <div class="btn-grid">
-                        <button class="btn" onclick="photonTool.toggle('grayscale')" id="btn-grayscale">灰度</button>
-                        <button class="btn" onclick="photonTool.toggle('invert')" id="btn-invert">反色</button>
-                        <button class="btn" onclick="photonTool.toggle('sepia')" id="btn-sepia">复古</button>
-                        <button class="btn" onclick="photonTool.toggle('solarize')" id="btn-solarize">过曝</button>
-                        <button class="btn" onclick="photonTool.toggle('posterize')" id="btn-posterize">色调分离</button>
-                        <button class="btn" onclick="photonTool.toggle('threshold')" id="btn-threshold">二值化</button>
+                        <button class="btn" id="btn-grayscale">灰度</button>
+                        <button class="btn" id="btn-invert">反色</button>
+                        <button class="btn" id="btn-sepia">复古</button>
+                        <button class="btn" id="btn-solarize">过曝</button>
+                        <button class="btn" id="btn-posterize">色调分离</button>
+                        <button class="btn" id="btn-threshold">二值化</button>
                     </div>
                 </div>
                 
                 <div class="control-group">
                     <div class="filter-title">风格化 (Stylize)</div>
                     <div class="btn-grid">
-                        <button class="btn" onclick="photonTool.toggle('emboss')" id="btn-emboss">浮雕</button>
-                        <button class="btn" onclick="photonTool.toggle('edge_detection')" id="btn-edge_detection">边缘</button>
-                        <button class="btn" onclick="photonTool.toggle('sharpen')" id="btn-sharpen">锐化</button>
-                        <button class="btn" onclick="photonTool.toggle('noise_reduction')" id="btn-noise_reduction">降噪</button>
-                        <button class="btn" onclick="photonTool.toggle('blur')" id="btn-blur">模糊</button>
-                        <button class="btn" onclick="photonTool.toggle('mosaic')" id="btn-mosaic">马赛克</button>
+                        <button class="btn" id="btn-emboss">浮雕</button>
+                        <button class="btn" id="btn-edge_detection">边缘</button>
+                        <button class="btn" id="btn-sharpen">锐化</button>
+                        <button class="btn" id="btn-noise_reduction">降噪</button>
+                        <button class="btn" id="btn-blur">模糊</button>
+                        <button class="btn" id="btn-mosaic">马赛克</button>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <div class="filter-title">艺术效果 (Artistic)</div>
                     <div class="btn-grid">
-                        <button class="btn" onclick="photonTool.toggle('vignette')" id="btn-vignette">暗角</button>
-                        <button class="btn" onclick="photonTool.toggle('duotone')" id="btn-duotone">双色</button>
-                        <button class="btn" onclick="photonTool.toggle('colorize')" id="btn-colorize">着色</button>
-                        <button class="btn" onclick="photonTool.toggle('vintage')" id="btn-vintage">老照片</button>
-                        <button class="btn" onclick="photonTool.toggle('rgb_split')" id="btn-rgb_split">RGB分离</button>
-                        <button class="btn" onclick="photonTool.toggle('scanlines')" id="btn-scanlines">扫描线</button>
+                        <button class="btn" id="btn-vignette">暗角</button>
+                        <button class="btn" id="btn-duotone">双色</button>
+                        <button class="btn" id="btn-colorize">着色</button>
+                        <button class="btn" id="btn-vintage">老照片</button>
+                        <button class="btn" id="btn-rgb_split">RGB分离</button>
+                        <button class="btn" id="btn-scanlines">扫描线</button>
                     </div>
                 </div>
             </div>
@@ -94,26 +93,26 @@
                     <div class="filter-title">色彩调整</div>
                     <div class="input-row" style="flex-direction:column; align-items:flex-start;">
                         <label>亮度 (Brightness) <span id="val-brightness">0</span></label>
-                        <input type="range" min="-100" max="100" value="0" style="width:100%" oninput="photonTool.updateValue('brightness', this.value)">
+                        <input type="range" min="-100" max="100" value="0" style="width:100%" id="range-brightness">
                     </div>
                     <div class="input-row" style="flex-direction:column; align-items:flex-start;">
                         <label>对比度 (Contrast) <span id="val-contrast">0</span></label>
-                        <input type="range" min="-100" max="100" value="0" style="width:100%" oninput="photonTool.updateValue('contrast', this.value)">
+                        <input type="range" min="-100" max="100" value="0" style="width:100%" id="range-contrast">
                     </div>
                     <div class="input-row" style="flex-direction:column; align-items:flex-start;">
                         <label>饱和度 (Saturation) <span id="val-saturation">0</span></label>
-                        <input type="range" min="-100" max="100" value="0" style="width:100%" oninput="photonTool.updateValue('saturation', this.value)">
+                        <input type="range" min="-100" max="100" value="0" style="width:100%" id="range-saturation">
                     </div>
                     <div class="input-row" style="flex-direction:column; align-items:flex-start;">
                         <label>色相旋转 (Hue) <span id="val-hue">0</span></label>
-                        <input type="range" min="-180" max="180" value="0" style="width:100%" oninput="photonTool.updateValue('hue', this.value)">
+                        <input type="range" min="-180" max="180" value="0" style="width:100%" id="range-hue">
                     </div>
                 </div>
                 <div class="control-group">
                     <div class="filter-title">色温 (Temp)</div>
                     <div class="btn-grid">
-                        <button class="btn" onclick="photonTool.toggle('warm')" id="btn-warm">暖色调</button>
-                        <button class="btn" onclick="photonTool.toggle('cool')" id="btn-cool">冷色调</button>
+                        <button class="btn" id="btn-warm">暖色调</button>
+                        <button class="btn" id="btn-cool">冷色调</button>
                     </div>
                 </div>
             </div>
@@ -123,8 +122,8 @@
                 <div class="control-group">
                     <div class="filter-title">镜像 (Mirror)</div>
                     <div class="btn-grid">
-                        <button class="btn" onclick="photonTool.toggle('mirror_h')" id="btn-mirror_h">水平镜像</button>
-                        <button class="btn" onclick="photonTool.toggle('mirror_v')" id="btn-mirror_v">垂直镜像</button>
+                        <button class="btn" id="btn-mirror_h">水平镜像</button>
+                        <button class="btn" id="btn-mirror_v">垂直镜像</button>
                     </div>
                 </div>
                 
@@ -132,15 +131,15 @@
                     <div class="filter-title">缩放 (Scale)</div>
                     <div class="input-row">
                         <label style="width:80px">百分比 %</label>
-                        <input type="number" id="scale-percent" value="100" min="1" max="500" onchange="photonTool.updateScale('percent', this.value)">
+                        <input type="number" id="scale-percent" value="100" min="1" max="500">
                     </div>
                     <div class="input-row">
                         <label style="width:80px">宽 px</label>
-                        <input type="number" id="scale-width" onchange="photonTool.updateScale('width', this.value)">
+                        <input type="number" id="scale-width">
                     </div>
                     <div class="input-row">
                         <label style="width:80px">高 px</label>
-                        <input type="number" id="scale-height" onchange="photonTool.updateScale('height', this.value)">
+                        <input type="number" id="scale-height">
                     </div>
                     <div style="font-size:0.8rem; color:var(--text-dim); margin-top:5px;">
                         原始尺寸: <span id="original-size">- x -</span>
@@ -150,13 +149,13 @@
                 <div class="control-group">
                     <div class="filter-title">
                         裁剪 (Crop) 
-                        <label style="margin-left:auto; font-size:0.8rem;"><input type="checkbox" id="crop-enabled" onchange="photonTool.toggleCrop(this.checked)"> 启用</label>
+                        <label style="margin-left:auto; font-size:0.8rem;"><input type="checkbox" id="crop-enabled"> 启用</label>
                     </div>
                     <div id="crop-controls" style="opacity:0.5; pointer-events:none; display:flex; flex-direction:column; gap:5px;">
-                        <div class="input-row"><label style="width:30px">X</label><input type="number" id="crop-x" value="0" onchange="photonTool.updateCrop()"></div>
-                        <div class="input-row"><label style="width:30px">Y</label><input type="number" id="crop-y" value="0" onchange="photonTool.updateCrop()"></div>
-                        <div class="input-row"><label style="width:30px">W</label><input type="number" id="crop-w" onchange="photonTool.updateCrop()"></div>
-                        <div class="input-row"><label style="width:30px">H</label><input type="number" id="crop-h" onchange="photonTool.updateCrop()"></div>
+                        <div class="input-row"><label style="width:30px">X</label><input type="number" id="crop-x" value="0"></div>
+                        <div class="input-row"><label style="width:30px">Y</label><input type="number" id="crop-y" value="0"></div>
+                        <div class="input-row"><label style="width:30px">W</label><input type="number" id="crop-w"></div>
+                        <div class="input-row"><label style="width:30px">H</label><input type="number" id="crop-h"></div>
                     </div>
                 </div>
             </div>
@@ -178,12 +177,12 @@
                         <input type="number" id="export-quality" value="0.9" step="0.1" min="0.1" max="1.0">
                     </div>
                     <div class="input-row" style="margin-top:10px;">
-                        <button class="btn btn-primary" onclick="photonTool.download()" style="width:100%;">下载图片</button>
+                        <button class="btn btn-primary" id="btn-download-export" style="width:100%;">下载图片</button>
                     </div>
                 </div>
             </div>
 
-            <button class="btn btn-secondary" onclick="photonTool.reset()" style="margin-top:auto;">↺ 重置所有</button>
+            <button class="btn btn-secondary" id="btn-reset-all" style="margin-top:auto;">↺ 重置所有</button>
         </div>
 
         <div class="preview-area">
@@ -758,6 +757,69 @@
         window.onload = () => {
             photonTool.init();
         };
+
+        // Event listeners
+        document.getElementById('btn-save-header').addEventListener('click', () => photonTool.download());
+
+        document.getElementById('imageUpload').addEventListener('change', function() {
+            photonTool.handleFile(this.files[0]);
+        });
+
+        // Sub-tabs - event delegation
+        document.querySelector('.sub-tab-group').addEventListener('click', (e) => {
+            const tab = e.target.closest('.sub-tab');
+            if (tab && tab.dataset.tab) {
+                photonTool.switchTab(tab.dataset.tab);
+            }
+        });
+
+        // Filter toggle buttons - event delegation on all .btn-grid containers
+        document.querySelectorAll('.btn-grid').forEach(grid => {
+            grid.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn');
+                if (btn && btn.id && btn.id.startsWith('btn-')) {
+                    const filterName = btn.id.replace('btn-', '');
+                    photonTool.toggle(filterName);
+                }
+            });
+        });
+
+        // Adjust range sliders
+        document.getElementById('range-brightness').addEventListener('input', function() {
+            photonTool.updateValue('brightness', this.value);
+        });
+        document.getElementById('range-contrast').addEventListener('input', function() {
+            photonTool.updateValue('contrast', this.value);
+        });
+        document.getElementById('range-saturation').addEventListener('input', function() {
+            photonTool.updateValue('saturation', this.value);
+        });
+        document.getElementById('range-hue').addEventListener('input', function() {
+            photonTool.updateValue('hue', this.value);
+        });
+
+        // Scale inputs - use function() for 'this' context
+        document.getElementById('scale-percent').addEventListener('change', function() {
+            photonTool.updateScale('percent', this.value);
+        });
+        document.getElementById('scale-width').addEventListener('change', function() {
+            photonTool.updateScale('width', this.value);
+        });
+        document.getElementById('scale-height').addEventListener('change', function() {
+            photonTool.updateScale('height', this.value);
+        });
+
+        // Crop controls
+        document.getElementById('crop-enabled').addEventListener('change', function() {
+            photonTool.toggleCrop(this.checked);
+        });
+        ['crop-x', 'crop-y', 'crop-w', 'crop-h'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => photonTool.updateCrop());
+        });
+
+        // Export & Reset
+        document.getElementById('btn-download-export').addEventListener('click', () => photonTool.download());
+        document.getElementById('btn-reset-all').addEventListener('click', () => photonTool.reset());
     </script>
 </body>
 </html>

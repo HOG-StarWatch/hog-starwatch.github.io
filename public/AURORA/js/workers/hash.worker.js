@@ -46,7 +46,7 @@ self.onmessage = async function(e) {
                 results[algo] = hash.toString(CryptoJS.enc.Hex);
             });
 
-            self.postMessage({ type: 'result', results: results, requestId: requestId });
+            self.postMessage({ type: 'success', results: results, requestId: requestId });
 
         } catch (error) {
             const msg = error && error.message ? error.message : 'Unknown error';

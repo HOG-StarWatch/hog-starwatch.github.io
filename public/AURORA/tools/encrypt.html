@@ -6,11 +6,11 @@
     <title>加密解密</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
-<body style="padding: 1rem;">
+<body class="scroll-content">
     <div class="sub-tab-group">
-        <div class="sub-tab active" onclick="cryptoTool.switchSubTab('std', this)">标准加密 (AES/DES)</div>
-        <div class="sub-tab" onclick="cryptoTool.switchSubTab('custom', this)">自定义加密 (Custom)</div>
-        <div class="sub-tab" onclick="cryptoTool.switchSubTab('zerowidth', this)">零宽隐写 (ZeroWidth)</div>
+        <div class="sub-tab active" id="tab-std">标准加密 (AES/DES)</div>
+        <div class="sub-tab" id="tab-custom">自定义加密 (Custom)</div>
+        <div class="sub-tab" id="tab-zerowidth">零宽隐写 (ZeroWidth)</div>
     </div>
     
     <div class="workspace">
@@ -18,7 +18,7 @@
             <div class="panel-header">
                 <div class="panel-title">加密配置 & 输入</div>
                 <div class="panel-actions">
-                     <button class="btn btn-icon" onclick="app.clear('crypto')">清空</button>
+                     <button class="btn btn-icon" id="btn-clear">清空</button>
                 </div>
             </div>
             <div style="padding: 1rem; flex: 1; display: flex; flex-direction: column; gap: 1rem;">
@@ -45,7 +45,7 @@
                 <div id="crypto-custom-config" class="crypto-config" style="display:none;">
                     <div class="input-row">
                         <label>模式:</label>
-                        <select id="custom-mode" onchange="cryptoTool.updateCustomUI()">
+                        <select id="custom-mode">
                             <option value="16char">16字符映射 (字节级 - 压缩优化)</option>
                             <option value="4char">4字符映射 (位流级 - 压缩优化)</option>
                         </select>
@@ -55,7 +55,7 @@
                     <div id="custom-16-settings">
                         <div class="input-row">
                             <label>预设:</label>
-                            <select id="custom-16-preset" onchange="cryptoTool.apply16Preset()">
+                            <select id="custom-16-preset">
                                 <option value="default">默认</option>
                                 <option value="orgasm">木珠</option>
                                 <option value="sound">拟声词</option>
@@ -73,7 +73,7 @@
                     <div id="custom-4-settings" style="display:none;">
                         <div class="input-row">
                             <label>预设:</label>
-                            <select id="custom-4-preset" onchange="cryptoTool.apply4Preset()">
+                            <select id="custom-4-preset">
                                 <option value="default">默认 (HOG❤)</option>
                                 <option value="orgasm">木珠</option>
                                 <option value="letters">字母 (ABCD)</option>
@@ -108,8 +108,8 @@
         <div class="toolbar">
             <div class="tool-group">
                 <div class="group-label">操作</div>
-                <button class="btn btn-primary" onclick="cryptoTool.run('encrypt')">加密 (Encrypt) →</button>
-                <button class="btn btn-primary" onclick="cryptoTool.run('decrypt')">解密 (Decrypt) ←</button>
+                <button class="btn btn-primary" id="btn-encrypt">加密 (Encrypt) →</button>
+                <button class="btn btn-primary" id="btn-decrypt">解密 (Decrypt) ←</button>
             </div>
             <div class="tool-group">
                 <div class="group-label">信息</div>
@@ -125,7 +125,7 @@
             <div class="panel-header">
                 <div class="panel-title">结果</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon btn-secondary" onclick="app.copy('crypto-output')">复制</button>
+                    <button class="btn btn-icon btn-secondary" id="btn-copy">复制</button>
                 </div>
             </div>
             <textarea id="crypto-output" readonly placeholder="结果..." style="border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2);"></textarea>
@@ -420,6 +420,19 @@
         
         // Init logic
         cryptoTool.updateCustomUI();
+
+        // Event listeners
+        document.getElementById('tab-std').addEventListener('click', function() { cryptoTool.switchSubTab('std', this); });
+        document.getElementById('tab-custom').addEventListener('click', function() { cryptoTool.switchSubTab('custom', this); });
+        document.getElementById('tab-zerowidth').addEventListener('click', function() { cryptoTool.switchSubTab('zerowidth', this); });
+        document.getElementById('btn-clear').addEventListener('click', function() { app.clear('crypto'); });
+        document.getElementById('btn-encrypt').addEventListener('click', function() { cryptoTool.run('encrypt'); });
+        document.getElementById('btn-decrypt').addEventListener('click', function() { cryptoTool.run('decrypt'); });
+        document.getElementById('btn-copy').addEventListener('click', function() { app.copy('crypto-output'); });
+
+        document.getElementById('custom-mode').addEventListener('change', function() { cryptoTool.updateCustomUI(); });
+        document.getElementById('custom-16-preset').addEventListener('change', function() { cryptoTool.apply16Preset(); });
+        document.getElementById('custom-4-preset').addEventListener('change', function() { cryptoTool.apply4Preset(); });
     </script>
 </body>
 </html>
