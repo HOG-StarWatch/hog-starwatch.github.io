@@ -34,10 +34,6 @@ const PerfMonitor = {
         const msg = `[Perf] ${metric.name} (${engine}): ${duration.toFixed(2)}ms [${success ? 'OK' : 'FAIL'}]`;
         
         console.log(msg);
-        
-        // Optional: In a real app, send to analytics server here
-        // this.reportToAnalytics({ task: metric.name, engine, duration, success });
-
         delete this.metrics[timerId];
         return duration;
     },
@@ -49,7 +45,6 @@ const PerfMonitor = {
      */
     logFallback: function(taskName, reason) {
         console.warn(`[Fallback] ${taskName} switched to JS. Reason: ${reason}`);
-        // this.reportError({ type: 'fallback', task: taskName, reason });
     },
 
     /**

@@ -30,9 +30,13 @@
 index.html (应用壳)
     ├── 导航栏 + 主题切换
     └── iframe (tools/*.html)
-            ├── js/app.js       (核心应用)
-            ├── js/loader.js    (资源加载)
-            └── js/utils/*.js   (工具库)
+            ├── js/app.js            (核心应用)
+            ├── js/loader.js         (资源加载)
+            ├── js/utils/            (工具库)
+            │   ├── canvas-utils.js  (Canvas 操作封装)
+            │   ├── drag-drop.js     (拖拽文件处理)
+            │   └── worker-utils.js  (Worker 通信封装)
+            └── js/workers/          (Web Workers)
 ```
 
 ### 目录结构
@@ -45,10 +49,10 @@ AURORA/
 │   ├── loader.js           # 多源 CDN 加载器
 │   ├── perf-monitor.js     # 性能监控
 │   ├── theme-data.js       # 主题数据
-│   ├── utils/
+│   ├── utils/              # 工具库 (与 app.js 解耦)
 │   │   ├── canvas-utils.js # Canvas 操作封装
-│   │   ├── drag-drop.js     # 拖拽文件处理
-│   │   └── worker-utils.js  # Worker 通信封装
+│   │   ├── drag-drop.js    # 拖拽文件处理
+│   │   └── worker-utils.js # Worker 通信封装
 │   └── workers/            # Web Workers
 │       ├── ascii.worker.js
 │       ├── crypto.worker.js
