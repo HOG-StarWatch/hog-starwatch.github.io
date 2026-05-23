@@ -496,9 +496,8 @@
                 <h2><i class="fas fa-terminal"></i> 连通性测试</h2>
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
                     <input type="text" id="customTarget" placeholder="输入 IP 或域名" 
-                           onkeydown="if(event.key==='Enter') runCustomPing()"
                            style="flex:1; padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-main); outline:none; font-family:'JetBrains Mono', monospace; font-size:0.9rem;">
-                    <button class="btn-main" id="customPingBtn" onclick="runCustomPing()" style="padding:12px 20px;"><i class="fas fa-paper-plane"></i></button>
+                    <button class="btn-main" id="customPingBtn" style="padding:12px 20px;"><i class="fas fa-paper-plane"></i></button>
                 </div>
                 <div id="customResult" style="min-height:40px; font-size:0.9rem; padding:10px; border-radius:var(--radius-sm); background:var(--bg-deep);">
                     <span style="color:var(--text-dim)">输入地址并点击发送以测试</span>
@@ -1159,6 +1158,12 @@ function init() {
         opt.innerText = eng.name;
         select.appendChild(opt);
     });
+    // Attach custom ping event listeners (bypass app.js inline handler migration)
+    document.getElementById('customTarget')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') runCustomPing();
+    });
+    document.getElementById('customPingBtn')?.addEventListener('click', runCustomPing);
+
     // Set default unit to MB/s
     changeUnit('MBps');
     render();
@@ -1199,10 +1204,11 @@ function render() {
         </div>
     `).join('');
     
-    // Update tabs count
-    const domesticTab = document.querySelector('.tab[onclick*="domestic"]');
-    const internationalTab = document.querySelector('.tab[onclick*="international"]');
-    const adultTab = document.querySelector('.tab[onclick*="adult"]');
+    // Update tabs count (use index since app.js removes onclick attributes)
+    const tabs = document.querySelectorAll('.tab');
+    const domesticTab = tabs[0];
+    const internationalTab = tabs[1];
+    const adultTab = tabs[2];
     
     if (domesticTab) {
         const dTotal = siteDB.domestic.reduce((acc, cat) => acc + cat.items.length, 0);
@@ -1478,8 +1484,9 @@ function updateHist() {
 
 // Porn Mode Toggle Logic
 function togglePornMode(enable) {
-    const adultTab = document.querySelector('.tab[onclick*="adult"]');
-    const otherTabs = document.querySelectorAll('.tab:not([onclick*="adult"])');
+    const tabs = document.querySelectorAll('.tab');
+    const adultTab = tabs[2];
+    const otherTabs = [tabs[0], tabs[1]];
     const resBox = document.getElementById('customResult');
     
     if (enable) {
@@ -1892,7 +1899,9 @@ async function runCustomPing() {
 
     // Adult content unlock trigger
     if (input.toLowerCase() === 'porn') {
-        const adultTab = document.querySelector('.tab[onclick*="adult"]');
+        const tabs = document.querySelectorAll('.tab');
+        const adultTab = tabs[2];
+        if (!adultTab) return;
         const isHidden = adultTab.style.display === 'none';
         
         if (isHidden) {
