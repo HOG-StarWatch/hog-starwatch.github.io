@@ -26,7 +26,7 @@ lastUpdated: true
 17. [m3u8-downloader-m3u8.019425.xyz](https://m3u8.019425.xyz)
 18. [github-repo-explorer-gh.0194925.xyz](https://gh.019425.xyz)
 19. [ScriptExecutor-se.019425.xyz](https://se.019425.xyz)
-20. [comix-comixpublic1]
+20. [comix]
 21. [sc2replay-online-analysis-rep.019425.xyz](https://rep.019425.xyz)
 22. [worldmonitor-wm.019425.xyz](https://wm.019425.xyz)
 23. [FitTool-如何呢.又能怎.de5.net](https://xn--vqqy6jo2e.xn--foro9zwwz.de5.net/)

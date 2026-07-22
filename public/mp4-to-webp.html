@@ -1,0 +1,269 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MP4 to WEBP</title>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm" as="fetch" crossorigin="anonymous">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0d1117; color:#e6edf3; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+.container { width:100%; max-width:720px; padding:48px 20px; }
+header { text-align:center; margin-bottom:32px; }
+header h1 { font-size:1.75rem; font-weight:600; }
+header p { color:#8b949e; font-size:0.9rem; margin-top:8px; }
+.card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:32px; }
+.drop-zone { border:2px dashed #30363d; border-radius:8px; padding:48px 24px; text-align:center; cursor:pointer; transition:border-color .2s; }
+.drop-zone:hover,.drop-zone.dragover { border-color:#58a6ff; background:rgba(88,166,255,0.05); }
+.drop-zone h3 { font-size:1rem; font-weight:500; margin-bottom:6px; }
+.drop-zone p { color:#8b949e; font-size:0.85rem; margin-bottom:16px; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 20px; font-size:0.875rem; font-weight:500; border:1px solid #30363d; border-radius:6px; background:transparent; color:#e6edf3; cursor:pointer; }
+.btn:hover { border-color:#8b949e; }
+.btn-primary { background:#58a6ff; color:#0d1117; border-color:#58a6ff; }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+#fileInput { display:none; }
+.file-info { display:none; align-items:center; gap:12px; padding:12px 16px; background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.2); border-radius:6px; margin-bottom:24px; }
+.file-info.show { display:flex; }
+.file-info .nm { font-weight:500; }
+.file-info .sz { color:#8b949e; font-size:0.8rem; }
+.file-info .rm { margin-left:auto; background:none; border:none; color:#8b949e; cursor:pointer; font-size:1.2rem; }
+.file-info .rm:hover { color:#f85149; }
+.settings { display:none; margin-bottom:20px; }
+.settings.show { display:block; }
+.settings h3 { font-size:0.85rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#8b949e; margin-bottom:16px; }
+.grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+@media(max-width:540px){.grid{grid-template-columns:1fr}}
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media(max-width:540px){.grid-2{grid-template-columns:1fr}}
+.form-group { display:flex; flex-direction:column; gap:4px; }
+.form-group label { font-size:0.8rem; color:#8b949e; }
+.form-group select,.form-group input { padding:8px 10px; background:#0d1117; border:1px solid #30363d; border-radius:6px; color:#e6edf3; font-size:0.875rem; }
+.form-group select:focus,.form-group input:focus { outline:none; border-color:#58a6ff; }
+.clip-group { margin-top:16px; padding-top:16px; border-top:1px solid #30363d; }
+.clip-group h4 { font-size:0.8rem; color:#8b949e; font-weight:500; margin-bottom:10px; }
+.btn-cvt { width:100%; padding:12px; font-size:0.95rem; font-weight:600; border-radius:6px; display:flex; align-items:center; justify-content:center; gap:8px; }
+.prg { display:none; margin-top:20px; }
+.prg.show { display:block; }
+.prg-track { width:100%; height:6px; background:#0d1117; border-radius:3px; overflow:hidden; }
+.prg-fill { height:100%; width:0%; background:#58a6ff; border-radius:3px; transition:width .3s; }
+.prg-label { text-align:center; font-size:0.85rem; color:#8b949e; margin-top:8px; }
+.result { display:none; margin-top:20px; padding:20px; border:1px solid rgba(63,185,80,0.3); background:rgba(63,185,80,0.06); border-radius:6px; text-align:center; }
+.result.show { display:block; }
+.result h3 { font-size:1rem; font-weight:600; color:#3fb950; margin-bottom:8px; }
+.result .info { font-size:0.85rem; color:#8b949e; margin-bottom:16px; }
+.result img { max-width:100%; max-height:240px; border-radius:4px; margin-bottom:16px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header><h1>MP4 to WEBP</h1><p>本地转换，文件不上传服务器</p></header>
+  <div class="card">
+    <div class="drop-zone" id="dropZone">
+      <h3>将 MP4 文件拖放到此处</h3><p>或点击选择文件</p>
+      <button class="btn" type="button">选择 MP4</button>
+      <input type="file" id="fileInput" accept="video/mp4,.mp4">
+    </div>
+    <div class="file-info" id="fileInfo">
+      <div><div class="nm" id="fileName"></div><div class="sz" id="fileSize"></div></div>
+      <button class="rm" id="removeBtn">&times;</button>
+    </div>
+    <div class="settings" id="settings">
+      <h3>设置</h3>
+      <div class="grid">
+        <div class="form-group">
+          <label for="width">宽度</label>
+          <select id="width"><option value="original" selected>原始</option><option value="1280">1280</option><option value="854">854</option><option value="640">640</option><option value="480">480</option><option value="320">320</option></select>
+        </div>
+        <div class="form-group">
+          <label for="height">高度</label>
+          <select id="height"><option value="original" selected>原始</option><option value="720">720</option><option value="480">480</option><option value="360">360</option></select>
+        </div>
+        <div class="form-group">
+          <label for="fps">帧率</label>
+          <select id="fps"><option value="original" selected>原始</option><option value="15">15</option><option value="10">10</option><option value="5">5</option><option value="2">2</option><option value="1">1</option></select>
+        </div>
+        <div class="form-group">
+          <label for="quality">质量</label>
+          <select id="quality"><option value="0.3">低</option><option value="0.5">中</option><option value="0.75" selected>高</option><option value="0.9">最高</option></select>
+        </div>
+        <div class="form-group">
+          <label for="loop">循环</label>
+          <select id="loop"><option value="0">无限</option><option value="1">1</option><option value="3">3</option></select>
+        </div>
+      </div>
+      <div class="clip-group">
+        <h4>裁剪（可选）</h4>
+        <div class="grid-2">
+          <div class="form-group"><label for="startTime">开始（秒）</label><input type="number" id="startTime" min="0" step="0.1" placeholder="0"></div>
+          <div class="form-group"><label for="endTime">结束（秒）</label><input type="number" id="endTime" min="0" step="0.1" placeholder="留空到末尾"></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-cvt" id="convertBtn" disabled>开始转换</button>
+    <div class="prg" id="progressWrap">
+      <div class="prg-track"><div class="prg-fill" id="progressFill"></div></div>
+      <div class="prg-label" id="progressLabel">准备就绪</div>
+    </div>
+    <div class="result" id="resultBox">
+      <h3 id="resultTitle">转换完成</h3>
+      <div id="previewContainer"></div>
+      <p class="info" id="resultInfo"></p>
+      <a class="btn btn-primary" id="downloadBtn" href="#">下载 WEBP</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/classes.js';
+
+const $ = id => document.getElementById(id);
+const dropZone = $('dropZone'), fileInput = $('fileInput'), fileInfo = $('fileInfo');
+const fileName = $('fileName'), fileSize = $('fileSize'), removeBtn = $('removeBtn');
+const settings = $('settings'), convertBtn = $('convertBtn');
+const progressWrap = $('progressWrap'), progressFill = $('progressFill'), progressLabel = $('progressLabel');
+const resultBox = $('resultBox'), previewContainer = $('previewContainer');
+const resultInfo = $('resultInfo'), downloadBtn = $('downloadBtn');
+
+let selectedFile = null;
+
+function fmtSize(bytes) {
+  if (!bytes) return '0 B';
+  const k = 1024, s = ['B','KB','MB','GB'];
+  const i = Math.floor(Math.log(bytes)/Math.log(k));
+  return (bytes/Math.pow(k,i)).toFixed(1) + ' ' + s[i];
+}
+
+async function toBlobURL(url, mime) {
+  const blob = await fetch(url).then(r => r.blob());
+  return URL.createObjectURL(new Blob([blob], { type: mime }));
+}
+
+async function fileToU8(file) {
+  return new Uint8Array(await file.arrayBuffer());
+}
+
+async function createWorkerURL() {
+  const BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/';
+  let code = await fetch(BASE + 'worker.js').then(r => r.text());
+  code = code.replace(/from\s+"\.\/(.+?)"/g, `from "${BASE}$1"`);
+  return URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+}
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('video/')) handleFile(f);
+  else alert('请选择 MP4 文件');
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  selectedFile = file;
+  fileName.textContent = file.name;
+  fileSize.textContent = fmtSize(file.size);
+  fileInfo.classList.add('show');
+  dropZone.style.display = 'none';
+  settings.classList.add('show');
+  convertBtn.disabled = false;
+  resultBox.classList.remove('show');
+  progressFill.style.width = '0%';
+  progressFill.style.backgroundColor = '#58a6ff';
+}
+
+removeBtn.addEventListener('click', () => {
+  selectedFile = null; fileInput.value = '';
+  fileInfo.classList.remove('show'); dropZone.style.display = 'block';
+  settings.classList.remove('show'); convertBtn.disabled = true;
+  resultBox.classList.remove('show');
+});
+
+convertBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  convertBtn.disabled = true;
+  progressWrap.classList.add('show');
+  resultBox.classList.remove('show');
+  progressFill.style.width = '0%';
+  progressFill.style.backgroundColor = '#58a6ff';
+  progressLabel.textContent = '正在加载 FFmpeg...';
+
+  try {
+    const ffmpeg = new FFmpeg();
+
+    ffmpeg.on('log', ({ message }) => console.log('[ffmpeg]', message));
+    ffmpeg.on('progress', ({ progress }) => {
+      progressFill.style.width = Math.round(50 + progress * 35) + '%';
+    });
+
+    progressLabel.textContent = '正在加载 FFmpeg...';
+    progressFill.style.width = '5%';
+
+    const workerURL = await createWorkerURL();
+    const CORE_BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
+    const coreURL = await toBlobURL(CORE_BASE + '/ffmpeg-core.js', 'text/javascript');
+    const wasmURL = await toBlobURL(CORE_BASE + '/ffmpeg-core.wasm', 'application/wasm');
+
+    await ffmpeg.load({ classWorkerURL: workerURL, coreURL, wasmURL });
+
+    progressFill.style.width = '40%';
+    progressLabel.textContent = '正在写入文件...';
+
+    await ffmpeg.writeFile('input.mp4', await fileToU8(selectedFile));
+
+    progressFill.style.width = '50%';
+    progressLabel.textContent = '正在转换...';
+
+    const startVal = $('startTime').value;
+    const endVal = $('endTime').value;
+    const st = startVal ? parseFloat(startVal) : 0;
+    const et = endVal ? parseFloat(endVal) : '';
+    const fps = $('fps').value;
+    const wOpt = $('width').value;
+    const hOpt = $('height').value;
+    const w = wOpt === 'original' ? '-1' : wOpt;
+    const h = hOpt === 'original' ? '-1' : hOpt;
+    const quality = Math.round(parseFloat($('quality').value) * 100);
+    const loop = parseInt($('loop').value);
+
+    const args = ['-i', 'input.mp4', '-ss', String(st)];
+    if (et) args.push('-to', String(et));
+    const filters = [];
+    if (fps !== 'original') filters.push('fps=' + fps);
+    if (w !== '-1' || h !== '-1') filters.push('scale=' + w + ':' + h + ':flags=lanczos');
+    if (filters.length) args.push('-vf', filters.join(','));
+    args.push('-loop', String(loop), '-compression_level', '6', '-q:v', String(quality), '-an', 'output.webp');
+
+    await ffmpeg.exec(args);
+
+    progressFill.style.width = '85%';
+    progressLabel.textContent = '正在读取结果...';
+    const data = await ffmpeg.readFile('output.webp');
+    const blob = new Blob([data], { type: 'image/webp' });
+    const blobUrl = URL.createObjectURL(blob);
+
+    const outName = selectedFile.name.replace(/\.[^.]+$/, '') + '.webp';
+    downloadBtn.href = blobUrl;
+    downloadBtn.download = outName;
+
+    previewContainer.innerHTML = '<img src="' + blobUrl + '" alt="预览">';
+    $('resultTitle').textContent = '转换完成';
+    resultInfo.textContent = fmtSize(blob.size) + ' | ' + outName;
+    resultBox.classList.add('show');
+
+    progressFill.style.width = '100%';
+    progressLabel.textContent = '完成';
+
+    ffmpeg.terminate();
+
+  } catch (err) {
+    progressLabel.textContent = '出错: ' + err.message;
+    progressFill.style.backgroundColor = '#f85149';
+  } finally {
+    convertBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
