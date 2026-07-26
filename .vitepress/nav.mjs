@@ -40,6 +40,8 @@ export default [
       items: [
         { text: 'AURORA❤极光', link: '../../../AURORA/index.html', target: '_self', },
         { text: '网页开发素材箱', link: '../../../developer-toolbox.html', target: '_self', },
+        { text: '网易云音乐.NCM', link: '../../../NeteaseNCM.html', target: '_self', },
+        { text: '静态HTML可视化编辑', link: '../../../html-visual-editor.html', target: '_self', },
         { text: 'HTML在线运行', link: '../../../html_runner.html', target: '_self', },
         { text: 'HTML在线运行', link: '../../../htmlrunner.html', target: '_self', },
         { text: '脚本执行器ProMax', link: '../../../ScriptExecutor.html', target: '_self', },

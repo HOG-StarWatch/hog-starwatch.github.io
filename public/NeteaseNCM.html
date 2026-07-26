@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCM &#x89E3;&#x7801;&#x5668;</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(135deg,#0f0a1a 0%,#1a0f2e 30%,#0d0d1a 70%,#0a0a14 100%);color:#e4d9f0;min-height:100vh;min-height:100dvh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(88,28,135,0.15) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(124,58,237,0.1) 0%,transparent 50%);pointer-events:none;z-index:0}
+.container{max-width:960px;margin:0 auto;padding:40px 20px;position:relative;z-index:1}
+h1{text-align:center;font-weight:600;font-size:28px;margin-bottom:8px;background:linear-gradient(135deg,#c4b5fd,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{text-align:center;color:#9ca3af;font-size:14px;margin-bottom:32px}
+.drop-zone{border:1.5px solid rgba(167,139,250,0.2);border-radius:20px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(255,255,255,0.03);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06)}
+.drop-zone:hover,.drop-zone.dragover{border-color:rgba(167,139,250,0.5);background:rgba(167,139,250,0.06);box-shadow:0 8px 40px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.08)}
+.drop-zone.dragover{transform:scale(1.02)}
+.drop-zone-icon{font-size:48px;margin-bottom:12px;opacity:.4;filter:drop-shadow(0 0 20px rgba(167,139,250,0.3))}
+.drop-zone p{color:#9ca3af;font-size:15px}
+.drop-zone .hint{font-size:13px;color:#6b7280;margin-top:8px}
+.btn{display:inline-block;padding:10px 24px;border-radius:24px;border:1px solid rgba(255,255,255,0.08);font-size:15px;font-weight:500;cursor:pointer;transition:all .25s;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.btn-primary{background:linear-gradient(135deg,rgba(124,58,237,0.7),rgba(88,28,135,0.5));color:#e4d9f0;box-shadow:0 4px 20px rgba(124,58,237,0.2),inset 0 1px 0 rgba(255,255,255,0.1)}
+.btn-primary:hover{background:linear-gradient(135deg,rgba(139,92,246,0.8),rgba(124,58,237,0.6));box-shadow:0 6px 28px rgba(124,58,237,0.35),inset 0 1px 0 rgba(255,255,255,0.12);transform:translateY(-1px)}
+.btn-primary:disabled{background:rgba(75,85,99,0.3);border-color:rgba(255,255,255,0.05);color:#6b7280;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:rgba(255,255,255,0.04);color:#c4b5fd;border-color:rgba(167,139,250,0.15);box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)}
+.btn-secondary:hover{background:rgba(255,255,255,0.08);border-color:rgba(167,139,250,0.3)}
+.card{background:rgba(255,255,255,0.04);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-radius:20px;padding:24px;margin-top:20px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 8px 32px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.05)}
+.card-header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.card-close{background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px;padding:4px 8px;border-radius:8px;transition:all .2s;flex-shrink:0;line-height:1;margin-left:auto}
+.card-close:hover{color:#fca5a5;background:rgba(239,68,68,0.1)}
+.cover-wrap{width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.06)}
+.cover-wrap img{width:100%;height:100%;object-fit:cover}
+.cover-wrap .placeholder{font-size:28px;opacity:.3}
+.meta-info{flex:1;min-width:0}
+.meta-info .title{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e4d9f0}
+.meta-info .artist{font-size:14px;color:#a78bfa;margin-top:2px}
+.meta-info .album{font-size:13px;color:#6b7280;margin-top:1px}
+.enc-title,.enc-artist,.enc-album{display:block;width:100%;margin-bottom:4px;font-size:13px;padding:6px 8px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
+.detail-grid .label{color:#6b7280}
+.detail-grid .value{color:#c4b5fd;text-align:right;font-weight:500}
+.actions{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+.actions .btn{flex:1;text-align:center;min-width:120px}
+.progress-wrap{margin-top:16px;display:none}
+.progress-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#a78bfa,#7c3aed);width:0%;transition:width .3s;border-radius:4px;box-shadow:0 0 12px rgba(124,58,237,0.4)}
+.progress-text{font-size:13px;color:#9ca3af;text-align:center;margin-top:6px}
+.status-msg{padding:12px 16px;border-radius:14px;font-size:14px;margin-top:16px;display:none;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06)}
+.status-msg.error{background:rgba(239,68,68,0.1);color:#fca5a5;border-color:rgba(239,68,68,0.15);display:block}
+.status-msg.success{background:rgba(34,197,94,0.1);color:#86efac;border-color:rgba(34,197,94,0.15);display:block}
+.status-msg.info{background:rgba(124,58,237,0.1);color:#c4b5fd;border-color:rgba(124,58,237,0.15);display:block}
+.files-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.form-input{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 12px;font-size:13px;color:#e4d9f0;outline:none;transition:all .25s;font-family:inherit;box-sizing:border-box;min-width:0}
+.form-input:hover{border-color:rgba(167,139,250,0.25)}
+.form-input:focus{border-color:rgba(167,139,250,0.5);box-shadow:0 0 0 3px rgba(124,58,237,0.1)}
+.form-input::placeholder{color:#4b5563}
+.floating-batch{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:10px;padding:12px 20px;background:rgba(15,10,26,0.8);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.08);border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04);align-items:center;animation:fadeIn .3s ease}
+.floating-batch .batch-info{color:#6b7280;font-size:13px;margin:0;white-space:nowrap}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+footer{text-align:center;color:#4b5563;font-size:12px;margin-top:40px;padding:20px;position:relative;z-index:1}
+footer a{color:#6b7280}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>NCM &#x5DE5;&#x5177;</h1>
+  <p class="subtitle">&#x7F51;&#x6613;&#x4E91;&#x97F3;&#x4E50; .ncm &#x6587;&#x4EF6;&#x89E3;&#x5BC6; / &#x52A0;&#x5BC6;</p>
+
+  <div class="drop-zone" id="dropZone">
+    <div class="drop-zone-icon">&#9835;</div>
+    <p>&#x62D6;&#x62FD; .ncm &#x6587;&#x4EF6;&#x89E3;&#x5BC6;&#xFF0C;&#x6216; MP3/FLAC/OGG/WAV &#x52A0;&#x5BC6;</p>
+    <p class="hint">&#x652F;&#x6301;&#x6279;&#x91CF;&#x5904;&#x7406;&#xFF0C;&#x81EA;&#x52A8;&#x8BC6;&#x522B;&#x6587;&#x4EF6;&#x7C7B;&#x578B;</p>
+    <input type="file" id="fileInput" accept=".ncm,.mp3,.flac,.ogg,.wav" multiple hidden>
+  </div>
+
+  <div id="filesContainer" class="files-grid"></div>
+
+  <div id="fullProgress" class="card" style="display:none">
+    <div class="progress-wrap" style="display:block">
+      <div class="progress-bar"><div class="progress-bar-fill" id="fullProgressFill"></div></div>
+      <div class="progress-text" id="fullProgressText"></div>
+    </div>
+  </div>
+
+  <div id="batchActions" style="display:none" class="floating-batch">
+    <button class="btn btn-primary" id="convertAllBtn">&#x5168;&#x90E8;&#x4E0B;&#x8F7D;</button>
+    <button class="btn btn-secondary" id="clearAllBtn">&#x6E05;&#x7A7A;&#x5217;&#x8868;</button>
+    <div class="batch-info" id="batchInfo"></div>
+  </div>
+
+  <footer>
+    <p>&#x6240;&#x6709;&#x64CD;&#x4F5C;&#x5728;&#x672C;&#x5730;&#x6D4F;&#x89C8;&#x5668;&#x4E2D;&#x5B8C;&#x6210;&#xFF0C;&#x6587;&#x4EF6;&#x4E0D;&#x4F1A;&#x4E0A;&#x4F20;&#x5230;&#x670D;&#x52A1;&#x5668;&#x3002;</p>
+    <p>&#x7B97;&#x6CD5;&#x53C2;&#x8003;&#xFF1A;<a href="https://github.com/Johnserf-Seed/ncm2mp3" target="_blank">ncm2mp3</a> &middot; <a href="https://github.com/anonymous5l/ncmdump" target="_blank">ncmdump</a></p>
+  </footer>
+</div>
+
+<script>
+(function() {
+'use strict';
+
+const CORE_KEY = new Uint8Array([0x68,0x7A,0x48,0x52,0x41,0x6D,0x73,0x6F,0x35,0x6B,0x49,0x6E,0x62,0x61,0x78,0x57]);
+const META_KEY = new Uint8Array([0x23,0x31,0x34,0x6C,0x6A,0x6B,0x5F,0x21,0x5C,0x5D,0x26,0x30,0x55,0x3C,0x27,0x28]);
+const MAGIC = new Uint8Array([0x43,0x54,0x45,0x4E,0x46,0x44,0x41,0x4D]);
+
+function readU32(d, o) {
+  return (d[o]|d[o+1]<<8|d[o+2]<<16|d[o+3]<<24)>>>0;
+}
+
+function xorBytes(d, v) {
+  const r = new Uint8Array(d.length);
+  for (let i = 0; i < d.length; i++) r[i] = d[i] ^ v;
+  return r;
+}
+
+const AES_SBOX = new Uint8Array([
+  0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
+  0xca,0x82,0xc9,0x7d,0xfa,0x59,0x47,0xf0,0xad,0xd4,0xa2,0xaf,0x9c,0xa4,0x72,0xc0,
+  0xb7,0xfd,0x93,0x26,0x36,0x3f,0xf7,0xcc,0x34,0xa5,0xe5,0xf1,0x71,0xd8,0x31,0x15,
+  0x04,0xc7,0x23,0xc3,0x18,0x96,0x05,0x9a,0x07,0x12,0x80,0xe2,0xeb,0x27,0xb2,0x75,
+  0x09,0x83,0x2c,0x1a,0x1b,0x6e,0x5a,0xa0,0x52,0x3b,0xd6,0xb3,0x29,0xe3,0x2f,0x84,
+  0x53,0xd1,0x00,0xed,0x20,0xfc,0xb1,0x5b,0x6a,0xcb,0xbe,0x39,0x4a,0x4c,0x58,0xcf,
+  0xd0,0xef,0xaa,0xfb,0x43,0x4d,0x33,0x85,0x45,0xf9,0x02,0x7f,0x50,0x3c,0x9f,0xa8,
+  0x51,0xa3,0x40,0x8f,0x92,0x9d,0x38,0xf5,0xbc,0xb6,0xda,0x21,0x10,0xff,0xf3,0xd2,
+  0xcd,0x0c,0x13,0xec,0x5f,0x97,0x44,0x17,0xc4,0xa7,0x7e,0x3d,0x64,0x5d,0x19,0x73,
+  0x60,0x81,0x4f,0xdc,0x22,0x2a,0x90,0x88,0x46,0xee,0xb8,0x14,0xde,0x5e,0x0b,0xdb,
+  0xe0,0x32,0x3a,0x0a,0x49,0x06,0x24,0x5c,0xc2,0xd3,0xac,0x62,0x91,0x95,0xe4,0x79,
+  0xe7,0xc8,0x37,0x6d,0x8d,0xd5,0x4e,0xa9,0x6c,0x56,0xf4,0xea,0x65,0x7a,0xae,0x08,
+  0xba,0x78,0x25,0x2e,0x1c,0xa6,0xb4,0xc6,0xe8,0xdd,0x74,0x1f,0x4b,0xbd,0x8b,0x8a,
+  0x70,0x3e,0xb5,0x66,0x48,0x03,0xf6,0x0e,0x61,0x35,0x57,0xb9,0x86,0xc1,0x1d,0x9e,
+  0xe1,0xf8,0x98,0x11,0x69,0xd9,0x8e,0x94,0x9b,0x1e,0x87,0xe9,0xce,0x55,0x28,0xdf,
+  0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16
+]);
+
+const AES_INV_SBOX = new Uint8Array([
+  0x52,0x09,0x6a,0xd5,0x30,0x36,0xa5,0x38,0xbf,0x40,0xa3,0x9e,0x81,0xf3,0xd7,0xfb,
+  0x7c,0xe3,0x39,0x82,0x9b,0x2f,0xff,0x87,0x34,0x8e,0x43,0x44,0xc4,0xde,0xe9,0xcb,
+  0x54,0x7b,0x94,0x32,0xa6,0xc2,0x23,0x3d,0xee,0x4c,0x95,0x0b,0x42,0xfa,0xc3,0x4e,
+  0x08,0x2e,0xa1,0x66,0x28,0xd9,0x24,0xb2,0x76,0x5b,0xa2,0x49,0x6d,0x8b,0xd1,0x25,
+  0x72,0xf8,0xf6,0x64,0x86,0x68,0x98,0x16,0xd4,0xa4,0x5c,0xcc,0x5d,0x65,0xb6,0x92,
+  0x6c,0x70,0x48,0x50,0xfd,0xed,0xb9,0xda,0x5e,0x15,0x46,0x57,0xa7,0x8d,0x9d,0x84,
+  0x90,0xd8,0xab,0x00,0x8c,0xbc,0xd3,0x0a,0xf7,0xe4,0x58,0x05,0xb8,0xb3,0x45,0x06,
+  0xd0,0x2c,0x1e,0x8f,0xca,0x3f,0x0f,0x02,0xc1,0xaf,0xbd,0x03,0x01,0x13,0x8a,0x6b,
+  0x3a,0x91,0x11,0x41,0x4f,0x67,0xdc,0xea,0x97,0xf2,0xcf,0xce,0xf0,0xb4,0xe6,0x73,
+  0x96,0xac,0x74,0x22,0xe7,0xad,0x35,0x85,0xe2,0xf9,0x37,0xe8,0x1c,0x75,0xdf,0x6e,
+  0x47,0xf1,0x1a,0x71,0x1d,0x29,0xc5,0x89,0x6f,0xb7,0x62,0x0e,0xaa,0x18,0xbe,0x1b,
+  0xfc,0x56,0x3e,0x4b,0xc6,0xd2,0x79,0x20,0x9a,0xdb,0xc0,0xfe,0x78,0xcd,0x5a,0xf4,
+  0x1f,0xdd,0xa8,0x33,0x88,0x07,0xc7,0x31,0xb1,0x12,0x10,0x59,0x27,0x80,0xec,0x5f,
+  0x60,0x51,0x7f,0xa9,0x19,0xb5,0x4a,0x0d,0x2d,0xe5,0x7a,0x9f,0x93,0xc9,0x9c,0xef,
+  0xa0,0xe0,0x3b,0x4d,0xae,0x2a,0xf5,0xb0,0xc8,0xeb,0xbb,0x3c,0x83,0x53,0x99,0x61,
+  0x17,0x2b,0x04,0x7e,0xba,0x77,0xd6,0x26,0xe1,0x69,0x14,0x63,0x55,0x21,0x0c,0x7d
+]);
+
+const AES_RCON = new Uint8Array([0x00,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36]);
+
+function aesSubWord(w) {
+  return (AES_SBOX[w[0]]<<24|AES_SBOX[w[1]]<<16|AES_SBOX[w[2]]<<8|AES_SBOX[w[3]])>>>0;
+}
+
+function aesRotWord(w) {
+  return ((w<<8)|(w>>>24))>>>0;
+}
+
+function aesGmul(a, b) {
+  let p = 0;
+  for (let i = 0; i < 8; i++) {
+    if (b & 1) p ^= a;
+    const hi = a & 0x80;
+    a = (a << 1) & 0xff;
+    if (hi) a ^= 0x1b;
+    b >>= 1;
+  }
+  return p;
+}
+
+function aesKeyExpansion(key) {
+  const Nk = 4, Nb = 4, Nr = 10;
+  const w = new Uint32Array(Nb * (Nr + 1));
+  for (let i = 0; i < Nk; i++) {
+    w[i] = (key[4*i]<<24) | (key[4*i+1]<<16) | (key[4*i+2]<<8) | key[4*i+3];
+  }
+  for (let i = Nk; i < Nb * (Nr + 1); i++) {
+    let t = w[i-1];
+    if (i % Nk === 0) {
+      const rot = aesRotWord(t);
+      t = aesSubWord([(rot>>>24)&0xff,(rot>>>16)&0xff,(rot>>>8)&0xff,rot&0xff]) ^ (AES_RCON[i/Nk]<<24);
+    }
+    w[i] = w[i-Nk] ^ t;
+  }
+  return w;
+}
+
+function aesDecryptBlock(block, w) {
+  const state = new Uint8Array(block);
+  const Nb = 4;
+  const Nr = 10;
+
+  function addRoundKey(r) {
+    for (let c = 0; c < Nb; c++) {
+      const k = w[r * Nb + c];
+      state[c * 4]     ^= (k >>> 24) & 0xff;
+      state[c * 4 + 1] ^= (k >>> 16) & 0xff;
+      state[c * 4 + 2] ^= (k >>> 8) & 0xff;
+      state[c * 4 + 3] ^= k & 0xff;
+    }
+  }
+
+  function invShiftRows() {
+    const s = new Uint8Array(16);
+    s[0]=state[0];  s[1]=state[13]; s[2]=state[10]; s[3]=state[7];
+    s[4]=state[4];  s[5]=state[1];  s[6]=state[14]; s[7]=state[11];
+    s[8]=state[8];  s[9]=state[5];  s[10]=state[2]; s[11]=state[15];
+    s[12]=state[12]; s[13]=state[9]; s[14]=state[6]; s[15]=state[3];
+    state.set(s);
+  }
+
+  function invSubBytes() {
+    for (let i = 0; i < 16; i++) state[i] = AES_INV_SBOX[state[i]];
+  }
+
+  function invMixColumns() {
+    const s = new Uint8Array(16);
+    for (let c = 0; c < 4; c++) {
+      const i = c * 4;
+      s[i]   = aesGmul(state[i],14) ^ aesGmul(state[i+1],11) ^ aesGmul(state[i+2],13) ^ aesGmul(state[i+3],9);
+      s[i+1] = aesGmul(state[i],9)  ^ aesGmul(state[i+1],14) ^ aesGmul(state[i+2],11) ^ aesGmul(state[i+3],13);
+      s[i+2] = aesGmul(state[i],13) ^ aesGmul(state[i+1],9)  ^ aesGmul(state[i+2],14) ^ aesGmul(state[i+3],11);
+      s[i+3] = aesGmul(state[i],11) ^ aesGmul(state[i+1],13) ^ aesGmul(state[i+2],9)  ^ aesGmul(state[i+3],14);
+    }
+    state.set(s);
+  }
+
+  addRoundKey(Nr);
+  for (let r = Nr - 1; r >= 1; r--) {
+    invShiftRows();
+    invSubBytes();
+    addRoundKey(r);
+    invMixColumns();
+  }
+  invShiftRows();
+  invSubBytes();
+  addRoundKey(0);
+
+  return state;
+}
+
+function aesEcbDecrypt(keyBytes, data) {
+  const w = aesKeyExpansion(keyBytes);
+  const n = data.length / 16;
+  if (n !== Math.floor(n)) throw new Error('AES data length not multiple of 16');
+  const out = new Uint8Array(data.length);
+  for (let i = 0; i < n; i++) {
+    const dec = aesDecryptBlock(data.slice(i*16, i*16+16), w);
+    out.set(dec, i*16);
+  }
+  return out;
+}
+
+function aesEncryptBlock(block, w) {
+  const state = new Uint8Array(block);
+  const Nb = 4, Nr = 10;
+  function subBytes(s) { for (let i = 0; i < 16; i++) s[i] = AES_SBOX[s[i]]; }
+  function shiftRows(s) {
+    const t = [s[0],s[5],s[10],s[15],s[4],s[9],s[14],s[3],s[8],s[13],s[2],s[7],s[12],s[1],s[6],s[11]];
+    for (let i = 0; i < 16; i++) s[i] = t[i];
+  }
+  function mixCols(s) {
+    for (let c = 0; c < 4; c++) {
+      const i = c * 4, a = s[i], b = s[i+1], c2 = s[i+2], d = s[i+3];
+      s[i]   = aesGmul(a,2)^aesGmul(b,3)^c2^d;
+      s[i+1] = a^aesGmul(b,2)^aesGmul(c2,3)^d;
+      s[i+2] = a^b^aesGmul(c2,2)^aesGmul(d,3);
+      s[i+3] = aesGmul(a,3)^b^c2^aesGmul(d,2);
+    }
+  }
+  function addKey(s, rk) {
+    for (let c = 0; c < Nb; c++) {
+      const k = rk[c];
+      s[c*4]   ^= (k>>>24)&0xff;
+      s[c*4+1] ^= (k>>>16)&0xff;
+      s[c*4+2] ^= (k>>>8)&0xff;
+      s[c*4+3] ^= k&0xff;
+    }
+  }
+  addKey(state, w.slice(0, 4));
+  for (let r = 1; r < Nr; r++) { subBytes(state); shiftRows(state); mixCols(state); addKey(state, w.slice(r*4, (r+1)*4)); }
+  subBytes(state); shiftRows(state); addKey(state, w.slice(Nr*4, (Nr+1)*4));
+  return state;
+}
+
+function aesEcbEncrypt(keyBytes, data) {
+  const w = aesKeyExpansion(keyBytes);
+  const n = data.length / 16;
+  const out = new Uint8Array(data.length);
+  for (let i = 0; i < n; i++) {
+    const enc = aesEncryptBlock(data.slice(i*16, i*16+16), w);
+    out.set(enc, i*16);
+  }
+  return out;
+}
+
+function writeU32(d, o, v) {
+  d[o] = v & 0xff; d[o+1] = (v>>>8)&0xff; d[o+2] = (v>>>16)&0xff; d[o+3] = (v>>>24)&0xff;
+}
+
+function concatBytes(arrays) {
+  let len = 0;
+  for (const a of arrays) len += a.length;
+  const r = new Uint8Array(len);
+  let off = 0;
+  for (const a of arrays) { r.set(a, off); off += a.length; }
+  return r;
+}
+
+function pkcs7Pad(data, bs) {
+  bs = bs || 16;
+  const padLen = bs - (data.length % bs);
+  const r = new Uint8Array(data.length + padLen);
+  r.set(data);
+  r.fill(padLen, data.length);
+  return r;
+}
+
+function generateRC4Key() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let s = '';
+  for (let i = 0; i < 98; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return new TextEncoder().encode(s);
+}
+
+function ncmEncrypt(audioData, coverData, metaObj) {
+  const rc4Key = generateRC4Key();
+  const prefix = new TextEncoder().encode('neteasecloudmusic');
+  const keyMat = concatBytes([prefix, rc4Key]);
+  const keyPadded = pkcs7Pad(keyMat);
+  const keyEnc = aesEcbEncrypt(CORE_KEY, keyPadded);
+  const keyXored = xorBytes(keyEnc, 0x64);
+
+  const metaJson = 'music:' + JSON.stringify(metaObj);
+  const metaBytes = new TextEncoder().encode(metaJson);
+  const metaPadded = pkcs7Pad(metaBytes);
+  const metaEnc = aesEcbEncrypt(META_KEY, metaPadded);
+  const metaB64 = btoa(String.fromCharCode(...metaEnc));
+  const metaLine = '163 key(Don\'t modify):' + metaB64;
+  const metaLineBytes = new TextEncoder().encode(metaLine);
+  const metaXored = xorBytes(metaLineBytes, 0x63);
+
+  const S = rc4KSA(rc4Key);
+  const keyBox = ncmKeyBox(S);
+  const audioEnc = new Uint8Array(audioData.length);
+  for (let i = 0; i < audioData.length; i++) audioEnc[i] = audioData[i] ^ keyBox[i & 0xff];
+
+  const coverSize = coverData ? coverData.length : 0;
+  const crcHeader = new Uint8Array(13);
+  writeU32(crcHeader, 5, coverSize);
+  writeU32(crcHeader, 9, coverSize);
+
+  const keyLenBytes = new Uint8Array(4); writeU32(keyLenBytes, 0, keyXored.length);
+  const metaLenBytes = new Uint8Array(4); writeU32(metaLenBytes, 0, metaXored.length);
+  const parts = [MAGIC, new Uint8Array([0x00, 0x00])];
+  parts.push(keyLenBytes, keyXored);
+  parts.push(metaLenBytes, metaXored);
+  if (metaXored.length % 2 === 1) parts.push(new Uint8Array([0x00]));
+  parts.push(crcHeader);
+  if (coverData) parts.push(coverData);
+  parts.push(audioEnc);
+
+  return concatBytes(parts);
+}
+
+function extractMetaFromAudio(data, fileName) {
+  const ext = fileName.split('.').pop().toLowerCase();
+  let meta = {};
+  if (ext === 'mp3') { meta = parseID3v2(data) || {}; }
+  else if (ext === 'flac' || ext === 'ogg') { meta = parseVorbisMeta(data) || {}; }
+  meta.title = meta.title || fileName.replace(/\.[^.]+$/, '');
+  meta.artist = meta.artist || '';
+  meta.album = meta.album || '';
+  meta.format = ext;
+  return meta;
+}
+
+function parseID3v2(data) {
+  if (data[0] !== 0x49 || data[1] !== 0x44 || data[2] !== 0x33) return null;
+  const syncSafe = (data[6] & 0x80) === 0;
+  const size = syncSafe
+    ? ((data[6] & 0x7f) << 21) | ((data[7] & 0x7f) << 14) | ((data[8] & 0x7f) << 7) | (data[9] & 0x7f)
+    : (data[6] << 21) | (data[7] << 14) | (data[8] << 7) | data[9];
+  let off = 10, end = off + size;
+  const meta = {};
+  while (off + 10 <= end) {
+    const id = String.fromCharCode(data[off], data[off+1], data[off+2], data[off+3]);
+    let frameSize = (data[off+4] << 24) | (data[off+5] << 16) | (data[off+6] << 8) | data[off+7];
+    if (!syncSafe) frameSize >>>= 0;
+    if (frameSize < 1) { off += 10; continue; }
+    if (off + 10 + frameSize > end) break;
+    const flags = (data[off+8] << 8) | data[off+9];
+    off += 10;
+    const enc = data[off];
+    let raw;
+    if (enc === 0 || enc === 3) {
+      raw = new TextDecoder('latin1').decode(data.slice(off+1, off+frameSize));
+    } else if (enc === 1) {
+      const bom = (data[off+1] << 8) | data[off+2];
+      raw = new TextDecoder(bom === 0xfffe ? 'utf-16le' : 'utf-16be').decode(data.slice(off+1, off+frameSize));
+    } else if (enc === 2) {
+      raw = new TextDecoder('utf-16be').decode(data.slice(off+1, off+frameSize));
+    } else { raw = new TextDecoder().decode(data.slice(off+1, off+frameSize)); }
+    raw = raw.replace(/\0.*$/, '').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '').trim();
+    if (id === 'TIT2') meta.title = raw;
+    else if (id === 'TPE1') meta.artist = raw;
+    else if (id === 'TALB') meta.album = raw;
+    off += frameSize;
+  }
+  return meta.title ? meta : null;
+}
+
+function parseVorbisMeta(data) {
+  if (data[0] === 0x66 && data[1] === 0x4C && data[2] === 0x61 && data[3] === 0x43) {
+    let off = 4;
+    while (off + 4 < data.length) {
+      const last = (data[off] & 0x80) !== 0;
+      const type = data[off] & 0x7f;
+      const len = (data[off+1] << 16) | (data[off+2] << 8) | data[off+3];
+      off += 4;
+      if (type === 4 && len > 4) {
+        let pos = off;
+        const vL = (data[pos]|data[pos+1]<<8|data[pos+2]<<16|data[pos+3]<<24)>>>0;
+        pos += 4 + vL;
+        const n = (data[pos]|data[pos+1]<<8|data[pos+2]<<16|data[pos+3]<<24)>>>0;
+        pos += 4;
+        const meta = {};
+        for (let i = 0; i < n && pos + 4 <= off + len; i++) {
+          const fL = (data[pos]|data[pos+1]<<8|data[pos+2]<<16|data[pos+3]<<24)>>>0;
+          pos += 4;
+          if (pos + fL > off + len) break;
+          const field = new TextDecoder().decode(data.slice(pos, pos+fL));
+          pos += fL;
+          const eq = field.indexOf('=');
+          if (eq > 0) {
+            const k = field.substring(0, eq).toUpperCase();
+            const v = field.substring(eq + 1);
+            if (k === 'TITLE') meta.title = v;
+            else if (k === 'ARTIST') meta.artist = v;
+            else if (k === 'ALBUM') meta.album = v;
+          }
+        }
+        if (meta.title) return meta;
+      }
+      off += len;
+      if (last) break;
+    }
+  }
+  return null;
+}
+
+function rc4KSA(key) {
+  const S = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) S[i] = i;
+  for (let i = 0, j = 0; i < 256; i++) {
+    j = (j + S[i] + key[i % key.length]) & 0xff;
+    [S[i], S[j]] = [S[j], S[i]];
+  }
+  return S;
+}
+
+function ncmKeyBox(S) {
+  const kb = new Uint8Array(256);
+  for (let idx = 0; idx < 256; idx++) {
+    const i = (idx + 1) & 0xff;
+    const si = S[i];
+    const sj = S[(i + si) & 0xff];
+    kb[idx] = S[(si + sj) & 0xff];
+  }
+  return kb;
+}
+
+function parseNCM(data) {
+  if (data.length < 16) throw new Error('File too small');
+  for (let i = 0; i < 8; i++) {
+    if (data[i] !== MAGIC[i]) throw new Error('Invalid NCM file: bad magic');
+  }
+
+  let off = 10;
+  const keyLen = readU32(data, off); off += 4;
+  if (off + keyLen > data.length) throw new Error('Invalid NCM: key section truncated');
+  const keyData = data.slice(off, off + keyLen); off += keyLen;
+  const keyXor = xorBytes(keyData, 0x64);
+  const coreDec = aesEcbDecrypt(CORE_KEY, keyXor);
+  const keyPad = coreDec[coreDec.length - 1];
+  const keyPlain = (keyPad > 0 && keyPad <= 16) ? coreDec.slice(0, -keyPad) : coreDec;
+  const rc4Key = keyPlain.slice(17);
+
+  const metaLen = readU32(data, off); off += 4;
+  let metaObj = null;
+  if (metaLen > 0) {
+    if (off + metaLen > data.length) throw new Error('Invalid NCM: meta section truncated');
+    const metaData = data.slice(off, off + metaLen); off += metaLen;
+    const metaXor = xorBytes(metaData, 0x63);
+    const metaStr = new TextDecoder().decode(metaXor);
+    const colonIdx = metaStr.indexOf(':');
+    const metaB64 = colonIdx >= 0 ? metaStr.substring(colonIdx + 1) : metaStr.slice(6, -1);
+    let metaRaw;
+    try {
+      metaRaw = atob(metaB64);
+    } catch (e) {
+      throw new Error('Meta base64 decode failed');
+    }
+    const metaBytes = new Uint8Array(metaRaw.length);
+    for (let i = 0; i < metaRaw.length; i++) metaBytes[i] = metaRaw.charCodeAt(i);
+    const metaDec = aesEcbDecrypt(META_KEY, metaBytes);
+    const padLen = metaDec[metaDec.length - 1];
+    const metaPad = (padLen > 0 && padLen < 16) ? metaDec.slice(0, -padLen) : metaDec;
+    const metaDecoded = new TextDecoder().decode(metaPad);
+    try {
+      const colonIdx = metaDecoded.indexOf(':');
+      const jsonPart = metaDecoded.substring(colonIdx + 1);
+      metaObj = JSON.parse(jsonPart);
+    } catch (e) {
+      throw new Error('Meta parse failed: ' + e.message);
+    }
+  }
+
+  const crcPos = (off % 2 === 1) ? off + 1 : off;
+  if (crcPos + 13 > data.length) throw new Error('Invalid NCM: no cover/audio data');
+  const valAt5 = readU32(data, crcPos + 5);
+  const valAt9 = readU32(data, crcPos + 9);
+
+  let coverData = null, audioOff = 0;
+  if (valAt5 !== 0 && valAt5 >= valAt9) {
+    const totalLen = readU32(data, crcPos + 5);
+    const dataLen = readU32(data, crcPos + 9);
+    coverData = data.slice(crcPos + 13, crcPos + 13 + dataLen);
+    audioOff = crcPos + 13 + totalLen;
+  } else if (valAt9 !== 0) {
+    coverData = data.slice(crcPos + 9, crcPos + 9 + valAt9);
+    audioOff = crcPos + 13 + valAt9;
+  } else {
+    coverData = null;
+    audioOff = crcPos + 13;
+  }
+
+  if (audioOff >= data.length) throw new Error('Invalid NCM: no audio data');
+
+  const S = rc4KSA(rc4Key);
+  const keyBox = ncmKeyBox(S);
+  const audioLen = data.length - audioOff;
+  const audioData = new Uint8Array(audioLen);
+  for (let i = 0; i < audioLen; i++) {
+    audioData[i] = data[audioOff + i] ^ keyBox[i & 0xff];
+  }
+
+  let format = detectFormat(audioData);
+  let ext = '';
+  switch (format) {
+    case 'mp3': ext = 'mp3'; break;
+    case 'flac': ext = 'flac'; break;
+    case 'ogg': ext = 'ogg'; break;
+    case 'wav': ext = 'wav'; break;
+    case 'm4a': ext = 'm4a'; break;
+    default: ext = 'mp3'; format = 'mp3'; break;
+  }
+
+  return { meta: metaObj, cover: coverData, audio: audioData, format: format, ext: ext };
+}
+
+function detectFormat(audio) {
+  if (audio[0] === 0xFF && (audio[1] & 0xE0) === 0xE0) return 'mp3';
+  if (audio[0] === 0x66 && audio[1] === 0x4C && audio[2] === 0x61 && audio[3] === 0x43) return 'flac';
+  if (audio[0] === 0x4F && audio[1] === 0x67 && audio[2] === 0x67 && audio[3] === 0x53) return 'ogg';
+  if (audio[0] === 0x52 && audio[1] === 0x49 && audio[2] === 0x46 && audio[3] === 0x46) return 'wav';
+  if (audio[4] === 0x66 && audio[5] === 0x74 && audio[6] === 0x79 && audio[7] === 0x70) return 'm4a';
+  if (audio[0] === 0x00 && audio[1] === 0x00 && audio[2] === 0x00 && audio[3] === 0x1C) return 'm4a';
+  return 'unknown';
+}
+
+function getMetaValue(meta, key) {
+  if (!meta) return '';
+  return (meta[key] || meta['music.' + key] || meta['dj.' + key] || '').toString();
+}
+
+let allFiles = [];
+
+function formatSize(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(1) + ' MB';
+}
+
+function renderFileCard(f, index) {
+  const isEncrypt = f.type === 'encrypt';
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = 'card-' + index;
+
+  const header = document.createElement('div');
+  header.className = 'card-header';
+
+  const cw = document.createElement('div');
+  cw.className = 'cover-wrap';
+  const coverImg = document.createElement('img');
+  const coverPl = document.createElement('span');
+  coverPl.className = 'placeholder';
+  coverPl.textContent = '?';
+  if (f.cover) {
+    if (f._coverUrl) URL.revokeObjectURL(f._coverUrl);
+    const blob = new Blob([f.cover], { type: ('image/png') });
+    f._coverUrl = URL.createObjectURL(blob);
+    coverImg.src = f._coverUrl;
+    cw.appendChild(coverImg);
+  } else {
+    cw.appendChild(coverPl);
+  }
+  if (isEncrypt) {
+    cw.style.cursor = 'pointer';
+    cw.title = '点击选择封面';
+    const coverInput = document.createElement('input');
+    coverInput.type = 'file';
+    coverInput.accept = 'image/*';
+    coverInput.style.display = 'none';
+    function setCover(data) {
+      if (f._coverUrl) URL.revokeObjectURL(f._coverUrl);
+      f.cover = data;
+      const blob = new Blob([f.cover], { type: 'image/png' });
+      f._coverUrl = URL.createObjectURL(blob);
+      coverImg.src = f._coverUrl;
+      cw.innerHTML = '';
+      cw.appendChild(coverImg);
+      cw.appendChild(coverInput);
+    }
+    coverInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = function(e) { setCover(new Uint8Array(e.target.result)); };
+      r.readAsArrayBuffer(file);
+    });
+    cw.appendChild(coverInput);
+    cw.addEventListener('click', function() { coverInput.click(); });
+    cw.addEventListener('dragover', function(e) { e.preventDefault(); cw.style.borderColor = 'rgba(167,139,250,0.5)'; });
+    cw.addEventListener('dragleave', function() { cw.style.borderColor = ''; });
+    cw.addEventListener('drop', function(e) {
+      e.preventDefault();
+      cw.style.borderColor = '';
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      const r = new FileReader();
+      r.onload = function(ev) { setCover(new Uint8Array(ev.target.result)); };
+      r.readAsArrayBuffer(file);
+    });
+  }
+  header.appendChild(cw);
+
+  const mi = document.createElement('div');
+  mi.className = 'meta-info';
+
+  if (isEncrypt) {
+    const t = document.createElement('input');
+    t.className = 'form-input enc-title';
+    t.value = getMetaValue(f.meta, 'title') || f.name.replace(/\.(mp3|flac|ogg|wav)$/i, '');
+    t.placeholder = '歌曲';
+    mi.appendChild(t);
+    const a = document.createElement('input');
+    a.className = 'form-input enc-artist';
+    a.value = getMetaValue(f.meta, 'artist') || '';
+    a.placeholder = '艺术家';
+    mi.appendChild(a);
+    const al = document.createElement('input');
+    al.className = 'form-input enc-album';
+    al.value = getMetaValue(f.meta, 'album') || '';
+    al.placeholder = '专辑';
+    mi.appendChild(al);
+  } else {
+    const t = document.createElement('div'); t.className = 'title';
+    t.textContent = getMetaValue(f.meta, 'title') || f.name.replace(/\.ncm$/i, '');
+    mi.appendChild(t);
+    const a = document.createElement('div'); a.className = 'artist';
+    a.textContent = getMetaValue(f.meta, 'artist') || '';
+    mi.appendChild(a);
+    const al = document.createElement('div'); al.className = 'album';
+    al.textContent = getMetaValue(f.meta, 'album') || '';
+    mi.appendChild(al);
+  }
+  header.appendChild(mi);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'card-close';
+  closeBtn.innerHTML = '&#10005;';
+  closeBtn.title = '移除';
+  closeBtn.addEventListener('click', function() { removeCard(index); });
+  header.appendChild(closeBtn);
+  div.appendChild(header);
+
+  const dg = document.createElement('div');
+  dg.className = 'detail-grid';
+  const addRow = function(lbl, val) {
+    const l = document.createElement('div'); l.className = 'label'; l.textContent = lbl;
+    const v = document.createElement('div'); v.className = 'value'; v.textContent = val;
+    dg.appendChild(l); dg.appendChild(v);
+  };
+  if (isEncrypt) {
+    addRow('格式', f.format.toUpperCase());
+    addRow('大小', formatSize(f.data ? f.data.length : 0));
+  } else {
+    addRow('格式', f.format.toUpperCase());
+    addRow('大小', formatSize(f.audio.length));
+    if (f.cover) addRow('封面', formatSize(f.cover.length));
+  }
+  div.appendChild(dg);
+
+  const act = document.createElement('div');
+  act.className = 'actions';
+  if (isEncrypt) {
+    const encBtn = document.createElement('button');
+    encBtn.className = 'btn btn-primary';
+    encBtn.textContent = '加密';
+    encBtn.addEventListener('click', function() { encryptSingle(index); });
+    act.appendChild(encBtn);
+  } else {
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'btn btn-primary';
+    dlBtn.textContent = '下载 ' + f.ext.toUpperCase();
+    dlBtn.addEventListener('click', function() { downloadFile(f, false); });
+    act.appendChild(dlBtn);
+    const coverBtn = document.createElement('button');
+    coverBtn.className = 'btn btn-secondary';
+    coverBtn.textContent = '保存封面';
+    if (f.cover) {
+      coverBtn.addEventListener('click', function() { downloadCover(f, true); });
+    } else {
+      coverBtn.disabled = true;
+    }
+    act.appendChild(coverBtn);
+  }
+  div.appendChild(act);
+
+  return div;
+}
+
+function downloadFile(f, batch) {
+  const name = getMetaValue(f.meta, 'title') || f.name.replace(/\.ncm$/i, '');
+  const sanitized = name.replace(/[<>:"/\\|?*]/g, '_');
+  const fileName = sanitized + '.' + f.ext;
+  const blob = new Blob([f.audio], { type: 'audio/' + f.ext });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadCover(f) {
+  if (!f.cover) return;
+  const name = getMetaValue(f.meta, 'title') || f.name.replace(/\.ncm$/i, '');
+  const sanitized = name.replace(/[<>:"/\\|?*]/g, '_');
+  const blob = new Blob([f.cover]);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = sanitized + '.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const result = parseNCM(data);
+      result.name = file.name;
+      allFiles.push(result);
+      document.getElementById('batchActions').style.display = 'block';
+      renderAllCards();
+    } catch (err) {
+      showStatus('error', '解析失败: ' + file.name + ' - ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function hasDecryptFiles() {
+  return allFiles.some(function(f) { return f.type !== 'encrypt'; });
+}
+
+function processAll() {
+  const decryptFiles = allFiles.filter(function(f) { return f.type !== 'encrypt'; });
+  if (decryptFiles.length === 0) return;
+  const progress = document.getElementById('fullProgress');
+  progress.style.display = 'block';
+  const fill = document.getElementById('fullProgressFill');
+  const text = document.getElementById('fullProgressText');
+
+  let completed = 0;
+  for (let i = 0; i < decryptFiles.length; i++) {
+    setTimeout(function(idx) {
+      try {
+        downloadFile(decryptFiles[idx], true);
+        completed++;
+        const pct = Math.round((completed / decryptFiles.length) * 100);
+        fill.style.width = pct + '%';
+        text.textContent = '正在下载... ' + completed + '/' + decryptFiles.length;
+        if (completed === decryptFiles.length) {
+          text.textContent = '全部下载完成!';
+        }
+      } catch (e) {
+        text.textContent = '下载失败: ' + decryptFiles[idx].name;
+      }
+    }, i * 500, i);
+  }
+}
+
+function clearAll() {
+  for (var i = 0; i < allFiles.length; i++) { if (allFiles[i]._coverUrl) URL.revokeObjectURL(allFiles[i]._coverUrl); }
+  allFiles = [];
+  document.getElementById('filesContainer').innerHTML = '';
+  document.getElementById('batchActions').style.display = 'none';
+  document.getElementById('fullProgress').style.display = 'none';
+}
+
+function removeCard(index) {
+  if (allFiles[index]._coverUrl) URL.revokeObjectURL(allFiles[index]._coverUrl);
+  allFiles.splice(index, 1);
+  renderAllCards();
+}
+
+function updateBatchInfo() {
+  document.getElementById('batchInfo').textContent = '共 ' + allFiles.length + ' 个文件';
+}
+
+function showStatus(type, msg) {
+  const el = document.createElement('div');
+  el.className = 'status-msg ' + type;
+  el.textContent = msg;
+  document.getElementById('filesContainer').appendChild(el);
+  setTimeout(function() { el.remove(); }, 5000);
+}
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', function() { fileInput.click(); });
+
+dropZone.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', function() {
+  dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', function(e) {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const files = e.dataTransfer.files;
+  for (let i = 0; i < files.length; i++) {
+    const name = files[i].name.toLowerCase();
+    if (name.endsWith('.ncm')) {
+      processFile(files[i]);
+    } else if (name.endsWith('.mp3') || name.endsWith('.flac') || name.endsWith('.ogg') || name.endsWith('.wav')) {
+      addEncryptFile(files[i]);
+    }
+  }
+});
+
+fileInput.addEventListener('change', function() {
+  for (let i = 0; i < fileInput.files.length; i++) {
+    const name = fileInput.files[i].name.toLowerCase();
+    if (name.endsWith('.ncm')) {
+      processFile(fileInput.files[i]);
+    } else if (name.endsWith('.mp3') || name.endsWith('.flac') || name.endsWith('.ogg') || name.endsWith('.wav')) {
+      addEncryptFile(fileInput.files[i]);
+    }
+  }
+  fileInput.value = '';
+});
+
+document.getElementById('convertAllBtn').addEventListener('click', processAll);
+document.getElementById('clearAllBtn').addEventListener('click', clearAll);
+
+// --- Unified card management ---
+
+function snapshotEncryptInputs() {
+  var container = document.getElementById('filesContainer');
+  for (var i = 0; i < allFiles.length; i++) {
+    if (allFiles[i].type !== 'encrypt') continue;
+    var card = container.querySelector('#card-' + i);
+    if (!card) continue;
+    var ti = card.querySelector('.enc-title');
+    var ai = card.querySelector('.enc-artist');
+    var ali = card.querySelector('.enc-album');
+    if (ti) allFiles[i].meta.title = ti.value || allFiles[i].meta.title;
+    if (ai) allFiles[i].meta.artist = ai.value || allFiles[i].meta.artist;
+    if (ali) allFiles[i].meta.album = ali.value || allFiles[i].meta.album;
+  }
+}
+
+function renderAllCards() {
+  snapshotEncryptInputs();
+  var container = document.getElementById('filesContainer');
+  container.innerHTML = '';
+  for (var i = 0; i < allFiles.length; i++) container.appendChild(renderFileCard(allFiles[i], i));
+  if (hasDecryptFiles()) {
+    document.getElementById('batchActions').style.display = 'block';
+  } else {
+    document.getElementById('batchActions').style.display = 'none';
+  }
+  updateBatchInfo();
+}
+
+function addEncryptFile(file) {
+  allFiles.push({ type: 'encrypt', name: file.name, file: file, data: null, meta: { title: file.name.replace(/\.[^.]+$/, ''), artist: '', album: '' }, format: file.name.split('.').pop().toLowerCase(), cover: null });
+  renderAllCards();
+
+  var idx = allFiles.length - 1;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var data = new Uint8Array(e.target.result);
+    var meta = extractMetaFromAudio(data, file.name);
+    snapshotEncryptInputs();
+    allFiles[idx].meta = meta;
+    allFiles[idx].data = data;
+    renderAllCards();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function encryptSingle(index) {
+  var f = allFiles[index];
+  if (!f || f.type !== 'encrypt') return;
+  if (!f.data) { showStatus('error', f.name + ' 尚未读取完成'); return; }
+
+  var card = document.getElementById('card-' + index);
+  if (!card) return;
+  var btn = card.querySelector('.actions .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = '加密中…'; }
+
+  var titleInp = card.querySelector('.enc-title');
+  var artistInp = card.querySelector('.enc-artist');
+  var albumInp = card.querySelector('.enc-album');
+  var metaTitle = titleInp ? titleInp.value.trim() || f.meta.title : f.meta.title;
+  var metaArtist = artistInp ? artistInp.value.trim() || (f.meta.artist || 'Unknown') : (f.meta.artist || 'Unknown');
+  var metaAlbum = albumInp ? albumInp.value.trim() || (f.meta.album || 'Unknown') : (f.meta.album || 'Unknown');
+  var metaObj = { musicName: metaTitle, artist: [[metaArtist, '0']], album: metaAlbum, format: f.format || 'mp3', bitrate: 0, duration: 0, musicId: String(Date.now()) };
+
+  try {
+    var ncmData = ncmEncrypt(f.data, f.cover || null, metaObj);
+    var blob = new Blob([ncmData]);
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = metaTitle.replace(/[<>:"/\\|?*]/g, '_') + '.ncm';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    allFiles.splice(index, 1);
+    renderAllCards();
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = '加密'; }
+    showStatus('error', '加密失败: ' + e.message);
+  }
+}
+
+  renderAllCards();
+})();</script>
+</body>
+</html>
