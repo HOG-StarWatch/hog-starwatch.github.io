@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Waterfall — A Raw Data Media Player</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:13px;user-select:none}
+body{background:#1e1f22;color:#ddd;display:flex;flex-direction:column}
+/* Menu */
+.menubar{display:flex;background:#2b2d30;height:24px;align-items:center;padding:0 4px;gap:0;flex-shrink:0}
+.menubar-item{position:relative;padding:2px 10px;cursor:pointer;color:#9a9ba2;font-size:12px;line-height:20px}
+.menubar-item:hover,.menubar-item.open{background:#333;color:#ddd}
+.menu-dropdown{display:none;position:absolute;top:100%;left:0;background:#2b2d30;border:1px solid #444;min-width:160px;z-index:100;padding:4px 0}
+.menubar-item.open .menu-dropdown{display:block}
+.menu-item{padding:4px 20px;cursor:pointer;color:#ccc;font-size:12px;white-space:nowrap}
+.menu-item:hover{background:#333;color:#fff}
+.menu-item.disabled{color:#666;cursor:default}
+.menu-item.disabled:hover{background:transparent;color:#666}
+.menu-sep{height:1px;background:#444;margin:4px 8px}
+/* Main area */
+.main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 10px 10px;gap:10px;min-height:0}
+.canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;width:100%}
+#waterfall{image-rendering:pixelated;background:#18191b;border:1px solid #333;max-width:100%;max-height:100%}
+/* Seek bar */
+.seek-row{width:100%;max-width:600px;padding:0;flex-shrink:0}
+#seekbar{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:#444;border-radius:2px;outline:none;cursor:pointer}
+#seekbar::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:#888;cursor:pointer;border:none}
+#seekbar::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#888;cursor:pointer;border:none}
+#seekbar:disabled{opacity:.4;cursor:default}
+/* Controls */
+.controls{display:flex;align-items:center;gap:10px;flex-shrink:0;padding:0 10px}
+.ctrl-btn{background:none;border:none;cursor:pointer;padding:4px;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#ccc;transition:color .1s}
+.ctrl-btn:hover{color:#fff}
+.ctrl-btn:active{color:#aaa}
+.ctrl-btn svg{display:block}
+.ctrl-btn:disabled{opacity:.3;cursor:default}
+.volume-area{display:flex;align-items:center;gap:6px;margin-left:10px}
+.volume-label{width:30px;text-align:center;font-size:12px;color:#aaa}
+#volslider{-webkit-appearance:none;appearance:none;width:60px;height:4px;background:#444;border-radius:2px;outline:none;cursor:pointer;writing-mode:horizontal-tb}
+#volslider::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:#888;cursor:pointer;border:none}
+#volslider::-moz-range-thumb{width:10px;height:10px;border-radius:50%;background:#888;cursor:pointer;border:none}
+/* Dialogs */
+.dialog-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:200;justify-content:center;align-items:center}
+.dialog-overlay.open{display:flex}
+.dialog{background:#2b2d30;border:1px solid #555;border-radius:6px;padding:20px;min-width:300px;max-width:500px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.dialog h2{font-size:15px;font-weight:600;margin-bottom:14px;color:#eee}
+.dialog-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.dialog-row label{width:120px;flex-shrink:0;color:#bbb;font-size:12px}
+.dialog-row input,.dialog-row select{flex:1;background:#333;color:#ddd;border:1px solid #555;padding:4px 8px;border-radius:3px;font-size:12px;outline:none}
+.dialog-row input:focus,.dialog-row select:focus{border-color:#888}
+.dialog-row input[type=checkbox]{width:auto;flex:none}
+.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.dialog-actions button{padding:6px 20px;border:1px solid #555;border-radius:3px;cursor:pointer;font-size:12px;background:#333;color:#ddd}
+.dialog-actions button:hover{background:#444}
+.dialog-actions button.primary{background:#555;border-color:#777}
+.dialog-actions button.primary:hover{background:#666}
+.file-input{display:none}
+#status-msg{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:#2b2d30;border:1px solid #555;padding:6px 16px;border-radius:4px;font-size:12px;color:#aaa;display:none;z-index:300;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div class="menubar">
+  <div class="menubar-item" data-menu="file">File
+    <div class="menu-dropdown">
+      <div class="menu-item" id="menu-open">Open...</div>
+      <div class="menu-item disabled" id="menu-close">Close</div>
+    </div>
+  </div>
+  <div class="menubar-item" data-menu="settings">Settings
+    <div class="menu-dropdown">
+      <div class="menu-item" id="menu-audio">Audio...</div>
+      <div class="menu-item" id="menu-video">Video...</div>
+      <div class="menu-item" id="menu-player">Player...</div>
+    </div>
+  </div>
+  <div class="menubar-item" data-menu="export">Export
+    <div class="menu-dropdown">
+      <div class="menu-item disabled" id="menu-export-audio">Audio...</div>
+      <div class="menu-item disabled" id="menu-export-image">Image...</div>
+    </div>
+  </div>
+  <div class="menubar-item" data-menu="help">Help
+    <div class="menu-dropdown">
+      <div class="menu-item" id="menu-hotkeys">Hotkeys...</div>
+      <div class="menu-item" id="menu-about">About...</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="canvas-wrap">
+    <canvas id="waterfall"></canvas>
+  </div>
+  <div class="seek-row">
+    <input type="range" id="seekbar" min="0" max="0" value="0" disabled>
+  </div>
+  <div class="controls">
+    <button class="ctrl-btn" id="btn-restart" title="Restart (R)" disabled>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    </button>
+    <button class="ctrl-btn" id="btn-back" title="Back 5s (&larr;)" disabled>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="ctrl-btn" id="btn-play" title="Play/Pause (Space)" disabled>
+      <svg id="play-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </button>
+    <button class="ctrl-btn" id="btn-forward" title="Forward 5s (&rarr;)" disabled>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="volume-area">
+      <button class="ctrl-btn" id="btn-mute" title="Mute/Unmute (M)">
+        <svg id="vol-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      </button>
+      <span class="volume-label" id="vol-label">100%</span>
+      <input type="range" id="volslider" min="0" max="100" value="100">
+    </div>
+  </div>
+</div>
+
+<input type="file" class="file-input" id="file-input">
+
+<div class="dialog-overlay" id="dialog-audio">
+  <div class="dialog">
+    <h2>Audio Settings</h2>
+    <div class="dialog-row"><label>Channels</label><select id="dlg-audio-ch"><option value="1" selected>Mono (1)</option><option value="2">Stereo (2)</option></select></div>
+    <div class="dialog-row"><label>Sample Bytes</label><select id="dlg-audio-bytes"><option value="1" selected>1 (8-bit)</option><option value="2">2 (16-bit)</option><option value="3">3 (24-bit)</option><option value="4">4 (32-bit)</option></select></div>
+    <div class="dialog-row"><label>Sample Rate</label><input type="number" id="dlg-audio-rate" value="32000" min="1" max="192000"></div>
+    <div class="dialog-row"><label>Volume</label><input type="number" id="dlg-audio-vol" value="100" min="0" max="100"></div>
+    <div class="dialog-actions"><button id="dlg-audio-cancel">Cancel</button><button class="primary" id="dlg-audio-ok">OK</button></div>
+  </div>
+</div>
+
+<div class="dialog-overlay" id="dialog-video">
+  <div class="dialog">
+    <h2>Video Settings</h2>
+    <div class="dialog-row"><label>Width</label><input type="number" id="dlg-vid-w" value="48" min="4" max="1024"></div>
+    <div class="dialog-row"><label>Height</label><input type="number" id="dlg-vid-h" value="48" min="4" max="1024"></div>
+    <div class="dialog-row"><label>Color Format</label><input type="text" id="dlg-vid-fmt" value="bgrx" style="font-family:monospace;text-transform:lowercase"></div>
+    <div class="dialog-row"><label>Flip Vertical</label><input type="checkbox" id="dlg-vid-flipv" checked></div>
+    <div class="dialog-row"><label>Flip Horizontal</label><input type="checkbox" id="dlg-vid-fliph"></div>
+    <div class="dialog-row"><label>Alignment</label><select id="dlg-vid-align"><option value="start">Start</option><option value="middle" selected>Middle</option><option value="end">End</option></select></div>
+    <div class="dialog-row"><label>Playhead</label><input type="checkbox" id="dlg-vid-ph" checked></div>
+    <div class="dialog-actions"><button id="dlg-vid-cancel">Cancel</button><button class="primary" id="dlg-vid-ok">OK</button></div>
+  </div>
+</div>
+
+<div class="dialog-overlay" id="dialog-player">
+  <div class="dialog">
+    <h2>Player Settings</h2>
+    <div class="dialog-row"><label>Max View Size</label><input type="number" id="dlg-play-max" value="512" min="16" max="2048"></div>
+    <div class="dialog-row"><label>FPS</label><input type="number" id="dlg-play-fps" value="60" min="1" max="120"></div>
+    <div class="dialog-actions"><button id="dlg-play-cancel">Cancel</button><button class="primary" id="dlg-play-ok">OK</button></div>
+  </div>
+</div>
+
+<div class="dialog-overlay" id="dialog-hotkeys">
+  <div class="dialog" style="min-width:260px">
+    <h2>Hotkeys</h2>
+    <div style="font-size:12px;line-height:2;color:#ccc">
+      <b>Space</b> &mdash; Play / Pause<br>
+      <b>&larr;</b> &mdash; Back 5s<br>
+      <b>&rarr;</b> &mdash; Forward 5s<br>
+      <b>,</b> &mdash; Frame Back<br>
+      <b>.</b> &mdash; Frame Forward<br>
+      <b>R</b> &mdash; Restart<br>
+      <b>&uarr;</b> &mdash; Volume Up<br>
+      <b>&darr;</b> &mdash; Volume Down<br>
+      <b>M</b> &mdash; Mute / Unmute
+    </div>
+    <div class="dialog-actions"><button class="primary" id="dlg-hotkeys-ok">OK</button></div>
+  </div>
+</div>
+
+<div class="dialog-overlay" id="dialog-about">
+  <div class="dialog" style="min-width:280px">
+    <h2>Binary Waterfall</h2>
+    <p style="font-size:13px;color:#bbb;margin-bottom:6px">A Raw Data Media Player</p>
+    <p style="font-size:11px;color:#888">Version 3.7.0</p>
+    <p style="font-size:11px;color:#888;margin-top:4px">Ella Jameson (nimaid)</p>
+    <p style="font-size:11px;color:#666;margin-top:12px">HTML replica &mdash; inspired by <a href="https://www.youtube.com/watch?v=NFe0aGO9-TE" target="_blank" style="color:#aaa">this video</a>.</p>
+    <div class="dialog-actions"><button class="primary" id="dlg-about-ok">OK</button></div>
+  </div>
+</div>
+
+<div id="status-msg"></div>
+
+<script>
+// ─── Constants ──────────────────────────────────────────────────────────────
+const COLORS = {
+  background:'#1e1f22', foreground:'#333', text:'#ddd', button_text:'#fff',
+  viewer:'#18191b', link:'#ddd', disabled:'#555', disabled_text:'#888',
+  status_background:'#2b2d30', status_text:'#9a9ba2', controls_background:'#242526'
+};
+const ColorFmt = {RED:'r',RED_INV:'R',GREEN:'g',GREEN_INV:'G',BLUE:'b',BLUE_INV:'B',WHITE:'w',WHITE_INV:'W',UNUSED:'x'};
+const Alignment = {START:'start',MIDDLE:'middle',END:'end'};
+
+// ─── State ──────────────────────────────────────────────────────────────────
+const state = {
+  filename: null,
+  fileData: null,       // Uint8Array
+  audioBuffer: null,
+  audioCtx: null,
+  sourceNode: null,
+  isPlaying: false,
+  positionMs: 0,
+  durationMs: 0,
+  volume: 100,
+  muted: false,
+  unmuteVol: 100,
+
+  // Video settings
+  width: 48,
+  height: 48,
+  colorFormatStr: 'bgrx',
+  colorFormat: [],      // parsed array of codes
+  usedBytes: 0,
+  unusedBytes: 0,
+  colorBytes: 0,
+  flipV: true,
+  flipH: false,
+  alignment: Alignment.MIDDLE,
+  playheadVisible: true,
+  maxDim: 512,
+  fps: 60,
+
+  // Audio settings
+  numChannels: 1,
+  sampleBytes: 1,
+  sampleRate: 32000,
+  fileVolume: 100,
+
+  // Render
+  canvasDim: {w:512,h:512},
+  animId: null,
+  lastFrameMs: 0,
+  frameIntervalMs: 8,
+  fileLoaded: false
+};
+
+// ─── DOM refs ───────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const canvas = $('waterfall');
+const ctx = canvas.getContext('2d');
+const seekbar = $('seekbar');
+const volslider = $('volslider');
+const volLabel = $('vol-label');
+const volIcon = $('vol-icon');
+const playIcon = $('play-icon');
+const fileInput = $('file-input');
+const statusMsg = $('status-msg');
+
+// ─── Color format parsing ───────────────────────────────────────────────────
+function parseColorFormat(str) {
+  str = str.trim().toLowerCase();
+  const result = {valid:true,message:'',format:[],usedBytes:0,unusedBytes:0,colorBytes:0};
+  const codes = [];
+  for (const ch of str) {
+    let code = null;
+    for (const [k,v] of Object.entries(ColorFmt)) {
+      if (v === ch) { code = ch; break; }
+      if (v.toUpperCase() === ch) { code = v.toUpperCase(); break; }
+    }
+    if (!code) { result.valid = false; result.message = `Invalid character "${ch}"`; return result; }
+    codes.push(code);
+  }
+  const lower = (c) => c.toLowerCase();
+  const reds = codes.filter(c=>lower(c)==='r').length;
+  const greens = codes.filter(c=>lower(c)==='g').length;
+  const blues = codes.filter(c=>lower(c)==='b').length;
+  const whites = codes.filter(c=>lower(c)==='w').length;
+  const unuses = codes.filter(c=>lower(c)==='x').length;
+  const rgbCount = reds + greens + blues;
+  if (whites > 0 && rgbCount > 0) { result.valid = false; result.message = 'Cannot mix grayscale (w) and RGB (r,g,b)'; return result; }
+  if (whites > 0 && whites > 1) { result.valid = false; result.message = 'Only one white channel allowed'; return result; }
+  if (whites === 0 && rgbCount === 0 && unuses === 0) { result.valid = false; result.message = 'No color channels specified'; return result; }
+  if (rgbCount > 0) {
+    if (reds > 1 || greens > 1 || blues > 1) { result.valid = false; result.message = 'Only one of each RGB channel allowed'; return result; }
+  }
+  result.usedBytes = whites + rgbCount;
+  result.unusedBytes = unuses;
+  result.colorBytes = codes.length;
+  result.format = codes;
+  return result;
+}
+
+// ─── Audio engine ───────────────────────────────────────────────────────────
+let audioGainNode = null;
+
+function initAudioCtx() {
+  if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+}
+
+function buildAudioBuffer(bytes) {
+  const {numChannels:ch,sampleBytes:sbytes,sampleRate:srate,fileVolume:fvol} = state;
+  const totalSamples = Math.floor(bytes.length / (ch * sbytes));
+  if (totalSamples < 1) return null;
+  const buffer = state.audioCtx.createBuffer(ch, totalSamples, srate);
+  const volFactor = fvol / 100;
+
+  for (let c = 0; c < ch; c++) {
+    const data = buffer.getChannelData(c);
+    for (let i = 0; i < totalSamples; i++) {
+      const byteOffset = (i * ch + c) * sbytes;
+      let sample = 0;
+      if (sbytes === 1) {
+        sample = (bytes[byteOffset] - 128) / 128;
+      } else if (sbytes === 2) {
+        const val = bytes[byteOffset] | (bytes[byteOffset + 1] << 8);
+        sample = val / 32768;
+      } else if (sbytes === 3) {
+        const val = bytes[byteOffset] | (bytes[byteOffset + 1] << 8) | (bytes[byteOffset + 2] << 16);
+        const signed = val > 0x7fffff ? val - 0x1000000 : val;
+        sample = signed / 8388608;
+      } else {
+        const val = bytes[byteOffset] | (bytes[byteOffset + 1] << 8) | (bytes[byteOffset + 2] << 16) | (bytes[byteOffset + 3] << 24);
+        sample = val / 2147483648;
+      }
+      data[i] = Math.max(-1, Math.min(1, sample * volFactor));
+    }
+  }
+  return buffer;
+}
+
+function scheduleAudio(startMs) {
+  if (state.sourceNode) {
+    try { state.sourceNode.stop(); } catch(e) {}
+    state.sourceNode.disconnect();
+    state.sourceNode = null;
+  }
+  const buffer = state.audioBuffer;
+  if (!buffer) return;
+  const source = state.audioCtx.createBufferSource();
+  source.buffer = buffer;
+  audioGainNode = state.audioCtx.createGain();
+  audioGainNode.gain.value = state.muted ? 0 : state.volume / 100;
+  source.connect(audioGainNode);
+  audioGainNode.connect(state.audioCtx.destination);
+  const offset = startMs / 1000;
+  source.start(0, offset);
+  state.sourceNode = source;
+  state.sourceNode.onended = () => { if (state.isPlaying) { state.isPlaying = false; updatePlayButton(); } };
+}
+
+function updateAudioGain() {
+  if (audioGainNode) {
+    audioGainNode.gain.value = state.muted ? 0 : state.volume / 100;
+  }
+}
+
+function stopAudio() {
+  if (state.sourceNode) {
+    try { state.sourceNode.stop(); } catch(e) {}
+    state.sourceNode.disconnect();
+    state.sourceNode = null;
+  }
+  audioGainNode = null;
+}
+
+// ─── Waterfall rendering ────────────────────────────────────────────────────
+function binToWaterfall(bytes, ms) {
+  const {width,height,colorFormat,usedBytes,unusedBytes,colorBytes,alignment,playheadVisible,flipV,flipH} = state;
+  const addrBlockSize = width * colorBytes;
+  const totalBytes = bytes.length;
+  const totalBlocks = Math.ceil(totalBytes / addrBlockSize);
+  const audioLen = state.durationMs;
+  if (!audioLen || !totalBlocks) return new Uint8Array(width * height * 3);
+
+  let blockIdx = Math.round(totalBlocks * (ms / audioLen));
+  if (alignment === Alignment.START) blockIdx -= height;
+  else if (alignment === Alignment.MIDDLE) blockIdx -= Math.round(height / 2);
+
+  let address = blockIdx * addrBlockSize;
+  const frameSize = width * height * colorBytes;
+  const rgbSize = width * height * 3;
+  const rgb = new Uint8Array(rgbSize);
+  const empty = 0;
+
+  let rowPad = 0;
+  if (address < 0) {
+    const missingPixels = Math.ceil(-address / colorBytes);
+    rowPad = Math.min(missingPixels, width * height);
+    address = 0;
+  }
+
+  let srcIdx = address;
+  let dstIdx = rowPad * 3;
+  const limit = Math.min(address + frameSize, totalBytes);
+  const maxDst = rgbSize;
+
+  for (let px = rowPad; px < width * height && srcIdx < limit; px++) {
+    if (dstIdx >= maxDst) break;
+    let r = 0, g = 0, b = 0;
+    for (const code of colorFormat) {
+      const val = srcIdx < totalBytes ? bytes[srcIdx] : 0;
+      srcIdx++;
+      const codeLower = code.toLowerCase();
+      const inv = code !== codeLower;
+      const v = inv ? (255 - val) : val;
+      if (codeLower === 'r') r = v;
+      else if (codeLower === 'g') g = v;
+      else if (codeLower === 'b') b = v;
+      else if (codeLower === 'w') { r = v; g = v; b = v; }
+      // 'x' = unused, skip
+    }
+    rgb[dstIdx] = r;
+    rgb[dstIdx + 1] = g;
+    rgb[dstIdx + 2] = b;
+    dstIdx += 3;
+  }
+
+  // Playhead
+  if (playheadVisible) {
+    let phRow = 0;
+    if (alignment === Alignment.END) phRow = 0;
+    else if (alignment === Alignment.START) phRow = height - 1;
+    else phRow = Math.round((height - 1) / 2);
+    const rowSize = width * 3;
+    const phOff = phRow * rowSize;
+    for (let i = 0; i < rowSize; i += 3) {
+      const idx = phOff + i;
+      if (idx + 2 < rgbSize) {
+        const lum = 0.299 * rgb[idx] + 0.587 * rgb[idx + 1] + 0.114 * rgb[idx + 2];
+        const contrast = lum > 128 ? 0 : 255;
+        rgb[idx] = 255 - rgb[idx];
+        rgb[idx + 1] = 255 - rgb[idx + 1];
+        rgb[idx + 2] = 255 - rgb[idx + 2];
+        // Mix with contrast
+        const mix = 0.5;
+        rgb[idx] = Math.round(rgb[idx] * mix + contrast * (1 - mix));
+        rgb[idx + 1] = Math.round(rgb[idx + 1] * mix + contrast * (1 - mix));
+        rgb[idx + 2] = Math.round(rgb[idx + 2] * mix + contrast * (1 - mix));
+      }
+    }
+  }
+
+  // Flip
+  if (flipV || flipH) {
+    const flipped = new Uint8Array(rgbSize);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const sx = flipH ? (width - 1 - x) : x;
+        const sy = flipV ? (height - 1 - y) : y;
+        const srcOff = (y * width + x) * 3;
+        const dstOff = (sy * width + sx) * 3;
+        flipped[dstOff] = rgb[srcOff];
+        flipped[dstOff + 1] = rgb[srcOff + 1];
+        flipped[dstOff + 2] = rgb[srcOff + 2];
+      }
+    }
+    return flipped;
+  }
+  return rgb;
+}
+
+function renderFrame(ms) {
+  const {width,height,canvasDim} = state;
+  if (!width || !height) return;
+  if (!state.fileData) {
+    ctx.fillStyle = COLORS.viewer;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+  const rgb = binToWaterfall(state.fileData, ms);
+  const imgData = ctx.createImageData(width, height);
+  for (let i = 0; i < width * height; i++) {
+    imgData.data[i * 4] = rgb[i * 3];
+    imgData.data[i * 4 + 1] = rgb[i * 3 + 1];
+    imgData.data[i * 4 + 2] = rgb[i * 3 + 2];
+    imgData.data[i * 4 + 3] = 255;
+  }
+  const tmp = document.createElement('canvas');
+  tmp.width = width;
+  tmp.height = height;
+  const tctx = tmp.getContext('2d');
+  tctx.putImageData(imgData, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
+}
+
+// ─── Animation loop ─────────────────────────────────────────────────────────
+function tick(now) {
+  state.animId = requestAnimationFrame(tick);
+  if (!state.isPlaying || !state.fileLoaded) return;
+  const dt = now - state.lastFrameMs;
+  if (dt < state.frameIntervalMs) return;
+  state.lastFrameMs = now;
+
+  if (state.audioCtx && state.sourceNode) {
+    const ctxTime = state.audioCtx.currentTime;
+    const startOffset = state._startOffset || 0;
+    const currentMs = Math.min((ctxTime - startOffset) * 1000, state.durationMs);
+    state.positionMs = currentMs;
+    if (!seekbar.disabled) seekbar.value = currentMs;
+    renderFrame(currentMs);
+    if (currentMs >= state.durationMs) {
+      state.isPlaying = false;
+      updatePlayButton();
+      state.positionMs = state.durationMs;
+      seekbar.value = state.durationMs;
+      renderFrame(state.durationMs);
+      stopAudio();
+    }
+  }
+}
+
+// ─── UI updates ─────────────────────────────────────────────────────────────
+function updatePlayButton() {
+  if (state.isPlaying) {
+    playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+  } else {
+    playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+  }
+}
+
+function updateVolumeUI() {
+  const v = state.muted ? 0 : state.volume;
+  volLabel.textContent = `${Math.round(v)}%`;
+  volslider.value = v;
+  if (state.muted || v === 0) {
+    volIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+  } else {
+    volIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+  }
+}
+
+function updateControlsEnabled(enabled) {
+  const els = ['btn-restart','btn-back','btn-play','btn-forward','seekbar','menu-close','menu-export-audio','menu-export-image'];
+  els.forEach(id => {
+    const el = $(id);
+    if (el) { el.disabled = !enabled; if (id === 'seekbar' && !enabled) el.value = 0; }
+  });
+  if (enabled) {
+    $('menu-close').classList.remove('disabled');
+    $('menu-export-audio').classList.remove('disabled');
+    $('menu-export-image').classList.remove('disabled');
+  } else {
+    $('menu-close').classList.add('disabled');
+    $('menu-export-audio').classList.add('disabled');
+    $('menu-export-image').classList.add('disabled');
+  }
+}
+
+function showStatus(text, duration) {
+  statusMsg.textContent = text;
+  statusMsg.style.display = 'block';
+  clearTimeout(statusMsg._timer);
+  if (duration) statusMsg._timer = setTimeout(() => { statusMsg.style.display = 'none'; }, duration);
+  else statusMsg.style.display = 'none';
+}
+
+function updateCanvasSize() {
+  const wrap = canvas.parentElement;
+  const maxDim = state.maxDim;
+  const avail = Math.min(wrap.clientWidth - 4, wrap.clientHeight - 4, maxDim);
+  const ratio = state.width / state.height;
+  let w, h;
+  if (ratio > 1) { w = avail; h = avail / ratio; }
+  else { h = avail; w = avail * ratio; }
+  canvas.width = Math.round(w);
+  canvas.height = Math.round(h);
+  state.canvasDim.w = canvas.width;
+  state.canvasDim.h = canvas.height;
+  if (state.fileData) renderFrame(state.positionMs);
+  else { ctx.fillStyle = COLORS.viewer; ctx.fillRect(0,0,canvas.width,canvas.height); }
+}
+
+// ─── File handling ──────────────────────────────────────────────────────────
+async function openFile(file) {
+  if (!file) return;
+  try {
+    const buf = await file.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    state.fileData = bytes;
+    state.filename = file.name;
+
+    initAudioCtx();
+    state.audioBuffer = buildAudioBuffer(bytes);
+    if (state.audioBuffer) {
+      state.durationMs = (state.audioBuffer.duration * 1000) || 0;
+    } else {
+      state.durationMs = 0;
+    }
+
+    state.positionMs = 0;
+    state.isPlaying = false;
+    state.fileLoaded = true;
+    state._startOffset = 0;
+
+    updateControlsEnabled(true);
+    updatePlayButton();
+    seekbar.max = state.durationMs || 0;
+    seekbar.value = 0;
+    document.title = `Binary Waterfall | ${file.name}`;
+    renderFrame(0);
+    updateCanvasSize();
+    showStatus(`Opened: ${file.name} (${(bytes.length/1024).toFixed(1)} KB, ${(state.durationMs/1000).toFixed(1)}s audio)`, 3000);
+  } catch(e) {
+    showStatus(`Error: ${e.message}`, 3000);
+  }
+}
+
+function closeFile() {
+  stopAudio();
+  state.isPlaying = false;
+  state.fileLoaded = false;
+  state.fileData = null;
+  state.audioBuffer = null;
+  state.filename = null;
+  state.positionMs = 0;
+  state.durationMs = 0;
+  updateControlsEnabled(false);
+  updatePlayButton();
+  seekbar.max = 0;
+  seekbar.value = 0;
+  document.title = 'Binary Waterfall';
+  ctx.fillStyle = COLORS.viewer;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+// ─── Playback controls ──────────────────────────────────────────────────────
+function play() {
+  if (!state.fileLoaded || !state.audioBuffer) return;
+  if (state.positionMs >= state.durationMs) { state.positionMs = 0; seekbar.value = 0; }
+  initAudioCtx();
+  stopAudio();
+  const ctx = state.audioCtx;
+  const offset = state.positionMs / 1000;
+  state._startOffset = ctx.currentTime - offset;
+  scheduleAudio(state.positionMs);
+  state.isPlaying = true;
+  state.lastFrameMs = performance.now();
+  updatePlayButton();
+  if (!state.animId) state.animId = requestAnimationFrame(tick);
+}
+
+function pause() {
+  if (state.sourceNode) {
+    if (state.audioCtx) state.positionMs = (state.audioCtx.currentTime - state._startOffset) * 1000;
+    stopAudio();
+  }
+  state.isPlaying = false;
+  updatePlayButton();
+}
+
+function togglePlay() {
+  if (state.isPlaying) pause();
+  else play();
+}
+
+function setPosition(ms) {
+  ms = Math.max(0, Math.min(ms, state.durationMs));
+  state.positionMs = ms;
+  seekbar.value = ms;
+  renderFrame(ms);
+  if (state.isPlaying) {
+    stopAudio();
+    initAudioCtx();
+    state._startOffset = state.audioCtx.currentTime - (ms / 1000);
+    scheduleAudio(ms);
+  }
+}
+
+function back() { setPosition(state.positionMs - 5000); }
+function forward() { setPosition(state.positionMs + 5000); }
+function frameBack() { setPosition(state.positionMs - state.frameIntervalMs); }
+function frameForward() { setPosition(state.positionMs + state.frameIntervalMs); }
+function restart() { setPosition(0); }
+
+function setVolume(val) {
+  state.volume = Math.max(0, Math.min(100, val));
+  state.muted = false;
+  if (state.volume > 0) state.unmuteVol = state.volume;
+  updateVolumeUI();
+  updateAudioGain();
+}
+
+function toggleMute() {
+  if (state.muted) {
+    state.muted = false;
+    setVolume(state.unmuteVol);
+  } else {
+    state.muted = true;
+    updateVolumeUI();
+  }
+}
+
+// ─── Dialog helpers ─────────────────────────────────────────────────────────
+function showDialog(id) { $(id).classList.add('open'); }
+function hideDialog(id) { $(id).classList.remove('open'); }
+
+function applyAudioSettings() {
+  state.numChannels = parseInt($('dlg-audio-ch').value);
+  state.sampleBytes = parseInt($('dlg-audio-bytes').value);
+  state.sampleRate = parseInt($('dlg-audio-rate').value);
+  state.fileVolume = parseInt($('dlg-audio-vol').value);
+  if (state.fileData) {
+    initAudioCtx();
+    state.audioBuffer = buildAudioBuffer(state.fileData);
+    if (state.audioBuffer) state.durationMs = state.audioBuffer.duration * 1000;
+    seekbar.max = state.durationMs || 0;
+    if (state.positionMs > state.durationMs) setPosition(state.durationMs);
+    showStatus('Audio settings applied', 2000);
+  }
+}
+
+function applyVideoSettings() {
+  state.width = parseInt($('dlg-vid-w').value) || 48;
+  state.height = parseInt($('dlg-vid-h').value) || 48;
+  state.colorFormatStr = $('dlg-vid-fmt').value;
+  state.flipV = $('dlg-vid-flipv').checked;
+  state.flipH = $('dlg-vid-fliph').checked;
+  state.alignment = $('dlg-vid-align').value;
+  state.playheadVisible = $('dlg-vid-ph').checked;
+  const parsed = parseColorFormat(state.colorFormatStr);
+  if (!parsed.valid) { showStatus(`Color format error: ${parsed.message}`, 3000); return; }
+  state.colorFormat = parsed.format;
+  state.usedBytes = parsed.usedBytes;
+  state.unusedBytes = parsed.unusedBytes;
+  state.colorBytes = parsed.colorBytes;
+  updateCanvasSize();
+  if (state.fileData) renderFrame(state.positionMs);
+  showStatus('Video settings applied', 2000);
+}
+
+function applyPlayerSettings() {
+  state.maxDim = parseInt($('dlg-play-max').value) || 512;
+  state.fps = parseInt($('dlg-play-fps').value) || 60;
+  state.frameIntervalMs = Math.floor(1000 / state.fps);
+  updateCanvasSize();
+  showStatus('Player settings applied', 2000);
+}
+
+// ─── Export ─────────────────────────────────────────────────────────────────
+function exportAudio() {
+  if (!state.fileLoaded || !state.audioBuffer) { showStatus('No file open', 2000); return; }
+  // Create WAV blob from the current audio buffer
+  const ch = state.audioBuffer.numberOfChannels;
+  const sr = state.audioBuffer.sampleRate;
+  const len = state.audioBuffer.length;
+  const bitsPerSample = 16;
+  const byteRate = sr * ch * bitsPerSample / 8;
+  const blockAlign = ch * bitsPerSample / 8;
+  const dataSize = len * blockAlign;
+  const buf = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buf);
+  const writeStr = (off, str) => { for (let i=0;i<str.length;i++) view.setUint8(off+i, str.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, ch, true);
+  view.setUint32(24, sr, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  writeStr(36, 'data');
+  view.setUint32(40, dataSize, true);
+  let off = 44;
+  for (let i = 0; i < len; i++) {
+    for (let c = 0; c < ch; c++) {
+      const s = Math.max(-1, Math.min(1, state.audioBuffer.getChannelData(c)[i]));
+      const val = s < 0 ? s * 32768 : s * 32767;
+      view.setInt16(off, Math.round(val), true);
+      off += 2;
+    }
+  }
+  const blob = new Blob([buf], {type:'audio/wav'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (state.filename || 'untitled') + '.wav';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showStatus('Audio exported as WAV', 2000);
+}
+
+function exportImage() {
+  if (!state.fileLoaded) { showStatus('No file open', 2000); return; }
+  const tmp = document.createElement('canvas');
+  tmp.width = state.width;
+  tmp.height = state.height;
+  const tctx = tmp.getContext('2d');
+  const rgb = binToWaterfall(state.fileData, state.positionMs);
+  const imgData = tctx.createImageData(state.width, state.height);
+  for (let i = 0; i < state.width * state.height; i++) {
+    imgData.data[i*4] = rgb[i*3];
+    imgData.data[i*4+1] = rgb[i*3+1];
+    imgData.data[i*4+2] = rgb[i*3+2];
+    imgData.data[i*4+3] = 255;
+  }
+  tctx.putImageData(imgData, 0, 0);
+  const a = document.createElement('a');
+  a.href = tmp.toDataURL('image/png');
+  a.download = (state.filename || 'frame') + '.png';
+  a.click();
+  showStatus('Image exported as PNG', 2000);
+}
+
+// ─── Event bindings ─────────────────────────────────────────────────────────
+// Menu
+document.querySelectorAll('.menubar-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.menubar-item').forEach(m => m.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+    e.stopPropagation();
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.menubar-item').forEach(m => m.classList.remove('open'));
+});
+
+$('menu-open').addEventListener('click', () => fileInput.click());
+$('menu-close').addEventListener('click', () => { if (state.fileLoaded) closeFile(); });
+$('menu-audio').addEventListener('click', () => {
+  $('dlg-audio-ch').value = state.numChannels;
+  $('dlg-audio-bytes').value = state.sampleBytes;
+  $('dlg-audio-rate').value = state.sampleRate;
+  $('dlg-audio-vol').value = state.fileVolume;
+  showDialog('dialog-audio');
+});
+$('menu-video').addEventListener('click', () => {
+  $('dlg-vid-w').value = state.width;
+  $('dlg-vid-h').value = state.height;
+  $('dlg-vid-fmt').value = state.colorFormatStr;
+  $('dlg-vid-flipv').checked = state.flipV;
+  $('dlg-vid-fliph').checked = state.flipH;
+  $('dlg-vid-align').value = state.alignment;
+  $('dlg-vid-ph').checked = state.playheadVisible;
+  showDialog('dialog-video');
+});
+$('menu-player').addEventListener('click', () => {
+  $('dlg-play-max').value = state.maxDim;
+  $('dlg-play-fps').value = state.fps;
+  showDialog('dialog-player');
+});
+$('menu-export-audio').addEventListener('click', () => { if (state.fileLoaded) exportAudio(); });
+$('menu-export-image').addEventListener('click', () => { if (state.fileLoaded) exportImage(); });
+$('menu-hotkeys').addEventListener('click', () => showDialog('dialog-hotkeys'));
+$('menu-about').addEventListener('click', () => showDialog('dialog-about'));
+
+// Dialog buttons
+$('dlg-audio-ok').addEventListener('click', () => { hideDialog('dialog-audio'); applyAudioSettings(); });
+$('dlg-audio-cancel').addEventListener('click', () => hideDialog('dialog-audio'));
+$('dlg-vid-ok').addEventListener('click', () => { hideDialog('dialog-video'); applyVideoSettings(); });
+$('dlg-vid-cancel').addEventListener('click', () => hideDialog('dialog-video'));
+$('dlg-play-ok').addEventListener('click', () => { hideDialog('dialog-player'); applyPlayerSettings(); });
+$('dlg-play-cancel').addEventListener('click', () => hideDialog('dialog-player'));
+$('dlg-hotkeys-ok').addEventListener('click', () => hideDialog('dialog-hotkeys'));
+$('dlg-about-ok').addEventListener('click', () => hideDialog('dialog-about'));
+
+// Controls
+$('btn-play').addEventListener('click', togglePlay);
+$('btn-back').addEventListener('click', back);
+$('btn-forward').addEventListener('click', forward);
+$('btn-restart').addEventListener('click', restart);
+$('btn-mute').addEventListener('click', toggleMute);
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length) openFile(e.target.files[0]);
+  e.target.value = '';
+});
+
+seekbar.addEventListener('input', () => {
+  const val = parseFloat(seekbar.value);
+  state.positionMs = val;
+  renderFrame(val);
+});
+seekbar.addEventListener('change', () => {
+  const val = parseFloat(seekbar.value);
+  setPosition(val);
+});
+
+volslider.addEventListener('input', () => {
+  const v = parseFloat(volslider.value);
+  state.volume = v;
+  state.muted = false;
+  if (v > 0) state.unmuteVol = v;
+  updateVolumeUI();
+  updateAudioGain();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  switch (e.code) {
+    case 'Space': e.preventDefault(); togglePlay(); break;
+    case 'ArrowLeft': e.preventDefault(); back(); break;
+    case 'ArrowRight': e.preventDefault(); forward(); break;
+    case 'ArrowUp': e.preventDefault(); setVolume(state.volume + 5); updateVolumeUI(); break;
+    case 'ArrowDown': e.preventDefault(); setVolume(state.volume - 5); updateVolumeUI(); break;
+    case 'KeyM': e.preventDefault(); toggleMute(); break;
+    case 'KeyR': e.preventDefault(); restart(); break;
+    case 'Comma': e.preventDefault(); frameBack(); break;
+    case 'Period': e.preventDefault(); frameForward(); break;
+  }
+});
+
+// Resize
+window.addEventListener('resize', updateCanvasSize);
+
+// Drop file support
+document.addEventListener('dragover', (e) => e.preventDefault());
+document.addEventListener('drop', (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files.length) openFile(e.dataTransfer.files[0]);
+});
+
+// ─── Init ───────────────────────────────────────────────────────────────────
+state.frameIntervalMs = Math.floor(1000 / state.fps);
+const defaultParsed = parseColorFormat('bgrx');
+state.colorFormat = defaultParsed.format;
+state.usedBytes = defaultParsed.usedBytes;
+state.unusedBytes = defaultParsed.unusedBytes;
+state.colorBytes = defaultParsed.colorBytes;
+updateVolumeUI();
+updateControlsEnabled(false);
+updateCanvasSize();
+ctx.fillStyle = COLORS.viewer;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+state.animId = requestAnimationFrame(tick);
+</script>
+</body>
+</html>

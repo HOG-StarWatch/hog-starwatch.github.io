@@ -173,13 +173,22 @@
         { id: 'chk-invisible', label: '隐身模式 (Invisibility)' },
         { id: 'chk-freeze', label: '冻结敌人 (Freeze Enemies)' },
         { id: 'chk-rapid', label: '极速射击 (Rapid Fire)' },
+        { id: 'chk-no-spread', label: '无散弹 (No Spread)' },
+        { id: 'chk-rainbow', label: '🌈 彩虹子弹 (Rainbow Bullets)' },
+        { id: 'chk-bullet-destroy', label: '碎墙子弹 (Destroy Walls)' },
+        { id: 'chk-bullet-speed', label: '子弹恒速 (Constant Bullet Speed)' },
+        { id: 'chk-homing', label: '子弹追踪 (Homing Bullets)' },
+        { id: 'chk-explosive-death', label: '💥 死亡爆炸 (Explosive Deaths)' },
+        { id: 'chk-fireworks', label: '🎆 死亡烟花 (Death Fireworks)' },
         { id: 'chk-explosive', label: '爆炸子弹 (Explosive Ammo)' },
         { id: 'chk-inf-grenade', label: '无限手雷 (Infinite Grenades)' },
         { id: 'chk-no-cd', label: '快速投掷 (No Cooldown)' },
         { id: 'chk-battle-royale', label: '斗蛐蛐 (Battle Royale)' }
     ];
     const worldToggles = [
-        { id: 'chk-matrix', label: '子弹时间 (Matrix Mode)' }
+        { id: 'chk-matrix', label: '子弹时间 (Matrix Mode)' },
+        { id: 'chk-slow-mo', label: '慢动作 (Slow Motion)' },
+        { id: 'chk-clear-weather', label: '清除天气 (Clear Weather)' }
     ];
     const debugToggles = [
         { id: 'chk-disable-particles', label: '关闭粒子效果 (Disable Particles)' },
@@ -230,7 +239,9 @@
             },
             {
                 title: '战斗 (Combat)',
-                html: renderToggleRows(combatToggles)
+                html: renderToggleRows(combatToggles) + renderButtonGrid([
+                    { id: 'btn-summon-ally', label: '召唤盟友 (Summon Ally)' }
+                ])
             },
             {
                 title: '角色纹理 (Character Textures)',
@@ -384,6 +395,13 @@
         infiniteJump: false,
         superSpeed: false,
         rapidFire: false,
+        noSpread: false,
+        rainbow: false,
+        bulletDestroy: false,
+        bulletSpeed: false,
+        homing: false,
+        explosiveDeath: false,
+        fireworks: false,
         explosiveBullets: false,
         infiniteGrenades: false,
         noGrenadeCooldown: false,
@@ -391,6 +409,8 @@
         invisible: false,
         freezeEnemies: false,
         matrixMode: false,
+        slowMo: false,
+        clearWeather: false,
         zoomEnabled: false, // Default OFF
         battleRoyale: false, // Default OFF
         mouseAim: false,
@@ -453,16 +473,17 @@
     const showShortcutFeedback = (text) => {
         if (!text) return;
         ensureFeedback();
+        if (feedbackTimer) { clearTimeout(feedbackTimer); feedbackTimer = null; }
         feedbackEl.textContent = text;
         setElementVisible(feedbackEl, true, 'block');
         feedbackEl.classList.add('is-visible');
-        if (feedbackTimer) clearTimeout(feedbackTimer);
         feedbackTimer = setTimeout(() => {
             if (!feedbackEl) return;
             feedbackEl.classList.remove('is-visible');
-            feedbackTimer = setTimeout(() => {
+            (feedbackTimer = setTimeout(() => {
                 setElementVisible(feedbackEl, false);
-            }, 150);
+                feedbackTimer = null;
+            }, 150));
         }, 1200);
     };
 
@@ -615,14 +636,23 @@
         ['chk-jump', 'superJump'],
         ['chk-inf-jump', 'infiniteJump'],
         ['chk-speed', 'superSpeed'],
+        ['chk-rapid', 'rapidFire'],
+        ['chk-no-spread', 'noSpread'],
+        ['chk-rainbow', 'rainbow'],
+        ['chk-bullet-destroy', 'bulletDestroy'],
+        ['chk-bullet-speed', 'bulletSpeed'],
+        ['chk-homing', 'homing'],
+        ['chk-explosive-death', 'explosiveDeath'],
+        ['chk-fireworks', 'fireworks'],
         ['chk-one-hit', 'oneHitKill'],
         ['chk-invisible', 'invisible'],
         ['chk-freeze', 'freezeEnemies'],
-        ['chk-rapid', 'rapidFire'],
         ['chk-explosive', 'explosiveBullets'],
         ['chk-inf-grenade', 'infiniteGrenades'],
         ['chk-no-cd', 'noGrenadeCooldown'],
         ['chk-matrix', 'matrixMode'],
+        ['chk-slow-mo', 'slowMo'],
+        ['chk-clear-weather', 'clearWeather'],
         ['chk-zoom', 'zoomEnabled'],
         ['chk-battle-royale', 'battleRoyale'],
         ['chk-aim', 'mouseAim'],
@@ -789,9 +819,17 @@
         return true;
     };
 
-    const waitForTiles = setInterval(() => {
-        if (buildTextureOptions()) clearInterval(waitForTiles);
-    }, 200);
+    // Single initialisation poller (replaces separate intervals for tiles, classes, text)
+    const initPoller = setInterval(() => {
+        if (!window.__tilesReady && buildTextureOptions()) window.__tilesReady = true;
+        if (!window.__classesHooked &&
+            typeof Player !== 'undefined' && typeof Weapon !== 'undefined' &&
+            typeof Bullet !== 'undefined' && typeof Enemy !== 'undefined' && typeof Grenade !== 'undefined') {
+            window.__classesHooked = true;
+            applyHooks();
+        }
+        if (window.__tilesReady && window.__classesHooked) clearInterval(initPoller);
+    }, 100);
 
     const applyNumericValue = (value, { key, minValue, rangeEl, inputEl }) => {
         const parsed = parseFloat(value);
@@ -874,6 +912,18 @@
     document.getElementById('btn-lives').onclick = () => { if (typeof playerLives !== 'undefined') playerLives += 99; };
     document.getElementById('btn-next-level').onclick = () => { if (typeof nextLevel !== 'undefined') nextLevel(); };
     document.getElementById('btn-destroy-level').onclick = () => { if (typeof explosion !== 'undefined' && players[0]) explosion(players[0].pos, 50); };
+    document.getElementById('btn-summon-ally').onclick = () => {
+        if (!players[0] || typeof Enemy === 'undefined') return;
+        const pos = players[0].pos.add(vec2(players[0].getMirrorSign() * 2, 0));
+        const ally = new Enemy(pos);
+        ally.type = 1;
+        ally.team = typeof team_player !== 'undefined' ? team_player : 1;
+        ally.color = new Color(0,1,0.5);
+        ally.eyeColor = new Color(1,1,1);
+        ally.health = ally.healthMax = 5;
+        ally.__isAlly = true;
+        if (typeof playSound === 'function') playSound(sound_checkpoint, pos);
+    };
 
     const terrainTypeSelect = document.getElementById('sel-terrain-type');
     const terrainLayerToggle = document.getElementById('terrain-layer-toggle');
@@ -961,36 +1011,45 @@
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Tab') {
             e.preventDefault();
-        if (!uiReady) initUI();
-        const isVisible = container && container.style.display !== 'none';
-        const nextVisible = !isVisible;
-        setElementVisible(container, nextVisible, 'flex');
-        setElementVisible(helpPanel, nextVisible, 'block');
+            if (!uiReady) initUI();
+            const isVisible = container && container.style.display !== 'none';
+            const nextVisible = !isVisible;
+            setElementVisible(container, nextVisible, 'flex');
+            setElementVisible(helpPanel, nextVisible, 'block');
             if (isVisible) state.uiBlocking = false;
             showShortcutFeedback(`Menu/菜单: ${nextVisible ? 'On/开' : 'Off/关'}`);
         }
         
         // Quick Actions
-        if (typeof mousePosWorld !== 'undefined') {
-            if (isUiBlocking(e.target)) return;
-            if (e.code === 'KeyQ') { new Enemy(mousePosWorld); showShortcutFeedback('快速生成敌人 / Quick spawn enemy'); }
-            if (e.code === 'KeyT') { new Prop(mousePosWorld); showShortcutFeedback('快速生成物体 / Quick spawn prop'); }
-            if (e.code === 'KeyE') { explosion(mousePosWorld); showShortcutFeedback('爆炸 / Explosion'); }
-            if (e.code === 'KeyF') {  makeWater(mousePosWorld); showShortcutFeedback('水桶爆炸 / Water explosion'); }
-            if (e.code === 'KeyG') { performSpawn(mousePosWorld); debugRect && debugRect(mousePosWorld, vec2(1), '#fff', 0.1); showShortcutFeedback(`生成/Spawn: ${selectedSpawn ? selectedSpawn.label : '未知 / Unknown'}`); }
-            if (e.code === 'KeyB') {
-                if (isUiBlocking(e.target)) return;
-                state.terrainEdit = !state.terrainEdit;
-                syncTerrainToggle();
-                showShortcutFeedback(`Terrain Edit/地形编辑: ${state.terrainEdit ? 'On/开' : 'Off/关'}`);
-            }
-            if (e.code === 'KeyV') {
-                state.zoomEnabled = !state.zoomEnabled;
-                const zoomToggle = uiReady ? document.getElementById('chk-zoom') : null;
-                if (zoomToggle) zoomToggle.checked = state.zoomEnabled;
-                if (!state.zoomEnabled && typeof mouseWheel !== 'undefined') mouseWheel = 0;
-                showShortcutFeedback(`Mouse Zoom/鼠标缩放: ${state.zoomEnabled ? 'On/开' : 'Off/关'}`);
-            }
+        if (typeof mousePosWorld === 'undefined') return;
+        if (isUiBlocking(e.target)) return;
+        
+        // Throttle repeated key actions (e.g. holding E/F)
+        const now = Date.now();
+        const keyActionThrottle = 300; // ms between repeated actions
+        if (window.__lastKeyActionTime) {
+            if (now - (window.__lastKeyActionTime[e.code] || 0) < keyActionThrottle) return;
+        } else {
+            window.__lastKeyActionTime = {};
+        }
+        window.__lastKeyActionTime[e.code] = now;
+        
+        if (e.code === 'KeyQ') { new Enemy(mousePosWorld); showShortcutFeedback('快速生成敌人 / Quick spawn enemy'); }
+        else if (e.code === 'KeyT') { new Prop(mousePosWorld); showShortcutFeedback('快速生成物体 / Quick spawn prop'); }
+        else if (e.code === 'KeyE') { explosion(mousePosWorld); showShortcutFeedback('爆炸 / Explosion'); }
+        else if (e.code === 'KeyF') { makeWater(mousePosWorld); showShortcutFeedback('水桶爆炸 / Water explosion'); }
+        else if (e.code === 'KeyG') { performSpawn(mousePosWorld); debugRect && debugRect(mousePosWorld, vec2(1), '#fff', 0.1); showShortcutFeedback(`生成/Spawn: ${selectedSpawn ? selectedSpawn.label : '未知 / Unknown'}`); }
+        else if (e.code === 'KeyB') {
+            state.terrainEdit = !state.terrainEdit;
+            syncTerrainToggle();
+            showShortcutFeedback(`Terrain Edit/地形编辑: ${state.terrainEdit ? 'On/开' : 'Off/关'}`);
+        }
+        else if (e.code === 'KeyV') {
+            state.zoomEnabled = !state.zoomEnabled;
+            const zoomToggle = uiReady ? document.getElementById('chk-zoom') : null;
+            if (zoomToggle) zoomToggle.checked = state.zoomEnabled;
+            if (!state.zoomEnabled && typeof mouseWheel !== 'undefined') mouseWheel = 0;
+            showShortcutFeedback(`Mouse Zoom/鼠标缩放: ${state.zoomEnabled ? 'On/开' : 'Off/关'}`);
         }
     });
 
@@ -1201,6 +1260,10 @@
     if (typeof window.engineUpdate === 'function') {
         const originalEngineUpdate = window.engineUpdate;
         window.engineUpdate = function() {
+            if (state.clearWeather && typeof skyParticles !== 'undefined' && skyParticles) {
+                skyParticles.emitRate = 0;
+                skyParticles.angle = 0;
+            }
             originalEngineUpdate();
             drawTerrainBrush();
         };
@@ -1216,11 +1279,7 @@
         requestAnimationFrame(brushLoop);
     }
 
-    const waitForClasses = setInterval(() => {
-        if (typeof Player === 'undefined' || typeof Weapon === 'undefined' || typeof Bullet === 'undefined' || typeof Enemy === 'undefined' || typeof Grenade === 'undefined') return;
-        clearInterval(waitForClasses);
-        applyHooks();
-    }, 100);
+
 
     function applyHooks() {
         // Helper: Count active enemies (handling Battle Royale teams and excluding players)
@@ -1252,6 +1311,7 @@
         if (typeof EngineObject !== 'undefined') {
             const originalEngineObjectUpdate = EngineObject.prototype.update;
             EngineObject.prototype.update = function() {
+                if (state.slowMo && frame % 2 !== 0) return; // skip every other frame
                 const originalGravityScale = this.gravityScale;
                 if (state.worldGravityMultiplier !== 1) this.gravityScale *= state.worldGravityMultiplier;
                 originalEngineObjectUpdate.apply(this, arguments);
@@ -1271,6 +1331,11 @@
             const originalPlaySound = playSound;
             window.playSound = function() {
                 if (state.disableAudio) return;
+                if (state.rapidFire && arguments[0] === sound_shoot) {
+                    const now = Date.now();
+                    if (now - (window.__lastRapidSoundTime || 0) < 500) return;
+                    window.__lastRapidSoundTime = now;
+                }
                 return originalPlaySound.apply(this, arguments);
             };
         }
@@ -1349,11 +1414,19 @@
         }
         
         if (!window.__cheatExplosionHooked && typeof explosion === 'function') {
-            const originalExplosion = explosion;
+            const _origExplosion = explosion;
+            window.__cheatExplosionHooked = true;
             window.explosion = function(pos, radius=2) {
-                const baseRadius = (typeof radius === 'number' ? radius : 2) * (state.worldExplosionRadiusMultiplier || 1);
+                const er = state.worldExplosionRadiusMultiplier;
+                const sr = state.worldExplosionShockwaveRangeMultiplier;
+                const sf = state.worldExplosionShockwaveForceMultiplier;
+                const ir = state.worldExplosionIgniteRangeMultiplier;
+                if (er === 1 && sr === 1 && sf === 1 && ir === 1 && !state.renderExplosionRadius) {
+                    return _origExplosion.call(this, pos, radius);
+                }
+                const baseRadius = (typeof radius === 'number' ? radius : 2) * (er || 1);
                 if (!pos || typeof destroyTile !== 'function' || typeof forEachObject !== 'function' || typeof ParticleEmitter === 'undefined') {
-                    const result = originalExplosion.call(this, pos, baseRadius);
+                    const result = _origExplosion.call(this, pos, baseRadius);
                     if (state.renderExplosionRadius && typeof debugCircle !== 'undefined' && pos) {
                         debugCircle(pos, baseRadius, '#ffb300', 0.2, 0.15);
                     }
@@ -1361,9 +1434,9 @@
                 }
                 if (typeof ASSERT === 'function') ASSERT(baseRadius > 0);
                 if (typeof levelWarmup !== 'undefined' && levelWarmup) return;
-                const shockwaveMultiplier = Number.isFinite(state.worldExplosionShockwaveRangeMultiplier) ? state.worldExplosionShockwaveRangeMultiplier : 1;
-                const igniteMultiplier = Number.isFinite(state.worldExplosionIgniteRangeMultiplier) ? state.worldExplosionIgniteRangeMultiplier : 1;
-                const shockwaveForceMultiplier = Number.isFinite(state.worldExplosionShockwaveForceMultiplier) ? state.worldExplosionShockwaveForceMultiplier : 1;
+                const shockwaveMultiplier = Number.isFinite(sr) ? sr : 1;
+                const igniteMultiplier = Number.isFinite(ir) ? ir : 1;
+                const shockwaveForceMultiplier = Number.isFinite(sf) ? sf : 1;
                 const burnRange = baseRadius * 1.5 * igniteMultiplier;
                 const pushOuter = Math.max(baseRadius, 2 * baseRadius * shockwaveMultiplier);
                 const maxEffectRange = Math.max(baseRadius * 3, burnRange, pushOuter);
@@ -1397,31 +1470,18 @@
                     debugCircle(pos, maxEffectRange, '#f00', 2);
                     debugCircle(pos, baseRadius, '#ff0', 2);
                 }
-                new ParticleEmitter(
-                    pos, baseRadius/2, .2, 50*baseRadius, PI,
-                    0, undefined,
-                    new Color(0,0,0), new Color(0,0,0),
-                    new Color(0,0,0,0), new Color(0,0,0,0),
-                    1, .5, 2, .1, .05,
-                    .9, 1, -.3, PI, .1, 
-                    .5, 0, 0, 0, 1e8
-                );
-                new ParticleEmitter(
-                    pos, baseRadius/2, .1, 100*baseRadius, PI,
-                    0, undefined,
-                    new Color(1,.5,.1), new Color(1,.1,.1),
-                    new Color(1,.5,.1,0), new Color(1,.1,.1,0),
-                    .5, .5, 2, .1, .05,
-                    .9, 1, 0, PI, .05, 
-                    .5, 0, 1, 0, 1e9
-                );
+                new ParticleEmitter(pos, baseRadius/2, .2, 50*baseRadius, PI, 0, undefined,
+                    new Color(0,0,0), new Color(0,0,0), new Color(0,0,0,0), new Color(0,0,0,0),
+                    1, .5, 2, .1, .05, .9, 1, -.3, PI, .1, .5, 0, 0, 0, 1e8);
+                new ParticleEmitter(pos, baseRadius/2, .1, 100*baseRadius, PI, 0, undefined,
+                    new Color(1,.5,.1), new Color(1,.1,.1), new Color(1,.5,.1,0), new Color(1,.1,.1,0),
+                    .5, .5, 2, .1, .05, .9, 1, 0, PI, .05, .5, 0, 1, 0, 1e9);
                 if (state.renderExplosionRadius && typeof debugCircle !== 'undefined') {
                     debugCircle(pos, pushOuter, '#38bdf8', 0.2, 0);
                     debugCircle(pos, burnRange, '#f97316', 0.2, 0);
                     debugCircle(pos, baseRadius, '#ffb300', 0.2, 0.15);
                 }
             };
-            window.__cheatExplosionHooked = true;
         }
 
         // --- Player Hooks ---
@@ -1612,7 +1672,37 @@
                 const speed = this.velocity.length();
                 if (diff.lengthSquared()) this.velocity = diff.normalize(speed);
             }
+            if (state.noSpread && this.attacker && this.attacker.isPlayer && this.getAliveTime() < 0.05) {
+                const speed = this.velocity.length();
+                this.velocity = vec2(this.velocity.x > 0 ? speed : -speed, 0);
+            }
+            if (state.rainbow && this.attacker && this.attacker.isPlayer) {
+                this.color = new Color().setHSLA((time * 0.3) % 1, 1, 0.6);
+            }
+            if (state.bulletSpeed && this.attacker && this.attacker.isPlayer) {
+                if (!this.__initSpeed) this.__initSpeed = this.velocity.length();
+            }
             originalBulletUpdate.apply(this, arguments);
+            if (state.homing && this.attacker && this.attacker.isPlayer && this.getAliveTime() > 0.1 && this.getAliveTime() < 2) {
+                let nearestEnemy = null, nearestDist = Infinity;
+                if (typeof engineObjects !== 'undefined') {
+                    for (const o of engineObjects) {
+                        if (o instanceof Enemy && !o.isDead()) {
+                            const d = this.pos.distanceSquared(o.pos);
+                            if (d < nearestDist) { nearestDist = d; nearestEnemy = o; }
+                        }
+                    }
+                }
+                if (nearestEnemy) {
+                    const targetDir = nearestEnemy.pos.subtract(this.pos).normalize();
+                    const speed = this.velocity.length();
+                    this.velocity = this.velocity.lerp(targetDir.scale(speed), 0.08);
+                }
+            }
+            if (state.bulletSpeed && this.attacker && this.attacker.isPlayer && this.__initSpeed) {
+                const len = this.velocity.length();
+                if (len > 0.001) this.velocity = this.velocity.scale(this.__initSpeed / len);
+            }
         };
         const originalBulletKill = Bullet.prototype.kill;
         Bullet.prototype.kill = function() {
@@ -1621,6 +1711,18 @@
             }
             originalBulletKill.apply(this, arguments);
         };
+
+        if (typeof Bullet !== 'undefined' && Bullet.prototype.collideWithTile && typeof destroyTile === 'function') {
+            const originalCollideWithTile = Bullet.prototype.collideWithTile;
+            Bullet.prototype.collideWithTile = function(data, pos) {
+                if (state.bulletDestroy && data > 0) {
+                    destroyTile(pos);
+                    this.kill();
+                    return 1;
+                }
+                return originalCollideWithTile.apply(this, arguments);
+            };
+        }
 
         // --- Character Hooks ---
         const originalCharacterDamage = Character.prototype.damage;
@@ -1633,9 +1735,29 @@
             }
             return originalCharacterDamage.call(this, finalDamage, damagingObject);
         };
-        
-        // Custom Female Body Render Hook - REMOVED
-        // The user requested to remove this.
+
+        // --- Kill Effects (Explosive Deaths, Fireworks, Blood Mode) ---
+        if (typeof Enemy !== 'undefined' && Enemy.prototype.kill) {
+            const originalEnemyKill = Enemy.prototype.kill;
+            Enemy.prototype.kill = function(damagingObject) {
+                const isEnemy = !this.isDead() && this.team === team_enemy && !this.__isAlly;
+                const killPos = this.pos.copy();
+                const result = originalEnemyKill.apply(this, arguments);
+                if (isEnemy) {
+                    if (state.explosiveDeath && typeof explosion === 'function') {
+                        explosion(killPos, 3);
+                    }
+                    if (state.fireworks && typeof ParticleEmitter !== 'undefined') {
+                        const hue = Math.random();
+                        const c = new Color().setHSLA(hue, 1, 0.6);
+                        new ParticleEmitter(killPos, 1, .1, 200, PI, 0, undefined,
+                            c, c, c.scale(1,0), c.scale(1,0),
+                            1, .3, .5, .2, .1, .9, .95, 0, PI, .1, .5, 0, 1);
+                    }
+                }
+                return result;
+            };
+        }
         
         // --- Enemy Hooks (Matrix Mode & Battle Royale) ---
         const originalEnemyAlert = Enemy.prototype.alert;
@@ -1648,6 +1770,43 @@
         Enemy.prototype.update = function() {
             if (state.freezeEnemies) return;
             if (state.matrixMode && frame % 5 !== 0) return;
+
+            // Ally AI: aggressive pursuit of enemies
+            if (this.__isAlly) {
+                const t_enemy = typeof team_enemy !== 'undefined' ? team_enemy : 2;
+                let target = null, targetDist = Infinity;
+                if (typeof engineObjects !== 'undefined') {
+                    for (const o of engineObjects) {
+                        if (o instanceof Enemy && o !== this && !o.isDead() && o.team === t_enemy) {
+                            const d = this.pos.distanceSquared(o.pos);
+                            if (d < targetDist) { targetDist = d; target = o; }
+                        }
+                    }
+                }
+                if (target) {
+                    this.sawPlayerPos = target.pos.copy();
+                    this.sawPlayerTimer.set(5);
+                    this.shootTimer.set(0.1);
+                } else if (players[0] && !players[0].isDead()) {
+                    this.sawPlayerPos = players[0].pos.copy();
+                    this.sawPlayerTimer.set(2);
+                }
+                this.reactionTimer.unset();
+                this.facePlayerTimer.set(2);
+
+                originalEnemyUpdate.apply(this, arguments);
+
+                if (target && !this.isDead()) {
+                    const dx = target.pos.x - this.pos.x;
+                    const dy = target.pos.y - this.pos.y;
+                    this.moveInput.x = clamp(dx * 0.08, 1, -1);
+                    this.moveInput.y = clamp(dy * 0.08, 1, -1) * 0.5;
+                    this.mirror = dx < 0;
+                    this.holdingShoot = 1;
+                    if (dy > 2 && this.groundObject) this.pressedJumpTimer.set(.1);
+                }
+                return;
+            }
 
             if (state.battleRoyale) {
                 if (!this.__brTeamAssigned) {
