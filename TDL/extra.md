@@ -10,6 +10,14 @@ import threading
 import queue
 import os
 import sys
+if sys.platform == "win32" and not getattr(sys, 'frozen', False):
+    if sys.executable and sys.executable.endswith('python.exe'):
+        import os as _os
+        _pw = sys.executable.replace('python.exe', 'pythonw.exe')
+        if _os.path.exists(_pw):
+            import subprocess as _sp
+            _sp.Popen([_pw] + sys.argv)
+            sys.exit()
 import urllib.request
 import zipfile
 import winreg
@@ -152,7 +160,7 @@ class TDLGuiApp:
                 json.dump(config, f, indent=4)
         except Exception as e:
             print(f"Failed to save config: {e}")
-            
+        
         self.root.destroy()
 
     def setup_login_tab(self):
@@ -529,6 +537,40 @@ class TDLGuiApp:
         
         ttk.Button(msg_opts_3, text="执行", command=self.tools_export_messages).pack(side=tk.LEFT, padx=15)
 
+        # Filter Export JSON
+        filter_frame = ttk.LabelFrame(top_frame, text="筛选导出文件 (Filter Export JSON)", padding=10)
+        filter_frame.pack(fill=tk.X, pady=5)
+        
+        f_row1 = ttk.Frame(filter_frame)
+        f_row1.pack(fill=tk.X, pady=2)
+        ttk.Label(f_row1, text="JSON 文件:").pack(side=tk.LEFT)
+        self.tls_filter_path = tk.StringVar(value="tdl-export.json")
+        ttk.Entry(f_row1, textvariable=self.tls_filter_path, width=40).pack(side=tk.LEFT, padx=5)
+        ttk.Button(f_row1, text="浏览...", command=lambda: self.tls_filter_path.set(filedialog.askopenfilename(filetypes=[("JSON files", "*.json")]))).pack(side=tk.LEFT)
+        
+        f_row2 = ttk.Frame(filter_frame)
+        f_row2.pack(fill=tk.X, pady=2)
+        ttk.Label(f_row2, text="关键词 (空格/逗号分隔):").pack(side=tk.LEFT)
+        self.tls_filter_kw = tk.StringVar()
+        ttk.Entry(f_row2, textvariable=self.tls_filter_kw, width=30).pack(side=tk.LEFT, padx=5)
+        
+        f_row3 = ttk.Frame(filter_frame)
+        f_row3.pack(fill=tk.X, pady=2)
+        self.tls_filter_file = tk.BooleanVar(value=True)
+        ttk.Checkbutton(f_row3, text="匹配文件名 (file)", variable=self.tls_filter_file).pack(side=tk.LEFT, padx=5)
+        self.tls_filter_text = tk.BooleanVar(value=True)
+        ttk.Checkbutton(f_row3, text="匹配内容 (text)", variable=self.tls_filter_text).pack(side=tk.LEFT, padx=5)
+        self.tls_filter_mode = tk.StringVar(value="any")
+        ttk.Radiobutton(f_row3, text="匹配任一", variable=self.tls_filter_mode, value="any").pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(f_row3, text="匹配全部", variable=self.tls_filter_mode, value="all").pack(side=tk.LEFT, padx=5)
+        
+        f_row4 = ttk.Frame(filter_frame)
+        f_row4.pack(fill=tk.X, pady=5)
+        self.tls_filter_backup = tk.BooleanVar(value=True)
+        ttk.Checkbutton(f_row4, text="修改前备份为 .bak", variable=self.tls_filter_backup).pack(side=tk.LEFT, padx=5)
+        ttk.Button(f_row4, text="执行筛选", command=self.tools_filter_export).pack(side=tk.LEFT, padx=15)
+        ttk.Button(f_row4, text="另存为...", command=self.tools_filter_export_as).pack(side=tk.LEFT, padx=5)
+        
     def setup_env_tab(self):
         top_frame = ttk.Frame(self.tab_env, padding=20)
         top_frame.pack(fill=tk.BOTH, expand=True)
@@ -630,8 +672,8 @@ class TDLGuiApp:
                 return
             
         def task():
-            self.log_env(f"开始下载最新的 TDL (Windows amd64) 到 {install_dir}...")
-            url = "https://github.com/iyear/tdl/releases/latest/download/tdl_Windows_x86_64.zip"
+            self.log_env(f"开始下载v0.20.1 TDL (Windows amd64) 到 {install_dir}... 若失败请手动下载https://github.com/iyear/tdl/releases/tag/v0.20.1")
+            url = "https://github.com/iyear/tdl/releases/download/v0.20.1/tdl_Windows_64bit.zip"
             zip_path = os.path.join(install_dir, "tdl_downloaded.zip")
             
             try:
@@ -846,6 +888,73 @@ class TDLGuiApp:
         if self.tls_msg_all.get(): cmd.append("--all")
         
         self.run_background_task(cmd)
+
+    def tools_filter_export(self):
+        self._filter_export(save_as=False)
+
+    def tools_filter_export_as(self):
+        self._filter_export(save_as=True)
+
+    def _filter_export(self, save_as=False):
+        json_path = self.tls_filter_path.get().strip()
+        kw_text = self.tls_filter_kw.get().strip()
+        if not json_path or not os.path.exists(json_path):
+            messagebox.showwarning("警告", "请指定有效的 JSON 文件路径。")
+            return
+        if not kw_text:
+            messagebox.showwarning("警告", "请输入至少一个关键词。")
+            return
+        keywords = [w for w in kw_text.replace(',', ' ').split() if w.strip()]
+        if not keywords:
+            messagebox.showwarning("警告", "关键词不能为空。")
+            return
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception as e:
+            messagebox.showerror("错误", f"读取 JSON 失败:\n{e}")
+            return
+        match_file = self.tls_filter_file.get()
+        match_text = self.tls_filter_text.get()
+        mode_any = self.tls_filter_mode.get() == "any"
+        filtered = []
+        for msg in data.get('messages', []):
+            file_name = msg.get('file', '')
+            text_content = msg.get('text', '')
+            matches = []
+            for kw in keywords:
+                kw_l = kw.lower()
+                found = False
+                if match_file and kw_l in file_name.lower():
+                    found = True
+                if match_text and kw_l in str(text_content).lower():
+                    found = True
+                matches.append(found)
+            if (mode_any and any(matches)) or (not mode_any and all(matches)):
+                filtered.append(msg)
+        total = len(data.get('messages', []))
+        kept = len(filtered)
+        data['messages'] = filtered
+        if save_as:
+            out_path = filedialog.asksaveasfilename(
+                defaultextension=".json", filetypes=[("JSON files", "*.json")],
+                initialfile="tdl-export_filtered.json"
+            )
+            if not out_path:
+                return
+        else:
+            out_path = json_path
+            if self.tls_filter_backup.get():
+                import shutil
+                shutil.copy2(json_path, json_path + ".bak")
+        try:
+            with open(out_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False)
+            msg = f"筛选完成。共 {total} 条消息，保留 {kept} 条。\n输出: {out_path}"
+            messagebox.showinfo("完成", msg)
+            self.log_msg(msg + "\n")
+        except Exception as e:
+            messagebox.showerror("错误", f"写入文件失败:\n{e}")
 
     # --- Login Methods ---
     def run_interactive_cmd(self, cmd):
@@ -1082,7 +1191,6 @@ if __name__ == "__main__":
             
     app = TDLGuiApp(root)
     root.mainloop()
-
 
 ```
 
