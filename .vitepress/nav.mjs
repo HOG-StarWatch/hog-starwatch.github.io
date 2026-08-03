@@ -76,6 +76,9 @@ export default [
         { text: '24dr1v3n-wild', link: '../../../24dr1v3n-wild.html', target: '_self', },
         { text: '24escape-from-planet-xiii', link: '../../../24escape-from-planet-xiii.html', target: '_self', },
         { text: '25clawstrike', link: '../../../25clawstrike.html', target: '_self', },
+        { text: 'mitruvian-van', link: '../../../aplovestudio/mitruvian-van-18-edition/index.html', target: '_self', },
+        { text: 'please-touch-tiffany', link: '../../../aplovestudio/please-touch-tiffany/index.html', target: '_self', },
+        { text: 'wifes-bedroom', link: '../../../aplovestudio/wifes-bedroom/index.html', target: '_self', },
       ],
     },    
 ];
