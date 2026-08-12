@@ -19,17 +19,22 @@ lastUpdated: true
 10. [Ona-Dop-dnsr.019425.xyz](https://dnsr.019425.xyz)
 11. [Eaglercraft_IR_1.8.8wasm-mc.019425.xyz](https://mc.019425.xyz)
 12. [Clist-clist.019425.xyz](https://clist.019425.xyz)
-13. [subscriptionmanager-clam.019425.xyz](https://clam.019425.xyz/)
-14. [Kvideo-kvideo.019425.xyz/premium](https://kvideo.019425.xyz/)
-15. [Slug-slug.019425.xyz](https://slug.019425.xyz)
-16. [Openlist-Zeabur-op-sw--op.019425.xyz](https://op.019425.xyz)
-17. [m3u8-downloader-m3u8.019425.xyz](https://m3u8.019425.xyz)
-18. [github-repo-explorer-gh.0194925.xyz](https://gh.019425.xyz)
-19. [ScriptExecutor-se.019425.xyz](https://se.019425.xyz)
-20. [comix]
-21. [sc2replay-online-analysis-rep.019425.xyz](https://rep.019425.xyz)
-22. [worldmonitor-wm.019425.xyz](https://wm.019425.xyz)
-23. [FitTool-如何呢.又能怎.de5.net](https://xn--vqqy6jo2e.xn--foro9zwwz.de5.net/)
+13. [Kvideo-kvideo.019425.xyz/premium](https://kvideo.019425.xyz/)
+14. [Slug-slug.019425.xyz](https://slug.019425.xyz)
+15. [Openlist-Zeabur-op-sw--op.019425.xyz](https://op.019425.xyz)
+16. [m3u8-downloader-m3u8.019425.xyz](https://m3u8.019425.xyz)
+17. [github-repo-explorer-gh.0194925.xyz](https://gh.019425.xyz)
+18. [ScriptExecutor-se.019425.xyz](https://se.019425.xyz)
+19. [comix]
+20. [sc2replay-online-analysis-rep.019425.xyz](https://rep.019425.xyz)
+21. [worldmonitor-wm.019425.xyz](https://wm.019425.xyz)
+22. [FitTool-如何呢.又能怎.de5.net](https://xn--vqqy6jo2e.xn--foro9zwwz.de5.net/)
+23. [SBTI-heyiwei-btw.pages.dev](https://heyiwei-btw.pages.dev/)
+24. [OrangeCloud]
+25. [Cors-cors.019425.xyz](https://cors.019425.xyz/)
+26. [nodewarden-bw.019425.xyz]
+27. [K-Vault-kv.019425.xyz](https://kv.019425.xyz/)
+28. [AutoKeepAlive-ak.019425.xyz](https://ak.019425.xyz)
 
 ## cloudemail.ggff.net
 
@@ -48,6 +53,11 @@ lastUpdated: true
 3. [grok-playground-grok.futa.de5.net](https://grok.futa.de5.net)
 4. [zi-hf-prox-zi.futa.de5.net/](https://zi.futa.de5.net/)
 5. [tg.futa.de5.net](https://tg.futa.de5.net)
+
+6. [LiveMYOpenlist-op.futa.de5.net](https://op.futa.de5.net)
+https://vh-prod-openlist-main-6b914b-e28ef0ff.livemy.site/
+7. [LiveMY1-TG]()
+https://vh-prod-telegram-bot-api-master-ca39b5-2833039b.livemy.site/
 
 ce725a92-690d-4f9f-af42-0bcba945bac0
 
