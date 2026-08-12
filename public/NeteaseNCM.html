@@ -8,28 +8,39 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(135deg,#0f0a1a 0%,#1a0f2e 30%,#0d0d1a 70%,#0a0a14 100%);color:#e4d9f0;min-height:100vh;min-height:100dvh}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(88,28,135,0.15) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(124,58,237,0.1) 0%,transparent 50%);pointer-events:none;z-index:0}
-.container{max-width:960px;margin:0 auto;padding:40px 20px;position:relative;z-index:1}
+.container{max-width:960px;margin:0 auto;padding:84px 20px 40px;position:relative;z-index:1}
 h1{text-align:center;font-weight:600;font-size:28px;margin-bottom:8px;background:linear-gradient(135deg,#c4b5fd,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .subtitle{text-align:center;color:#9ca3af;font-size:14px;margin-bottom:32px}
 .drop-zone{border:1.5px solid rgba(167,139,250,0.2);border-radius:20px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(255,255,255,0.03);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06)}
 .drop-zone:hover,.drop-zone.dragover{border-color:rgba(167,139,250,0.5);background:rgba(167,139,250,0.06);box-shadow:0 8px 40px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.08)}
 .drop-zone.dragover{transform:scale(1.02)}
-.drop-zone-icon{font-size:48px;margin-bottom:12px;opacity:.4;filter:drop-shadow(0 0 20px rgba(167,139,250,0.3))}
+.drop-zone-icon{display:flex;justify-content:center;margin-bottom:12px;opacity:.4;filter:drop-shadow(0 0 20px rgba(167,139,250,0.3))}
 .drop-zone p{color:#9ca3af;font-size:15px}
 .drop-zone .hint{font-size:13px;color:#6b7280;margin-top:8px}
+.drop-btns{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.drop-btns .btn{padding:8px 20px;font-size:13px}
+.preview-row{display:flex;align-items:center;gap:10px;margin-top:14px}
+.preview-bar{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:visible;position:relative;cursor:pointer;padding:8px 0;margin:-8px 0}
+.preview-bar::before{content:'';position:absolute;top:8px;left:0;right:0;height:6px;background:rgba(255,255,255,0.06);border-radius:4px;z-index:0}
+.preview-bar-fill{position:absolute;top:8px;left:0;height:6px;width:0%;background:linear-gradient(90deg,#a78bfa,#7c3aed);border-radius:4px;box-shadow:0 0 8px rgba(124,58,237,0.4);z-index:1;transition:width .1s linear}
+.preview-bar-thumb{position:absolute;top:4px;width:14px;height:14px;background:#c4b5fd;border:2px solid #7c3aed;border-radius:50%;transform:translateX(-50%);z-index:2;box-shadow:0 0 6px rgba(124,58,237,0.5);transition:left .1s linear;pointer-events:none}
+.preview-bar:hover .preview-bar-thumb{box-shadow:0 0 10px rgba(124,58,237,0.7);transform:translateX(-50%) scale(1.15)}
+.preview-bar:hover .preview-bar-fill{box-shadow:0 0 12px rgba(124,58,237,0.6)}
+.preview-time{font-size:12px;color:#9ca3af;white-space:nowrap;font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
 .btn{display:inline-block;padding:10px 24px;border-radius:24px;border:1px solid rgba(255,255,255,0.08);font-size:15px;font-weight:500;cursor:pointer;transition:all .25s;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 .btn-primary{background:linear-gradient(135deg,rgba(124,58,237,0.7),rgba(88,28,135,0.5));color:#e4d9f0;box-shadow:0 4px 20px rgba(124,58,237,0.2),inset 0 1px 0 rgba(255,255,255,0.1)}
 .btn-primary:hover{background:linear-gradient(135deg,rgba(139,92,246,0.8),rgba(124,58,237,0.6));box-shadow:0 6px 28px rgba(124,58,237,0.35),inset 0 1px 0 rgba(255,255,255,0.12);transform:translateY(-1px)}
 .btn-primary:disabled{background:rgba(75,85,99,0.3);border-color:rgba(255,255,255,0.05);color:#6b7280;cursor:not-allowed;transform:none;box-shadow:none}
 .btn-secondary{background:rgba(255,255,255,0.04);color:#c4b5fd;border-color:rgba(167,139,250,0.15);box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)}
 .btn-secondary:hover{background:rgba(255,255,255,0.08);border-color:rgba(167,139,250,0.3)}
-.card{background:rgba(255,255,255,0.04);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-radius:20px;padding:24px;margin-top:20px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 8px 32px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.05)}
+.card{background:rgba(255,255,255,0.04);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-radius:20px;padding:24px;margin-top:20px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 8px 32px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.05);animation:cardIn .35s ease backwards;transition:background .3s,border-color .3s,box-shadow .3s,transform .3s}
+.card:hover{background:rgba(255,255,255,0.06);border-color:rgba(167,139,250,0.25);box-shadow:0 12px 40px rgba(0,0,0,0.3),0 0 24px rgba(124,58,237,0.08),inset 0 1px 0 rgba(255,255,255,0.07);transform:translateY(-2px)}
 .card-header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
 .card-close{background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px;padding:4px 8px;border-radius:8px;transition:all .2s;flex-shrink:0;line-height:1;margin-left:auto}
 .card-close:hover{color:#fca5a5;background:rgba(239,68,68,0.1)}
-.cover-wrap{width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.06)}
+.cover-wrap{width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(88,28,135,0.3));display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.06)}
 .cover-wrap img{width:100%;height:100%;object-fit:cover}
-.cover-wrap .placeholder{font-size:28px;opacity:.3}
+.cover-wrap .placeholder{display:flex;opacity:.35;color:#a78bfa}
 .meta-info{flex:1;min-width:0}
 .meta-info .title{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e4d9f0}
 .meta-info .artist{font-size:14px;color:#a78bfa;margin-top:2px}
@@ -39,7 +50,8 @@ h1{text-align:center;font-weight:600;font-size:28px;margin-bottom:8px;background
 .detail-grid .label{color:#6b7280}
 .detail-grid .value{color:#c4b5fd;text-align:right;font-weight:500}
 .actions{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
-.actions .btn{flex:1;text-align:center;min-width:120px}
+.actions .btn{flex:1;text-align:center;min-width:120px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.actions .btn svg{flex-shrink:0}
 .progress-wrap{margin-top:16px;display:none}
 .progress-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
 .progress-bar-fill{height:100%;background:linear-gradient(90deg,#a78bfa,#7c3aed);width:0%;transition:width .3s;border-radius:4px;box-shadow:0 0 12px rgba(124,58,237,0.4)}
@@ -55,22 +67,65 @@ h1{text-align:center;font-weight:600;font-size:28px;margin-bottom:8px;background
 .form-input::placeholder{color:#4b5563}
 .floating-batch{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:10px;padding:12px 20px;background:rgba(15,10,26,0.8);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.08);border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04);align-items:center;animation:fadeIn .3s ease}
 .floating-batch .batch-info{color:#6b7280;font-size:13px;margin:0;white-space:nowrap}
+.toolbar{position:fixed;top:0;left:0;right:0;z-index:90;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 24px;background:rgba(13,10,22,0.55);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.06);box-shadow:0 4px 24px rgba(0,0,0,0.25)}
+.toolbar-brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:#e4d9f0}
+.toolbar-logo{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,rgba(124,58,237,0.5),rgba(88,28,135,0.4));color:#c4b5fd;box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),0 4px 12px rgba(124,58,237,0.25)}
+.toolbar-stats{font-size:13px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toolbar-stats b{color:#c4b5fd;font-weight:600}
+.toast-container{position:fixed;top:70px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:min(360px,calc(100vw - 40px))}
+.toast{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-radius:14px;background:rgba(24,18,38,0.92);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.45);font-size:13px;line-height:1.5;color:#e4d9f0;word-break:break-all;animation:toastIn .3s ease;pointer-events:auto}
+.toast .toast-ico{flex-shrink:0;margin-top:1px;color:#a78bfa}
+.toast.error{border-color:rgba(239,68,68,0.35);box-shadow:0 8px 32px rgba(239,68,68,0.15)}
+.toast.error .toast-ico{color:#fca5a5}
+.toast.success{border-color:rgba(34,197,94,0.35);box-shadow:0 8px 32px rgba(34,197,94,0.12)}
+.toast.success .toast-ico{color:#86efac}
+.toast.hide{animation:toastOut .3s ease forwards}
+.empty-state{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:56px 24px;border:1.5px dashed rgba(167,139,250,0.25);border-radius:20px;background:rgba(255,255,255,0.02);margin-top:20px;color:#6b7280}
+.empty-state .empty-icon{display:flex;margin-bottom:6px;opacity:.4;color:#a78bfa}
+.empty-state .empty-title{font-size:15px;font-weight:500;color:#c4b5fd}
+.empty-state .empty-hint{font-size:13px}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateX(24px)}}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(167,139,250,0.25);border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:rgba(167,139,250,0.45);border:2px solid transparent;background-clip:padding-box}
+::selection{background:rgba(124,58,237,0.5);color:#fff}
+.btn:focus-visible,.form-input:focus-visible{outline:2px solid rgba(167,139,250,0.5);outline-offset:2px}
 @keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 footer{text-align:center;color:#4b5563;font-size:12px;margin-top:40px;padding:20px;position:relative;z-index:1}
 footer a{color:#6b7280}
 </style>
 </head>
 <body>
+<div id="toastContainer" class="toast-container"></div>
+<header class="toolbar">
+  <div class="toolbar-brand">
+    <span class="toolbar-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </span>
+    NCM &#x5DE5;&#x5177;
+  </div>
+  <div class="toolbar-stats" id="toolbarStats">&#x62D6;&#x62FD;&#x6587;&#x4EF6;&#x5F00;&#x59CB;</div>
+</header>
 <div class="container">
 
   <h1>NCM &#x5DE5;&#x5177;</h1>
   <p class="subtitle">&#x7F51;&#x6613;&#x4E91;&#x97F3;&#x4E50; .ncm &#x6587;&#x4EF6;&#x89E3;&#x5BC6; / &#x52A0;&#x5BC6;</p>
 
   <div class="drop-zone" id="dropZone">
-    <div class="drop-zone-icon">&#9835;</div>
+    <div class="drop-zone-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </div>
     <p>&#x62D6;&#x62FD; .ncm &#x6587;&#x4EF6;&#x89E3;&#x5BC6;&#xFF0C;&#x6216; MP3/FLAC/OGG/WAV &#x52A0;&#x5BC6;</p>
-    <p class="hint">&#x652F;&#x6301;&#x6279;&#x91CF;&#x5904;&#x7406;&#xFF0C;&#x81EA;&#x52A8;&#x8BC6;&#x522B;&#x6587;&#x4EF6;&#x7C7B;&#x578B;</p>
+    <p class="hint">&#x652F;&#x6301;&#x6279;&#x91CF;&#x5904;&#x7406;&#xFF0C;&#x6587;&#x4EF6;&#x5939;&#x8BF7;&#x7528;&#x4E0B;&#x65B9;&#x201C;&#x9009;&#x62E9;&#x6587;&#x4EF6;&#x5939;&#x201D;&#x6309;&#x94AE;</p>
+  </div>
+  <div class="drop-btns">
+    <button type="button" class="btn btn-secondary" id="pickFileBtn">&#x9009;&#x62E9;&#x6587;&#x4EF6;</button>
+    <button type="button" class="btn btn-secondary" id="pickFolderBtn">&#x9009;&#x62E9;&#x6587;&#x4EF6;&#x5939;</button>
     <input type="file" id="fileInput" accept=".ncm,.mp3,.flac,.ogg,.wav" multiple hidden>
+    <input type="file" id="folderInput" webkitdirectory multiple hidden>
   </div>
 
   <div id="filesContainer" class="files-grid"></div>
@@ -90,7 +145,6 @@ footer a{color:#6b7280}
 
   <footer>
     <p>&#x6240;&#x6709;&#x64CD;&#x4F5C;&#x5728;&#x672C;&#x5730;&#x6D4F;&#x89C8;&#x5668;&#x4E2D;&#x5B8C;&#x6210;&#xFF0C;&#x6587;&#x4EF6;&#x4E0D;&#x4F1A;&#x4E0A;&#x4F20;&#x5230;&#x670D;&#x52A1;&#x5668;&#x3002;</p>
-    <p>&#x7B97;&#x6CD5;&#x53C2;&#x8003;&#xFF1A;<a href="https://github.com/Johnserf-Seed/ncm2mp3" target="_blank">ncm2mp3</a> &middot; <a href="https://github.com/anonymous5l/ncmdump" target="_blank">ncmdump</a></p>
   </footer>
 </div>
 
@@ -101,6 +155,24 @@ footer a{color:#6b7280}
 const CORE_KEY = new Uint8Array([0x68,0x7A,0x48,0x52,0x41,0x6D,0x73,0x6F,0x35,0x6B,0x49,0x6E,0x62,0x61,0x78,0x57]);
 const META_KEY = new Uint8Array([0x23,0x31,0x34,0x6C,0x6A,0x6B,0x5F,0x21,0x5C,0x5D,0x26,0x30,0x55,0x3C,0x27,0x28]);
 const MAGIC = new Uint8Array([0x43,0x54,0x45,0x4E,0x46,0x44,0x41,0x4D]);
+
+const ICO = {
+  music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
+  x: '<path d="M18 6L6 18M6 6l12 12"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+  check: '<path d="M20 6L9 17l-5-5"/>',
+  error: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'
+};
+
+function svgIcon(body, size) {
+  size = size || 14;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+}
 
 function readU32(d, o) {
   return (d[o]|d[o+1]<<8|d[o+2]<<16|d[o+3]<<24)>>>0;
@@ -320,6 +392,13 @@ function pkcs7Pad(data, bs) {
   return r;
 }
 
+function unpadPkcs7(d) {
+  if (!d || d.length === 0) return d;
+  const last = d[d.length - 1];
+  if (last >= 1 && last <= 16 && last <= d.length) return d.slice(0, d.length - last);
+  return d;
+}
+
 function generateRC4Key() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let s = '';
@@ -381,16 +460,15 @@ function extractMetaFromAudio(data, fileName) {
 
 function parseID3v2(data) {
   if (data[0] !== 0x49 || data[1] !== 0x44 || data[2] !== 0x33) return null;
-  const syncSafe = (data[6] & 0x80) === 0;
-  const size = syncSafe
-    ? ((data[6] & 0x7f) << 21) | ((data[7] & 0x7f) << 14) | ((data[8] & 0x7f) << 7) | (data[9] & 0x7f)
-    : (data[6] << 21) | (data[7] << 14) | (data[8] << 7) | data[9];
+  const v24 = data[3] === 4;
+  const size = ((data[6] & 0x7f) << 21) | ((data[7] & 0x7f) << 14) | ((data[8] & 0x7f) << 7) | (data[9] & 0x7f);
   let off = 10, end = off + size;
   const meta = {};
   while (off + 10 <= end) {
     const id = String.fromCharCode(data[off], data[off+1], data[off+2], data[off+3]);
-    let frameSize = (data[off+4] << 24) | (data[off+5] << 16) | (data[off+6] << 8) | data[off+7];
-    if (!syncSafe) frameSize >>>= 0;
+    let frameSize = v24
+      ? ((data[off+4] & 0x7f) << 21) | ((data[off+5] & 0x7f) << 14) | ((data[off+6] & 0x7f) << 7) | (data[off+7] & 0x7f)
+      : ((data[off+4] << 24) | (data[off+5] << 16) | (data[off+6] << 8) | data[off+7]) >>> 0;
     if (frameSize < 1) { off += 10; continue; }
     if (off + 10 + frameSize > end) break;
     const flags = (data[off+8] << 8) | data[off+9];
@@ -486,8 +564,7 @@ function parseNCM(data) {
   const keyData = data.slice(off, off + keyLen); off += keyLen;
   const keyXor = xorBytes(keyData, 0x64);
   const coreDec = aesEcbDecrypt(CORE_KEY, keyXor);
-  const keyPad = coreDec[coreDec.length - 1];
-  const keyPlain = (keyPad > 0 && keyPad <= 16) ? coreDec.slice(0, -keyPad) : coreDec;
+  const keyPlain = unpadPkcs7(coreDec);
   const rc4Key = keyPlain.slice(17);
 
   const metaLen = readU32(data, off); off += 4;
@@ -508,12 +585,14 @@ function parseNCM(data) {
     const metaBytes = new Uint8Array(metaRaw.length);
     for (let i = 0; i < metaRaw.length; i++) metaBytes[i] = metaRaw.charCodeAt(i);
     const metaDec = aesEcbDecrypt(META_KEY, metaBytes);
-    const padLen = metaDec[metaDec.length - 1];
-    const metaPad = (padLen > 0 && padLen < 16) ? metaDec.slice(0, -padLen) : metaDec;
+    const metaPad = unpadPkcs7(metaDec);
     const metaDecoded = new TextDecoder().decode(metaPad);
     try {
-      const colonIdx = metaDecoded.indexOf(':');
-      const jsonPart = metaDecoded.substring(colonIdx + 1);
+      const firstBrace = metaDecoded.indexOf('{');
+      const lastBrace = metaDecoded.lastIndexOf('}');
+      const jsonPart = (firstBrace >= 0 && lastBrace > firstBrace)
+        ? metaDecoded.substring(firstBrace, lastBrace + 1)
+        : metaDecoded;
       metaObj = JSON.parse(jsonPart);
     } catch (e) {
       throw new Error('Meta parse failed: ' + e.message);
@@ -573,17 +652,33 @@ function detectFormat(audio) {
   return 'unknown';
 }
 
+function detectCoverFormat(d) {
+  if (!d || d.length < 4) return { mime: 'application/octet-stream', ext: 'bin' };
+  if (d[0] === 0xFF && d[1] === 0xD8) return { mime: 'image/jpeg', ext: 'jpg' };
+  if (d[0] === 0x89 && d[1] === 0x50 && d[2] === 0x4E && d[3] === 0x47) return { mime: 'image/png', ext: 'png' };
+  if (d[0] === 0x47 && d[1] === 0x49 && d[2] === 0x46) return { mime: 'image/gif', ext: 'gif' };
+  if (d[0] === 0x42 && d[1] === 0x4D) return { mime: 'image/bmp', ext: 'bmp' };
+  return { mime: 'application/octet-stream', ext: 'bin' };
+}
+
 function getMetaValue(meta, key) {
   if (!meta) return '';
   return (meta[key] || meta['music.' + key] || meta['dj.' + key] || '').toString();
 }
 
 let allFiles = [];
+let activePreview = null;
 
 function formatSize(n) {
   if (n < 1024) return n + ' B';
   if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
   return (n / 1048576).toFixed(1) + ' MB';
+}
+
+function formatDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  return m + ':' + String(s % 60).padStart(2, '0');
 }
 
 function renderFileCard(f, index) {
@@ -600,10 +695,10 @@ function renderFileCard(f, index) {
   const coverImg = document.createElement('img');
   const coverPl = document.createElement('span');
   coverPl.className = 'placeholder';
-  coverPl.textContent = '?';
+  coverPl.innerHTML = svgIcon(ICO.image, 30);
   if (f.cover) {
     if (f._coverUrl) URL.revokeObjectURL(f._coverUrl);
-    const blob = new Blob([f.cover], { type: ('image/png') });
+    const blob = new Blob([f.cover], { type: detectCoverFormat(f.cover).mime });
     f._coverUrl = URL.createObjectURL(blob);
     coverImg.src = f._coverUrl;
     cw.appendChild(coverImg);
@@ -620,7 +715,7 @@ function renderFileCard(f, index) {
     function setCover(data) {
       if (f._coverUrl) URL.revokeObjectURL(f._coverUrl);
       f.cover = data;
-      const blob = new Blob([f.cover], { type: 'image/png' });
+      const blob = new Blob([f.cover], { type: detectCoverFormat(f.cover).mime });
       f._coverUrl = URL.createObjectURL(blob);
       coverImg.src = f._coverUrl;
       cw.innerHTML = '';
@@ -640,6 +735,7 @@ function renderFileCard(f, index) {
     cw.addEventListener('dragleave', function() { cw.style.borderColor = ''; });
     cw.addEventListener('drop', function(e) {
       e.preventDefault();
+      e.stopPropagation();
       cw.style.borderColor = '';
       const file = e.dataTransfer.files[0];
       if (!file || !file.type.startsWith('image/')) return;
@@ -684,7 +780,7 @@ function renderFileCard(f, index) {
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'card-close';
-  closeBtn.innerHTML = '&#10005;';
+  closeBtn.innerHTML = svgIcon(ICO.x, 13);
   closeBtn.title = '移除';
   closeBtn.addEventListener('click', function() { removeCard(index); });
   header.appendChild(closeBtn);
@@ -704,6 +800,13 @@ function renderFileCard(f, index) {
     addRow('格式', f.format.toUpperCase());
     addRow('大小', formatSize(f.audio.length));
     if (f.cover) addRow('封面', formatSize(f.cover.length));
+    if (f.meta) {
+      if (Number(f.meta.duration) > 0) addRow('时长', formatDuration(Number(f.meta.duration)));
+      if (Number(f.meta.bitrate) > 0) addRow('码率', Math.round(Number(f.meta.bitrate) / 1000) + ' kbps');
+      if (f.meta.musicId !== undefined && f.meta.musicId !== null && String(f.meta.musicId) !== '' && String(f.meta.musicId) !== '0') {
+        addRow('音乐ID', String(f.meta.musicId));
+      }
+    }
   }
   div.appendChild(dg);
 
@@ -712,18 +815,118 @@ function renderFileCard(f, index) {
   if (isEncrypt) {
     const encBtn = document.createElement('button');
     encBtn.className = 'btn btn-primary';
-    encBtn.textContent = '加密';
+    encBtn.innerHTML = svgIcon(ICO.lock, 14) + ' 加密';
     encBtn.addEventListener('click', function() { encryptSingle(index); });
     act.appendChild(encBtn);
   } else {
+    const pr = document.createElement('div');
+    pr.className = 'preview-row';
+    pr.style.display = 'none';
+    const pbar = document.createElement('div');
+    pbar.className = 'preview-bar';
+    const pfill = document.createElement('div');
+    pfill.className = 'preview-bar-fill';
+    const pthumb = document.createElement('div');
+    pthumb.className = 'preview-bar-thumb';
+    let preview = null;
+    var dragging = false;
+    function seekToEvent(e) {
+      if (!preview || preview.readyState < 2) return;
+      var rect = pbar.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var percent = Math.min(Math.max(x / rect.width, 0), 1);
+      pfill.style.width = percent * 100 + '%';
+      pthumb.style.left = percent * 100 + '%';
+      preview.currentTime = percent * preview.duration;
+      updatePreview();
+    }
+    pbar.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      if (!preview) { /* create audio if needed */
+        var mime = (f.ext === 'mp3') ? 'audio/mpeg' : (f.ext === 'm4a' ? 'audio/mp4' : 'audio/' + f.ext);
+        preview = new Audio(URL.createObjectURL(new Blob([f.audio], { type: mime })));
+        preview.addEventListener('timeupdate', updatePreview);
+        preview.addEventListener('ended', function() { playLabel(); updatePreview(); });
+        preview.addEventListener('pause', function() { playLabel(); updatePreview(); });
+        pr.style.display = 'flex';
+      }
+      dragging = true;
+      pfill.style.transition = 'none';
+      pthumb.style.transition = 'none';
+      seekToEvent(e);
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (dragging) seekToEvent(e);
+    });
+    document.addEventListener('mouseup', function() {
+      if (dragging) {
+        dragging = false;
+        pfill.style.transition = '';
+        pthumb.style.transition = '';
+      }
+    });
+    const ptime = document.createElement('span');
+    ptime.className = 'preview-time';
+    ptime.textContent = '0:00 / 0:00';
+    pbar.appendChild(pfill);
+    pbar.appendChild(pthumb);
+    pr.appendChild(pbar);
+    pr.appendChild(ptime);
+    div.appendChild(pr);
+
+    const playBtn = document.createElement('button');
+    playBtn.className = 'btn btn-secondary';
+    playBtn.innerHTML = svgIcon(ICO.play, 14) + ' 试听';
+    const playLabel = function() { playBtn.innerHTML = svgIcon(ICO.play, 14) + ' 试听'; };
+    const stopLabel = function() { playBtn.innerHTML = svgIcon(ICO.pause, 14) + ' 停止'; };
+const pfmt = function(t) {
+  if (!isFinite(t) || isNaN(t)) return '0:00';
+  const m = Math.floor(t / 60);
+  const s = Math.floor(t % 60);
+  return m + ':' + String(s).padStart(2, '0');
+};
+const updatePreview = function() {
+  const cur = preview && isFinite(preview.currentTime) ? preview.currentTime : 0;
+  const dur = (preview && isFinite(preview.duration) && preview.duration > 0) ? preview.duration : 0;
+  const pct = dur > 0 && cur > 0 ? (cur / dur) * 100 : 0;
+  pfill.style.width = pct + '%';
+  pthumb.style.left = pct + '%';
+  ptime.textContent = pfmt(cur) + ' / ' + pfmt(dur);
+};
+    playBtn.addEventListener('click', function() {
+      if (preview && !preview.paused) {
+        preview.pause();
+        preview.currentTime = 0;
+        playLabel();
+        updatePreview();
+        activePreview = null;
+        return;
+      }
+      if (!preview) {
+        const mime = (f.ext === 'mp3') ? 'audio/mpeg' : (f.ext === 'm4a' ? 'audio/mp4' : 'audio/' + f.ext);
+        const blob = new Blob([f.audio], { type: mime });
+        const url = URL.createObjectURL(blob);
+        preview = new Audio(url);
+        preview.addEventListener('loadedmetadata', function() { pr.style.display = 'flex'; updatePreview(); });
+        preview.addEventListener('timeupdate', updatePreview);
+        preview.addEventListener('ended', function() { playLabel(); updatePreview(); activePreview = null; });
+        preview.addEventListener('pause', function() { playLabel(); updatePreview(); });
+      }
+      activePreview = { audio: preview, index: index, playLabel: playLabel, updatePreview: updatePreview, pr: pr, pfill: pfill, pthumb: pthumb, ptime: ptime };
+      pr.style.display = 'flex';
+      stopLabel();
+      const p = preview.play();
+      if (p && p.catch) p.catch(function() { playLabel(); });
+    });
+    act.appendChild(playBtn);
     const dlBtn = document.createElement('button');
     dlBtn.className = 'btn btn-primary';
-    dlBtn.textContent = '下载 ' + f.ext.toUpperCase();
+    dlBtn.innerHTML = svgIcon(ICO.download, 14) + ' 下载 ' + f.ext.toUpperCase();
     dlBtn.addEventListener('click', function() { downloadFile(f, false); });
     act.appendChild(dlBtn);
     const coverBtn = document.createElement('button');
     coverBtn.className = 'btn btn-secondary';
-    coverBtn.textContent = '保存封面';
+    coverBtn.innerHTML = svgIcon(ICO.image, 14) + ' 保存封面';
     if (f.cover) {
       coverBtn.addEventListener('click', function() { downloadCover(f, true); });
     } else {
@@ -759,7 +962,7 @@ function downloadCover(f) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = sanitized + '.png';
+  a.download = sanitized + '.' + detectCoverFormat(f.cover).ext;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -817,8 +1020,7 @@ function processAll() {
 function clearAll() {
   for (var i = 0; i < allFiles.length; i++) { if (allFiles[i]._coverUrl) URL.revokeObjectURL(allFiles[i]._coverUrl); }
   allFiles = [];
-  document.getElementById('filesContainer').innerHTML = '';
-  document.getElementById('batchActions').style.display = 'none';
+  renderAllCards();
   document.getElementById('fullProgress').style.display = 'none';
 }
 
@@ -830,55 +1032,121 @@ function removeCard(index) {
 
 function updateBatchInfo() {
   document.getElementById('batchInfo').textContent = '共 ' + allFiles.length + ' 个文件';
+  var total = 0;
+  for (var i = 0; i < allFiles.length; i++) {
+    total += (allFiles[i].type === 'encrypt')
+      ? (allFiles[i].data ? allFiles[i].data.length : 0)
+      : allFiles[i].audio.length;
+  }
+  var t = document.getElementById('toolbarStats');
+  if (allFiles.length === 0) {
+    t.textContent = '\u62D6\u62FD\u6587\u4EF6\u5F00\u59CB';
+  } else {
+    t.innerHTML = '<b>' + allFiles.length + '</b> \u4E2A\u6587\u4EF6 \u00B7 ' + formatSize(total);
+  }
 }
 
 function showStatus(type, msg) {
+  const box = document.getElementById('toastContainer');
   const el = document.createElement('div');
-  el.className = 'status-msg ' + type;
-  el.textContent = msg;
-  document.getElementById('filesContainer').appendChild(el);
-  setTimeout(function() { el.remove(); }, 5000);
+  el.className = 'toast ' + type;
+  const icon = type === 'error' ? ICO.error : type === 'success' ? ICO.check : ICO.info;
+  el.innerHTML = '<span class="toast-ico">' + svgIcon(icon, 15) + '</span><span class="toast-msg"></span>';
+  el.querySelector('.toast-msg').textContent = msg;
+  box.appendChild(el);
+  setTimeout(function() {
+    el.classList.add('hide');
+    setTimeout(function() { el.remove(); }, 300);
+  }, 4500);
+}
+
+function handleFile(file) {
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.ncm')) {
+    processFile(file);
+  } else if (name.endsWith('.mp3') || name.endsWith('.flac') || name.endsWith('.ogg') || name.endsWith('.wav')) {
+    addEncryptFile(file);
+  }
 }
 
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
+const folderInput = document.getElementById('folderInput');
+folderInput.setAttribute('webkitdirectory', '');
+folderInput.webkitdirectory = true;
+const OK_EXT = /\.(ncm|mp3|flac|ogg|wav)$/i;
 
-dropZone.addEventListener('click', function() { fileInput.click(); });
+let lastDropTime = 0;
+
+function handleDrop(e) {
+  const now = Date.now();
+  if (now - lastDropTime < 300) return;
+  lastDropTime = now;
+  if (e.preventDefault) e.preventDefault();
+  if (e.stopPropagation) e.stopPropagation();
+  dropZone.classList.remove('dragover');
+
+  let accepted = 0;
+  const files = e.dataTransfer && e.dataTransfer.files;
+
+  if (files && files.length) {
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      if (OK_EXT.test(f.name || '')) accepted++;
+      handleFile(f);
+    }
+  }
+
+  if (accepted > 0) {
+    showStatus('success', '正在处理 ' + accepted + ' 个文件');
+  } else if (files && files.length) {
+    showStatus('info', '未找到支持的音频文件（.ncm/.mp3/.flac/.ogg/.wav）');
+  } else {
+    showStatus('info', '未检测到文件');
+  }
+}
+
+window.addEventListener('dragover', function(e) { if (e.preventDefault) e.preventDefault(); }, false);
+window.addEventListener('drop', handleDrop, false);
 
 dropZone.addEventListener('dragover', function(e) {
-  e.preventDefault();
+  if (e.preventDefault) e.preventDefault();
   dropZone.classList.add('dragover');
-});
+}, false);
 
 dropZone.addEventListener('dragleave', function() {
   dropZone.classList.remove('dragover');
-});
+}, false);
 
-dropZone.addEventListener('drop', function(e) {
-  e.preventDefault();
-  dropZone.classList.remove('dragover');
-  const files = e.dataTransfer.files;
-  for (let i = 0; i < files.length; i++) {
-    const name = files[i].name.toLowerCase();
-    if (name.endsWith('.ncm')) {
-      processFile(files[i]);
-    } else if (name.endsWith('.mp3') || name.endsWith('.flac') || name.endsWith('.ogg') || name.endsWith('.wav')) {
-      addEncryptFile(files[i]);
-    }
+dropZone.addEventListener('click', function() { fileInput.click(); });
+
+document.getElementById('pickFileBtn').addEventListener('click', function() { fileInput.click(); });
+
+folderInput.setAttribute('webkitdirectory', '');
+folderInput.webkitdirectory = true;
+
+document.getElementById('pickFolderBtn').addEventListener('click', function() {
+  if (folderInput.webkitdirectory) {
+    folderInput.click();
+  } else {
+    showStatus('error', '当前浏览器不支持选择文件夹，请直接拖入文件夹');
   }
 });
 
 fileInput.addEventListener('change', function() {
-  for (let i = 0; i < fileInput.files.length; i++) {
-    const name = fileInput.files[i].name.toLowerCase();
-    if (name.endsWith('.ncm')) {
-      processFile(fileInput.files[i]);
-    } else if (name.endsWith('.mp3') || name.endsWith('.flac') || name.endsWith('.ogg') || name.endsWith('.wav')) {
-      addEncryptFile(fileInput.files[i]);
-    }
-  }
+  for (let i = 0; i < fileInput.files.length; i++) handleFile(fileInput.files[i]);
   fileInput.value = '';
 });
+
+folderInput.addEventListener('change', function() {
+  for (let i = 0; i < folderInput.files.length; i++) handleFile(folderInput.files[i]);
+  folderInput.value = '';
+});
+
+window.addEventListener('error', function(ev) {
+  var msg = (ev && ev.message) ? String(ev.message) : '未知脚本错误';
+  try { showStatus('error', '脚本错误: ' + msg); } catch (err2) {}
+}, false);
 
 document.getElementById('convertAllBtn').addEventListener('click', processAll);
 document.getElementById('clearAllBtn').addEventListener('click', clearAll);
@@ -902,8 +1170,20 @@ function snapshotEncryptInputs() {
 
 function renderAllCards() {
   snapshotEncryptInputs();
+  if (activePreview && activePreview.audio) {
+    activePreview.audio.pause();
+    activePreview = null;
+  }
   var container = document.getElementById('filesContainer');
   container.innerHTML = '';
+  if (allFiles.length === 0) {
+    var es = document.createElement('div');
+    es.className = 'empty-state';
+    es.innerHTML = '<div class="empty-icon">' + svgIcon(ICO.music, 36) + '</div>' +
+      '<p class="empty-title">&#x6682;&#x65E0;&#x6587;&#x4EF6;</p>' +
+      '<p class="empty-hint">&#x62D6;&#x62FD; .ncm &#x6216;&#x97F3;&#x9891;&#x6587;&#x4EF6;&#x5230;&#x4E0A;&#x65B9;&#x533A;&#x57DF;&#xFF0C;&#x6216;&#x70B9;&#x51FB;&#x4E0A;&#x4F20;&#x5F00;&#x59CB;&#x5904;&#x7406;</p>';
+    container.appendChild(es);
+  }
   for (var i = 0; i < allFiles.length; i++) container.appendChild(renderFileCard(allFiles[i], i));
   if (hasDecryptFiles()) {
     document.getElementById('batchActions').style.display = 'block';

@@ -79,6 +79,8 @@ export default [
         { text: 'mitruvian-van', link: '../../../aplovestudio/mitruvian-van-18-edition/index.html', target: '_self', },
         { text: 'please-touch-tiffany', link: '../../../aplovestudio/please-touch-tiffany/index.html', target: '_self', },
         { text: 'wifes-bedroom', link: '../../../aplovestudio/wifes-bedroom/index.html', target: '_self', },
+        { text: 'plapping-simulator', link: '../../../plapping-simulator/index.html', target: '_self', },
+        { text: 'sakissluttystriptease', link: '../../../sakissluttystriptease/index.html', target: '_self', },
       ],
     },    
 ];

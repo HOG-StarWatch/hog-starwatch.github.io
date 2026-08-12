@@ -1,0 +1,8 @@
+0 "Welcome back, Saki. HR has been watching."
+1 "Ready to play? Fix the contract to please her."
+2 OPTION "Let's start." -> 10
+3 OPTION "Not in the mood." -> 20
+10 "Great. Click the sigils in the right order."
+11 "Each correct choice will change her mood..."
+12 "But a wrong move might anger her."
+20 "Maybe next time then."
