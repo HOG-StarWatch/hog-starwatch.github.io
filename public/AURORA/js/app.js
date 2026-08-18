@@ -80,14 +80,18 @@ Object.assign(app, {
             navigator.clipboard.writeText(text).then(() => {
                 this.showToast('已复制到剪贴板');
             }).catch(() => {
-                el.select();
-                document.execCommand('copy');
-                this.showToast('已复制到剪贴板');
+                this._copyFallback(el, text);
             });
             return;
         }
-        el.select();
-        document.execCommand('copy');
+        this._copyFallback(el, text);
+    },
+
+    _copyFallback: function(el, text) {
+        try {
+            el.select();
+            document.execCommand('copy');
+        } catch (e) {}
         this.showToast('已复制到剪贴板');
     },
 
@@ -170,75 +174,12 @@ Object.assign(app, {
         const out = document.getElementById(`${prefix}-output`);
         if (out) out.value = '';
         if (prefix === 'text') {
-            document.getElementById('text-in-stat').innerText = '0 字符';
-            document.getElementById('text-out-stat').innerText = '0 字符';
+            const statIn = document.getElementById('text-in-stat');
+            const statOut = document.getElementById('text-out-stat');
+            if (statIn) statIn.innerText = '0 字符';
+            if (statOut) statOut.innerText = '0 字符';
         }
         this.showToast('已清空');
-    },
-
-    migrateInlineEvents: function(root) {
-        if (!root || !root.querySelectorAll) return;
-        const map = this._inlineHandlerMap || (this._inlineHandlerMap = new WeakMap());
-        root.querySelectorAll('*').forEach(el => {
-            if (!el.attributes) return;
-            const attrs = Array.from(el.attributes);
-            attrs.forEach(attr => {
-                const name = String(attr.name || '').toLowerCase();
-                if (!name.startsWith('on')) return;
-                const code = String(attr.value || '');
-                const type = name.slice(2);
-                if (!type) {
-                    el.removeAttribute(attr.name);
-                    return;
-                }
-                let handler;
-                try {
-                    handler = new Function('event', code);
-                } catch (e) {
-                    el.removeAttribute(attr.name);
-                    return;
-                }
-                let set = map.get(el);
-                if (!set) {
-                    set = new Set();
-                    map.set(el, set);
-                }
-                const key = name + '::' + code;
-                if (set.has(key)) {
-                    el.removeAttribute(attr.name);
-                    return;
-                }
-                if (name === 'onclick') {
-                    const m = code.match(/switchTab\((['"])(.+?)\1/);
-                    if (m && !el.dataset.target) el.dataset.target = m[2];
-                }
-                set.add(key);
-                el.addEventListener(type, function(event) {
-                    return handler.call(el, event);
-                });
-                el.removeAttribute(attr.name);
-            });
-        });
-    },
-
-    bindInlineEvents: function() {
-        const run = () => this.migrateInlineEvents(document);
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', run, { once: true });
-        } else {
-            run();
-        }
-        if (this._inlineObserver) return;
-        this._inlineObserver = new MutationObserver(muts => {
-            muts.forEach(m => {
-                m.addedNodes.forEach(node => {
-                    if (node && node.nodeType === 1) this.migrateInlineEvents(node);
-                });
-            });
-        });
-        try {
-            this._inlineObserver.observe(document.documentElement, { childList: true, subtree: true });
-        } catch (e) {}
     },
 
     notifyParentResize: function(delay = 100) {
@@ -249,13 +190,106 @@ Object.assign(app, {
     }
 });
 
-window.app = app;
-try { app.bindInlineEvents(); } catch (e) {}
-try {
-    window.addEventListener('beforeunload', function() {
-        app.releaseAllWorkers();
-        if (app._inlineObserver) {
-            try { app._inlineObserver.disconnect(); } catch (e) {}
+/* ============================================================
+ * data-action delegation
+ * Replaces inline onclick attributes: <button data-action="...">
+ * Resolves against a per-tool registry (app.action) first, then
+ * falls back to global functions (window[name]).
+ * Handlers receive (element, event); parameters come from data-* attrs.
+ * ============================================================ */
+(function () {
+    const actions = new Map();
+
+    app.action = function (name, fn) {
+        actions.set(name, fn);
+    };
+    app.runAction = function (name, el, evt) {
+        const fn = actions.get(name) || window[name];
+        if (typeof fn !== 'function') return false;
+        fn.call(el, el, evt);
+        return true;
+    };
+
+    // ----- built-in actions -----
+    app.action('copy', (el) => {
+        const id = el.dataset.copyTarget || el.dataset.target;
+        if (id) app.copy(id);
+    });
+    app.action('clear', (el) => {
+        const prefix = el.dataset.clearPrefix || el.dataset.prefix;
+        if (prefix) app.clear(prefix);
+    });
+    app.action('file-click', (el) => {
+        const id = el.dataset.fileTarget || el.dataset.target;
+        const input = id && document.getElementById(id);
+        if (input) input.click();
+    });
+    app.action('window-open', (el) => {
+        const url = el.dataset.href || el.href;
+        if (url) window.open(url, '_blank');
+    });
+
+    document.addEventListener('click', (e) => {
+        const target = e.target;
+        const trigger = target && target.closest ? target.closest('[data-action]') : null;
+        if (!trigger) return;
+        const name = trigger.dataset.action;
+        if (!name) return;
+        const handled = app.runAction(name, trigger, e);
+        if (handled && trigger.tagName === 'A') e.preventDefault();
+    }, true);
+
+    // change / input events (selects, ranges, text inputs)
+    ['change', 'input'].forEach(evtType => {
+        document.addEventListener(evtType, (e) => {
+            const target = e.target;
+            const trigger = target && target.closest ? target.closest('[data-action]') : null;
+            if (!trigger) return;
+            const name = trigger.dataset.action;
+            if (!name) return;
+            app.runAction(name, trigger, e);
+        }, true);
+    });
+})();
+
+/* ============================================================
+ * aurora-theme channel
+ * The shell pushes theme vars / meltdown CSS into tool documents
+ * via postMessage (no cross-frame DOM poking).
+ * ============================================================ */
+(function () {
+    function rebroadcast(data) {
+        // nested tool iframes (e.g. image-fun -> image-phantom) get the same payload
+        document.querySelectorAll('iframe').forEach(f => {
+            try {
+                if (f.contentWindow) f.contentWindow.postMessage(data, '*');
+            } catch (e) {}
+        });
+    }
+    window.addEventListener('message', (e) => {
+        const d = e.data;
+        if (!d || typeof d !== 'object') return;
+        if (d.type === 'aurora-theme' && d.vars) {
+            const root = document.documentElement;
+            for (const [key, value] of Object.entries(d.vars)) {
+                root.style.setProperty(key, value);
+            }
+            rebroadcast(d);
+        } else if (d.type === 'aurora-meltdown' && typeof d.css === 'string') {
+            let el = document.getElementById('meltdown-style');
+            if (!el) {
+                el = document.createElement('style');
+                el.id = 'meltdown-style';
+                document.head.appendChild(el);
+            }
+            el.textContent = d.css;
+            rebroadcast(d);
+        } else if (d.type === 'aurora-meltdown-remove') {
+            const el = document.getElementById('meltdown-style');
+            if (el) el.remove();
+            rebroadcast(d);
         }
     });
-} catch (e) {}
+})();
+
+window.app = app;

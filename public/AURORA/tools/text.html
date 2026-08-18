@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文本处理</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/theme-boot.js"></script>
+    <script src="../js/ui/icons.js"></script>
 </head>
 <body class="scroll-content">
     <div id="workspace-basic" class="workspace">
@@ -12,7 +14,7 @@
             <div class="panel-header">
                 <div class="panel-title">输入</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon" onclick="app.clear('text'); textTool.updateStats();">清空</button>
+                    <button class="btn btn-icon" data-action="text.clear">清空</button>
                 </div>
             </div>
             <textarea id="text-input" placeholder="在此输入文本..." style="min-height: 220px;"></textarea>
@@ -28,27 +30,27 @@
         <div class="toolbar">
             <div class="tool-group">
                 <div class="group-label">基础</div>
-                <button class="btn" onclick="textTool.process('upper')">全大写 <span>AA</span></button>
-                <button class="btn" onclick="textTool.process('lower')">全小写 <span>aa</span></button>
-                <button class="btn" onclick="textTool.process('title')">首字母大写 <span>Aa</span></button>
+                <button class="btn" data-action="text.process" data-mode="upper">全大写 <span>AA</span></button>
+                <button class="btn" data-action="text.process" data-mode="lower">全小写 <span>aa</span></button>
+                <button class="btn" data-action="text.process" data-mode="title">首字母大写 <span>Aa</span></button>
             </div>
             <div class="tool-group">
                 <div class="group-label">格式</div>
-                <button class="btn" onclick="textTool.process('trim')">去首尾空 <span>|__|</span></button>
-                <button class="btn" onclick="textTool.process('nospace')">去所有空格 <span>><</span></button>
-                <button class="btn" onclick="textTool.process('oneline')">合并为一行 <span>—</span></button>
+                <button class="btn" data-action="text.process" data-mode="trim">去首尾空 <span>|__|</span></button>
+                <button class="btn" data-action="text.process" data-mode="nospace">去所有空格 <span>><</span></button>
+                <button class="btn" data-action="text.process" data-mode="oneline">合并为一行 <span>—</span></button>
             </div>
             <div class="tool-group">
                 <div class="group-label">高级</div>
-                <button class="btn" onclick="textTool.process('snake')">Snake Case</button>
-                <button class="btn" onclick="textTool.process('camel')">Camel Case</button>
-                <button class="btn" onclick="textTool.process('dedupe')">去重行</button>
-                <button class="btn" onclick="textTool.process('sort')">排序</button>
+                <button class="btn" data-action="text.process" data-mode="snake">Snake Case</button>
+                <button class="btn" data-action="text.process" data-mode="camel">Camel Case</button>
+                <button class="btn" data-action="text.process" data-mode="dedupe">去重行</button>
+                <button class="btn" data-action="text.process" data-mode="sort">排序</button>
             </div>
             <div class="tool-group">
                 <div class="group-label">中文</div>
-                <button class="btn" onclick="textTool.process('sc2tc')">转繁体</button>
-                <button class="btn" onclick="textTool.process('tc2sc')">转简体</button>
+                <button class="btn" data-action="text.process" data-mode="sc2tc">转繁体</button>
+                <button class="btn" data-action="text.process" data-mode="tc2sc">转简体</button>
             </div>
         </div>
 
@@ -56,7 +58,7 @@
             <div class="panel-header">
                 <div class="panel-title">结果 <span class="stat-badge" id="text-out-stat">0 字符</span></div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon btn-secondary" onclick="app.copy('text-output')">复制</button>
+                    <button class="btn btn-icon btn-secondary" data-action="copy" data-copy-target="text-output">复制</button>
                 </div>
             </div>
             <textarea id="text-output" readonly placeholder="处理结果..." style="min-height: 220px;"></textarea>
@@ -66,64 +68,6 @@
     <div id="toast" class="toast">操作成功</div>
     <script src="../js/app.js"></script>
     <script src="../js/loader.js"></script>
-    <script>
-        const textTool = {
-            updateStats: function() {
-                const val = document.getElementById('text-input').value;
-                document.getElementById('stat-total').innerText = val.length;
-                document.getElementById('stat-nospace').innerText = val.replace(/\s/g, '').length;
-                document.getElementById('stat-words').innerText = (val.match(/[a-zA-Z]+/g) || []).length;
-                document.getElementById('stat-cn').innerText = (val.match(/[\u4e00-\u9fa5]/g) || []).length;
-                document.getElementById('stat-lines').innerText = val ? val.split(/\r\n|\r|\n/).length : 0;
-            },
-
-            process: function(action) {
-                const input = document.getElementById('text-input').value;
-                let res = input;
-
-                switch(action) {
-                    case 'upper': res = input.toUpperCase(); break;
-                    case 'lower': res = input.toLowerCase(); break;
-                    case 'title': res = input.replace(/\b\w/g, c => c.toUpperCase()); break;
-                    case 'trim': res = input.trim(); break;
-                    case 'nospace': res = input.replace(/\s+/g, ''); break;
-                    case 'oneline': res = input.replace(/[\r\n]+/g, ' '); break;
-                    case 'snake': res = input.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, '').replace(/\s+/g, '_'); break;
-                    case 'camel': res = input.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase()); break;
-                    case 'dedupe': res = [...new Set(input.split('\n'))].join('\n'); break;
-                    case 'sort': res = input.split('\n').sort().join('\n'); break;
-                    case 'sc2tc':
-                        app.showToast('正在加载组件...', 'info');
-                        ResourceLoader.loadDeps('@opencc').then(() => {
-                            const sc2tc = OpenCC.Converter({ from: 'cn', to: 'tw' });
-                            const res = sc2tc(input);
-                            document.getElementById('text-output').value = res;
-                            document.getElementById('text-out-stat').innerText = `${res.length} 字符`;
-                            app.showToast('转换完成');
-                        });
-                        return;
-                    case 'tc2sc':
-                        app.showToast('正在加载组件...', 'info');
-                        ResourceLoader.loadDeps('@opencc').then(() => {
-                            const tc2sc = OpenCC.Converter({ from: 'tw', to: 'cn' });
-                            const res = tc2sc(input);
-                            document.getElementById('text-output').value = res;
-                            document.getElementById('text-out-stat').innerText = `${res.length} 字符`;
-                            app.showToast('转换完成');
-                        });
-                        return;
-                }
-
-                document.getElementById('text-output').value = res;
-                document.getElementById('text-out-stat').innerText = `${res.length} 字符`;
-            }
-        };
-
-        // Init
-        const txtInput = document.getElementById('text-input');
-        if(txtInput) {
-            txtInput.addEventListener('input', () => textTool.updateStats());
-        }
-    </script>
+    <script src="../js/tools/text.js"></script>
 </body>
 </html>

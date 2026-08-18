@@ -1,4 +1,4 @@
-请使用网页小工具栏[Base64储存文件](../File64.html)工具解码获取tdl_gui.py
+请使用网页小工具栏[Base64储存文件](/web-tools/File64.html)工具解码获取tdl_gui.py
 ```json
 {
   "version": "1.1",

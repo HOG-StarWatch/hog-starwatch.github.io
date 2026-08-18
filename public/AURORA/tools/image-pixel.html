@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图片像素化</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/theme-boot.js"></script>
+    <script src="../js/ui/icons.js"></script>
 </head>
 <body class="scroll-content">
     <div class="layout-sidebar">
@@ -14,7 +16,7 @@
             
             <div class="control-group">
                 <div class="upload-area" id="uploadArea">
-                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-dim);"></i>
+                    <i class="fas fa-cloud-upload-alt text-dim"></i>
                     <div style="font-size: 0.8rem;">点击或拖放图片</div>
                     <input type="file" id="imageUpload" accept="image/*" hidden>
                 </div>
@@ -23,19 +25,19 @@
             <div class="control-group">
                 <label style="display:flex; justify-content:space-between; margin-bottom:8px;">
                     <span><i class="fas fa-th-large" style="margin-right:5px; color:var(--primary);"></i> 像素块大小</span>
-                    <span id="pixelValue" style="color:var(--secondary)">8px</span>
+                    <span id="pixelValue" class="text-secondary">8px</span>
                 </label>
-                <input type="range" id="pixelSize" min="2" max="50" value="8" style="width:100%">
+                <input type="range" id="pixelSize" min="2" max="50" value="8" class="w-100">
             </div>
             
             <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px;">
-                <button id="processBtn" class="btn btn-primary" style="justify-content:center" disabled>
+                <button id="processBtn" class="btn btn-primary btn-center" disabled>
                     <i class="fas fa-magic"></i> 处理图片
                 </button>
-                <button id="downloadBtn" class="btn btn-success" style="justify-content:center" disabled>
+                <button id="downloadBtn" class="btn btn-success btn-center" disabled>
                     <i class="fas fa-download"></i> 下载图片
                 </button>
-                <button id="resetBtn" class="btn btn-secondary" style="justify-content:center">
+                <button id="resetBtn" class="btn btn-secondary btn-center">
                     <i class="fas fa-redo"></i> 重置
                 </button>
             </div>
@@ -43,7 +45,7 @@
         
         <!-- Preview -->
         <div class="preview-area">
-            <div id="previewPlaceholder" style="text-align:center; color:var(--text-dim);">
+            <div id="previewPlaceholder" style="text-align:center" class="text-dim">
                 <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
                 <div>请上传图片并点击处理</div>
             </div>
@@ -54,124 +56,6 @@
 
     <script src="../js/loader.js"></script>
     <script src="../js/app.js"></script>
-    <script>
-        ResourceLoader.loadDeps('@icons');
-        const imageUpload = document.getElementById('imageUpload');
-        const uploadArea = document.getElementById('uploadArea');
-        const pixelSize = document.getElementById('pixelSize');
-        const pixelValue = document.getElementById('pixelValue');
-        const processBtn = document.getElementById('processBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const originalCanvas = document.getElementById('originalCanvas');
-        const pixelatedCanvas = document.getElementById('pixelatedCanvas');
-        const previewPlaceholder = document.getElementById('previewPlaceholder');
-        
-        let originalCtx = originalCanvas.getContext('2d');
-        let pixelatedCtx = pixelatedCanvas.getContext('2d');
-        let originalImage = null;
-        let pixelSizeValue = 8;
-
-        pixelSize.addEventListener('input', (e) => {
-            pixelSizeValue = parseInt(e.target.value);
-            pixelValue.innerText = pixelSizeValue + 'px';
-        });
-
-        uploadArea.addEventListener('click', () => imageUpload.click());
-        imageUpload.addEventListener('change', (e) => handleFile(e.target.files[0]));
-
-        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
-        uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border)'; });
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = 'var(--border)';
-            handleFile(e.dataTransfer.files[0]);
-        });
-
-        function handleFile(file) {
-            if(!file || !file.type.startsWith('image/')) return;
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    originalImage = img;
-                    processBtn.disabled = false;
-                    
-                    // Show original
-                    resizeCanvas(originalCanvas, img.width, img.height);
-                    originalCtx.drawImage(img, 0, 0);
-                    
-                    previewPlaceholder.style.display = 'none';
-                    originalCanvas.style.display = 'block';
-                    pixelatedCanvas.style.display = 'none';
-                    downloadBtn.disabled = true;
-
-                    if (app && app.showToast) app.showToast('图片已加载');
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function resizeCanvas(canvas, w, h) {
-            canvas.width = w;
-            canvas.height = h;
-        }
-
-        processBtn.addEventListener('click', () => {
-            if(!originalImage) return;
-            
-            const w = originalImage.width;
-            const h = originalImage.height;
-            
-            resizeCanvas(pixelatedCanvas, w, h);
-            
-            // Pixelation Logic
-            // Draw small
-            const scaledW = Math.ceil(w / pixelSizeValue);
-            const scaledH = Math.ceil(h / pixelSizeValue);
-            
-            // We can use a temporary canvas to scale down then up
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = scaledW;
-            tempCanvas.height = scaledH;
-            const tempCtx = tempCanvas.getContext('2d');
-            
-            // Turn off smoothing
-            tempCtx.imageSmoothingEnabled = false;
-            pixelatedCtx.imageSmoothingEnabled = false;
-            
-            tempCtx.drawImage(originalImage, 0, 0, scaledW, scaledH);
-            
-            // Draw back to large canvas
-            pixelatedCtx.drawImage(tempCanvas, 0, 0, scaledW, scaledH, 0, 0, w, h);
-            
-            originalCanvas.style.display = 'none';
-            pixelatedCanvas.style.display = 'block';
-            downloadBtn.disabled = false;
-            if (app && app.showToast) app.showToast('处理完成');
-        });
-
-        downloadBtn.addEventListener('click', () => {
-            const link = document.createElement('a');
-            link.download = 'pixelated.png';
-            link.href = pixelatedCanvas.toDataURL();
-            link.click();
-        });
-
-        resetBtn.addEventListener('click', () => {
-            originalImage = null;
-            processBtn.disabled = true;
-            downloadBtn.disabled = true;
-            originalCanvas.style.display = 'none';
-            pixelatedCanvas.style.display = 'none';
-            previewPlaceholder.style.display = 'block';
-            imageUpload.value = '';
-            
-            // Reset border
-            uploadArea.style.borderColor = 'var(--border)';
-        });
-    </script>
+    <script src="../js/tools/image-pixel.js"></script>
 </body>
 </html>

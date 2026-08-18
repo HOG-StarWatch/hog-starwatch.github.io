@@ -1,0 +1,61 @@
+/* Extracted from image-glitch.html (refactor script). Tool-specific styles only. */
+
+/* === image-glitch.html — inline style block 1 === */
+/* Tool-specific overrides only */
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .slider-row label { flex: 1; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0; }
+        .slider-row span { font-size: 0.85rem; color: var(--secondary); width: 30px; text-align: right; }
+        
+        .control-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .frame-item {
+            position: relative;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            background: #000;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .frame-item:hover {
+            border-color: var(--text-dim);
+        }
+        .frame-item.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.3);
+        }
+        .frame-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: space-between;
+            padding: 2px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .frame-item:hover .frame-overlay, .frame-item.active .frame-overlay {
+            opacity: 1;
+        }
+        
+        /* Fix for scrolling issue */
+        .layout-sidebar .controls {
+            max-height: 100%;
+            overflow-y: auto;
+        }

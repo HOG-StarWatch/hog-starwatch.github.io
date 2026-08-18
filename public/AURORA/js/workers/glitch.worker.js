@@ -4,7 +4,7 @@
  */
 
 self.onmessage = function(e) {
-    const { type, imageData, config } = e.data;
+    const { type, requestId, imageData, config } = e.data;
 
     if (type === 'process') {
         try {
@@ -62,10 +62,10 @@ self.onmessage = function(e) {
                 }
             }
 
-            self.postMessage({ type: 'complete', imageData: imageData }, [imageData.data.buffer]);
+            self.postMessage({ type: 'success', requestId, imageData: imageData }, [imageData.data.buffer]);
 
         } catch (error) {
-            self.postMessage({ type: 'error', error: error.message });
+            self.postMessage({ type: 'error', requestId, error: error.message });
         }
     }
 };

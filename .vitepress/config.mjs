@@ -5,13 +5,13 @@ import sidebar from './sidebar.mjs';
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   // base: "/docs-demo/",
-  head:[["link", { rel: "icon", href: "/SixStar_P.png" }]],
+  head:[["link", { rel: "icon", href: "/assets/SixStar_P.png" }]],
   title: "HOG-StarWatch的主页",
   description: "HOG-StarWatch",
   lastUpdated: true,
   themeConfig: {
         // https://vitepress.dev/reference/default-theme-config
-    logo: '/SixStar_P.png',
+    logo: '/assets/SixStar_P.png',
 
     lastUpdated: {
       text: '最后更新于：',

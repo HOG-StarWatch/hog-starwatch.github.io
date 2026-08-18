@@ -1,0 +1,491 @@
+/* Extracted from image-convert.html (refactor script). Tool logic. */
+
+        function switchSubTab(tab, el) {
+            document.querySelectorAll('.sub-tab-group .sub-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            
+            document.getElementById('tab-format').style.display = tab === 'format' ? 'block' : 'none';
+            document.getElementById('tab-resize').style.display = tab === 'resize' ? 'block' : 'none';
+            document.getElementById('tab-base64').style.display = tab === 'base64' ? 'block' : 'none';
+        }
+
+        const resizeTool = {
+            currentFile: null,
+            currentImage: null,
+            ratio: 1,
+            blobUrl: null,
+
+            init: function() {
+                const dropZone = document.getElementById('resize-drop-zone');
+                if (!dropZone) return;
+
+                // Unified click/drag-drop upload zone (Ui.fileDrop)
+                if (window.Ui && Ui.fileDrop) {
+                    Ui.fileDrop(dropZone, {
+                        inputId: 'resize-file-input',
+                        accept: 'image/*',
+                        multiple: false,
+                        dragClass: 'drag-over',
+                        onFiles: (files) => { if (files[0]) this.handleFile(files[0]); }
+                    });
+                }
+
+                // Input Listeners
+                const widthInput = document.getElementById('resize-width');
+                const heightInput = document.getElementById('resize-height');
+                const lockInput = document.getElementById('resize-lock');
+                const formatSelect = document.getElementById('resize-format');
+                const qualityInput = document.getElementById('resize-quality');
+
+                widthInput.addEventListener('input', () => {
+                    if (lockInput.checked && widthInput.value && this.ratio) {
+                        heightInput.value = Math.round(Number(widthInput.value) / this.ratio);
+                    }
+                });
+
+                heightInput.addEventListener('input', () => {
+                    if (lockInput.checked && heightInput.value && this.ratio) {
+                        widthInput.value = Math.round(Number(heightInput.value) * this.ratio);
+                    }
+                });
+                
+                // Show quality slider for JPEG/WEBP
+                formatSelect.addEventListener('change', () => {
+                    const fmt = formatSelect.value;
+                    const wrapper = document.getElementById('resize-quality-wrapper');
+                    if (fmt === 'image/jpeg' || fmt === 'image/webp') {
+                        wrapper.style.display = 'block';
+                    } else {
+                        wrapper.style.display = 'none';
+                    }
+                });
+
+                qualityInput.addEventListener('input', (e) => {
+                    document.getElementById('resize-quality-val').textContent = e.target.value;
+                });
+            },
+
+            handleFile: function(file) {
+                if (!file || !file.type.startsWith('image/')) {
+                    app.showToast('请上传有效的图片文件', 'error');
+                    return;
+                }
+
+                this.currentFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.currentImage = new Image();
+                    this.currentImage.onload = () => {
+                        this.ratio = this.currentImage.naturalWidth / this.currentImage.naturalHeight;
+                        
+                        // Update UI
+                        document.getElementById('original-size').textContent = `${this.currentImage.naturalWidth} x ${this.currentImage.naturalHeight}`;
+                        document.getElementById('resize-width').value = this.currentImage.naturalWidth;
+                        document.getElementById('resize-height').value = this.currentImage.naturalHeight;
+                        
+                        // Reset preview
+                        const container = document.getElementById('resize-preview-container');
+                        container.innerHTML = '';
+                        const img = this.currentImage.cloneNode();
+                        img.style.maxWidth = '100%';
+                        img.style.maxHeight = '100%';
+                        container.appendChild(img);
+                        
+                        document.getElementById('resize-workspace').style.display = 'block';
+                        document.getElementById('resize-download-btn').disabled = true; // Need to process first
+                    };
+                    this.currentImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            process: function() {
+                if (!this.currentImage) return;
+
+                const width = parseInt(document.getElementById('resize-width').value);
+                const height = parseInt(document.getElementById('resize-height').value);
+                const format = document.getElementById('resize-format').value;
+                const quality = parseFloat(document.getElementById('resize-quality').value);
+
+                if (!width || !height) {
+                    app.showToast('请输入有效的宽高', 'error');
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                
+                // Handle transparent background for JPEG
+                if (format === 'image/jpeg') {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, width, height);
+                }
+                
+                ctx.drawImage(this.currentImage, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        app.showToast('处理失败', 'error');
+                        return;
+                    }
+                    
+                    if (this.blobUrl) URL.revokeObjectURL(this.blobUrl);
+                    this.blobUrl = URL.createObjectURL(blob);
+                    
+                    const container = document.getElementById('resize-preview-container');
+                    container.innerHTML = '';
+                    const img = new Image();
+                    img.src = this.blobUrl;
+                    img.style.maxWidth = '100%';
+                    img.style.maxHeight = '100%';
+                    container.appendChild(img);
+                    
+                    document.getElementById('resize-download-btn').disabled = false;
+                    app.showToast('图片已生成');
+                }, format, quality);
+            },
+
+            download: function() {
+                if (!this.blobUrl) return;
+                
+                const format = document.getElementById('resize-format').value;
+                const ext = format.split('/')[1];
+                const link = document.createElement('a');
+                link.download = `resized_${Date.now()}.${ext}`;
+                link.href = this.blobUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+        const base64Tool = {
+            currentMode: 'toBase64',
+            currentMime: '',
+            
+            init: function() {
+                const dropZone = document.getElementById('b64-drop-zone');
+                if(!dropZone) return;
+
+                // Unified click/drag-drop upload zone (Ui.fileDrop)
+                if (window.Ui && Ui.fileDrop) {
+                    Ui.fileDrop(dropZone, {
+                        inputId: 'b64-file-input',
+                        accept: 'image/*',
+                        multiple: false,
+                        dragClass: 'drag-over',
+                        onFiles: (files) => { if (files[0]) this.handleFile(files[0]); }
+                    });
+                }
+            },
+            
+            switchMode: function(mode) {
+                this.currentMode = mode;
+                // Update buttons
+                const btn1 = document.getElementById('mode-to-base64');
+                const btn2 = document.getElementById('mode-to-image');
+                
+                if (mode === 'toBase64') {
+                    btn1.classList.add('active');
+                    btn2.classList.remove('active');
+                } else {
+                    btn1.classList.remove('active');
+                    btn2.classList.add('active');
+                }
+                
+                // Animate views
+                const view1 = document.getElementById('view-to-base64');
+                const view2 = document.getElementById('view-to-image');
+                
+                // Fade out current visible one? No, just toggle classes
+                // Simple fade switch
+                if (mode === 'toBase64') {
+                    view2.classList.add('hidden');
+                    setTimeout(() => {
+                        view2.style.display = 'none';
+                        view1.style.display = 'block';
+                        // Small delay to allow display block to apply before removing opacity class
+                        requestAnimationFrame(() => {
+                            view1.classList.remove('hidden');
+                        });
+                    }, 300); // Match CSS transition time
+                } else {
+                    view1.classList.add('hidden');
+                    setTimeout(() => {
+                        view1.style.display = 'none';
+                        view2.style.display = 'block';
+                        requestAnimationFrame(() => {
+                            view2.classList.remove('hidden');
+                        });
+                    }, 300);
+                }
+            },
+
+            handleFile: function(file) {
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const res = e.target.result;
+                    document.getElementById('b64-output').value = res;
+                    document.getElementById('b64-preview-img').src = res;
+                    document.getElementById('b64-file-info').innerText = `${file.name} (${(file.size/1024).toFixed(2)} KB)`;
+                    document.getElementById('b64-result-area').style.display = 'block';
+                    this.currentMime = res.split(';')[0].split(':')[1];
+                };
+                reader.readAsDataURL(file);
+            },
+
+            copyAsCSS: function() {
+                const b64 = document.getElementById('b64-output').value;
+                if(!b64) return;
+                const css = `background-image: url('${b64}');`;
+                this.copyToClip(css, 'CSS 已复制');
+            },
+
+            copyAsHTML: function() {
+                const b64 = document.getElementById('b64-output').value;
+                if(!b64) return;
+                const html = `<img src="${b64}" alt="image" />`;
+                this.copyToClip(html, 'HTML img 标签已复制');
+            },
+
+            decode: function() {
+                let val = document.getElementById('b64-input').value.trim();
+                if(!val) {
+                    app.showToast('请输入 Base64 字符串');
+                    return;
+                }
+                
+                // Add prefix if missing (simple check)
+                if(!val.startsWith('data:image')) {
+                    // Try to guess or just let browser handle it if it's raw base64
+                    // If raw base64, we might need to know mime type or try common ones
+                    // For now, assume user might paste full Data URI or raw.
+                    // If raw, try adding png prefix as fallback
+                    if(!val.includes(',')) {
+                         val = 'data:image/png;base64,' + val;
+                    }
+                }
+
+                const img = document.getElementById('decode-preview-img');
+                img.src = val;
+                img.onload = () => {
+                    document.getElementById('decode-result-area').style.display = 'block';
+                };
+                img.onerror = () => {
+                    app.showToast('解码失败，无效的 Base64 图片数据');
+                };
+            },
+
+            download: function() {
+                const src = document.getElementById('decode-preview-img').src;
+                if(!src) return;
+                
+                const link = document.createElement('a');
+                link.download = 'decoded-image.png'; // Default name
+                link.href = src;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            },
+            
+            copyToClip: function(text, msg) {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                app.showToast(msg);
+            }
+        };
+
+        const imgConverter = {
+            files: [],
+            
+            init: function() {
+                const dropZone = document.getElementById('drop-zone');
+                const fileInput = document.getElementById('file-input');
+
+                if(!dropZone) return;
+
+                // Unified click/drag-drop upload zone (Ui.fileDrop)
+                if (window.Ui && Ui.fileDrop) {
+                    Ui.fileDrop(dropZone, {
+                        inputId: 'file-input',
+                        accept: 'image/*',
+                        multiple: true,
+                        dragClass: 'drag-over',
+                        onFiles: (files) => { this.handleFiles(files); }
+                    });
+                } else if (fileInput) {
+                    // Fallback: input-only
+                    fileInput.addEventListener('change', (e) => {
+                        this.handleFiles(e.target.files);
+                        fileInput.value = '';
+                    });
+                }
+            },
+
+            handleFiles: function(fileList) {
+                Array.from(fileList).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const fileObj = {
+                                id: Date.now() + Math.random().toString(16).slice(2),
+                                file: file,
+                                src: e.target.result,
+                                convertedSrc: null
+                            };
+                            this.files.push(fileObj);
+                            this.renderItem(fileObj);
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        app.showToast('跳过非图片文件: ' + file.name, 'error');
+                    }
+                });
+            },
+
+            renderItem: function(item) {
+                const list = document.getElementById('preview-list');
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.id = 'item-' + item.id;
+                div.innerHTML = `
+                    <img src="${item.src}" class="preview-img">
+                    <div class="file-info" title="${item.file.name}">${item.file.name}</div>
+                    <div class="file-info">${(item.file.size / 1024).toFixed(1)} KB</div>
+                    <div class="action-row">
+                        <span class="status-badge" style="font-size: 0.8rem; color: var(--secondary);">待转换</span>
+                        <button class="btn btn-icon btn-sm" onclick="imgConverter.removeItem('${item.id}')" title="删除" aria-label="删除">${Ui.icon ? Ui.icon('close') : ''}</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            },
+
+            removeItem: function(id) {
+                this.files = this.files.filter(f => f.id !== id);
+                document.getElementById('item-' + id).remove();
+            },
+
+            clearAll: function() {
+                this.files = [];
+                document.getElementById('preview-list').innerHTML = '';
+            },
+
+            convertAll: function() {
+                if(this.files.length === 0) {
+                    app.showToast('请先上传图片');
+                    return;
+                }
+
+                const format = document.getElementById('target-format').value;
+                const quality = parseFloat(document.getElementById('target-quality').value);
+                
+                let processed = 0;
+                
+                this.files.forEach(item => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Handle transparent background for JPEG (fill white)
+                        if (format === 'image/jpeg') {
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        }
+                        
+                        ctx.drawImage(img, 0, 0);
+                        
+                        const convertedDataUrl = canvas.toDataURL(format, quality);
+                        item.convertedSrc = convertedDataUrl;
+                        
+                        // Update UI
+                        const el = document.getElementById('item-' + item.id);
+                        if (el) {
+                            const ext = format.split('/')[1];
+                            const badge = el.querySelector('.status-badge');
+                            badge.innerText = '已完成';
+                            badge.style.color = 'var(--primary)';
+                            
+                            // Add download button if not exists
+                            if (!el.querySelector('.btn-download')) {
+                                const btn = document.createElement('button');
+                                btn.className = 'btn btn-secondary btn-sm btn-download';
+                                btn.innerText = `下载 .${ext}`;
+                                btn.style.marginTop = '0.5rem';
+                                btn.onclick = () => this.download(item, ext);
+                                el.appendChild(btn);
+                            }
+                        }
+                        
+                        processed++;
+                        if(processed === this.files.length) {
+                            app.showToast('所有图片转换完成');
+                        }
+                    };
+                    img.src = item.src;
+                });
+            },
+            
+            download: function(item, ext) {
+                const link = document.createElement('a');
+                link.download = item.file.name.split('.')[0] + '_converted.' + ext;
+                link.href = item.convertedSrc;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+        // Initialize
+        window.onload = function() {
+             imgConverter.init();
+             base64Tool.init();
+             resizeTool.init();
+        };
+    
+if (window.app && app.action) {
+    app.action('switchSubTab', function (el) {
+        switchSubTab(el.dataset.mode, el);
+    });
+    app.action('convert.updateQualityLabel', function (el) {
+        document.getElementById('quality-val').innerText = Math.round(el.value * 100) + '%';
+    });
+    app.action('imgConverter.convertAll', function () {
+        imgConverter.convertAll();
+    });
+    app.action('imgConverter.clearAll', function () {
+        imgConverter.clearAll();
+    });
+    app.action('resizeTool.process', function () {
+        resizeTool.process();
+    });
+    app.action('resizeTool.download', function () {
+        resizeTool.download();
+    });
+    app.action('base64Tool.switchMode', function (el) {
+        base64Tool.switchMode(el.dataset.mode);
+    });
+    app.action('base64Tool.copyAsCSS', function () {
+        base64Tool.copyAsCSS();
+    });
+    app.action('base64Tool.copyAsHTML', function () {
+        base64Tool.copyAsHTML();
+    });
+    app.action('base64Tool.decode', function () {
+        base64Tool.decode();
+    });
+    app.action('base64Tool.download', function () {
+        base64Tool.download();
+    });
+}
+    

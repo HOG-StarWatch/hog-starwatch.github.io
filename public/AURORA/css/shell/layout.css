@@ -1,0 +1,13 @@
+/* Extracted from index.html (refactor script). Shell section: layout. */
+body { overflow: hidden; }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            flex: 1;
+            display: block;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+        }

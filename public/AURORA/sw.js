@@ -1,93 +1,39 @@
-const CACHE_NAME = 'aurora-toolbox-v17';
+/* ============================================================
+ * Aurora Toolbox — Service Worker（无 CDN：全部资源同源本地）
+ *  - install:  预缓存 APP_SHELL + vendor（读 vendor/manifest.json）
+ *  - 工具偏好:  离线面板勾选工具 → 缓存其 html + 本地 css/js/worker（cacheToolGraph）
+ *  - prune:     只删除"未勾选工具"及其专属 js/css；共享/壳/vendor/worker 永不清
+ *  - fetch:     html 网络优先（失败回缓存）；其余同源 缓存优先 + 网络回填
+ * ============================================================ */
+const CACHE_NAME = 'aurora-toolbox-v21';
 const BASE_PATH = new URL('./', self.location).pathname;
 const TOOL_PATH = BASE_PATH.endsWith('/') ? `${BASE_PATH}tools/` : `${BASE_PATH}/tools/`;
-const LOADER_URL = BASE_PATH.endsWith('/') ? `${BASE_PATH}js/loader.js` : `${BASE_PATH}/js/loader.js`;
 
 const APP_SHELL = [
     './',
     './index.html',
     './css/style.css',
+    './css/shell/layout.css',
+    './css/shell/modals.css',
     './js/app.js',
+    './js/theme-boot.js',
     './js/loader.js',
     './js/perf-monitor.js',
+    './js/shell/core.js',
+    './js/shell/theme.js',
+    './js/shell/offline.js',
+    './js/shell/nav.js',
+    './js/ui/worker-rpc.js',
+    './js/ui/file-drop.js',
+    './js/ui/result-card.js',
+    './js/ui/icons.js',
+    './js/utils/canvas-utils.js',
     './favicon.svg',
     './tools/home.html'
 ];
 
-const EXTRA_CDN_KEY = './__offline_cdn_prefs__';
 const TOOL_PREFS_KEY = './__offline_tool_prefs__';
-let extraCdnLibs = new Set();
 let extraToolUrls = new Set();
-let dynamicLibs = [];
-
-async function extractLibsFromLoader() {
-    try {
-        const res = await fetch(LOADER_URL);
-        if (!res.ok) throw new Error('Failed to fetch loader');
-        const text = await res.text();
-
-        const libs = [];
-        const seenUrls = new Set();
-
-        const addUrl = (url) => {
-            if (url && url.startsWith('http') && !seenUrls.has(url)) {
-                seenUrls.add(url);
-                libs.push(url);
-            }
-        };
-
-        const libKeyPattern = /registry\s*=\s*\{([\s\S]*?)\n\s*\};/;
-        const libBlockMatch = text.match(libKeyPattern);
-        if (!libBlockMatch) {
-            throw new Error('Could not find registry block');
-        }
-        const libBlock = libBlockMatch[1];
-
-        const entryPattern = /'([a-z0-9-]+)':\s*\[([^\]]+)\]/gi;
-        let entryMatch;
-        while ((entryMatch = entryPattern.exec(libBlock)) !== null) {
-            const [, libName, sourcesStr] = entryMatch;
-            if (libName.startsWith('@') || libName === 'groups' || libName === 'loaded') continue;
-
-            const urlPattern = /['"](https?:\/\/[^'"]+)['"]/g;
-            let urlMatch;
-            while ((urlMatch = urlPattern.exec(sourcesStr)) !== null) {
-                addUrl(urlMatch[1]);
-            }
-        }
-
-        const groupPattern = /groups\s*:\s*\{([\s\S]*?)\n\s*\}/;
-        const groupBlockMatch = text.match(groupPattern);
-        if (groupBlockMatch) {
-            const groupBlock = groupBlockMatch[1];
-            const groupEntryPattern = /'@([a-z-]+)':\s*\[([^\]]+)\]/gi;
-            let groupEntry;
-            while ((groupEntry = groupEntryPattern.exec(groupBlock)) !== null) {
-                const [, groupName, depsStr] = groupEntry;
-                const depPattern = /'([a-z0-9-]+)'/g;
-                let depMatch;
-                while ((depMatch = depPattern.exec(depsStr)) !== null) {
-                    const dep = depMatch[1];
-                    const depSearchPattern = new RegExp(`'${dep}':\\s*\\[([^\\]]+)\\]`);
-                    const depBlockMatch = libBlock.match(depSearchPattern);
-                    if (depBlockMatch) {
-                        const urlsInDep = depBlockMatch[1].match(/['"](https?:\/\/[^'"]+)['"]/g) || [];
-                        urlsInDep.forEach(u => addUrl(u.replace(/['"]/g, '')));
-                    }
-                }
-            }
-        }
-
-        return libs;
-    } catch (e) {
-        console.warn('[ServiceWorker] Failed to extract libs from loader, using minimal set', e);
-        return [
-            'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
-        ];
-    }
-}
 
 function normalizeToolUrl(url) {
     try {
@@ -101,25 +47,11 @@ function normalizeToolUrl(url) {
     }
 }
 
-function normalizeCdnUrl(url) {
+function toolBaseName(htmlUrl) {
     try {
-        const abs = new URL(url, self.location.origin + BASE_PATH);
-        if (abs.origin === self.location.origin) return '';
-        if (abs.protocol !== 'https:' && abs.protocol !== 'http:') return '';
-        return abs.href;
-    } catch (e) {
-        return '';
-    }
-}
-
-async function loadExtraCdnPrefs() {
-    try {
-        const cache = await caches.open(CACHE_NAME);
-        const res = await cache.match(EXTRA_CDN_KEY);
-        if (!res) return;
-        const data = await res.json();
-        if (Array.isArray(data)) extraCdnLibs = new Set(data);
-    } catch (e) {}
+        const m = new URL(htmlUrl).pathname.match(/tools\/([\w][\w.-]*)\.html$/);
+        return m ? m[1] : '';
+    } catch (e) { return ''; }
 }
 
 async function loadToolPrefs() {
@@ -128,44 +60,125 @@ async function loadToolPrefs() {
         const res = await cache.match(TOOL_PREFS_KEY);
         if (!res) return;
         const data = await res.json();
-        if (Array.isArray(data)) {
-            extraToolUrls = new Set(data.map(normalizeToolUrl).filter(Boolean));
+        if (Array.isArray(data)) extraToolUrls = new Set(data.map(normalizeToolUrl).filter(Boolean));
+    } catch (e) {}
+}
+
+async function precacheVendor(cache) {
+    // Pre-cache every vendored library listed in vendor/manifest.json
+    try {
+        const manifestUrl = new URL('vendor/manifest.json', self.location.origin + BASE_PATH).href;
+        const res = await fetch(manifestUrl);
+        if (!res.ok) return;
+        const manifest = await res.json();
+        const base = new URL('./', self.location.origin + BASE_PATH).href;
+        for (const lib of (manifest.libs || [])) {
+            for (const f of (lib.files || [])) {
+                if (!f.localPath) continue;
+                try {
+                    const abs = new URL(f.localPath, base).href;
+                    const fres = await fetch(abs, { cache: 'reload' });
+                    if (fres && fres.ok) await cache.put(abs, fres);
+                } catch (e) {}
+            }
         }
+    } catch (e) {}
+}
+
+async function cacheToolGraph(cache, htmlUrl) {
+    // Cache a tool page's same-origin local assets (css/tools/x.css,
+    // js/tools/x.js, js/workers/*.worker.js, js/utils/*) so "select for
+    // offline" works even for tools never visited.
+    let res;
+    try { res = await fetch(htmlUrl, { cache: 'reload' }); } catch (e) { return; }
+    if (!res.ok) return;
+    try { await cache.put(htmlUrl, res.clone()); } catch (e) {}
+    const text = await res.text();
+    const refRe = /(?:src|href)="([^"]+)"/g;
+    const found = new Set();
+    for (const m of text.matchAll(refRe)) {
+        const u = m[1];
+        if (/^(?:https?:)?\/\//.test(u)) continue;
+        if (/^(?:data:|#|javascript:|mailto:)/.test(u)) continue;
+        try {
+            const abs = new URL(u.replace(/^\.\//, ''), htmlUrl).href;
+            if (new URL(abs).origin !== self.location.origin) continue;
+            if (/\.(?:js|mjs|css|json)$/.test(new URL(abs).pathname)) found.add(abs);
+        } catch (e) {}
+    }
+    for (const abs of found) {
+        try {
+            const r = await fetch(abs, { cache: 'reload' });
+            if (r && r.ok) await cache.put(abs, r);
+        } catch (e) {}
+    }
+}
+
+// Remove only deselected tools: their entry html + per-tool js/css assets.
+// Never touches shell, shared assets, vendor/, workers, utils, theme-data.
+async function pruneDeselectedTools(cache, keptToolNames) {
+    const keys = await cache.keys();
+    const assetRe = /(?:js|css)\/tools\/([\w][\w.-]*?)(?:__\d+)?\.(?:js|css)$/;
+    for (const req of keys) {
+        try {
+            const u = new URL(req.url);
+            if (u.origin !== self.location.origin) continue;
+            if (u.pathname.startsWith(TOOL_PATH) && u.pathname.endsWith('.html')) {
+                if (!keptToolNames.has(toolBaseName(u.href))) await cache.delete(req);
+                continue;
+            }
+            const m = u.pathname.match(assetRe);
+            if (m && !keptToolNames.has(m[1])) await cache.delete(req);
+        } catch (e) {}
+    }
+}
+
+async function cacheToolsAndGraph(cache, normalized) {
+    for (const url of normalized) {
+        try {
+            const res = await fetch(url, { cache: 'reload' });
+            if (res && res.ok) await cache.put(url, res);
+        } catch (e) {}
+        await cacheToolGraph(cache, url);
+    }
+}
+
+async function writeToolPrefs(cache, urls) {
+    try {
+        await cache.put(TOOL_PREFS_KEY, new Response(JSON.stringify(urls), {
+            headers: { 'Content-Type': 'application/json' }
+        }));
+    } catch (e) {}
+}
+
+async function notice(type) {
+    try {
+        const list = await clients.matchAll({ includeUncontrolled: true });
+        list.forEach((c) => c.postMessage({ type }));
     } catch (e) {}
 }
 
 self.addEventListener('install', event => {
     self.skipWaiting();
     event.waitUntil((async () => {
-        dynamicLibs = await extractLibsFromLoader();
-        try {
-            const cache = await caches.open(CACHE_NAME);
-            console.log('[ServiceWorker] Pre-caching App Shell');
-            for (const url of APP_SHELL) {
-                try {
-                    const abs = new URL(url, self.location.origin + BASE_PATH).href;
-                    const res = await fetch(abs, { cache: 'reload' });
-                    if (res && res.ok) await cache.put(abs, res);
-                } catch (e) {}
-            }
-        } catch (e) {}
+        const cache = await caches.open(CACHE_NAME);
+        for (const url of APP_SHELL) {
+            try {
+                const abs = new URL(url, self.location.origin + BASE_PATH).href;
+                const res = await fetch(abs, { cache: 'reload' });
+                if (res && res.ok) await cache.put(abs, res);
+            } catch (e) {}
+        }
+        await precacheVendor(cache);
     })());
 });
 
 self.addEventListener('activate', event => {
     event.waitUntil((async () => {
-        await caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        });
-        await loadExtraCdnPrefs();
+        await caches.keys().then(names => Promise.all(names.map(n => {
+            if (n !== CACHE_NAME) return caches.delete(n);
+        })));
         await loadToolPrefs();
-        dynamicLibs = await extractLibsFromLoader();
         await clients.claim();
     })());
 });
@@ -173,15 +186,28 @@ self.addEventListener('activate', event => {
 self.addEventListener('message', event => {
     const data = event.data || {};
 
+    const applyOffline = (urls, doneType) => event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_NAME);
+        const normalized = urls.map(normalizeToolUrl).filter(Boolean);
+        extraToolUrls = new Set(normalized);
+        await writeToolPrefs(cache, Array.from(normalized));
+        await cacheToolsAndGraph(cache, normalized);
+        await pruneDeselectedTools(cache, new Set(normalized.map(toolBaseName)));
+        if (doneType) await notice(doneType);
+    })());
+
+    if (data.type === 'OFFLINE_PREFS') {
+        applyOffline(data.urls || [], '');
+        return;
+    }
+    if (data.type === 'REFRESH_SELECTED') {
+        applyOffline(data.urls || [], 'REFRESH_DONE');
+        return;
+    }
     if (data.type === 'REFRESH_ALL_CACHED') {
         event.waitUntil((async () => {
-            dynamicLibs = await extractLibsFromLoader();
             const cache = await caches.open(CACHE_NAME);
-            const keepTools = new Set(Array.from(extraToolUrls));
-            const keepShell = new Set(APP_SHELL.map(u => {
-                try { return new URL(u, self.location.origin + BASE_PATH).href; } catch (e) { return ''; }
-            }).filter(Boolean));
-
+            await cacheToolsAndGraph(cache, Array.from(extraToolUrls));
             for (const url of APP_SHELL) {
                 try {
                     const abs = new URL(url, self.location.origin + BASE_PATH).href;
@@ -189,75 +215,16 @@ self.addEventListener('message', event => {
                     if (res && res.ok) await cache.put(abs, res);
                 } catch (e) {}
             }
-            for (const url of keepTools) {
-                try {
-                    const res = await fetch(url, { cache: 'reload' });
-                    if (res && (res.ok || res.type === 'opaque')) await cache.put(url, res);
-                } catch (e) {}
-            }
-            const cdnKeep = new Set(Array.from(extraCdnLibs));
-            for (const lib of cdnKeep) {
-                try {
-                    const res = await fetch(lib, { mode: 'no-cors' });
-                    if (res && (res.ok || res.type === 'opaque')) await cache.put(lib, res);
-                } catch (e) {}
-            }
-            const keys = await cache.keys();
-            for (const req of keys) {
-                try {
-                    const u = new URL(req.url);
-                    if (u.origin === self.location.origin) {
-                        if (u.pathname.startsWith(TOOL_PATH) && !keepTools.has(u.href)) {
-                            await cache.delete(req);
-                        } else if (!keepShell.has(u.href) && !keepTools.has(u.href)) {
-                            await cache.delete(req);
-                        }
-                        continue;
-                    }
-                    const keepCdn = cdnKeep.has(u.href);
-                    if (!keepCdn) await cache.delete(req);
-                } catch (e) {}
-            }
-            try {
-                const list = await clients.matchAll({ includeUncontrolled: true });
-                list.forEach(c => c.postMessage({ type: 'REFRESH_DONE' }));
-            } catch (e) {}
+            await precacheVendor(cache);
+            await pruneDeselectedTools(cache, new Set(Array.from(extraToolUrls).map(toolBaseName)));
+            await notice('REFRESH_DONE');
         })());
         return;
     }
-
-    if (data.type === 'REFRESH_SELECTED') {
-        const urls = Array.isArray(data.urls) ? data.urls : [];
-        const cdnUrls = Array.isArray(data.cdnUrls) ? data.cdnUrls : [];
-        const normalized = urls.map(normalizeToolUrl).filter(Boolean);
-        const cdnNormalized = cdnUrls.map(normalizeCdnUrl).filter(Boolean);
-        event.waitUntil((async () => {
-            const cache = await caches.open(CACHE_NAME);
-            for (const url of normalized) {
-                try {
-                    const res = await fetch(url, { cache: 'reload' });
-                    if (res && (res.ok || res.type === 'opaque')) await cache.put(url, res);
-                } catch (e) {}
-            }
-            for (const lib of cdnNormalized) {
-                try {
-                    const res = await fetch(lib, { mode: 'no-cors' });
-                    if (res && (res.ok || res.type === 'opaque')) await cache.put(lib, res);
-                } catch (e) {}
-            }
-            try {
-                const list = await clients.matchAll({ includeUncontrolled: true });
-                list.forEach(c => c.postMessage({ type: 'REFRESH_DONE' }));
-            } catch (e) {}
-        })());
-        return;
-    }
-
     if (data.type === 'PURGE_CACHE') {
         event.waitUntil((async () => {
             await caches.delete(CACHE_NAME);
             const cache = await caches.open(CACHE_NAME);
-            extraCdnLibs = new Set();
             extraToolUrls = new Set();
             for (const url of APP_SHELL) {
                 try {
@@ -266,45 +233,19 @@ self.addEventListener('message', event => {
                     if (res && res.ok) await cache.put(abs, res);
                 } catch (e) {}
             }
-            try {
-                await cache.put(EXTRA_CDN_KEY, new Response(JSON.stringify([]), {
-                    headers: { 'Content-Type': 'application/json' }
-                }));
-            } catch (e) {}
-            try {
-                await cache.put(TOOL_PREFS_KEY, new Response(JSON.stringify([]), {
-                    headers: { 'Content-Type': 'application/json' }
-                }));
-            } catch (e) {}
-            try {
-                const list = await clients.matchAll({ includeUncontrolled: true });
-                list.forEach(c => c.postMessage({ type: 'PURGE_DONE' }));
-            } catch (e) {}
+            await precacheVendor(cache);
+            await writeToolPrefs(cache, []);
+            await notice('PURGE_DONE');
         })());
         return;
     }
-
     if (data.type === 'REBUILD_CACHE') {
-        const urls = Array.isArray(data.urls) ? data.urls : [];
-        const cdnUrls = Array.isArray(data.cdnUrls) ? data.cdnUrls : [];
-        const normalized = urls.map(normalizeToolUrl).filter(Boolean);
-        const cdnNormalized = cdnUrls.map(normalizeCdnUrl).filter(Boolean);
         event.waitUntil((async () => {
             await caches.delete(CACHE_NAME);
             const cache = await caches.open(CACHE_NAME);
-            dynamicLibs = await extractLibsFromLoader();
-            extraCdnLibs = new Set(cdnNormalized);
+            const normalized = (data.urls || []).map(normalizeToolUrl).filter(Boolean);
             extraToolUrls = new Set(normalized);
-            try {
-                await cache.put(EXTRA_CDN_KEY, new Response(JSON.stringify(cdnNormalized), {
-                    headers: { 'Content-Type': 'application/json' }
-                }));
-            } catch (e) {}
-            try {
-                await cache.put(TOOL_PREFS_KEY, new Response(JSON.stringify(Array.from(extraToolUrls)), {
-                    headers: { 'Content-Type': 'application/json' }
-                }));
-            } catch (e) {}
+            await writeToolPrefs(cache, normalized);
             for (const url of APP_SHELL) {
                 try {
                     const abs = new URL(url, self.location.origin + BASE_PATH).href;
@@ -312,83 +253,22 @@ self.addEventListener('message', event => {
                     if (res && res.ok) await cache.put(abs, res);
                 } catch (e) {}
             }
-            try {
-                const list = await clients.matchAll({ includeUncontrolled: true });
-                list.forEach(c => c.postMessage({ type: 'REBUILD_DONE' }));
-            } catch (e) {}
+            await precacheVendor(cache);
+            await cacheToolsAndGraph(cache, normalized);
+            await notice('REBUILD_DONE');
         })());
         return;
     }
-
-    if (data.type !== 'OFFLINE_PREFS') return;
-    const urls = Array.isArray(data.urls) ? data.urls : [];
-    const cdnUrls = Array.isArray(data.cdnUrls) ? data.cdnUrls : [];
-    const normalized = urls.map(normalizeToolUrl).filter(Boolean);
-    const keep = new Set(normalized);
-    event.waitUntil((async () => {
-        const cache = await caches.open(CACHE_NAME);
-        const cdnNormalized = cdnUrls.map(normalizeCdnUrl).filter(Boolean);
-        extraCdnLibs = new Set(cdnNormalized);
-        try {
-            await cache.put(EXTRA_CDN_KEY, new Response(JSON.stringify(cdnNormalized), {
-                headers: { 'Content-Type': 'application/json' }
-            }));
-        } catch (e) {}
-        extraToolUrls = new Set(normalized);
-        try {
-            await cache.put(TOOL_PREFS_KEY, new Response(JSON.stringify(Array.from(extraToolUrls)), {
-                headers: { 'Content-Type': 'application/json' }
-            }));
-        } catch (e) {}
-        for (const url of normalized) {
-            try {
-                const res = await fetch(url, { cache: 'reload' });
-                if (res && res.ok) await cache.put(url, res);
-            } catch (e) {}
-        }
-        for (const lib of extraCdnLibs) {
-            try {
-                const res = await fetch(lib, { mode: 'no-cors' });
-                if (res && (res.ok || res.type === 'opaque')) {
-                    await cache.put(lib, res);
-                }
-            } catch (e) {}
-        }
-        const keys = await cache.keys();
-        for (const req of keys) {
-            try {
-                const u = new URL(req.url);
-                if (u.origin === self.location.origin) {
-                    if (u.pathname.startsWith(TOOL_PATH) && !keep.has(u.href)) {
-                        await cache.delete(req);
-                        continue;
-                    }
-                    const keepShell = new Set(APP_SHELL.map(p => new URL(p, self.location.origin + BASE_PATH).href));
-                    if (!keepShell.has(u.href) && !keep.has(u.href)) {
-                        await cache.delete(req);
-                    }
-                    continue;
-                }
-                const keepCdn = dynamicLibs.some(lib => u.href.startsWith(lib)) || extraCdnLibs.has(u.href);
-                if (!keepCdn) await cache.delete(req);
-            } catch (e) {}
-        }
-    })());
 });
 
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
-    const isSameOrigin = url.origin === self.location.origin;
-    const isCdnLib = dynamicLibs.some(lib => url.href.startsWith(lib)) || extraCdnLibs.has(url.href);
-    const isProxyService = url.hostname.includes('cors') || url.hostname.includes('allorigins') || url.hostname.includes('thingproxy') || url.hostname.includes('codetabs');
-
-    if (isProxyService || (!isSameOrigin && !isCdnLib)) {
-        return;
-    }
+    if (url.origin !== self.location.origin) return;
 
     const isHtml = event.request.destination === 'document' || url.pathname.endsWith('.html');
 
-    if (isSameOrigin && isHtml) {
+    if (isHtml) {
+        // 网络优先，失败回缓存；命中缓存时回写
         event.respondWith(
             caches.open(CACHE_NAME).then(cache => {
                 return fetch(event.request).then(networkResponse => {
@@ -401,10 +281,7 @@ self.addEventListener('fetch', event => {
                         if (cached) return cached;
                         const homeUrl = new URL('tools/home.html', self.location.origin + BASE_PATH).href;
                         const indexUrl = new URL('index.html', self.location.origin + BASE_PATH).href;
-                        return cache.match(homeUrl).then(homeCached => {
-                            if (homeCached) return homeCached;
-                            return cache.match(indexUrl);
-                        });
+                        return cache.match(homeUrl).then(homeCached => homeCached || cache.match(indexUrl));
                     });
                 });
             })
@@ -412,6 +289,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // 其余同源资源：缓存优先，未命中则网络并回填
     event.respondWith(
         caches.open(CACHE_NAME).then(cache => {
             return cache.match(event.request).then(cachedResponse => {

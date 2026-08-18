@@ -1,0 +1,648 @@
+{
+  "schema": 1,
+  "generatedBy": "scripts/gen-vendor-manifest.mjs",
+  "note": "本地优先依赖清单。下载后 sha256/size 会被填充；单文件必须 < 20MB。",
+  "maxFileBytes": 20971520,
+  "libs": [
+    {
+      "name": "svgo",
+      "version": "2.8.0",
+      "license": null,
+      "files": [
+        {
+          "url": "https://esm.sh/svgo@2.8.0?bundle",
+          "localPath": "vendor/svgo/svgo-2.8.0.js",
+          "sha256": "62f570579da7b19972d5ebb861ec4d420ffabd3bec6f71ee965f6667d58e2baa",
+          "size": 290
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.skypack.dev/svgo@2.8.0",
+        "https://unpkg.com/svgo@2.8.0?module",
+        "https://cdn.jsdelivr.net/npm/svgo@2.8.0/dist/svgo.browser.js"
+      ],
+      "esmGraph": true,
+      "note": "esm.sh 依赖图已用 ?bundle 合并；若下载失败请保留 CDN 回退"
+    },
+    {
+      "name": "crypto-js",
+      "version": "4.1.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js",
+          "localPath": "vendor/crypto-js/crypto-js.min.js",
+          "sha256": "8e3b0117f4df4be452c0b6af5b8f0a0acf9d4ade23d08d55d7e312af22077762",
+          "size": 48316
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/crypto-js/4.1.1/crypto-js.min.js",
+        "https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js",
+        "https://unpkg.com/crypto-js@4.1.1/crypto-js.js",
+        "https://npm.elemecdn.com/crypto-js@4.1.1/crypto-js.js",
+        "https://lib.baomitu.com/crypto-js/4.1.1/crypto-js.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"
+      ]
+    },
+    {
+      "name": "lz-string",
+      "version": "1.4.4",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js",
+          "localPath": "vendor/lz-string/lz-string.min.js",
+          "sha256": "9d1a0ef07a2ea5faa8cd4afb60a0518075e6771e341e5ff4e0e481cefedeecbf",
+          "size": 4719
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/lz-string/1.4.4/lz-string.min.js",
+        "https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js",
+        "https://unpkg.com/lz-string@1.4.4/libs/lz-string.min.js",
+        "https://npm.elemecdn.com/lz-string@1.4.4/libs/lz-string.min.js",
+        "https://lib.baomitu.com/lz-string/1.4.4/lz-string.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/lz-string/1.4.4/lz-string.min.js"
+      ]
+    },
+    {
+      "name": "opencc-js",
+      "version": "1.0.5",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.min.js",
+          "localPath": "vendor/opencc-js/full.min.js",
+          "sha256": "62e4bf979161684a672bd63625041d3784ca9c0234afa576ed0bafbf8f2b5d42",
+          "size": 1112847
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/opencc-js@1.0.5/dist/umd/full.min.js",
+        "https://npm.elemecdn.com/opencc-js@1.0.5/dist/umd/full.min.js",
+        "https://fastly.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.min.js"
+      ]
+    },
+    {
+      "name": "js-beautify",
+      "version": "1.14.7",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify.min.js",
+          "localPath": "vendor/js-beautify/beautify.min.js",
+          "sha256": "e7831cdc835d6ce371dc59aa90c14fdee2160a20dc9a4a217c6250dc18ac4330",
+          "size": 74376
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/js-beautify/1.14.7/beautify.min.js",
+        "https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify.js",
+        "https://unpkg.com/js-beautify@1.14.7/js/lib/beautify.js",
+        "https://npm.elemecdn.com/js-beautify@1.14.7/js/lib/beautify.js",
+        "https://lib.baomitu.com/js-beautify/1.14.7/beautify.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/js-beautify/1.14.7/beautify.min.js"
+      ]
+    },
+    {
+      "name": "js-beautify-css",
+      "version": "1.14.7",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-css.min.js",
+          "localPath": "vendor/js-beautify-css/beautify-css.min.js",
+          "sha256": "ec7b78d5b9735057a77a77e8a64f8320f1af7c0cd676d696f9522d929a938ef5",
+          "size": 20760
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/js-beautify/1.14.7/beautify-css.min.js",
+        "https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-css.js",
+        "https://unpkg.com/js-beautify@1.14.7/js/lib/beautify-css.js",
+        "https://npm.elemecdn.com/js-beautify@1.14.7/js/lib/beautify-css.js",
+        "https://lib.baomitu.com/js-beautify/1.14.7/beautify-css.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/js-beautify/1.14.7/beautify-css.min.js"
+      ]
+    },
+    {
+      "name": "js-beautify-html",
+      "version": "1.14.7",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-html.min.js",
+          "localPath": "vendor/js-beautify-html/beautify-html.min.js",
+          "sha256": "caf8b629089a8e7d6ef1f35b553440b589b59e57be047247e7939d8df0279c30",
+          "size": 42944
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/js-beautify/1.14.7/beautify-html.min.js",
+        "https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-html.js",
+        "https://unpkg.com/js-beautify@1.14.7/js/lib/beautify-html.js",
+        "https://npm.elemecdn.com/js-beautify@1.14.7/js/lib/beautify-html.js",
+        "https://lib.baomitu.com/js-beautify/1.14.7/beautify-html.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/js-beautify/1.14.7/beautify-html.min.js"
+      ]
+    },
+    {
+      "name": "diff_match_patch",
+      "version": "20121119",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js",
+          "localPath": "vendor/diff_match_patch/diff_match_patch.js",
+          "sha256": "aac7655a215d8448d95d9871e8d8a40ac3d9aaf38d81ab2ccc43c1cd267b8fa3",
+          "size": 19192
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.bootcdn.net/ajax/libs/diff_match_patch/20121119/diff_match_patch.js",
+        "https://lib.baomitu.com/diff_match_patch/20121119/diff_match_patch.js",
+        "https://cdn.staticfile.org/diff_match_patch/20121119/diff_match_patch.js",
+        "https://cdn.jsdelivr.net/cdnjs/diff_match_patch/20121119/diff_match_patch.js"
+      ]
+    },
+    {
+      "name": "jszip",
+      "version": "3.10.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
+          "localPath": "vendor/jszip/jszip.min.js",
+          "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e",
+          "size": 97630
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/jszip/3.10.1/jszip.min.js",
+        "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js",
+        "https://unpkg.com/jszip@3.10.1/dist/jszip.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/jszip/3.10.1/jszip.min.js",
+        "https://lib.baomitu.com/jszip/3.10.1/jszip.min.js",
+        "https://npm.elemecdn.com/jszip@3.10.1/dist/jszip.min.js"
+      ]
+    },
+    {
+      "name": "file-saver",
+      "version": "2.0.5",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js",
+          "localPath": "vendor/file-saver/FileSaver.min.js",
+          "sha256": "c68874cbaa2fd1650b7d770b328680ea765fb3376023cc3608427fde4f0d0481",
+          "size": 2749
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/FileSaver.js/2.0.5/FileSaver.min.js",
+        "https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js",
+        "https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js",
+        "https://lib.baomitu.com/FileSaver.js/2.0.5/FileSaver.min.js",
+        "https://npm.elemecdn.com/file-saver@2.0.5/dist/FileSaver.min.js"
+      ]
+    },
+    {
+      "name": "uuid",
+      "version": "8.3.2",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js",
+          "localPath": "vendor/uuid/uuid.min.js",
+          "sha256": "c5df6d9704bdada96df0770523058f395192ee9d1fe13880eb1d57dfe6417533",
+          "size": 8160
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/uuid/8.3.2/uuid.min.js",
+        "https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js",
+        "https://unpkg.com/uuid@8.3.2/dist/umd/uuid.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/uuid/8.3.2/uuid.min.js",
+        "https://lib.baomitu.com/uuid/8.3.2/uuid.min.js",
+        "https://npm.elemecdn.com/uuid@8.3.2/dist/umd/uuid.min.js"
+      ]
+    },
+    {
+      "name": "punycode",
+      "version": "1.4.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js",
+          "localPath": "vendor/punycode/punycode.min.js",
+          "sha256": "2395ce599bba81b7b031207d511f3ccb41a68898bd02c41c0b352903f3013670",
+          "size": 2796
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/punycode/1.4.1/punycode.min.js",
+        "https://cdn.jsdelivr.net/npm/punycode@1.4.1/punycode.min.js",
+        "https://unpkg.com/punycode@1.4.1/punycode.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/punycode/1.4.1/punycode.min.js",
+        "https://lib.baomitu.com/punycode/1.4.1/punycode.min.js",
+        "https://npm.elemecdn.com/punycode@1.4.1/punycode.min.js"
+      ]
+    },
+    {
+      "name": "easyqrcodejs",
+      "version": "4.4.13",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js",
+          "localPath": "vendor/easyqrcodejs/easy.qrcode.min.js",
+          "sha256": "cac9e3e4ca7d69d473a57ca16c65b66137544a975aa628271f7679edb32ae86f",
+          "size": 50884
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js",
+        "https://npm.elemecdn.com/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js",
+        "https://fastly.jsdelivr.net/npm/easyqrcodejs@4.4.13/dist/easy.qrcode.min.js"
+      ]
+    },
+    {
+      "name": "mammoth",
+      "version": "1.6.0",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js",
+          "localPath": "vendor/mammoth/mammoth.browser.min.js",
+          "sha256": "596ef52239e52d8ee3cee10b2ee4a72596abf900d0e4f468593f956e9f1809b0",
+          "size": 642759
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/mammoth/1.6.0/mammoth.browser.min.js",
+        "https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js",
+        "https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js",
+        "https://cdn.bootcdn.net/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js",
+        "https://lib.baomitu.com/mammoth/1.6.0/mammoth.browser.min.js",
+        "https://npm.elemecdn.com/mammoth@1.6.0/mammoth.browser.min.js"
+      ]
+    },
+    {
+      "name": "fflate",
+      "version": "0.8.0",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/fflate@0.8.0/umd/index.min.js",
+          "localPath": "vendor/fflate/index.min.js",
+          "sha256": "7f483a7397063c4f7c5810e055b47c4f6ec1b25eee416922c762d619ad4442e7",
+          "size": 32314
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/fflate@0.8.0/umd/index.min.js",
+        "https://npm.elemecdn.com/fflate@0.8.0/umd/index.min.js",
+        "https://fastly.jsdelivr.net/npm/fflate@0.8.0/umd/index.min.js"
+      ]
+    },
+    {
+      "name": "qrcode",
+      "version": "1.5.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js",
+          "localPath": "vendor/qrcode/qrcode.min.js",
+          "sha256": "ec64d89ab3096dce8084912dedff9f2ca5ae64144d0cacd4a082c293d5d06b59",
+          "size": 23738
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/qrcode@1.5.1/build/qrcode.min.js",
+        "https://npm.elemecdn.com/qrcode@1.5.1/build/qrcode.min.js",
+        "https://fastly.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"
+      ]
+    },
+    {
+      "name": "hash-wasm",
+      "version": "4.9.0",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/hash-wasm@4.9.0/dist/index.umd.min.js",
+          "localPath": "vendor/hash-wasm/index.umd.min.js",
+          "sha256": "a87ff2a1cf1eb17c473c2acbe516777908ba6f1837da9b761e3754e86fb9986a",
+          "size": 203402
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/hash-wasm@4.9.0/dist/index.umd.min.js",
+        "https://npm.elemecdn.com/hash-wasm@4.9.0/dist/index.umd.min.js",
+        "https://fastly.jsdelivr.net/npm/hash-wasm@4.9.0/dist/index.umd.min.js"
+      ]
+    },
+    {
+      "name": "hash-wasm-esm",
+      "version": "4.9.0",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/hash-wasm@4.9.0/dist/index.esm.min.js",
+          "localPath": "vendor/hash-wasm-esm/index.esm.min.js",
+          "sha256": "c7eaa33b6128130a2b528234b2a60aeef604be05b76d027075c09c434ce71af1",
+          "size": 203426
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/hash-wasm@4.9.0/dist/index.esm.min.js",
+        "https://npm.elemecdn.com/hash-wasm@4.9.0/dist/index.esm.min.js",
+        "https://fastly.jsdelivr.net/npm/hash-wasm@4.9.0/dist/index.esm.min.js"
+      ]
+    },
+    {
+      "name": "jsondiffpatch",
+      "version": "0.4.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/jsondiffpatch@0.4.1/dist/jsondiffpatch.umd.min.js",
+          "localPath": "vendor/jsondiffpatch/jsondiffpatch.umd.min.js",
+          "sha256": "61bf66e2332451d80526a31b435c1535fb5935f6bb39ed41c215ffac8be07318",
+          "size": 55049
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/jsondiffpatch@0.4.1/dist/jsondiffpatch.umd.min.js",
+        "https://npm.elemecdn.com/jsondiffpatch@0.4.1/dist/jsondiffpatch.umd.min.js"
+      ]
+    },
+    {
+      "name": "jsondiffpatch-css",
+      "version": "0.4.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/jsondiffpatch/0.4.1/formatters-styles/html.css",
+          "localPath": "vendor/jsondiffpatch-css/html.css",
+          "sha256": "e9c3a085b7bcf600e8cb21ef82c8b004f262cbb51048cfdb54720310555397c0",
+          "size": 3974
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.jsdelivr.net/npm/jsondiffpatch@0.4.1/dist/formatters-styles/html.css"
+      ]
+    },
+    {
+      "name": "markdown-wasm",
+      "version": "1.2.0",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.js",
+          "localPath": "vendor/markdown-wasm/markdown.js",
+          "sha256": "14ea2cc663ecdf5b4619ae9a9fd5b7011b2d47cb6eb3baebfb6ecb80236142c2",
+          "size": 9732
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.wasm",
+          "fallbacks": [
+            "https://unpkg.com/markdown-wasm@1.2.0/dist/markdown.wasm"
+          ],
+          "localPath": "vendor/markdown-wasm/markdown.wasm",
+          "sha256": "2e8d10e83d9e247e506feb9c9a34e01d6f792c6fc8a5002dd4921ffa162a54e6",
+          "size": 56655
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/markdown-wasm@1.2.0/dist/markdown.js",
+        "https://npm.elemecdn.com/markdown-wasm@1.2.0/dist/markdown.js",
+        "https://fastly.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.js"
+      ]
+    },
+    {
+      "name": "markdown-wasm-esm",
+      "version": "1.2.0",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.es.js",
+          "localPath": "vendor/markdown-wasm-esm/markdown.es.js",
+          "sha256": "b4723b8aa1ca4e8f6b60b81ace6d90707b34e2b9379707adfdea0c83164b7bdf",
+          "size": 9569
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.wasm",
+          "fallbacks": [
+            "https://unpkg.com/markdown-wasm@1.2.0/dist/markdown.wasm"
+          ],
+          "localPath": "vendor/markdown-wasm-esm/markdown.wasm",
+          "sha256": "2e8d10e83d9e247e506feb9c9a34e01d6f792c6fc8a5002dd4921ffa162a54e6",
+          "size": 56655
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/markdown-wasm@1.2.0/dist/markdown.es.js",
+        "https://npm.elemecdn.com/markdown-wasm@1.2.0/dist/markdown.es.js",
+        "https://fastly.jsdelivr.net/npm/markdown-wasm@1.2.0/dist/markdown.es.js"
+      ]
+    },
+    {
+      "name": "brotli-wasm",
+      "version": "1.3.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://unpkg.com/brotli-wasm@1.3.1/index.web.js",
+          "localPath": "vendor/brotli-wasm/index.web.js",
+          "sha256": "423d97a335f64ef5dd5584132e0cc39ad3ddf976b5e08be3ea447fc426c343c2",
+          "size": 373
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.jsdelivr.net/npm/brotli-wasm@1.3.1/index.web.js",
+        "https://npm.elemecdn.com/brotli-wasm@1.3.1/index.web.js",
+        "https://fastly.jsdelivr.net/npm/brotli-wasm@1.3.1/index.web.js"
+      ]
+    },
+    {
+      "name": "brotli-wasm-esm",
+      "version": "1.3.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://unpkg.com/brotli-wasm@1.3.1/index.web.js",
+          "localPath": "vendor/brotli-wasm-esm/index.web.js",
+          "sha256": "423d97a335f64ef5dd5584132e0cc39ad3ddf976b5e08be3ea447fc426c343c2",
+          "size": 373
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.jsdelivr.net/npm/brotli-wasm@1.3.1/index.web.js",
+        "https://npm.elemecdn.com/brotli-wasm@1.3.1/index.web.js",
+        "https://fastly.jsdelivr.net/npm/brotli-wasm@1.3.1/index.web.js"
+      ]
+    },
+    {
+      "name": "photon",
+      "version": "0.3.2",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs.js",
+          "localPath": "vendor/photon/photon_rs.js",
+          "sha256": "3ca319f79eacbc32adf2ec47fe51f46db20970a5361ff5ee4e8ae9f182c134c1",
+          "size": 79
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@silvia-odwyer/photon@0.3.2/photon_rs_bg.wasm",
+          "fallbacks": [
+            "https://unpkg.com/@silvia-odwyer/photon@0.3.2/photon_rs_bg.wasm"
+          ],
+          "localPath": "vendor/photon/photon_rs_bg.wasm",
+          "sha256": "10cbeb614362735cf77c12c9101da7ca78467b80d6edd5ae64251eaf6ee1222d",
+          "size": 1350429
+        }
+      ],
+      "fallbackUrls": [],
+      "note": "含 photon_rs_bg.wasm；该库上游 UMD 源本就不可靠，失败请保留 CDN 回退"
+    },
+    {
+      "name": "photon-esm",
+      "version": "0.5.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://esm.sh/@cf-wasm/photon@0.5.1/others?bundle",
+          "localPath": "vendor/photon-esm/others.js",
+          "sha256": "2e4a9ff671473950eedd4fb08f95e0560d69aee0af7b1c5e707b12b8f31758a7",
+          "size": 1670
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.skypack.dev/@silvia-odwyer/photon@0.3.2",
+        "https://esm.sh/@silvia-odwyer/photon@0.3.2?target=es2022"
+      ],
+      "esmGraph": true,
+      "note": "esm.sh 依赖图已用 ?bundle 合并；若下载失败请保留 CDN 回退"
+    },
+    {
+      "name": "fzstd",
+      "version": "0.1.1",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/fzstd@0.1.1/esm/index.mjs",
+          "localPath": "vendor/fzstd/index.mjs",
+          "sha256": "1a901fc5a58c349bbdb4f2aa1e688637ef56891ec58243a9f0cd863166b0d2a4",
+          "size": 24407
+        }
+      ],
+      "fallbackUrls": [
+        "https://unpkg.com/fzstd@0.1.1/esm/index.mjs",
+        "https://fastly.jsdelivr.net/npm/fzstd@0.1.1/esm/index.mjs",
+        "https://esm.sh/fzstd@0.1.1"
+      ]
+    },
+    {
+      "name": "gif.js",
+      "version": "0.2.0",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js",
+          "localPath": "vendor/gif.js/gif.js",
+          "sha256": "a8b111071bb3b123c302e6182c01d6b3550f93a4b627398b07c46875d84090bb",
+          "size": 13451
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js",
+        "https://unpkg.com/gif.js@0.2.0/dist/gif.js"
+      ]
+    },
+    {
+      "name": "imagetracerjs",
+      "version": "1.2.6",
+      "license": null,
+      "files": [
+        {
+          "url": "https://unpkg.com/imagetracerjs@1.2.6/imagetracer_v1.2.6.js",
+          "localPath": "vendor/imagetracerjs/imagetracer_v1.2.6.js",
+          "sha256": "1f7e21062196c53f2565120fc0708eac197c8403ec1bea28b381056ea0c3fdb9",
+          "size": 47118
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.min.js"
+      ]
+    },
+    {
+      "name": "marked",
+      "version": "9.1.2",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js",
+          "localPath": "vendor/marked/marked.min.js",
+          "sha256": "b512fc2e8b2d42a00871a5eac88925e4f72bb0696a35050aaaa8c2216225e5b8",
+          "size": 35970
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/marked/9.1.2/marked.min.js",
+        "https://cdn.jsdelivr.net/npm/marked/marked.min.js",
+        "https://unpkg.com/marked@9.1.2/marked.min.js"
+      ]
+    },
+    {
+      "name": "font-awesome",
+      "version": "6.4.0",
+      "license": null,
+      "files": [
+        {
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
+          "localPath": "vendor/font-awesome/all.min.css",
+          "sha256": "1edb1725a9ea8ca4dcf2f5508cee183218aa1685e47c1b23056717f754f58ebf",
+          "size": 102025
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/webfonts/fa-solid-900.woff2",
+          "localPath": "vendor/font-awesome/fa-solid-900.woff2",
+          "sha256": "7152a6933ee3d690ec2af3d09da9d701723d16aa3410a6d80f28ff8866f3b880",
+          "size": 150124,
+          "fallbacks": [
+            "https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/webfonts/fa-solid-900.woff2"
+          ]
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/webfonts/fa-regular-400.woff2",
+          "localPath": "vendor/font-awesome/fa-regular-400.woff2",
+          "sha256": "8e7e5ea1b15f62ab14dbd41768e8fbcd21cc859a4ea5da812457ee714299fb35",
+          "size": 24948,
+          "fallbacks": [
+            "https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/webfonts/fa-regular-400.woff2"
+          ]
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/webfonts/fa-brands-400.woff2",
+          "localPath": "vendor/font-awesome/fa-brands-400.woff2",
+          "sha256": "748332090c4b8e20f95d0ff59f0be20fa9c889359d3b36d4b886d73376054207",
+          "size": 108020,
+          "fallbacks": [
+            "https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/webfonts/fa-brands-400.woff2"
+          ]
+        }
+      ],
+      "fallbackUrls": [
+        "https://cdn.staticfile.org/font-awesome/6.4.0/css/all.min.css",
+        "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css",
+        "https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css",
+        "https://npm.elemecdn.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css",
+        "https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      ],
+      "note": "webfonts 源已切换 jsdelivr @fortawesome（cdnjs 返回文本）"
+    }
+  ]
+}

@@ -5,109 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>趣味图像生成</title>
     <link rel="stylesheet" href="../css/style.css">
-    <style>
-        body {
-            padding: 0;
-            margin: 0;
-            overflow: auto;
-            height: 100vh; /* Keep 100vh for layout calculation but allow scroll if needed */
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .content-frame {
-            flex: 1;
-            width: 100%;
-            border: none;
-            background: transparent;
-            min-height: 800px; /* Ensure enough space for PC scrolling */
-        }
-
-        /* Mobile Scroll Fix */
-        @media (max-width: 768px) {
-            body {
-                height: auto !important;
-                overflow-y: auto !important;
-                display: block !important;
-            }
-            .content-frame {
-                height: 1200px !important; /* Force large height to prevent internal scroll */
-                min-height: 800px;
-                display: block;
-            }
-        }
-    </style>
+    <script src="../js/theme-boot.js"></script>
+    <script src="../js/ui/icons.js"></script>
+    <link rel="stylesheet" href="../css/tools/image-fun.css">
 </head>
 <body>
     <div class="nav-pills">
-        <div class="nav-pill active" onclick="switchFunTool('phantom', this)">👻 幻影坦克</div>
-        <div class="nav-pill" onclick="switchFunTool('hybrid', this)">👁️ 视觉混合图</div>
+        <div class="nav-pill active" data-action="switchFunTool" data-mode="phantom"><span class="ic" data-ic="ghost"></span> 幻影坦克</div>
+        <div class="nav-pill" data-action="switchFunTool" data-mode="hybrid"><span class="ic" data-ic="eye"></span> 视觉混合图</div>
     </div>
     
     <iframe id="fun-frame" class="content-frame" src="image-phantom.html"></iframe>
     
     <script src="../js/app.js"></script>
-    <script>
-        // --- Iframe Auto-Resize Logic ---
-        window.addEventListener('message', (e) => {
-            if (e.data && e.data.type === 'resize' && e.data.height) {
-                const frame = document.getElementById('fun-frame');
-                if (frame) {
-                    // Add some buffer or set directly
-                    const newHeight = Math.max(800, e.data.height + 50); 
-                    frame.style.height = newHeight + 'px';
-                    // Also ensure parent body can scroll if needed (though already set to overflow: auto)
-                }
-            }
-        });
-
-        // Theme Propagation Helper
-        function propagateThemeToChild() {
-            const frame = document.getElementById('fun-frame');
-            if(!frame || !frame.contentWindow) return;
-            
-            const root = document.documentElement;
-            const vars = [
-                '--bg-deep', '--bg-panel', '--bg-header', '--primary', '--secondary', '--accent', 
-                '--text-main', '--text-dim', '--border', '--shadow', '--primary-contrast',
-                '--radius-lg', '--radius-md', '--radius-sm', '--font-main', '--font-mono',
-                '--input-bg', '--btn-bg', '--btn-hover-bg'
-            ];
-            
-            try {
-                const childRoot = frame.contentWindow.document.documentElement;
-                vars.forEach(v => {
-                    const val = getComputedStyle(root).getPropertyValue(v);
-                    if(val) childRoot.style.setProperty(v, val);
-                });
-            } catch(e) {
-                console.log('Cannot propagate theme to cross-origin frame');
-            }
-        }
-
-        const funFrame = document.getElementById('fun-frame');
-        funFrame.addEventListener('load', propagateThemeToChild);
-        
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    propagateThemeToChild();
-                }
-            });
-        });
-        observer.observe(document.documentElement, { attributes: true });
-
-        function switchFunTool(tool, el) {
-            document.querySelectorAll('.nav-pill').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            
-            const frame = document.getElementById('fun-frame');
-            if (tool === 'phantom') {
-                frame.src = 'image-phantom.html';
-            } else if (tool === 'hybrid') {
-                frame.src = 'image-hybrid.html';
-            }
-        }
-    </script>
+    <script src="../js/tools/image-fun.js"></script>
 </body>
 </html>

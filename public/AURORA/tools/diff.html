@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智能对比工具</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/theme-boot.js"></script>
+    <script src="../js/ui/icons.js"></script>
 </head>
 <body>
     <div class="workspace layout-vertical">
         
         <div class="sub-tab-group">
-            <div class="sub-tab active" onclick="diffTool.setMode('text')" id="tab-text">文本对比 (Text)</div>
-            <div class="sub-tab" onclick="diffTool.setMode('json')" id="tab-json">JSON 结构化对比</div>
+            <div class="sub-tab active" data-action="diff.set-mode" data-mode="text" id="tab-text">文本对比 (Text)</div>
+            <div class="sub-tab" data-action="diff.set-mode" data-mode="json" id="tab-json">JSON 结构化对比</div>
         </div>
 
         <div class="layout-split">
@@ -19,10 +21,10 @@
                 <div class="panel-header">
                     <div class="panel-title">原文 (Old)</div>
                     <div class="panel-actions">
-                        <button class="btn btn-icon" onclick="document.getElementById('file-old').click()" title="加载文件">📂</button>
-                        <input type="file" id="file-old" style="display:none" onchange="diffTool.loadFile(this, 'diff-old')">
-                        <button class="btn btn-icon" onclick="diffTool.formatJSON('diff-old')" title="格式化 JSON" id="btn-fmt-old" style="display:none;">{}</button>
-                        <button class="btn btn-icon" onclick="document.getElementById('diff-old').value=''">清空</button>
+                        <button class="btn btn-icon" data-action="file-click" data-file-target="file-old" title="加载文件"><span class="ic" data-ic="folder-open"></span></button>
+                        <input type="file" id="file-old" style="display:none" data-action="diff.load-file" data-target="diff-old">
+                        <button class="btn btn-icon" data-action="diff.format-json" data-target="diff-old" title="格式化 JSON" id="btn-fmt-old" style="display:none;">{}</button>
+                        <button class="btn btn-icon" data-action="diff.clear-area" data-target="diff-old">清空</button>
                     </div>
                 </div>
                 <textarea id="diff-old" placeholder="输入原始内容..."></textarea>
@@ -31,10 +33,10 @@
                 <div class="panel-header">
                     <div class="panel-title">新文 (New)</div>
                     <div class="panel-actions">
-                        <button class="btn btn-icon" onclick="document.getElementById('file-new').click()" title="加载文件">📂</button>
-                        <input type="file" id="file-new" style="display:none" onchange="diffTool.loadFile(this, 'diff-new')">
-                        <button class="btn btn-icon" onclick="diffTool.formatJSON('diff-new')" title="格式化 JSON" id="btn-fmt-new" style="display:none;">{}</button>
-                        <button class="btn btn-icon" onclick="document.getElementById('diff-new').value=''">清空</button>
+                        <button class="btn btn-icon" data-action="file-click" data-file-target="file-new" title="加载文件"><span class="ic" data-ic="folder-open"></span></button>
+                        <input type="file" id="file-new" style="display:none" data-action="diff.load-file" data-target="diff-new">
+                        <button class="btn btn-icon" data-action="diff.format-json" data-target="diff-new" title="格式化 JSON" id="btn-fmt-new" style="display:none;">{}</button>
+                        <button class="btn btn-icon" data-action="diff.clear-area" data-target="diff-new">清空</button>
                     </div>
                 </div>
                 <textarea id="diff-new" placeholder="输入修改后的内容..."></textarea>
@@ -42,201 +44,24 @@
         </div>
         
         <div style="display: flex; gap: 1rem; align-items: center; padding: 0.5rem 0;">
-            <button class="btn btn-primary" onclick="diffTool.compare()">开始对比 (Compare)</button>
-            <div style="font-size: 0.8rem; color: var(--text-dim);" id="legend-text">
+            <button class="btn btn-primary" data-action="diff.compare">开始对比 (Compare)</button>
+            <div style="font-size:0.8rem" class="text-dim" id="legend-text">
                 <span class="legend-badge ins">新增</span>
                 <span class="legend-badge del">删除</span>
             </div>
         </div>
 
-        <div class="panel" style="flex: 1; min-height: 0;">
+        <div class="panel flex-1">
              <div class="panel-header">
                 <div class="panel-title">对比结果</div>
             </div>
-            <div id="diff-output" style="padding: 1rem; overflow: auto; flex: 1; font-family: monospace; white-space: pre-wrap; color: var(--text-main);"></div>
+            <div id="diff-output" style="padding:1rem; overflow:auto; font-family:monospace; white-space:pre-wrap; color:var(--text-main)" class="flex-1"></div>
         </div>
     </div>
 
     <div id="toast" class="toast">操作成功</div>
     <script src="../js/loader.js"></script>
     <script src="../js/app.js"></script>
-    <script>
-        const diffTool = {
-            mode: 'text',
-
-            setMode: function(mode) {
-                this.mode = mode;
-                
-                // Update Tabs
-                document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
-                document.getElementById('tab-' + mode).classList.add('active');
-                
-                // Update UI controls
-                const showJsonBtns = mode === 'json' ? 'inline-flex' : 'none';
-                document.getElementById('btn-fmt-old').style.display = showJsonBtns;
-                document.getElementById('btn-fmt-new').style.display = showJsonBtns;
-                
-                // Clear output
-                document.getElementById('diff-output').innerHTML = '';
-                
-                app.showToast('已切换至 ' + (mode === 'json' ? 'JSON 结构化对比' : '文本对比') + ' 模式');
-            },
-
-            formatJSON: function(id) {
-                const el = document.getElementById(id);
-                try {
-                    const val = el.value.trim();
-                    if (!val) return;
-                    const obj = JSON.parse(val);
-                    el.value = JSON.stringify(obj, null, 2);
-                    app.showToast('格式化成功');
-                } catch(e) {
-                    app.showToast('JSON 格式错误: ' + e.message, 'error');
-                }
-            },
-
-            compare: function() {
-                if (this.mode === 'json') {
-                    this.compareJSON();
-                } else {
-                    this.compareText();
-                }
-            },
-
-            compareText: function() {
-                const oldTxt = document.getElementById('diff-old').value;
-                const newTxt = document.getElementById('diff-new').value;
-                
-                app.showToast('正在加载组件...', 'info');
-                ResourceLoader.loadDeps('@diff').then(() => {
-                    const dmp = new diff_match_patch();
-                    const diffs = dmp.diff_main(oldTxt, newTxt);
-                    dmp.diff_cleanupSemantic(diffs);
-                    
-                    // Custom pretty HTML generation
-                    const html = [];
-                    for (let x = 0; x < diffs.length; x++) {
-                        const op = diffs[x][0];    // Operation (insert, delete, equal)
-                        const data = diffs[x][1];  // Text of change
-                        const text = data.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-                        
-                        switch (op) {
-                            case DIFF_INSERT:
-                                html[x] = '<ins>' + text + '</ins>';
-                                break;
-                            case DIFF_DELETE:
-                                html[x] = '<del>' + text + '</del>';
-                                break;
-                            case DIFF_EQUAL:
-                                html[x] = '<span>' + text + '</span>';
-                                break;
-                        }
-                    }
-                    
-                    document.getElementById('diff-output').innerHTML = html.join('');
-                    app.showToast('对比完成');
-                });
-            },
-
-            compareJSON: function() {
-                const oldTxt = document.getElementById('diff-old').value;
-                const newTxt = document.getElementById('diff-new').value;
-                
-                let oldObj, newObj;
-                try {
-                    oldObj = oldTxt ? JSON.parse(oldTxt) : undefined;
-                } catch(e) {
-                    return app.showToast('原文不是有效的 JSON', 'error');
-                }
-                
-                try {
-                    newObj = newTxt ? JSON.parse(newTxt) : undefined;
-                } catch(e) {
-                    return app.showToast('新文不是有效的 JSON', 'error');
-                }
-
-                app.showToast('正在加载组件...', 'info');
-                ResourceLoader.loadDeps('@diff').then(() => {
-                    const delta = jsondiffpatch.diff(oldObj, newObj);
-                    
-                    if (!delta) {
-                        document.getElementById('diff-output').innerHTML = '<div style="padding:1rem; opacity:0.7;">没有发现差异 (No differences found)</div>';
-                        app.showToast('对比完成: 无差异');
-                        return;
-                    }
-
-                    // Render Diff
-                    // Note: jsondiffpatch.formatters.html.format returns HTML string
-                    // But we might need to load CSS if not loaded. (Handled in head)
-                    const html = jsondiffpatch.formatters.html.format(delta, oldObj);
-                    
-                    // jsondiffpatch css requires a wrapper or global css. 
-                    // We added CSS link in head.
-                    document.getElementById('diff-output').innerHTML = html;
-                    
-                    // Enable visual interactions if needed (unhiding unchanged parts etc)
-                    // jsondiffpatch.formatters.html.hideUnchanged() is a feature but requires JS to toggle classes
-                    // We can stick to basic static view first.
-                    
-                    app.showToast('对比完成');
-                }).catch(err => {
-                    console.error(err);
-                    app.showToast('加载组件失败', 'error');
-                });
-            },
-
-            loadFile: function(input, targetId) {
-                const file = input.files[0];
-                if(!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const buf = e.target.result;
-                    const bytes = new Uint8Array(buf);
-                    
-                    // Check for null bytes to detect binary (heuristic)
-                    let isBinary = false;
-                    const checkLen = Math.min(bytes.length, 1000);
-                    for(let i=0; i<checkLen; i++) {
-                        if(bytes[i] === 0) {
-                            isBinary = true;
-                            break;
-                        }
-                    }
-                    
-                    if(isBinary) {
-                        // Convert to Hex view for comparison
-                        let hexOutput = '';
-                        const len = bytes.length;
-                        for(let i=0; i<len; i++) {
-                            const b = bytes[i];
-                            hexOutput += (b < 16 ? '0' : '') + b.toString(16);
-                            // Add space every byte, newline every 16 bytes
-                            if ((i + 1) % 16 === 0) {
-                                hexOutput += '\n';
-                            } else {
-                                hexOutput += ' ';
-                            }
-                        }
-                        
-                        document.getElementById(targetId).value = hexOutput.trim();
-                        app.showToast('检测到二进制文件，已转换为 Hex 视图', 'info');
-                    } else {
-                        // Decode as text
-                        const decoder = new TextDecoder('utf-8');
-                        const text = decoder.decode(bytes);
-                        document.getElementById(targetId).value = text;
-                        app.showToast('文件加载成功');
-                    }
-                };
-                
-                reader.onerror = () => app.showToast('读取文件失败', 'error');
-                reader.readAsArrayBuffer(file);
-                
-                // Reset input
-                input.value = '';
-            }
-        };
-    </script>
+    <script src="../js/tools/diff.js"></script>
 </body>
 </html>

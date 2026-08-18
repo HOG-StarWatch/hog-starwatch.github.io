@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>从夯到拉 | 二叉树树</title>
+<style>
+*{box-sizing:border-box}
+html.dark{
+  color-scheme:dark;
+  --bg:#171717; --fg:#ededed; --muted-fg:#a1a1aa; --border:#262626;
+  --fgi:rgba(237,237,237,.1);
+}
+body{margin:0; background:var(--bg); color:var(--fg);
+  font-family:system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif;
+  display:flex; flex-direction:column; min-height:100vh;}
+a{color:var(--fg); text-decoration:none}
+.icon{display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; width:16px; height:16px;}
+.icon svg{width:100%; height:100%; display:block;}
+/* page */
+.page{flex:1 1 0; display:flex; flex-direction:column; min-height:0;}
+main{width:100%; max-width:896px; margin:0 auto; padding:24px 16px; display:flex; flex-direction:column; gap:20px; flex:1 1 0;}
+.sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; margin:-1px;}
+.title{width:100%; background:transparent; border:none; border-bottom:1px solid transparent; border-radius:0; text-align:center;
+  font-size:30px; font-weight:700; color:var(--fg); outline:none; padding:8px 2px; font-family:inherit;}
+.title::placeholder{color:var(--muted-fg); opacity:.6}
+.title:hover{border-bottom:1px solid rgba(237,237,237,.5);}
+.title:focus{border-bottom:1px solid var(--border);}
+/* tier board */
+.board{border:1px solid var(--border); overflow:hidden;}
+.tier-row{display:flex; align-items:stretch;}
+.tier-row + .tier-row{border-top:1px solid var(--border);}
+.tier-label{display:flex; width:64px; flex-shrink:0; align-items:center; justify-content:center;
+  padding:0 4px; text-align:center; font-weight:700; line-height:1.15; color:#171717;}
+.tier-zone{flex:1 1 auto; min-height:88px; padding:6px;
+  display:flex; flex-wrap:wrap; align-content:flex-start; gap:6px; background:rgba(23,23,23,.4); transition:background .15s;}
+.tier-zone.hover-in{background:var(--fgi);}
+.tier-zone.file-hover{background:var(--fgi); box-shadow:inset 0 0 0 2px var(--fg);}
+/* card */
+.card{height:72px; flex-shrink:0; overflow:hidden; background:var(--bg); border:1px solid var(--border);
+  touch-action:none; -webkit-user-select:none; user-select:none; cursor:grab;}
+.card img{width:100%; height:100%; object-fit:cover; pointer-events:none; display:block;}
+.card.dragging{opacity:.3; cursor:grabbing;}
+/* actions */
+.actions{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+.actions label{display:inline-flex;}
+.upload{display:inline-flex; align-items:center; gap:6px; height:36px; cursor:pointer;
+  border:1px solid var(--fg); background:var(--fg); color:var(--bg); padding:0 12px;
+  font-size:14px; font-weight:500; border-radius:6px;}
+.upload:hover{opacity:.9}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; height:32px; padding:0 12px;
+  border:1px solid rgba(237,237,237,.2); background:transparent; color:var(--fg); font-size:14px; cursor:pointer; border-radius:6px;}
+.btn:not(:disabled):hover{background:var(--fg); color:var(--bg); border-color:var(--fg);}
+.btn:disabled{opacity:.5; cursor:not-allowed; pointer-events:none;}
+/* pool */
+.pool-count{margin:0 0 8px; display:flex; align-items:center; gap:8px; font-size:12px; font-weight:500;
+  letter-spacing:.08em; text-transform:uppercase; color:rgba(161,161,170,.6);}
+.pool-zone{min-height:96px; padding:8px; border:1px dashed var(--border);
+  display:flex; flex-wrap:wrap; align-content:flex-start; gap:6px; transition:background .15s, border-color .15s, box-shadow .15s;}
+.pool-zone.file-hover{border-color:var(--fg); background:var(--fgi); box-shadow:inset 0 0 0 2px var(--fg);}
+.pool-zone.hover-in{background:var(--fgi);}
+.pool-empty{width:100%; display:flex; align-items:center; justify-content:center; padding:24px 0; font-size:14px; color:rgba(237,237,237,.5);}
+/* ghost */
+.ghost{display:none; position:fixed; z-index:50; pointer-events:none; transform:translate(-50%,-50%);
+  border:2px solid var(--fg); box-shadow:0 8px 24px rgba(0,0,0,.45); overflow:hidden; background:var(--bg);}
+.ghost img{width:100%; height:100%; object-fit:cover; display:block;}
+</style>
+</head>
+<body>
+<div class="page">
+  <main>
+    <h1 class="sr-only">Tier List 制作器</h1>
+    <input id="title-input" class="title" placeholder="从夯到拉" value="从夯到拉" aria-label="标题（可自定义）" spellcheck="false"/>
+    <div class="board" id="board"></div>
+    <div class="actions">
+      <label>
+        <input id="file-input" type="file" accept="image/*" multiple hidden/>
+        <span class="upload"><span class="icon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3zm-6.7 6H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v8.6c-.8-.5-1.6-.6-2-.6v-8h-14v14l5.5-7 1.5 1.3L15 15.4h-2.6L11 12.9 9.6 14.6z"/></svg></span>上传图片</span>
+      </label>
+      <button id="save" class="btn" disabled><span class="icon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 20h14v-2H5zm14-9h-4V3H9v8H5l7 8z"/></svg></span><span class="save-label">保存图片</span></button>
+      <button id="clear" class="btn" disabled><span class="icon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"/></svg></span>清空</button>
+    </div>
+    <section>
+      <p class="pool-count"><span class="icon" style="width:14px;height:14px"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M18 5H6v2h12M6 9h12v2H6m-4 1h2v5h16v-5h2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg></span>待排图片（<span id="pool-count">0</span>）</p>
+      <div class="pool-zone" id="pool-zone" data-zone="pool"></div>
+    </section>
+  </main>
+</div>
+<div class="ghost" id="ghost"><img alt=""/></div>
+<script>
+(function(){
+'use strict';
+var TIERS=[
+  {id:'hang', label:'夯', color:'#e5484d'},
+  {id:'top', label:'顶级', color:'#f08a3c'},
+  {id:'elite', label:'人上人', color:'#f2c94c'},
+  {id:'npc', label:'NPC', color:'#f5cfa8'},
+  {id:'la', label:'拉', color:'#ffffff'}
+];
+var DEFAULT_TITLE='从夯到拉';
+var CARD_H=72, EDGE=96, SPEED=18;
+var uid=function(){return Math.random().toString(36).slice(2)+Date.now().toString(36);};
+var initState=function(){var s={pool:[]};for(var i=0;i<TIERS.length;i++)s[TIERS[i].id]=[];return s;};
+
+var state=initState();
+var title=DEFAULT_TITLE;
+var drag=null;
+var fileHover=null;
+var saving=false;
+var objectURLs=[];
+
+var boardEl=document.getElementById('board');
+var titleInput=document.getElementById('title-input');
+var fileInput=document.getElementById('file-input');
+var saveBtn=document.getElementById('save');
+var saveLabel=saveBtn.querySelector('.save-label');
+var clearBtn=document.getElementById('clear');
+var poolCountEl=document.getElementById('pool-count');
+var poolZoneEl=document.getElementById('pool-zone');
+var ghostEl=document.getElementById('ghost');
+var ghostImg=ghostEl.querySelector('img');
+
+/* ---------- file -> item ---------- */
+function createItemFromFile(file){
+  return new Promise(function(resolve){
+    var src=URL.createObjectURL(file);
+    objectURLs.push(src);
+    var img=new Image();
+    img.onload=function(){resolve({id:uid(),src:src,ratio:img.naturalHeight?img.naturalWidth/img.naturalHeight:1});};
+    img.onerror=function(){resolve({id:uid(),src:src,ratio:1});};
+    img.src=src;
+  });
+}
+function processFiles(fileList,zone){
+  var files=[].filter.call(fileList||[],function(f){return f.type.indexOf('image/')===0;});
+  if(!files.length){return;}
+  Promise.all(files.map(createItemFromFile)).then(function(items){
+    if(!items.length){return;}
+    state[zone]=state[zone].concat(items);
+    render();
+  });
+}
+
+/* ---------- drag & drop ---------- */
+function zoneElOf(z){return document.querySelector('[data-zone="'+z+'"]');}
+function zoneIds(){return ['pool'].concat(TIERS.map(function(t){return t.id;}));}
+function zoneAt(x,y){
+  var keys=zoneIds();
+  for(var i=0;i<keys.length;i++){
+    var el=zoneElOf(keys[i]);
+    if(!el){continue;}
+    var r=el.getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){return keys[i];}
+  }
+  return null;
+}
+function dropIndex(z,x,y,excludeId){
+  var el=zoneElOf(z);
+  if(!el){return 0;}
+  var cards=Array.prototype.slice.call(el.querySelectorAll('.card')).filter(function(c){return c.dataset.card!==excludeId;});
+  for(var i=0;i<cards.length;i++){
+    var c=cards[i].getBoundingClientRect();
+    if(y<c.bottom&&x<c.left+c.width/2){return i;}
+  }
+  return cards.length;
+}
+function moveItem(id,fromZone,toZone,index){
+  var a=state[fromZone];
+  var oi=-1;
+  for(var i=0;i<a.length;i++){if(a[i].id===id){oi=i;break;}}
+  if(oi<0){return;}
+  var item=a.splice(oi,1)[0];
+  if(fromZone===toZone){
+    var idx=Math.max(0,Math.min(index,a.length));
+    a.splice(idx,0,item);
+  }else{
+    var c=state[toZone];
+    if(!c){c=[];state[toZone]=c;}
+    var idx2=Math.max(0,Math.min(index,c.length));
+    c.splice(idx2,0,item);
+  }
+  render();
+}
+function startPointer(e,item,fromZone){
+  if(e.pointerType==='mouse'&&e.button!==0){return;}
+  var sx=e.clientX,sy=e.clientY,moved=false,x=sx,y=sy,raf=null;
+  function auto(){
+    var ih=window.innerHeight,d=0;
+    if(y<EDGE){d=-SPEED*(1-y/EDGE);}
+    else if(y>ih-EDGE){d=SPEED*(1-(ih-y)/EDGE);}
+    if(d){
+      var prev=window.scrollY;
+      window.scrollBy(0,d);
+      if(window.scrollY!==prev){var o2=zoneAt(x,y);if(drag&&drag.over!==o2){drag.over=o2;syncHighlights();}}
+    }
+    raf=requestAnimationFrame(auto);
+  }
+  function showGhost(){
+    ghostEl.style.display='block';
+    ghostEl.style.left=x+'px';
+    ghostEl.style.top=y+'px';
+    ghostEl.style.width=(CARD_H*item.ratio)+'px';
+    ghostEl.style.height=CARD_H+'px';
+    ghostImg.src=item.src;
+  }
+  function move(ev){
+    if(!moved){
+      if(Math.hypot(ev.clientX-sx,ev.clientY-sy)<6){return;}
+      moved=true;
+      raf=requestAnimationFrame(autoScroll);
+    }
+    ev.preventDefault();
+    x=ev.clientX;y=ev.clientY;
+    drag={item:item,from:fromZone,x:x,y:y,over:zoneAt(x,y)};
+    showGhost();
+    syncHighlights();
+  }
+  function up(ev){
+    if(raf){cancelAnimationFrame(raf);raf=null;}
+    window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',up);
+    window.removeEventListener('pointercancel',up);
+    if(moved){
+      var o=zoneAt(ev.clientX,ev.clientY);
+      if(o){var idx=dropIndex(o,ev.clientX,ev.clientY,item.id);moveItem(item.id,fromZone,o,idx);}
+    }
+    drag=null;
+    ghostEl.style.display='none';
+    syncHighlights();
+  }
+  window.addEventListener('pointermove',move,{passive:false});
+  window.addEventListener('pointerup',up);
+  window.addEventListener('pointercancel',up);
+}
+function syncHighlights(){
+  var keys=zoneIds();
+  for(var i=0;i<keys.length;i++){
+    var el=zoneElOf(keys[i]);
+    if(!el){continue;}
+    el.classList.toggle('hover-in',!!(drag&&drag.over===keys[i]));
+    el.classList.toggle('file-hover',fileHover===keys[i]);
+  }
+  var cards=document.querySelectorAll('.card');
+  for(var j=0;j<cards.length;j++){
+    cards[j].classList.toggle('dragging',!!(drag&&drag.item&&drag.item.id===cards[j].dataset.card));
+  }
+}
+
+/* ---------- external file drop on zones ---------- */
+function attachFileDrop(el,zoneId){
+  if(el.__filedrop){return;}
+  el.__filedrop=true;
+  el.addEventListener('dragover',function(ev){
+    if(ev.dataTransfer&&ev.dataTransfer.types&&ev.dataTransfer.types.indexOf('Files')>=0){
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect='copy';
+      if(fileHover!==zoneId){fileHover=zoneId;syncHighlights();}
+    }
+  });
+  el.addEventListener('dragleave',function(ev){
+    if(!el.contains(ev.relatedTarget)&&fileHover===zoneId){
+      fileHover=null;syncHighlights();
+    }
+  });
+  el.addEventListener('drop',function(ev){
+    if(ev.dataTransfer&&ev.dataTransfer.types&&ev.dataTransfer.types.indexOf('Files')>=0){
+      ev.preventDefault();
+      ev.stopPropagation();
+      fileHover=null;syncHighlights();
+      processFiles(ev.dataTransfer.files,zoneId);
+    }
+  });
+}
+window.addEventListener('dragend',function(){fileHover=null;syncHighlights();});
+window.addEventListener('drop',function(){fileHover=null;syncHighlights();});
+
+/* ---------- render ---------- */
+function makeCard(item,fromZone){
+  var div=document.createElement('div');
+  div.className='card';
+  div.dataset.card=item.id;
+  div.style.width=(CARD_H*item.ratio)+'px';
+  var img=document.createElement('img');
+  img.src=item.src;
+  img.alt='';
+  img.draggable=false;
+  div.appendChild(img);
+  div.addEventListener('pointerdown',function(e){startPointer(e,item,fromZone);});
+  return div;
+}
+function render(){
+  var total=0,k;
+  for(k in state){if(state.hasOwnProperty(k)){total+=state[k].length;}}
+  poolCountEl.textContent=state.pool.length;
+  saveBtn.disabled=total===0||saving;
+  saveLabel.textContent=saving?'生成中…':'保存图片';
+  clearBtn.disabled=total===0||saving;
+  boardEl.innerHTML='';
+  TIERS.forEach(function(t,ti){
+    var row=document.createElement('div');
+    row.className='tier-row';
+    var lab=document.createElement('div');
+    lab.className='tier-label';
+    lab.style.backgroundColor=t.color;
+    lab.style.fontSize=t.label.length>=3?'16.8px':(t.label.length===2?'24px':'30px');
+    lab.textContent=t.label;
+    var body=document.createElement('div');
+    body.className='tier-zone';
+    body.dataset.zone=t.id;
+    state[t.id].forEach(function(it){body.appendChild(makeCard(it,t.id));});
+    row.appendChild(lab);
+    row.appendChild(body);
+    boardEl.appendChild(row);
+  });
+  poolZoneEl.innerHTML='';
+  if(state.pool.length===0){
+    var emp=document.createElement('div');
+    emp.className='pool-empty';
+    emp.textContent='上传或从外部拖拽图片到这里，再拖到上面的行进行排名';
+    poolZoneEl.appendChild(emp);
+  }else{
+    state.pool.forEach(function(it){poolZoneEl.appendChild(makeCard(it,'pool'));});
+  }
+  var keys=zoneIds();
+  keys.forEach(function(z){var el=zoneElOf(z);if(el){attachFileDrop(el,z);}});
+  syncHighlights();
+}
+
+/* ---------- clear ---------- */
+clearBtn.addEventListener('click',function(){
+  objectURLs.forEach(function(u){try{URL.revokeObjectURL(u);}catch(e){}});
+  objectURLs=[];
+  state=initState();
+  render();
+});
+
+/* ---------- save image ---------- */
+function loadImage(src){
+  return new Promise(function(resolve,reject){
+    var img=new Image();
+    img.onload=function(){resolve(img);};
+    img.onerror=reject;
+    img.src=src;
+  });
+}
+saveBtn.addEventListener('click',function(){
+  if(saving){return;}
+  saving=true;
+  render();
+  var all=[];
+  TIERS.forEach(function(t){state[t.id].forEach(function(it){all.push(it);});});
+  var loaded=new Map();
+  Promise.all(all.map(function(it){return loadImage(it.src).then(function(img){loaded.set(it.id,img);});}))
+    .then(function(){
+      var lines=TIERS.map(function(t){
+        var list=[],x=6,line=0;
+        state[t.id].forEach(function(it){
+          var img=loaded.get(it.id);
+          var ratio=img?(img.naturalHeight?img.naturalWidth/img.naturalHeight:1):it.ratio;
+          var w=Math.max(1,Math.min(Math.round(100*ratio),792));
+          if(x>6&&x+w+6>804){line+=1;x=6;}
+          list.push({img:img,x:x,w:w,line:line});
+          x+=w+6;
+        });
+        return list;
+      });
+      var heights=lines.map(function(list){
+        var linesCount=list.length?Math.max.apply(null,list.map(function(it){return it.line;}))+1:1;
+        return linesCount*100+(linesCount+1)*6;
+      });
+      var titleText=titleInput.value.trim();
+      var titleH=titleText?78:0;
+      var canvasH=titleH+heights.reduce(function(a,b){return a+b;},0)+(TIERS.length+1)*2;
+      var canvas=document.createElement('canvas');
+      canvas.width=1800;
+      canvas.height=canvasH*2;
+      var ctx=canvas.getContext('2d');
+      ctx.scale(2,2);
+      ctx.fillStyle='#171717';
+      ctx.fillRect(0,0,900,canvasH);
+      if(titleText){
+        ctx.fillStyle='#ededed';
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        var fs=46;
+        do{
+          ctx.font='bold '+fs+'px sans-serif';
+          if(ctx.measureText(titleText).width<=868){break;}
+          fs-=2;
+        }while(fs>16);
+        ctx.fillText(titleText,450,titleH/2);
+      }
+      var py=titleH+2;
+      for(var i=0;i<TIERS.length;i++){
+        var t=lines[i],rowH=heights[i],tier=TIERS[i];
+        ctx.fillStyle='#0f0f0f';
+        ctx.fillRect(96,py,804,rowH);
+        ctx.fillStyle=tier.color;
+        ctx.fillRect(0,py,96,rowH);
+        ctx.fillStyle='#171717';
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        var lfs=40;
+        do{
+          ctx.font='bold '+lfs+'px sans-serif';
+          if(ctx.measureText(tier.label).width<=82){break;}
+          lfs-=2;
+        }while(lfs>12);
+        ctx.fillText(tier.label,48,py+rowH/2);
+        t.forEach(function(it){
+          var img=it.img;
+          var ratio=img&&img.naturalHeight?img.naturalWidth/img.naturalHeight:1;
+          var w=it.w,h=w/ratio;
+          var dx=96+it.x,dy=py+6+it.line*106;
+          if(h>100){h=100;w=h*ratio;}
+          if(img){ctx.drawImage(img,dx+(it.w-w)/2,dy+(100-h)/2,w,h);}
+        });
+        py+=rowH+2;
+      }
+      var data=canvas.toDataURL('image/png');
+      var a=document.createElement('a');
+      a.href=data;
+      a.download=(titleText||DEFAULT_TITLE)+'.png';
+      a.click();
+    })
+    .catch(function(e){console.error(e);})
+    .then(function(){
+      saving=false;
+      render();
+    });
+});
+
+/* ---------- init ---------- */
+titleInput.addEventListener('input',function(){title=titleInput.value;});
+fileInput.addEventListener('change',function(){
+  processFiles(fileInput.files,'pool');
+  fileInput.value='';
+});
+render();
+})();
+</script>
+</body>
+</html>

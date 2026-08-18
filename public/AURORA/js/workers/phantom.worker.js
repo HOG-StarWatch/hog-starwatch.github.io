@@ -1,5 +1,7 @@
 self.onmessage = function(e) {
-    const { cmd, imgFront, imgBack, width, height } = e.data;
+    const { requestId, imgFront, imgBack, width, height } = e.data;
+    // unified: {type:'process', sub:'prism'|'shadow'|'process', ...}; legacy: {cmd:...}
+    const cmd = e.data.sub || e.data.cmd || e.data.type;
 
     if (cmd === 'process') {
         try {
@@ -25,9 +27,9 @@ self.onmessage = function(e) {
                 outputData[i+3] = a * (e.data.alphaBoost || 1);
             }
 
-            self.postMessage({ type: 'success', outputData: outputData.buffer, width, height }, [outputData.buffer]);
+            self.postMessage({ type: 'success', requestId, outputData: outputData.buffer, width, height }, [outputData.buffer]);
         } catch (error) {
-            self.postMessage({ type: 'error', error: error.message });
+            self.postMessage({ type: 'error', requestId, error: error.message });
         }
     } else if (cmd === 'prism') {
         try {
@@ -73,9 +75,9 @@ self.onmessage = function(e) {
                 outputData[i + 3] = 255;
             }
 
-            self.postMessage({ type: 'success', outputData: outputData.buffer, width, height }, [outputData.buffer]);
+            self.postMessage({ type: 'success', requestId, outputData: outputData.buffer, width, height }, [outputData.buffer]);
         } catch (error) {
-            self.postMessage({ type: 'error', error: error.message });
+            self.postMessage({ type: 'error', requestId, error: error.message });
         }
     } else if (cmd === 'shadow') {
         try {
@@ -155,9 +157,9 @@ self.onmessage = function(e) {
                 }
             }
 
-            self.postMessage({ type: 'success', outputData: outputData.buffer, width, height }, [outputData.buffer]);
+            self.postMessage({ type: 'success', requestId, outputData: outputData.buffer, width, height }, [outputData.buffer]);
         } catch (error) {
-            self.postMessage({ type: 'error', error: error.message });
+            self.postMessage({ type: 'error', requestId, error: error.message });
         }
     }
 };

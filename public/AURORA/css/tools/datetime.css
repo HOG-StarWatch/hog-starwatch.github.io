@@ -1,0 +1,166 @@
+/* Extracted from datetime.html (refactor script). Tool-specific styles only. */
+
+/* === datetime.html — inline style block 1 === */
+.time-container {
+            flex-direction: column;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Tab Navigation */
+        .tool-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .tool-tab {
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--text-dim);
+            background: transparent;
+            border: 1px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tool-tab.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(192, 132, 252, 0.3);
+        }
+
+        .tool-tab:hover:not(.active) {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Time Calc Specific */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .calc-grid { grid-template-columns: 1fr; }
+        }
+
+        .ts-display {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--secondary);
+            text-align: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: var(--radius-md);
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ts-display:hover { background: rgba(0,0,0,0.3); border-color: var(--secondary); }
+
+        .time-row {
+            display: flex; gap: 10px; margin-bottom: 15px; align-items: center;
+        }
+        .time-label { min-width: 90px; color: var(--text-dim); font-size: 0.9rem; }
+        .time-input { flex: 1; font-family: var(--font-mono); }
+        
+        .diff-result-item {
+            background: rgba(255,255,255,0.05);
+            padding: 10px 15px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .diff-val { font-family: var(--font-mono); color: var(--primary); font-weight: bold; }
+
+        /* Cron Specific */
+        .cron-display {
+            background: var(--bg-deep);
+            color: var(--secondary);
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
+        }
+
+        .cron-expression {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .cron-expression:hover { opacity: 0.8; transform: scale(1.02); }
+
+        .cron-desc {
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+
+        .cron-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .option-group {
+            background: var(--bg-panel);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .option-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .option-group select {
+            width: 100%;
+        }
+
+        .quick-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+
+        .preset-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .preset-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }

@@ -1,0 +1,70 @@
+/* Extracted from unit.html (refactor script). Tool-specific styles only. */
+
+/* === unit.html — inline style block 1 === */
+.unit-container {
+            max-width: 800px;
+            margin: 0 auto;
+            flex-direction: column !important;
+        }
+
+        .type-selector {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .type-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 20px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .type-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
+        .type-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
+
+        .converter-box {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            background: var(--bg-panel);
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .unit-select {
+            width: 100%;
+        }
+
+        .value-input {
+            font-size: 1.5rem;
+            padding: 15px;
+            text-align: center;
+            height: auto; /* 覆盖全局可能的 height */
+        }
+        .value-input:focus { border-color: var(--primary); }
+
+        .equal-sign {
+            font-size: 2rem;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 600px) {
+            .converter-box { grid-template-columns: 1fr; }
+            .equal-sign { transform: rotate(90deg); text-align: center; }
+        }

@@ -1,0 +1,388 @@
+/* Extracted from network-epic.html (refactor script). Tool-specific styles only. */
+
+/* === network-epic.html — inline style block 1 === */
+/* ===== 工具页专用样式（Epic 限免，Aurora UI） ===== */
+        .epic-workspace { max-width: 1500px; }
+
+        .epic-scroll {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            padding: 1rem;
+        }
+
+        .epic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 1rem;
+        }
+
+        .epic-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            animation: epic-card-in 0.35s ease both;
+        }
+        @keyframes epic-card-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .epic-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+        .epic-card.selected {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.35), var(--shadow);
+        }
+
+        .epic-card-media {
+            position: relative;
+            aspect-ratio: 3 / 4;
+            background: var(--btn-bg);
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .epic-card-media img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .epic-check {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 3;
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            accent-color: var(--secondary);
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .epic-detail {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 3;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.38);
+            color: #fff;
+            text-decoration: none;
+            opacity: 0;
+            transform: scale(0.7);
+            transition: opacity 0.15s ease, transform 0.2s ease, background 0.2s ease;
+        }
+        .epic-card:hover .epic-detail { opacity: 1; transform: scale(1); }
+        .epic-detail:hover { background: var(--primary); }
+        @media (hover: none) { .epic-detail { opacity: 1; transform: scale(1); } }
+
+        .epic-card-body {
+            padding: 10px 12px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+        .epic-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.45;
+            color: var(--text-main);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 2.6em;
+        }
+        .epic-dates { display: flex; flex-direction: column; gap: 2px; }
+        .epic-date {
+            display: flex;
+            gap: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            color: var(--text-dim);
+        }
+        .epic-date .epic-date-label { flex: none; opacity: 0.8; }
+        .epic-date .epic-time { font-family: var(--font-mono); color: var(--text-dim); }
+
+        .epic-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .epic-status .epic-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .epic-status.active { color: var(--secondary); }
+        .epic-status.active .epic-dot { background: var(--secondary); }
+        .epic-status.upcoming { color: var(--primary); }
+        .epic-status.upcoming .epic-dot { background: var(--primary); }
+
+        .epic-hint {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-align: center;
+            margin: 0;
+            padding-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        /* 骨架屏 */
+        .epic-skeleton {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 1rem;
+        }
+        .skel-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--bg-panel);
+        }
+        .skel-card .skel-img {
+            aspect-ratio: 3 / 4;
+            background: linear-gradient(100deg, var(--btn-bg) 40%, var(--btn-hover-bg) 50%, var(--btn-bg) 60%);
+            background-size: 200% 100%;
+            animation: shimmer 1.2s linear infinite;
+        }
+        .skel-card .skel-l {
+            height: 12px;
+            margin: 12px 14px 8px;
+            border-radius: 4px;
+            background: linear-gradient(100deg, var(--btn-bg) 40%, var(--btn-hover-bg) 50%, var(--btn-bg) 60%);
+            background-size: 200% 100%;
+            animation: shimmer 1.2s linear infinite;
+        }
+        .skel-card .skel-l.short { width: 55%; margin-top: 0; }
+        @keyframes shimmer { to { background-position: -200% 0; } }
+
+        /* 空态 / 错误态 */
+        .epic-empty, .epic-error {
+            padding: 3rem 1.5rem;
+            text-align: center;
+            color: var(--text-dim);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .epic-error h3 { margin: 0; color: var(--text-main); font-size: 1rem; }
+
+        /* 底部操作坞 */
+        .epic-dock {
+            position: fixed;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            min-width: 340px;
+            max-width: calc(100vw - 24px);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 10px;
+        }
+        .epic-dock-buttons { display: flex; gap: 8px; justify-content: center; }
+        .epic-dock-buttons .btn {
+            flex: 1;
+            text-align: center;
+            justify-content: center;
+            padding: 0.55rem 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .selected-tray {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            max-height: 0;
+            opacity: 0;
+            padding: 0 2px;
+            margin: 0;
+            align-items: center;
+            scrollbar-width: thin;
+            transition: max-height 0.26s ease, opacity 0.2s ease, padding 0.26s ease;
+        }
+        .selected-tray.active { max-height: 68px; opacity: 1; padding: 4px 2px 8px; }
+
+        .tray-item {
+            position: relative;
+            width: 36px;
+            height: 48px;
+            flex: none;
+            cursor: pointer;
+            transition: width 0.22s ease, opacity 0.18s ease, transform 0.22s ease;
+        }
+        .tray-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            display: block;
+        }
+        .tray-item.pre img, .tray-item.pre .remove-btn { opacity: 0 !important; }
+        .tray-item.pre::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1.5px dashed var(--border);
+            border-radius: 5px;
+            background: var(--btn-bg);
+        }
+        .tray-item.pop { animation: trayPop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes trayPop {
+            0% { transform: scale(0.55); }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .tray-item.land img { animation: trayLand 0.55s ease-out; }
+        @keyframes trayLand {
+            0% { box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.5); }
+            100% { box-shadow: 0 0 0 3px transparent; }
+        }
+        .tray-item.exit { width: 0 !important; margin-right: -8px; opacity: 0; transform: scale(0.7); pointer-events: none; }
+        .tray-item .remove-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--text-main);
+            color: var(--bg-deep);
+            font-size: 11px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        .tray-item:hover .remove-btn { opacity: 1; transform: scale(1); }
+        @media (hover: none) { .tray-item .remove-btn { opacity: 0.9; transform: scale(0.9); } }
+
+        .fly-clone {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 99999;
+            pointer-events: none;
+            background-size: cover;
+            background-position: center;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow);
+            will-change: transform, opacity;
+        }
+        #drag-selector {
+            position: fixed;
+            display: none;
+            pointer-events: none;
+            z-index: 9999;
+            border: 1px solid var(--secondary);
+            background: rgba(45, 212, 191, 0.12);
+            border-radius: 4px;
+        }
+
+        /* 轻提示（抬升避开底部操作坞） */
+        #toast { bottom: 120px; z-index: 3000; }
+
+        /* 确认弹窗 */
+        .epic-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        .epic-modal-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
+        .epic-modal {
+            width: min(460px, 100%);
+            max-height: 85vh;
+            overflow-y: auto;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+        .epic-modal-overlay.active .epic-modal { transform: scale(1); }
+        .epic-modal h3 { margin: 0 0 8px; font-size: 1.1rem; color: var(--text-main); }
+        .epic-modal-desc { margin: 0 0 14px; font-size: 0.85rem; line-height: 1.65; color: var(--text-dim); }
+        .epic-modal-desc strong { color: var(--text-main); font-variant-numeric: tabular-nums; }
+        .modal-tray {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 2px 2px 12px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+            scrollbar-width: thin;
+        }
+        .modal-tray-item { position: relative; width: 44px; height: 58px; flex: none; }
+        .modal-tray-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            display: block;
+        }
+        .epic-warn {
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--bg-panel);
+            margin-bottom: 16px;
+        }
+        .epic-warn-title { font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+        .epic-warn ul { margin: 0; padding-left: 18px; font-size: 0.78rem; line-height: 1.9; color: var(--text-dim); }
+        .epic-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .epic-modal-actions .btn { text-align: center; justify-content: center; padding: 0.6rem 1rem; }
+
+        @media (max-width: 768px) {
+            .epic-grid, .epic-skeleton { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+            .epic-title { font-size: 0.82rem; }
+            .epic-dock { min-width: 0; width: calc(100vw - 24px); }
+            .epic-modal-actions { flex-direction: column-reverse; }
+            .epic-modal-actions .btn { width: 100%; }
+        }

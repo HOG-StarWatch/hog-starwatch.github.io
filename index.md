@@ -7,12 +7,12 @@ hero:
   text: "欢迎来到我的主页"
   tagline: HOG-StarWatch
   image:
-    src: /HOG.png
+    src: /assets/HOG.png
     alt: 背景图片
   actions:
     - theme: brand
       text: My Domain
-      link: ../../../DomainIndex.md
+      link: /DomainIndex.md
     - theme: alt
       text: Tusiart
       link: https://tusiart.com/u/648531931343957263

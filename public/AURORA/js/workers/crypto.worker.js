@@ -5,7 +5,8 @@
  */
 
 self.onmessage = function(e) {
-    const { command, id, ...args } = e.data;
+    const { command, ...args } = e.data;
+    const id = e.data.requestId || e.data.id; // correlation id (also used as seed param)
     
     try {
         let result;
@@ -39,11 +40,11 @@ self.onmessage = function(e) {
         if (result.pixelsA) transferables.push(result.pixelsA.buffer);
         if (result.pixelsB) transferables.push(result.pixelsB.buffer);
 
-        self.postMessage({ id, success: true, ...result }, transferables);
+        self.postMessage({ type: 'success', requestId: id, ...result }, transferables);
 
     } catch (err) {
         console.error(err);
-        self.postMessage({ id, success: false, error: err.message });
+        self.postMessage({ type: 'error', requestId: id, error: err.message });
     }
 };
 
@@ -163,7 +164,7 @@ function visualEncrypt(srcPixels, w, h, style, param, algo, seed, id) {
     };
 
     const reportProgress = (percent) => {
-        if (id) self.postMessage({ id, progress: percent });
+        if (id) self.postMessage({ type: 'progress', requestId: id, progress: percent });
     };
 
     // --- Phase 1: Generate Visual Style (Share B) ---
@@ -303,7 +304,7 @@ function visualDecrypt(bPixels, cPixels, w, h, algo, seed, id) {
     const chunkSize = Math.max(2000, Math.floor(totalPixels / 100));
 
     const reportProgress = (percent) => {
-        if (id) self.postMessage({ id, progress: percent });
+        if (id) self.postMessage({ type: 'progress', requestId: id, progress: percent });
     };
 
     const useXor = (algo === 'lsb' || algo === 'xor');

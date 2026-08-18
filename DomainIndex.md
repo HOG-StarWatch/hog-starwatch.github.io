@@ -74,7 +74,19 @@ ws /019425/p<端口>
 
 11. [LiveMY5-合成大球球](https://vh-prod-oppai-oppai-orbs-decomp-main-4536aa-66413be4.livemy.site)
 
-12. [LiveMY6-漫画翻译器](https://vh-prod-manga-translator-ui-main-579ffa-46d1ea56.livemy.site/)
+12. [LiveMY6-漫画翻译器](https://vh-prod-manga-translator-ui-main-579ffa-46d1ea56.livemy.site)
+
+13. [LiveMYjitters-TD-py](https://vh-prod-telegram-downloader-py-main-ab710a-cb7fb945.livemy.site)
+
+14. [livemy.app-amber withoutBG](https://vh-prod-withoutbg-python-main-70826b-937c0445.livemy.site)
+
+KpLW8K8hU226
+
+15. [livemy.app-sympathy codeserver](https://vh-prod-code-server-main-1371da-add1174a.livemy.site)
+
+52c112ec946ced8dbb2e47c98869f27c
+
+16. [livemy.app-liftoff SearXNG](https://vh-prod-searxng-master-5f0487-3077e443.livemy.site)
 
 ce725a92-690d-4f9f-af42-0bcba945bac0
 

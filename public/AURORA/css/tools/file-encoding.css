@@ -1,0 +1,126 @@
+/* Extracted from file-encoding.html (refactor script). Tool-specific styles only. */
+.file-info { flex-direction: column; overflow: hidden; }
+
+/* === file-encoding.html — inline style block 1 === */
+/* Custom Styles for File Encoding Tool */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-dim);
+            margin-left: 8px;
+            transition: all 0.3s ease;
+        }
+        .status-badge.loading {
+            background: var(--secondary);
+            color: var(--bg-deep);
+            animation: pulse 1.5s infinite;
+        }
+        .status-badge.ready {
+            background: #10b981;
+            color: #fff;
+        }
+        .status-badge.error {
+            background: var(--accent);
+            color: #fff;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+        .drop-zone:hover {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .file-list-widget {
+            margin-top: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none; /* Hidden by default */
+        }
+        
+        .file-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .file-list-item:last-child {
+            border-bottom: none;
+        }
+        .file-list-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .file-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+        .file-meta {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        .remove-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+            margin-left: 10px;
+            border-radius: 4px;
+        }
+        .remove-btn:hover {
+            color: var(--accent);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            margin-top: 1rem;
+            align-items: center;
+        }
+        
+        @media (max-width: 600px) {
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        #file-b64enc-view, #file-b64dec-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        /* Ensure the active one is displayed correctly if JS misses it (though JS sets display:flex) */
+        #file-b64enc-view {
+            display: flex; /* Default active */
+        }

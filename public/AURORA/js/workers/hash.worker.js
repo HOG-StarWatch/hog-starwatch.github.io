@@ -11,10 +11,9 @@ try {
 }
 
 self.onmessage = async function(e) {
-    const { type, payload } = e.data;
+    const { type, requestId, data, isFile, algos, hmacKey } = e.data;
 
-    if (type === 'calc') {
-        const { data, isFile, algos, hmacKey, requestId } = payload;
+    if (type === 'process') {
         
         try {
             await ready;
@@ -46,11 +45,11 @@ self.onmessage = async function(e) {
                 results[algo] = hash.toString(CryptoJS.enc.Hex);
             });
 
-            self.postMessage({ type: 'result', results: results, requestId: requestId });
+            self.postMessage({ type: 'success', requestId, results: results });
 
         } catch (error) {
             const msg = error && error.message ? error.message : 'Unknown error';
-            self.postMessage({ type: 'error', error: msg, requestId: requestId });
+            self.postMessage({ type: 'error', requestId, error: msg });
         }
     }
 };

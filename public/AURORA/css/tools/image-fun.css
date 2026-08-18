@@ -1,0 +1,33 @@
+/* Extracted from image-fun.html (refactor script). Tool-specific styles only. */
+
+/* === image-fun.html — inline style block 1 === */
+body {
+            padding: 0;
+            margin: 0;
+            overflow: auto;
+            height: 100vh; /* Keep 100vh for layout calculation but allow scroll if needed */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: transparent;
+            min-height: 800px; /* Ensure enough space for PC scrolling */
+        }
+
+        /* Mobile Scroll Fix */
+        @media (max-width: 768px) {
+            body {
+                height: auto !important;
+                overflow-y: auto !important;
+                display: block !important;
+            }
+            .content-frame {
+                height: 1200px !important; /* Force large height to prevent internal scroll */
+                min-height: 800px;
+                display: block;
+            }
+        }

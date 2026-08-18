@@ -208,20 +208,9 @@ const compressBytes = async (bytes, fmt) => {
     }
     
     if (fmt === 'zstd') {
-        try {
-            try {
-                const zstd = await ResourceLoader.import('zstd-wasm-esm');
-                await zstd.init();
-                return zstd.compress(bytes);
-            } catch(e) {
-                // Fallback logic
-                await ResourceLoader.load('zstd-wasm');
-                await Zstd.init();
-                return Zstd.compress(bytes);
-            }
-        } catch(e) {
-            throw new Error("Zstd Wasm load failed: " + e.message);
-        }
+        // fzstd: pure-JS zstd with compress + decompress (zstd-wasm only decompresses)
+        const fzstd = await ResourceLoader.import('fzstd');
+        return fzstd.compress(bytes);
     }
 
     if (fmt === 'gzip' || fmt === 'deflate') {
@@ -276,15 +265,9 @@ handlers.decode = async ({ jsonStr }) => {
         }
         
         if (fmt === 'zstd') {
-            try {
-                const zstd = await ResourceLoader.import('zstd-wasm-esm');
-                await zstd.init();
-                return zstd.decompress(bytes);
-            } catch(e) {
-                await ResourceLoader.load('zstd-wasm');
-                await Zstd.init();
-                return Zstd.decompress(bytes);
-            }
+            // fzstd: pure-JS zstd with compress + decompress (zstd-wasm only decompresses)
+            const fzstd = await ResourceLoader.import('fzstd');
+            return fzstd.decompress(bytes);
         }
 
         if (fmt === 'gzip' || fmt === 'deflate') {
@@ -325,16 +308,17 @@ handlers.decode = async ({ jsonStr }) => {
 };
 
 self.onmessage = async (e) => {
-    const { id, action, payload } = e.data;
+    const requestId = e.data.requestId || e.data.id;
+    const { action, payload } = e.data;
     
     if (handlers[action]) {
         try {
             const result = await handlers[action](payload);
-            self.postMessage({ id, status: 'success', result });
+            self.postMessage({ type: 'success', requestId, result });
         } catch (error) {
-            self.postMessage({ id, status: 'error', error: error.message });
+            self.postMessage({ type: 'error', requestId, error: error.message });
         }
     } else {
-        self.postMessage({ id, status: 'error', error: `Unknown action: ${action}` });
+        self.postMessage({ type: 'error', requestId, error: `Unknown action: ${action}` });
     }
 };

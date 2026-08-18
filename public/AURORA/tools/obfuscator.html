@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTML混淆</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/theme-boot.js"></script>
+    <script src="../js/ui/icons.js"></script>
 </head>
 <body>
     <div class="workspace">
@@ -12,17 +14,17 @@
             <div class="panel-header">
                 <div class="panel-title">HTML 隐形加密器 (HTML Obfuscator)</div>
                 <div class="panel-actions">
-                     <button class="btn btn-icon" onclick="app.clear('obf')">清空</button>
+                     <button class="btn btn-icon" data-action="clear" data-clear-prefix="obf">清空</button>
                 </div>
             </div>
-            <div style="padding: 1rem; flex: 1; display: flex; flex-direction: column; gap: 1rem;">
-                <textarea id="obf-input" placeholder="请在此粘贴您的 HTML 源代码..." style="flex:1; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.2);"></textarea>
+            <div style="padding:1rem; display:flex; flex-direction:column; gap:1rem" class="flex-1">
+                <textarea id="obf-input" placeholder="请在此粘贴您的 HTML 源代码..." class="flex-1"></textarea>
                 
-                <div class="toolbar" style="width:100%; flex-direction:row; height:auto; overflow:visible;">
-                    <button class="btn btn-primary" onclick="obfTool.encrypt('base64')">⚡ Base64 加密</button>
-                    <button class="btn btn-primary" onclick="obfTool.encrypt('hex')">🔢 Hex 编码</button>
-                    <button class="btn btn-primary" onclick="obfTool.encrypt('unicode')">🔣 Unicode 混淆</button>
-                    <button class="btn btn-primary" onclick="obfTool.encrypt('ascii')">🤖 ASCII 数组</button>
+                <div class="toolbar w-100">
+                    <button class="btn btn-primary" data-action="obf.encrypt" data-algo="base64"><span class="ic" data-ic="zap"></span> Base64 加密</button>
+                    <button class="btn btn-primary" data-action="obf.encrypt" data-algo="hex"><span class="ic" data-ic="hash"></span> Hex 编码</button>
+                    <button class="btn btn-primary" data-action="obf.encrypt" data-algo="unicode"><span class="ic" data-ic="symbols"></span> Unicode 混淆</button>
+                    <button class="btn btn-primary" data-action="obf.encrypt" data-algo="ascii"><span class="ic" data-ic="bot"></span> ASCII 数组</button>
                 </div>
             </div>
         </div>
@@ -31,7 +33,7 @@
             <div class="panel-header">
                 <div class="panel-title">加密结果 (可直接保存为 .html 运行)</div>
                 <div class="panel-actions">
-                    <button class="btn btn-icon btn-secondary" onclick="app.copy('obf-output')">复制</button>
+                    <button class="btn btn-icon btn-secondary" data-action="copy" data-copy-target="obf-output">复制</button>
                 </div>
             </div>
             <textarea id="obf-output" readonly placeholder="加密后的代码将显示在这里，肉眼无法识别内容..." style="padding: 1rem;"></textarea>
@@ -40,47 +42,6 @@
 
     <div id="toast" class="toast">操作成功</div>
     <script src="../js/app.js"></script>
-    <script>
-        const obfTool = {
-            encrypt: function(type) {
-                const code = document.getElementById('obf-input').value;
-                if (!code) {
-                    app.showToast('请先输入代码！', 'error');
-                    return;
-                }
-
-                let script = '';
-                try {
-                    if (type === 'base64') {
-                        const base64 = btoa(unescape(encodeURIComponent(code)));
-                        script = `<script type="text/javascript">\ndocument.write(decodeURIComponent(escape(window.atob("${base64}"))));\n<\/script>`;
-                    } else if (type === 'hex') {
-                        let hex = '';
-                        for (let i = 0; i < code.length; i++) {
-                            hex += '%' + code.charCodeAt(i).toString(16).toUpperCase();
-                        }
-                        script = `<script type="text/javascript">\ndocument.write(unescape("${hex}"));\n<\/script>`;
-                    } else if (type === 'unicode') {
-                        let unicode = '';
-                        for (let i = 0; i < code.length; i++) {
-                            unicode += '\\u' + ('0000' + code.charCodeAt(i).toString(16)).slice(-4);
-                        }
-                        script = `<script type="text/javascript">\ndocument.write("${unicode}");\n<\/script>`;
-                    } else if (type === 'ascii') {
-                        let charCodes = [];
-                        for (let i = 0; i < code.length; i++) {
-                            charCodes.push(code.charCodeAt(i));
-                        }
-                        script = `<script type="text/javascript">\ndocument.write(String.fromCharCode(${charCodes.join(',')}));\n<\/script>`;
-                    }
-                    
-                    document.getElementById('obf-output').value = script;
-                    app.showToast('加密完成！');
-                } catch (e) {
-                    app.showToast('加密失败: ' + e.message, 'error');
-                }
-            }
-        };
-    </script>
+    <script src="../js/tools/obfuscator.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 self.onmessage = function(e) {
-    const { type, dN, dNB, dFB, config } = e.data;
+    const { type, requestId, dN, dNB, dFB, config } = e.data;
 
     if (type === 'process') {
         try {
@@ -44,9 +44,9 @@ self.onmessage = function(e) {
                 }
             }
 
-            self.postMessage({ type: 'complete', outputData: outputData.buffer }, [outputData.buffer]);
+            self.postMessage({ type: 'success', requestId, outputData: outputData.buffer }, [outputData.buffer]);
         } catch (error) {
-            self.postMessage({ type: 'error', error: error.message });
+            self.postMessage({ type: 'error', requestId, error: error.message });
         }
     }
 };

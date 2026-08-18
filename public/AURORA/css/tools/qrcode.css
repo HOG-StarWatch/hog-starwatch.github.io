@@ -1,0 +1,129 @@
+/* Extracted from qrcode.html (refactor script). Tool-specific styles only. */
+
+/* === qrcode.html — inline style block 1 === */
+/* 布局重构：响应式流式布局 */
+        .workspace-split {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: flex-start; /* 顶部对齐 */
+            max-width: 1600px;
+            margin: 0 auto;
+            padding-bottom: 2rem;
+        }
+
+        .settings-panel {
+            flex: 1 1 600px; /* 占据主要空间，基础宽600px */
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-panel {
+            flex: 0 0 400px; /* 侧边固定宽度，避免浪费空间 */
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            background: rgba(20, 25, 40, 0.4);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 1rem;
+            height: fit-content;
+            z-index: 10;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 自适应多列 */
+            gap: 0.7rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        #qrcode-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            width: 100%;
+            min-height: 300px;
+        }
+        
+        #qrcode-container img, #qrcode-container canvas {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .sub-group-title {
+            grid-column: 1 / -1;
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-top: 0.6rem;
+            margin-bottom: 0.35rem;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.2rem;
+        }
+        
+        .full-width-col {
+            grid-column: span 2;
+        }
+        
+        /* 当列数变少时，full-width-col 也应该适应 */
+        @media (max-width: 500px) {
+             .full-width-col {
+                grid-column: span 1;
+            }
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 1024px) {
+            .workspace-split {
+                flex-direction: column-reverse; /* 平板/手机端：设置在上，预览在下? 不，预览应该置顶方便看结果？
+                                                 但是在移动端 sticky 会失效或占空间。
+                                                 通常表单在下，结果在上比较好。
+                                                 或者保持 HTML 顺序（设置在前），但视觉上调整。
+                                                 这里选择：Settings (Main) + Preview (Bottom/Top)
+                                                 如果用 column-reverse，Preview 在上。
+                                                 如果用 column，Preview 在下。
+                                                 
+                                                 试想：用户改了参数，想看结果。如果在下面，得滑下去。如果在上面，得滑上去。
+                                                 既然有 sticky，大屏很好。
+                                                 小屏时，sticky 可能占屏太大。
+                                                 我们让它在小屏时变成普通流，放在最前面（order: -1）。
+                                              */
+            }
+            
+            .preview-panel {
+                flex: 1 1 100%;
+                width: 100%;
+                position: static; /* 取消吸顶 */
+                order: -1; /* 让预览显示在最上方 */
+                flex-direction: row; /* 横向排列内容? 不，还是 column */
+                min-height: auto;
+                padding: 1rem;
+            }
+            
+            #qrcode-container {
+                min-height: 200px;
+            }
+            
+            .settings-panel {
+                width: 100%;
+                flex: 1 1 auto;
+            }
+        }

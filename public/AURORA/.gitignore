@@ -1,0 +1,10 @@
+# --- Editor / OS ---
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store
+
+# --- Local dev scratch (dev-only, not deployment) ---
+scripts/.tmp/
+*.log

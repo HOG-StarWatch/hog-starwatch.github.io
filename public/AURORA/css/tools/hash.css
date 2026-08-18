@@ -1,0 +1,22 @@
+/* Extracted from hash.html (refactor script). Tool-specific styles only. */
+.file-info, /* === hash.html — inline style block 1 === */
+.file-info span {
+            color: var(--text-main);
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+        .file-item span {
+            color: var(--text-main);
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+        .hash-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+        .hash-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }

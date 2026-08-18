@@ -1,0 +1,87 @@
+/* Extracted from ai-tts.html (refactor script). Tool-specific styles only. */
+
+/* === ai-tts.html — inline style block 1 === */
+.tts-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .tts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px;
+            padding: 1rem;
+            align-items: start;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+        .input-group label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.2;
+        }
+        .input-group input[type="text"],
+        .input-group select,
+        .input-group textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            font-size: 0.95rem;
+        }
+        .input-group input[type="range"] {
+            width: 100%;
+        }
+        .voice-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 8px;
+        }
+        .voice-row input,
+        .voice-row select {
+            min-height: 42px;
+        }
+        .custom-engine {
+            grid-column: 1 / -1;
+            display: none;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        .tts-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 1rem;
+        }
+        .audio-preview {
+            padding: 0 1rem 1rem;
+            display: none;
+        }
+        .audio-preview audio {
+            width: 100%;
+        }
+        .engine-note {
+            padding: 0 1rem 1rem;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+        .status-row {
+            padding: 0 1rem 1rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+        .support-warning {
+            padding: 1rem;
+            color: #f43f5e;
+            font-size: 0.95rem;
+        }

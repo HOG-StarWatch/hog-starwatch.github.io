@@ -10,9 +10,10 @@ importScripts('../loader.js');
 const ready = ResourceLoader.load('imagetracerjs');
 
 self.onmessage = async function(e) {
-    const { id, imageData, options } = e.data;
+    const requestId = e.data.requestId || e.data.id;
+    const { imageData, options } = e.data;
 
-    if (!id || !imageData) return;
+    if (!requestId || !imageData) return;
 
     try {
         await ready;
@@ -24,15 +25,15 @@ self.onmessage = async function(e) {
         const svgstr = ImageTracer.imagedataToSVG(imageData, options);
 
         self.postMessage({
-            id: id,
-            status: 'success',
+            type: 'success',
+            requestId,
             svgContent: svgstr
         });
 
     } catch (error) {
         self.postMessage({
-            id: id,
-            status: 'error',
+            type: 'error',
+            requestId,
             error: error.message || 'Unknown error during SVG tracing'
         });
     }

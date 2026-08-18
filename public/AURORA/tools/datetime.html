@@ -5,179 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>时间工具箱</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/theme-boot.js"></script>
+    <script src="../js/ui/icons.js"></script>
     <script src="../js/app.js"></script>
-    <style>
-        .time-container {
-            flex-direction: column;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        /* Tab Navigation */
-        .tool-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-        }
-
-        .tool-tab {
-            padding: 8px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            color: var(--text-dim);
-            background: transparent;
-            border: 1px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .tool-tab.active {
-            background: var(--primary);
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(192, 132, 252, 0.3);
-        }
-
-        .tool-tab:hover:not(.active) {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-main);
-        }
-
-        /* Tab Content */
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Time Calc Specific */
-        .calc-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        @media (max-width: 768px) {
-            .calc-grid { grid-template-columns: 1fr; }
-        }
-
-        .ts-display {
-            font-family: var(--font-mono);
-            font-size: 1.5rem;
-            color: var(--secondary);
-            text-align: center;
-            padding: 20px;
-            background: rgba(0,0,0,0.2);
-            border-radius: var(--radius-md);
-            margin-bottom: 15px;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .ts-display:hover { background: rgba(0,0,0,0.3); border-color: var(--secondary); }
-
-        .time-row {
-            display: flex; gap: 10px; margin-bottom: 15px; align-items: center;
-        }
-        .time-label { min-width: 90px; color: var(--text-dim); font-size: 0.9rem; }
-        .time-input { flex: 1; font-family: var(--font-mono); }
-        
-        .diff-result-item {
-            background: rgba(255,255,255,0.05);
-            padding: 10px 15px;
-            border-radius: var(--radius-sm);
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .diff-val { font-family: var(--font-mono); color: var(--primary); font-weight: bold; }
-
-        /* Cron Specific */
-        .cron-display {
-            background: var(--bg-deep);
-            color: var(--secondary);
-            padding: 25px;
-            border-radius: var(--radius-lg);
-            text-align: center;
-            margin-bottom: 25px;
-            border: 1px solid var(--border);
-        }
-
-        .cron-expression {
-            font-family: var(--font-mono);
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .cron-expression:hover { opacity: 0.8; transform: scale(1.02); }
-
-        .cron-desc {
-            color: var(--text-dim);
-            font-size: 1rem;
-        }
-
-        .cron-options-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .option-group {
-            background: var(--bg-panel);
-            padding: 15px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-        }
-
-        .option-group label {
-            display: block;
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .option-group select {
-            width: 100%;
-        }
-
-        .quick-presets {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 25px;
-            justify-content: center;
-        }
-
-        .preset-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .preset-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
-    </style>
+    <link rel="stylesheet" href="../css/tools/datetime.css">
 </head>
 <body>
     <div class="workspace time-container">
         
         <div class="tool-tabs">
-            <div class="tool-tab active" onclick="switchTab('calc')">时间计算</div>
-            <div class="tool-tab" onclick="switchTab('cron')">Cron 表达式</div>
+            <div class="tool-tab active" data-action="dt.switch-tab" data-tab="calc">时间计算</div>
+            <div class="tool-tab" data-action="dt.switch-tab" data-tab="cron">Cron 表达式</div>
         </div>
 
         <!-- Tab 1: Time Calculator -->
@@ -188,22 +26,22 @@
                     <div class="panel-header">
                         <div class="panel-title">Unix 时间戳转换</div>
                         <div class="panel-actions">
-                            <button class="btn btn-sm" onclick="tsTool.now()">获取当前</button>
+                            <button class="btn btn-sm" data-action="ts.now">获取当前</button>
                         </div>
                     </div>
                     
                     <div style="padding: 1.5rem;">
-                            <div class="ts-display" id="current-ts" onclick="app.copy('current-ts')" title="点击复制">
+                            <div class="ts-display" id="current-ts" data-action="copy" data-copy-target="current-ts" title="点击复制">
                             加载中...
                         </div>
 
                         <div class="time-row">
                             <div class="time-label">时间戳 (s)</div>
-                            <input type="number" id="ts-in-sec" class="time-input" placeholder="10位时间戳" oninput="tsTool.convert('sec')">
+                            <input type="number" id="ts-in-sec" class="time-input" placeholder="10位时间戳" data-action="ts.convert" data-type="sec">
                         </div>
                         <div class="time-row">
                             <div class="time-label">时间戳 (ms)</div>
-                            <input type="number" id="ts-in-ms" class="time-input" placeholder="13位时间戳" oninput="tsTool.convert('ms')">
+                            <input type="number" id="ts-in-ms" class="time-input" placeholder="13位时间戳" data-action="ts.convert" data-type="ms">
                         </div>
                         <div class="time-row">
                             <div class="time-label">日期时间</div>
@@ -214,12 +52,12 @@
 
                         <div class="time-row">
                             <div class="time-label">日期输入</div>
-                            <input type="datetime-local" id="date-in" class="time-input" step="1" oninput="tsTool.convert('date')">
+                            <input type="datetime-local" id="date-in" class="time-input" step="1" data-action="ts.convert" data-type="date">
                         </div>
                         <div class="time-row">
                             <div class="time-label">结果 (s)</div>
                             <input type="text" id="date-out-ts" class="time-input" readonly>
-                            <button class="btn btn-sm btn-icon" style="margin-left: 10px;" onclick="app.copy('date-out-ts')">📋</button>
+                            <button class="btn btn-sm btn-icon" style="margin-left: 10px;" data-action="copy" data-copy-target="date-out-ts"><span class="ic" data-ic="copy"></span></button>
                         </div>
                     </div>
                 </div>
@@ -240,8 +78,8 @@
                         </div>
                         
                         <div style="display:flex; gap:10px; margin-bottom:20px;">
-                            <button class="btn btn-primary" style="flex:1" onclick="tsTool.calcDiff()">计算差值</button>
-                            <button class="btn" onclick="tsTool.clearDiff()">清空</button>
+                            <button class="btn btn-primary flex-1" data-action="ts.calc-diff">计算差值</button>
+                            <button class="btn" data-action="ts.clear-diff">清空</button>
                         </div>
 
                         <div id="diff-result" style="display:none;">
@@ -279,23 +117,23 @@
                 </div>
                 <div style="padding: 2rem;">
                     <div class="cron-display">
-                        <div class="cron-expression" id="cron-text" onclick="app.copy('cron-text')" title="点击复制">* * * * *</div>
+                        <div class="cron-expression" id="cron-text" data-action="copy" data-copy-target="cron-text" title="点击复制">* * * * *</div>
                         <div class="cron-desc" id="cron-human">每分钟</div>
                     </div>
 
                     <div class="quick-presets">
-                        <button class="preset-btn" onclick="cronTool.set('* * * * *')">每分钟</button>
-                        <button class="preset-btn" onclick="cronTool.set('0 * * * *')">每小时</button>
-                        <button class="preset-btn" onclick="cronTool.set('0 0 * * *')">每天午夜</button>
-                        <button class="preset-btn" onclick="cronTool.set('0 9 * * 1')">每周一 9:00</button>
-                        <button class="preset-btn" onclick="cronTool.set('0 0 1 * *')">每月1号</button>
-                        <button class="preset-btn" onclick="cronTool.set('*/5 * * * *')">每5分钟</button>
+                        <button class="preset-btn" data-action="cron.set" data-cron="* * * * *">每分钟</button>
+                        <button class="preset-btn" data-action="cron.set" data-cron="0 * * * *">每小时</button>
+                        <button class="preset-btn" data-action="cron.set" data-cron="0 0 * * *">每天午夜</button>
+                        <button class="preset-btn" data-action="cron.set" data-cron="0 9 * * 1">每周一 9:00</button>
+                        <button class="preset-btn" data-action="cron.set" data-cron="0 0 1 * *">每月1号</button>
+                        <button class="preset-btn" data-action="cron.set" data-cron="*/5 * * * *">每5分钟</button>
                     </div>
 
                     <div class="cron-options-grid">
                         <div class="option-group">
                             <label>分钟 (Minute)</label>
-                            <select id="cron-min" onchange="cronTool.update()">
+                            <select id="cron-min" data-action="cron.update">
                                 <option value="*">* (每分)</option>
                                 <option value="*/5">*/5 (每5分)</option>
                                 <option value="*/15">*/15 (每15分)</option>
@@ -305,7 +143,7 @@
                         </div>
                         <div class="option-group">
                             <label>小时 (Hour)</label>
-                            <select id="cron-hour" onchange="cronTool.update()">
+                            <select id="cron-hour" data-action="cron.update">
                                 <option value="*">* (每时)</option>
                                 <option value="*/2">*/2 (每2时)</option>
                                 <option value="*/6">*/6 (每6时)</option>
@@ -317,7 +155,7 @@
                         </div>
                         <div class="option-group">
                             <label>日期 (Day)</label>
-                            <select id="cron-day" onchange="cronTool.update()">
+                            <select id="cron-day" data-action="cron.update">
                                 <option value="*">* (每日)</option>
                                 <option value="1">1 (每月1号)</option>
                                 <option value="15">15 (每月15号)</option>
@@ -326,7 +164,7 @@
                         </div>
                         <div class="option-group">
                             <label>月份 (Month)</label>
-                            <select id="cron-month" onchange="cronTool.update()">
+                            <select id="cron-month" data-action="cron.update">
                                 <option value="*">* (每月)</option>
                                 <option value="*/3">*/3 (每季度)</option>
                                 <option value="1">1 (一月)</option>
@@ -336,7 +174,7 @@
                         </div>
                         <div class="option-group">
                             <label>星期 (Week)</label>
-                            <select id="cron-week" onchange="cronTool.update()">
+                            <select id="cron-week" data-action="cron.update">
                                 <option value="*">* (每日)</option>
                                 <option value="1-5">1-5 (工作日)</option>
                                 <option value="0,6">0,6 (周末)</option>
@@ -353,135 +191,6 @@
 
     <div id="toast" class="toast">操作成功</div>
     
-    <script>
-        function switchTab(tab) {
-            document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(`tab-${tab}`).classList.add('active');
-        }
-
-        const tsTool = {
-            timer: null,
-            init: function() {
-                this.now();
-                this.timer = setInterval(() => {
-                    document.getElementById('current-ts').innerText = Math.floor(Date.now() / 1000);
-                }, 1000);
-            },
-            
-            now: function() {
-                const now = new Date();
-                document.getElementById('current-ts').innerText = Math.floor(now.getTime() / 1000);
-                const localIso = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 19);
-                document.getElementById('date-in').value = localIso;
-                document.getElementById('diff-start').value = localIso;
-            },
-
-            formatDate: function(date) {
-                const pad = n => n < 10 ? '0' + n : n;
-                return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-            },
-
-            convert: function(type) {
-                if (type === 'sec' || type === 'ms') {
-                    let val = document.getElementById(type === 'sec' ? 'ts-in-sec' : 'ts-in-ms').value;
-                    if (!val) return;
-                    let ts = parseInt(val);
-                    if (type === 'sec') ts *= 1000;
-                    
-                    const date = new Date(ts);
-                    if (isNaN(date.getTime())) {
-                        document.getElementById('ts-date-out').value = '无效的时间戳';
-                    } else {
-                        document.getElementById('ts-date-out').value = this.formatDate(date);
-                    }
-                } else if (type === 'date') {
-                    const val = document.getElementById('date-in').value;
-                    if (!val) return;
-                    const date = new Date(val);
-                    if (isNaN(date.getTime())) return;
-                    document.getElementById('date-out-ts').value = Math.floor(date.getTime() / 1000);
-                }
-            },
-
-            calcDiff: function() {
-                const start = document.getElementById('diff-start').value;
-                const end = document.getElementById('diff-end').value;
-                
-                if (!start || !end) {
-                    app.showToast('请选择开始和结束时间', 'error');
-                    return;
-                }
-
-                const d1 = new Date(start);
-                const d2 = new Date(end);
-                let diffMs = Math.abs(d2 - d1);
-
-                const diffSecs = Math.floor(diffMs / 1000);
-                const diffMins = Math.floor(diffSecs / 60);
-                const diffHours = Math.floor(diffMins / 60);
-                const diffDays = Math.floor(diffHours / 24);
-
-                document.getElementById('diff-days').innerText = diffDays.toLocaleString();
-                document.getElementById('diff-hours').innerText = diffHours.toLocaleString();
-                document.getElementById('diff-mins').innerText = diffMins.toLocaleString();
-                document.getElementById('diff-secs').innerText = diffSecs.toLocaleString();
-
-                let rem = diffSecs;
-                const d = Math.floor(rem / 86400); rem %= 86400;
-                const h = Math.floor(rem / 3600); rem %= 3600;
-                const m = Math.floor(rem / 60); rem %= 60;
-                const s = rem;
-
-                document.getElementById('diff-detail').innerText = `${d}天 ${h}小时 ${m}分 ${s}秒`;
-                document.getElementById('diff-result').style.display = 'block';
-            },
-
-            clearDiff: function() {
-                document.getElementById('diff-start').value = '';
-                document.getElementById('diff-end').value = '';
-                document.getElementById('diff-result').style.display = 'none';
-            }
-        };
-
-        const cronTool = {
-            set: function(val) {
-                document.getElementById('cron-text').innerText = val;
-                this.updateHuman(val);
-            },
-            
-            update: function() {
-                const min = document.getElementById('cron-min').value;
-                const hour = document.getElementById('cron-hour').value;
-                const day = document.getElementById('cron-day').value;
-                const month = document.getElementById('cron-month').value;
-                const week = document.getElementById('cron-week').value;
-                
-                const cron = `${min} ${hour} ${day} ${month} ${week}`;
-                document.getElementById('cron-text').innerText = cron;
-                this.updateHuman(cron);
-            },
-
-            updateHuman: function(cron) {
-                const parts = cron.split(' ');
-                if(parts.length !== 5) return;
-                
-                let desc = '';
-                if(cron === '* * * * *') desc = '每分钟';
-                else if(cron === '0 * * * *') desc = '每小时整点';
-                else if(cron === '0 0 * * *') desc = '每天午夜';
-                else if(cron === '0 9 * * 1') desc = '每周一 9:00';
-                else if(cron === '0 0 1 * *') desc = '每月1号';
-                else if(cron === '*/5 * * * *') desc = '每5分钟';
-                else desc = '自定义定时任务';
-                
-                document.getElementById('cron-human').innerText = desc;
-            }
-        };
-
-        tsTool.init();
-    </script>
+    <script src="../js/tools/datetime.js"></script>
 </body>
 </html>

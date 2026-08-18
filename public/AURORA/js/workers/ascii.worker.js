@@ -4,7 +4,7 @@
  */
 
 self.onmessage = function(e) {
-    const { type, imageData, config } = e.data;
+    const { type, requestId, imageData, config } = e.data;
 
     if (type === 'process') {
         try {
@@ -16,9 +16,6 @@ self.onmessage = function(e) {
             
             let htmlOutput = '';
             let rawText = '';
-            
-            // Chunk processing to avoid huge string concatenation memory spikes?
-            // Actually, for typical ASCII sizes (e.g. 100-300 chars wide), strings are manageable.
             
             for (let y = 0; y < height; y++) {
                 let lineHtml = '';
@@ -57,13 +54,14 @@ self.onmessage = function(e) {
             }
 
             self.postMessage({ 
-                type: 'complete', 
+                type: 'success', 
+                requestId,
                 html: htmlOutput, 
                 text: rawText 
             });
 
         } catch (error) {
-            self.postMessage({ type: 'error', error: error.message });
+            self.postMessage({ type: 'error', requestId, error: error.message });
         }
     }
 };
