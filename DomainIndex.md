@@ -54,40 +54,6 @@ lastUpdated: true
 4. [zi-hf-prox-zi.futa.de5.net/](https://zi.futa.de5.net)
 5. [tg.futa.de5.net](https://tg.futa.de5.net)
 
-6. [LiveMYOpenlist-op.futa.de5.net](https://op.futa.de5.net)
-
-https://vh-prod-openlist-main-6b914b-e28ef0ff.livemy.site/
-
-7. [LiveMY1-callit](https://vh-prod-callit-main-ca39b5-93d65e3f.livemy.site/admin/)
-
-19a07a175074d7bbf3948ccb53e9155e
-
-8. [LiveMY2-PixivNow-px.futa.de5.net/](https://px.futa.de5.net)
-
-https://vh-prod-pixivnow-master-59beef-ee9c8d84.livemy.site/
-
-9. [LiveMY3xui](https://vh-prod-3x-ui-main-0e6c02-ba63e974.livemy.site/)
-
-ws /019425/p<端口>
-
-10. [LiveMY4-TGAPI](https://vh-prod-telegram-bot-api-master-0b9b4a-010e8a93.livemy.site)
-
-11. [LiveMY5-合成大球球](https://vh-prod-oppai-oppai-orbs-decomp-main-4536aa-66413be4.livemy.site)
-
-12. [LiveMY6-漫画翻译器](https://vh-prod-manga-translator-ui-main-579ffa-46d1ea56.livemy.site)
-
-13. [LiveMYjitters-TD-py](https://vh-prod-telegram-downloader-py-main-ab710a-cb7fb945.livemy.site)
-
-14. [livemy.app-amber withoutBG](https://vh-prod-withoutbg-python-main-70826b-937c0445.livemy.site)
-
-KpLW8K8hU226
-
-15. [livemy.app-sympathy codeserver](https://vh-prod-code-server-main-1371da-add1174a.livemy.site)
-
-52c112ec946ced8dbb2e47c98869f27c
-
-16. [livemy.app-liftoff SearXNG](https://vh-prod-searxng-master-5f0487-3077e443.livemy.site)
-
 ce725a92-690d-4f9f-af42-0bcba945bac0
 
 trahs.de5.net
